@@ -20,6 +20,14 @@ button {
   transition: ease-in-out 0.2s;
 }
 
+button:hover {
+  scale: 1.1;
+}
+
+button:active {
+  scale: 0.9;
+}
+
 #main-btn {
   background-color: rgb(222, 222, 200);
 }

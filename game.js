@@ -15,7 +15,7 @@ const loadGame = () => {
   const savedData = localStorage.getItem("eldenChillSave");
   if (savedData) {
     player = JSON.parse(savedData);
-    updateUi();
+    updateUI();
   }
 };
 
@@ -27,7 +27,7 @@ const collectRunes = () => {
 const updateUI = () => {
   document.getElementById("rune-count").innerText = player.runes;
   document.getElementById("level").innerText = player.level;
-  document.getElementbyId("strength").innerText = player.strength;
+  document.getElementById("strength").innerText = player.strength;
 };
 
 setInterval(saveGame, 30000);
