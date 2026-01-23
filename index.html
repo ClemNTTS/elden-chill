@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Elden Chill</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
   </head>
   <body>
     <div id="game-container">
@@ -23,22 +24,30 @@
           <div class="stat-card">
             <h3>Vigueur</h3>
             <p id="stat-vigor">10</p>
-            <button onclick="upgradeStat('vigor')">Améliorer</button>
+            <button onclick="upgradeStat('vigor')">
+              Améliorer (<span id="cost-vigor">10</span>)
+            </button>
           </div>
           <div class="stat-card">
             <h3>Force</h3>
             <p id="stat-strength">10</p>
-            <button onclick="upgradeStat('strength')">Améliorer</button>
+            <button onclick="upgradeStat('strength')">
+              Améliorer (<span id="cost-strength">10</span>)
+            </button>
           </div>
           <div class="stat-card">
             <h3>Critique %</h3>
             <p id="stat-crit-chance">5%</p>
-            <button onclick="upgradeStat('critChance')">Améliorer</button>
+            <button onclick="upgradeStat('critChance')">
+              Améliorer (<span id="cost-critChance">25</span>)
+            </button>
           </div>
           <div class="stat-card">
             <h3>Dégâts Crit.</h3>
             <p id="stat-crit-damage">1.5x</p>
-            <button onclick="upgradeStat('critDamage')">Améliorer</button>
+            <button onclick="upgradeStat('critDamage')">
+              Améliorer (<span id="cost-critDamage">25</span>)
+            </button>
           </div>
         </div>
 
@@ -51,9 +60,20 @@
           </div>
         </div>
 
-        <button id="start-btn" onclick="toggleView('biome')">
-          Partir en Expédition
-        </button>
+        <div id="biome-selection">
+          <h3>Choisir une destination</h3>
+          <div id="biome-list"></div>
+        </div>
+
+        <div id="inventory-section">
+          <h3>Inventaire</h3>
+          <div id="inventory-grid"></div>
+        </div>
+        <div class="danger-zone">
+          <button class="reset-btn" onclick="resetGame()">
+            Réinitialiser la sauvegarde
+          </button>
+        </div>
       </section>
 
       <section id="biome-view" style="display: none">
@@ -61,12 +81,27 @@
         <div id="action-log">
           <p>Vous avancez dans la brume...</p>
         </div>
+        <div id="combat-zone">
+          <div class="hp-container">
+            <span>Joueur</span>
+            <div class="hp-bar-bg">
+              <div id="player-hp-fill" class="hp-fill"></div>
+            </div>
+          </div>
+          <div class="hp-container">
+            <span id="enemy-name">Ennemi</span>
+            <div class="hp-bar-bg">
+              <div id="enemy-hp-fill" class="hp-fill"></div>
+            </div>
+          </div>
+        </div>
         <button class="safe-btn" onclick="toggleView('camp')">
           Se replier au Feu de Camp
         </button>
       </section>
     </div>
 
-    <script src="game.js"></script>
+    <div id="tooltip" class="tooltip-hidden"></div>
+    <script type="module" src="game.js"></script>
   </body>
 </html>
