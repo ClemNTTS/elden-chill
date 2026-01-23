@@ -62,18 +62,23 @@ const upgradeStat = (statName) => {
 
 const saveGame = () => {
   try {
-    localStorage.setItem(SAVE_NAME, JSON.stringify(gameState));
-    console.log("Sauvegarde effectuée !");
+    const secretString = encodeSave(gameState);
+    localStorage.setItem(SAVE_NAME, secretString);
+    console.log("Sauvegarde cryptée effectuée !");
   } catch (err) {
-    console.error("Erreur lors de la sauvegarde :", err);
+    console.error("⚠️ Sauvegarde corrompue ou modifiée illégalement : ", err);
   }
 };
 
 const loadGame = () => {
   const savedData = localStorage.getItem(SAVE_NAME);
   if (savedData) {
-    const parsed = JSON.parse(savedData);
-    gameState = { ...gameState, ...parsed };
+    const decrypted = decodeSave(savedData);
+    if (decrypted) {
+      gameState = { ...gameState, ...decrypted };
+    } else {
+      alert("Erreur de chargement : sauvegarde corrompue ou format obsolète.");
+    }
   }
   updateUI();
 };
@@ -111,23 +116,32 @@ const updateUI = () => {
 
   const invGrid = document.getElementById("inventory-grid");
   invGrid.innerHTML = "";
-  gameState.inventory.forEach((item) => {
-    const itemDiv = document.createElement("div");
-    itemDiv.className = "inventory-item";
-    itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>(${item.count}/${item.level})`;
 
-    const itemData = ITEMS[item.id];
-    itemDiv.onmouseenter = (e) =>
-      showTooltip(
-        e,
-        `<strong>${itemData.name}</strong><br>${itemData.description}`,
-      );
-    itemDiv.onmousemove = (e) => moveTooltip(e);
-    itemDiv.onmouseleave = () => hideTooltip();
+  if (gameState.inventory.length === 0) {
+    const empty = document.createElement("div");
+    empty.style.color = "grey";
+    empty.innerText = "Inventaire vide";
+    empty.style.marginBottom = "10px";
+    invGrid.appendChild(empty);
+  } else {
+    gameState.inventory.forEach((item) => {
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "inventory-item";
+      itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>(${item.count}/${item.level})`;
 
-    itemDiv.onclick = () => equipItem(item.id);
-    invGrid.appendChild(itemDiv);
-  });
+      const itemData = ITEMS[item.id];
+      itemDiv.onmouseenter = (e) =>
+        showTooltip(
+          e,
+          `<strong>${itemData.name}</strong><br>${itemData.description}`,
+        );
+      itemDiv.onmousemove = (e) => moveTooltip(e);
+      itemDiv.onmouseleave = () => hideTooltip();
+
+      itemDiv.onclick = () => equipItem(item.id);
+      invGrid.appendChild(itemDiv);
+    });
+  }
 
   Object.keys(upgradeCosts).forEach((stat) => {
     const costLabel = document.getElementById(`cost-${stat}`);
@@ -154,6 +168,8 @@ const toggleView = (view) => {
   } else {
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
+    document.getElementById("action-log").innerHTML =
+      "<p>De retour au repos...</p>";
 
     camp.style.display = "block";
     biome.style.display = "none";
@@ -168,7 +184,7 @@ const getEffectiveStats = () => {
 
   gameState.equipped.forEach((item) => {
     if (item && ITEMS[item.id]) {
-      ITEMS[item.id].apply(effStats);
+      ITEMS[item.id].apply(effStats, item.level);
     }
   });
 
@@ -180,15 +196,30 @@ const startExploration = (biomeId) => {
   gameState.world.isExploring = true;
   gameState.world.currentBiome = biomeId;
   gameState.world.progress = 0;
+  gameState.world.checkpointReached = false;
 
   playerCurrentHp = getEffectiveStats().vigor * 10;
 
+  document.getElementById("action-log").innerHTML = "";
+
   toggleView("biome");
+  document.getElementById("current-biome-name").innerText = biome.name;
+  updateHealthBars();
+
   nextEncounter();
 };
 
 const nextEncounter = () => {
   const biome = BIOMES[gameState.world.currentBiome];
+  const midPoint = Math.floor(biome.length / 2);
+
+  if (
+    gameState.world.progress === midPoint &&
+    !gameState.world.checkpointReached
+  ) {
+    handleCampfireEvent();
+    return;
+  }
 
   if (gameState.world.progress >= biome.length) {
     spawnMonster(biome.boss);
@@ -199,6 +230,33 @@ const nextEncounter = () => {
   }
 };
 
+const handleCampfireEvent = () => {
+  gameState.world.checkpointReached = true;
+  ActionLog("✨ SITES DE GRÂCE DÉCOUVERT !");
+  const overlay = document.getElementById("fade-overlay");
+
+  overlay.classList.add("active");
+
+  setTimeout(() => {
+    ActionLog("✨ SITE DE GRÂCE DÉCOUVERT !");
+    ActionLog("Vos runes ont été sécurisées.");
+
+    gameState.runes.banked += gameState.runes.carried;
+    gameState.runes.carried = 0;
+
+    playerCurrentHp = getEffectiveStats().vigor * 10;
+    updateHealthBars();
+    updateUI();
+    saveGame();
+
+    // 2. Retirer le fondu après le repos
+    setTimeout(() => {
+      overlay.classList.remove("active");
+      ActionLog("Vous reprenez la route...");
+      nextEncounter();
+    }, 2000);
+  }, 1000);
+};
 const spawnMonster = (monsterId) => {
   const monster = MONSTERS[monsterId];
   currentEnemy = { ...monster, currentHp: monster.hp };
@@ -273,13 +331,24 @@ const handleVictory = () => {
   gameState.world.progress++;
 
   if (currentEnemy.isBoss) {
-    const biome = BIOMES[gameState.world.currentBiome];
-    ActionLog("BOOS VAINCU ! Accés à la nouvelle zone débloqué.");
+    const currentBiome = BIOMES[gameState.world.currentBiome];
+    ActionLog("BOOS VAINCU !");
+
+    if (
+      currentBiome.unlocks &&
+      !gameState.world.unlockedBiomes.includes(currentBiome.unlocks)
+    ) {
+      gameState.world.unlockedBiomes.push(currentBiome.unlocks);
+      ActionLog(
+        `Nouvelle zone découverte : ${BIOMES[currentBiome.unlocks].name} !`,
+      );
+    }
 
     //loot
     const loot = LOOT_TABLES[gameState.world.currentBiome];
     const rolled = loot[Math.floor(Math.random() * loot.length)];
     dropItem(rolled.id);
+    saveGame();
 
     setTimeout(() => toggleView("camp"), 3000);
   } else {
@@ -294,9 +363,13 @@ const updateHealthBars = () => {
   document.getElementById("player-hp-fill").style.width =
     `${Math.max(0, playerPercent)}%`;
 
-  const enemyPercent = (currentEnemy.currentHp / currentEnemy.hp) * 100;
-  document.getElementById("enemy-hp-fill").style.width =
-    `${Math.max(0, enemyPercent)}%`;
+  const enemyBar = document.getElementById("enemy-hp-fill");
+  if (currentEnemy) {
+    const enemyPercent = (currentEnemy.currentHp / currentEnemy.hp) * 100;
+    enemyBar.style.width = `${Math.max(0, enemyPercent)}%`;
+  } else {
+    enemyBar.style.width = "0%";
+  }
 };
 
 const dropItem = (itemId) => {
@@ -357,7 +430,7 @@ const getUpgradeCost = (statName) => {
   if (statName === "critChance") count = Math.round((val - 0.05) * 100);
   if (statName === "critDamage") count = Math.round((val - 1.5) * 10);
 
-  return Math.floor(baseCost * Math.pow(1.5, count));
+  return Math.floor(baseCost * Math.pow(1.3, count));
 };
 
 const resetGame = () => {
@@ -383,7 +456,6 @@ const showTooltip = (e, text) => {
 
 const moveTooltip = (e) => {
   const tooltip = document.getElementById("tooltip");
-  // On décale un peu pour ne pas être sous le curseur
   tooltip.style.left = e.clientX + 15 + "px";
   tooltip.style.top = e.clientY + 15 + "px";
 };
@@ -392,10 +464,61 @@ const hideTooltip = () => {
   document.getElementById("tooltip").classList.add("tooltip-hidden");
 };
 
+const encodeSave = (data) => {
+  const jsonString = JSON.stringify(data);
+  const base64 = btoa(unescape(encodeURIComponent(jsonString)));
+  return base64.split("").reverse().join("");
+};
+
+const decodeSave = (encodedData) => {
+  try {
+    const reversed = encodedData.split("").reverse().join("");
+    const jsonString = decodeURIComponent(escape(atob(reversed)));
+    return JSON.parse(jsonString);
+  } catch (err) {
+    console.error("Erreur de décodage de la sauvegarde :", err);
+    return null;
+  }
+};
+
+const dev = {
+  // Se donner des runes : dev.giveRunes(5000)
+  giveRunes: (amount) => {
+    gameState.runes.banked += amount;
+    console.log(`🔧 DEV : +${amount} runes ajoutées au coffre.`);
+    updateUI();
+    saveGame();
+  },
+
+  // Se donner un objet spécifique : dev.giveItem('twin_blade')
+  giveItem: (itemId) => {
+    if (ITEMS[itemId]) {
+      dropItem(itemId);
+      console.log(`🔧 DEV : Objet ${itemId} obtenu.`);
+    } else {
+      console.error("ID d'objet inconnu.");
+    }
+  },
+
+  // Tout débloquer : dev.unlockAll()
+  unlockAll: () => {
+    Object.keys(BIOMES).forEach((id) => {
+      if (!gameState.world.unlockedBiomes.includes(id)) {
+        gameState.world.unlockedBiomes.push(id);
+      }
+    });
+    console.log("🔧 DEV : Tous les biomes sont débloqués.");
+    updateUI();
+    saveGame();
+  },
+};
+
 setInterval(saveGame, 30000);
 window.onload = loadGame;
+window.gameState = gameState;
 window.upgradeStat = upgradeStat;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;
 window.resetGame = resetGame;
+//window.dev = dev;

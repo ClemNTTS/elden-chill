@@ -10,17 +10,28 @@
     45,
     45
   ); /* Un peu plus clair que le fond pour le contraste */
+  --header-font: "Cinzel Decorative", serif;
+  --body-font: "Spectral", serif;
 }
 
 body {
   background-color: var(--bg-color);
   color: beige; /* Ta couleur de texte préférée */
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--body-font);
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.stat-card h3 {
+  font-family: var(--header-font);
+  letter-spacing: 2px;
+  color: var(--active-btn);
 }
 
 #game-container {
@@ -138,6 +149,11 @@ button:disabled {
   margin-top: 10px;
 }
 
+#biome-list {
+  gap: 5px;
+  display: flex;
+}
+
 /* Style du Biome / Log de combat */
 #action-log {
   background: black;
@@ -225,4 +241,21 @@ button:disabled {
 .tooltip-stat {
   color: var(--hover-btn);
   font-weight: bold;
+}
+
+#fade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 1s ease-in-out;
+}
+
+#fade-overlay.active {
+  opacity: 1;
 }
