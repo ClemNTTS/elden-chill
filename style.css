@@ -168,6 +168,12 @@ button:disabled {
   font-size: 0.9em;
   margin: 15px 0;
   border: 1px solid var(--active-btn);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#action-log::-webkit-scrollbar {
+  display: none;
 }
 
 .hp-bar-bg {
@@ -178,11 +184,28 @@ button:disabled {
   margin-bottom: 10px;
   overflow: hidden;
   border: 1px solid var(--active-btn);
+  position: relative; /* Nécessaire pour le texte en absolute */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hp-text {
+  position: absolute;
+  font-size: 0.75rem;
+  font-weight: bold;
+  font-family: var(--header-font);
+  color: white;
+  text-shadow: 1px 1px 2px black;
+  pointer-events: none; /* Empêche le texte de bloquer les clics */
 }
 
 .hp-fill {
   height: 100%;
   width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   background: linear-gradient(90deg, var(--pressed-btn), #ff0000);
   transition: width 0.3s ease-out;
 }
@@ -192,6 +215,7 @@ button:disabled {
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 10px;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .inventory-item {

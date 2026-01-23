@@ -3,6 +3,7 @@ const SAVE_NAME = "eldenChillSave";
 
 let currentEnemy = null;
 let playerCurrentHp = 0;
+let currentCombatSession = 0;
 
 let gameState = {
   runes: {
@@ -85,24 +86,31 @@ const loadGame = () => {
 };
 
 const updateUI = () => {
-  // Runes
   document.getElementById("banked-runes").innerText = gameState.runes.banked;
   document.getElementById("carried-runes").innerText = gameState.runes.carried;
 
-  // Statistiques
   document.getElementById("stat-vigor").innerText = gameState.stats.vigor;
   document.getElementById("stat-strength").innerText = gameState.stats.strength;
 
-  // Formatage des critiques
   document.getElementById("stat-crit-chance").innerText =
     (gameState.stats.critChance * 100).toFixed(0) + "%";
   document.getElementById("stat-crit-damage").innerText =
     gameState.stats.critDamage.toFixed(1) + "x";
 
-  // Gestion des slots d'équipement
-  gameState.equipped.forEach((item, index) => {
+  gameState.equipped.forEach((itemId, index) => {
     const slot = document.getElementById(`slot-${index}`);
-    slot.innerText = item ? `${item.name} (Lv.${item.level})` : "Vide";
+    if (itemId) {
+      const itemInInv = gameState.inventory.find((i) => i.id === itemId);
+      if (itemInInv) {
+        slot.innerText = `${itemInInv.name} (Lv.${itemInInv.level})`;
+        slot.onmouseenter = (e) => showTooltip(e, itemInInv);
+        slot.onmousemove = (e) => moveTooltip(e);
+        slot.onmouseleave = () => hideTooltip();
+      }
+    } else {
+      slot.innerText = "Vide";
+      slot.onmouseenter = null;
+    }
   });
 
   const list = document.getElementById("biome-list");
@@ -128,14 +136,12 @@ const updateUI = () => {
     gameState.inventory.forEach((item) => {
       const itemDiv = document.createElement("div");
       itemDiv.className = "inventory-item";
-      itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>(${item.count}/${item.level})`;
 
-      const itemData = ITEMS[item.id];
-      itemDiv.onmouseenter = (e) =>
-        showTooltip(
-          e,
-          `<strong>${itemData.name}</strong><br>${itemData.description}`,
-        );
+      const progressText =
+        item.level >= 10 ? "MAX" : `(${item.count}/${item.level})`;
+      itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>${progressText}`;
+
+      itemDiv.onmouseenter = (e) => showTooltip(e, item);
       itemDiv.onmousemove = (e) => moveTooltip(e);
       itemDiv.onmouseleave = () => hideTooltip();
 
@@ -183,16 +189,19 @@ const toggleView = (view) => {
 const getEffectiveStats = () => {
   let effStats = { ...gameState.stats, attacksPerTurn: 1 };
 
-  gameState.equipped.forEach((item) => {
-    if (item && ITEMS[item.id]) {
-      ITEMS[item.id].apply(effStats, item.level);
+  gameState.equipped.forEach((itemId) => {
+    if (itemId) {
+      const itemInInv = gameState.inventory.find((i) => i.id === itemId);
+      if (itemInInv && ITEMS[itemId]) {
+        ITEMS[itemId].apply(effStats, itemInInv.level);
+      }
     }
   });
-
   return effStats;
 };
 
 const startExploration = (biomeId) => {
+  currentCombatSession++;
   const biome = BIOMES[biomeId];
   gameState.world.isExploring = true;
   gameState.world.currentBiome = biomeId;
@@ -278,7 +287,11 @@ const combatLoop = () => {
     return;
   }
 
+  const sessionId = currentCombatSession;
+
   setTimeout(() => {
+    if (sessionId !== currentCombatSession || !gameState.world.isExploring)
+      return;
     const stats = getEffectiveStats();
     //Attaque du joueur
     for (let i = 0; i < stats.attacksPerTurn; i++) {
@@ -302,6 +315,8 @@ const combatLoop = () => {
 
     //Attaque ennemi
     setTimeout(() => {
+      if (sessionId !== currentCombatSession || !gameState.world.isExploring)
+        return;
       playerCurrentHp -= currentEnemy.atk;
       updateHealthBars();
       ActionLog(`${currentEnemy.name} frappe ! -${currentEnemy.atk} PV`);
@@ -331,7 +346,7 @@ const handleVictory = () => {
 
   if (currentEnemy.isBoss) {
     const currentBiome = BIOMES[gameState.world.currentBiome];
-    ActionLog("BOOS VAINCU !");
+    ActionLog("BOSS VAINCU !");
 
     if (
       currentBiome.unlocks &&
@@ -357,17 +372,25 @@ const handleVictory = () => {
 };
 
 const updateHealthBars = () => {
-  const playerMaxHp = getEffectiveStats().vigor * 10;
+  const stats = getEffectiveStats();
+  const playerMaxHp = stats.vigor * 10;
+
   const playerPercent = (playerCurrentHp / playerMaxHp) * 100;
   document.getElementById("player-hp-fill").style.width =
     `${Math.max(0, playerPercent)}%`;
+  document.getElementById("player-hp-text").innerText =
+    `${Math.max(0, Math.floor(playerCurrentHp))} / ${playerMaxHp}`;
 
   const enemyBar = document.getElementById("enemy-hp-fill");
+  const enemyText = document.getElementById("enemy-hp-text");
+
   if (currentEnemy) {
     const enemyPercent = (currentEnemy.currentHp / currentEnemy.hp) * 100;
     enemyBar.style.width = `${Math.max(0, enemyPercent)}%`;
+    enemyText.innerText = `${Math.max(0, Math.floor(currentEnemy.currentHp))} / ${currentEnemy.hp}`;
   } else {
     enemyBar.style.width = "0%";
+    enemyText.innerText = "0 / 0";
   }
 };
 
@@ -384,6 +407,15 @@ const dropItem = (itemId) => {
     });
     ActionLog(`Vous avez trouvé : ${itemTemplate.name} !`);
   } else {
+    if (inventoryItem.level >= 10) {
+      ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
+      gameState.runes.banked += 100 * gameState.world.currentBiome.length;
+      ActionLog(
+        `Vous recevez ${100 * gameState.world.currentBiome.length} runes en compensation.`,
+      );
+      saveGame();
+    }
+
     inventoryItem.count++;
     if (inventoryItem.count >= inventoryItem.level) {
       inventoryItem.level++;
@@ -402,19 +434,16 @@ const dropItem = (itemId) => {
 };
 
 const equipItem = (itemId) => {
-  const itemInInv = gameState.inventory.find((item) => item.id === itemId);
+  const alreadyEquippedIndex = gameState.equipped.indexOf(itemId);
 
-  const alreadyEquippedIndex = gameState.equipped.findIndex(
-    (e) => e && e.id === itemId,
-  );
   if (alreadyEquippedIndex !== -1) {
-    gameState.equipped[alreadyEquippedIndex] = null; //déséquipe
+    gameState.equipped[alreadyEquippedIndex] = null;
   } else {
     const emptySlot = gameState.equipped.indexOf(null);
     if (emptySlot !== -1) {
-      gameState.equipped[emptySlot] = itemInInv;
+      gameState.equipped[emptySlot] = itemId; // On stocke l'ID
     } else {
-      alert("Inventaire plein !");
+      alert("Slots d'équipement pleins !");
     }
   }
   updateUI();
@@ -443,12 +472,39 @@ const resetGame = () => {
   }
 };
 
-const showTooltip = (e, text) => {
+const showTooltip = (e, item) => {
   const tooltip = document.getElementById("tooltip");
-  tooltip.innerHTML = text.replace(
-    /\+/g,
-    '<span class="tooltip-stat">+</span>',
-  );
+  const itemData = ITEMS[item.id];
+
+  // Simulation pour calculer le bonus réel
+  let base = {
+    vigor: 10,
+    strength: 10,
+    critChance: 0.05,
+    critDamage: 1.5,
+    attacksPerTurn: 1,
+  };
+  let modified = { ...base };
+  itemData.apply(modified, item.level); // On applique le niveau de l'objet
+
+  // Génération du texte de stats (comparaison)
+  let statBonus = "";
+  if (modified.strength !== base.strength) {
+    const diff = modified.strength - base.strength;
+    statBonus += `<br><span class="tooltip-stat">${diff > 0 ? "+" : ""}${diff.toFixed(1)} Force</span>`;
+  }
+  if (modified.vigor !== base.vigor) {
+    const ratio = (modified.vigor / base.vigor).toFixed(1);
+    statBonus += `<br><span class="tooltip-stat">x${ratio} Vigueur</span>`;
+  }
+
+  tooltip.innerHTML = `
+    <strong style="color:var(--active-btn)">${itemData.name} (Niv.${item.level})</strong><br>
+    <small style="font-style:italic; color:#aaa;">${itemData.description}</small>
+    <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
+    <strong>Bonus actuel :</strong>${statBonus}
+  `;
+
   tooltip.classList.remove("tooltip-hidden");
   moveTooltip(e);
 };
@@ -587,4 +643,4 @@ window.startExploration = startExploration;
 window.equipItem = equipItem;
 window.resetGame = resetGame;
 window.toggleOptions = toggleOptions;
-//window.dev = dev;
+window.dev = dev;

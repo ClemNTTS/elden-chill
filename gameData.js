@@ -1,18 +1,22 @@
 export const ITEMS = {
   iron_sword: {
     name: "Épée en Fer",
-    description: "+5 Force <em style='color: grey;'>(x Niv)</em>",
+    description: "+5 Force <em style='color: grey;'>(+ 1 / Niv)</em>",
     apply: (stats, itemLevel) => {
-      stats.strength += 5 * itemLevel;
+      stats.strength += 5 + itemLevel - 1;
     },
   },
   twin_blade: {
     name: "Lames Jumelles",
     description:
-      "Attaque 2 fois, -50% Force.\n<em style='color: grey;'>Réduis le malus de 5% par niveau</em>",
+      "Attaque 2 fois, -50% Force.\n<em style='color: grey;'>Réduis le malus de 5% par niveau (max 40%)</em>",
     apply: (stats, itemLevel) => {
       stats.attacksPerTurn = 2;
-      stats.strength *= 0.5 + 0.05 * (itemLevel - 1); // Correction : on réduit le malus donc on ajoute
+      if (0.05 * (itemLevel - 1) >= 0.4) {
+        stats.strength *= 0.9;
+      } else {
+        stats.strength *= 0.5 + 0.05 * (itemLevel - 1);
+      }
     },
   },
   crimson_amber: {
