@@ -88,7 +88,7 @@ const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== currentCombatSession) return;
 
   const monster = MONSTERS[monsterId];
-  currentEnemy = { ...monster, currentHp: monster.hp };
+  currentEnemy = { ...monster, id: monsterId, currentHp: monster.hp };
 
   document.getElementById("enemy-name").innerText = currentEnemy.name;
   updateHealthBars();
@@ -208,14 +208,27 @@ const handleVictory = (sessionId) => {
       );
     }
 
-    // Regular boss loot
-    const loot = LOOT_TABLES[gameState.world.currentBiome];
-    const rolled = loot[Math.floor(Math.random() * loot.length)];
-    dropItem(rolled.id);
+    // Boss guaranteed loot from their loot table
+    const bossLootTable = LOOT_TABLES[currentEnemy.id] || [];
+    if (bossLootTable.length > 0) {
+      const rolled = bossLootTable[Math.floor(Math.random() * bossLootTable.length)];
+      dropItem(rolled.id, true); // true indicates boss drop
+    }
     saveGame();
 
     setTimeout(() => toggleView("camp"), 3000);
   } else {
+    // Regular monster loot drop - use probability from loot table
+    const monsterLootTable = LOOT_TABLES[currentEnemy.id] || [];
+    if (monsterLootTable.length > 0) {
+      // Roll for each item in the loot table
+      for (const lootEntry of monsterLootTable) {
+        if (Math.random() < lootEntry.chance) {
+          dropItem(lootEntry.id);
+          break; // Only one item per kill
+        }
+      }
+    }
     setTimeout(() => nextEncounter(sessionId), 1000);
   }
   updateUI();
@@ -244,7 +257,7 @@ const updateHealthBars = () => {
   }
 };
 
-const dropItem = (itemId) => {
+const dropItem = (itemId, isBoss = false) => {
   const itemTemplate = ITEMS[itemId];
   const itemCategory = itemTemplate.categorie;
   let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
@@ -279,11 +292,15 @@ const dropItem = (itemId) => {
   } else {
     if (inventoryItem.level >= 10) {
       ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
-      gameState.runes.banked += 100 * gameState.world.currentBiome.length;
-      ActionLog(
-        `Vous recevez ${100 * gameState.world.currentBiome.length} runes en compensation.`,
-      );
-      saveGame();
+      // Only give runes for max-level items from bosses
+      if (isBoss) {
+        gameState.runes.banked += 100 * gameState.world.currentBiome.length;
+        ActionLog(
+          `Vous recevez ${100 * gameState.world.currentBiome.length} runes en compensation.`,
+        );
+        saveGame();
+      }
+      return; // Don't count or level up the item if already max level
     }
 
     inventoryItem.count++;
@@ -347,23 +364,40 @@ const updateBiomeStats = () => {
   const list = document.getElementById("biome-stats-list");
   list.innerHTML = "";
 
-  Object.keys(BIOMES).forEach((id) => {
-    const biome = BIOMES[id];
-    const loots = LOOT_TABLES[id] || [];
+  Object.keys(BIOMES).forEach((biomeId) => {
+    const biome = BIOMES[biomeId];
 
     let biomeDiv = document.createElement("div");
     biomeDiv.className = "biome-stat-entry";
 
-    let lootHtml = loots
-      .map((l) => {
-        const item = ITEMS[l.id];
-        return `<li>${item.name} : <strong>${(l.chance * 100).toFixed(0)}%</strong></li>`;
+    // Collect all monsters in this biome
+    const monsterIds = [...biome.monsters];
+    if (biome.rareMonster) monsterIds.push(biome.rareMonster);
+    monsterIds.push(biome.boss);
+
+    let monstersHtml = monsterIds
+      .map((monsterId) => {
+        const monster = MONSTERS[monsterId];
+        const loots = LOOT_TABLES[monsterId] || [];
+        const lootHtml = loots
+          .map((l) => {
+            const item = ITEMS[l.id];
+            return `<li>${item.name} : <strong>${(l.chance * 100).toFixed(0)}%</strong></li>`;
+          })
+          .join("");
+
+        return `
+          <div style="margin: 10px 0; padding-left: 10px; border-left: 2px solid #888;">
+            <strong>${monster.name}</strong>
+            <ul>${lootHtml || "<li>Aucun objet répertorié</li>"}</ul>
+          </div>
+        `;
       })
       .join("");
 
     biomeDiv.innerHTML = `
       <h4>${biome.name}</h4>
-      <ul>${lootHtml || "<li>Aucun objet répertorié</li>"}</ul>
+      ${monstersHtml}
     `;
     list.appendChild(biomeDiv);
   });

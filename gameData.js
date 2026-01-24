@@ -62,12 +62,35 @@ export const ITEMS = {
 };
 
 export const LOOT_TABLES = {
-  necrolimbe: [
+  // Normal monsters with optional low-probability drops
+  soldier: [
+    { id: "iron_sword", chance: 1 },
+  ],
+  wolf: [
+    { id: "crimson_amber", chance: 0.08 },
+  ],
+  rotten_stray: [
+    { id: "keen_dagger", chance: 0.12 },
+  ],
+  giant_crow: [
+    { id: "great_shield", chance: 0.1 },
+  ],
+  // Rare monsters with higher drop chances
+  knight_elite: [
+    { id: "keen_dagger", chance: 0.7 },
+    { id: "iron_sword", chance: 0.3 },
+  ],
+  rot_apostle: [
+    { id: "scavenger_mask", chance: 0.6 },
+    { id: "twin_blade", chance: 0.4 },
+  ],
+  // Bosses with guaranteed drops from these tables
+  margit: [
     { id: "iron_sword", chance: 0.6 },
     { id: "crimson_amber", chance: 0.3 },
     { id: "twin_blade", chance: 0.1 },
   ],
-  caelid: [
+  radahn: [
     { id: "twin_blade", chance: 0.15 },
     { id: "great_shield", chance: 0.3 },
     { id: "keen_dagger", chance: 0.5 },
@@ -121,6 +144,7 @@ export const BIOMES = {
     rareMonster: "knight_elite",
     boss: "margit",
     length: 10,
+    depth: 1,
     unlocks: "caelid",
     firstClearReward: "slots", // Unlocks all 4 slot types
   },
@@ -130,6 +154,7 @@ export const BIOMES = {
     rareMonster: "rot_apostle",
     boss: "radahn",
     length: 15,
+    depth: 2,
     unlocks: null,
     firstClearReward: "accessory", // Unlocks new accessory slot
   },
