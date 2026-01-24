@@ -58,11 +58,13 @@
         </div>
 
         <div id="equipment-section">
-          <h3>Équipement Actif (3 slots)</h3>
+          <h3>Équipement Actif</h3>
           <div class="slots-container">
-            <div class="slot" id="slot-0">Vide</div>
-            <div class="slot" id="slot-1">Vide</div>
-            <div class="slot" id="slot-2">Vide</div>
+            <div class="slot" id="slot-0" data-slot-type="shield">Gauche</div>
+            <div class="slot" id="slot-1" data-slot-type="weapon">Droite</div>
+            <div class="slot" id="slot-2" data-slot-type="armor">Armure</div>
+            <div class="slot" id="slot-3" data-slot-type="accessory">Accessoire</div>
+            <div class="slot" id="slot-4" data-slot-type="accessory">Accessoire</div>
           </div>
         </div>
 
@@ -139,6 +141,6 @@
 
     <div id="tooltip" class="tooltip-hidden"></div>
     <div id="fade-overlay"></div>
-    <script type="module" src="game.js"></script>
+    <script type="module" src="main.js"></script>
   </body>
 </html>

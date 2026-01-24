@@ -1,5 +1,6 @@
 export const ITEMS = {
   iron_sword: {
+    categorie: "weapon",
     name: "Épée en Fer",
     description: "+5 Force <em style='color: grey;'>(+ 2 / Niv)</em>",
     apply: (stats, itemLevel) => {
@@ -7,6 +8,7 @@ export const ITEMS = {
     },
   },
   twin_blade: {
+    categorie: "two_handed_weapon",
     name: "Lames Jumelles",
     description:
       "Attaque 2 fois, -50% Force.\n<em style='color: grey;'>Réduis le malus de 5% par niveau (max 40%)</em>",
@@ -20,6 +22,7 @@ export const ITEMS = {
     },
   },
   crimson_amber: {
+    categorie: "accessory",
     name: "Médaillon d'Ambre",
     description:
       "Vigueur x1.2 <em style='color: grey;'>( plus 0.1 par Niv)</em>",
@@ -28,6 +31,7 @@ export const ITEMS = {
     },
   },
   great_shield: {
+    categorie: "shield",
     name: "Grand Bouclier",
     description:
       "Vigueur x1.5 mais -20% Force. <em style='color: grey;'>(+0.05x Force par Niv)</em>",
@@ -37,6 +41,7 @@ export const ITEMS = {
     },
   },
   keen_dagger: {
+    categorie: "weapon",
     name: "Dague Afilée",
     description:
       "+10% Chance Crit. <em style='color: grey;'>(+2% par Niv)</em>",
@@ -45,6 +50,7 @@ export const ITEMS = {
     },
   },
   scavenger_mask: {
+    categorie: "accessory",
     name: "Masque de Pillard",
     description:
       "Dégâts Crit x2 mais Vigueur x0.4. <em style='color: grey;'>(+0.1x Vigueur par Niv)</em>",
@@ -70,38 +76,61 @@ export const LOOT_TABLES = {
 };
 
 export const MONSTERS = {
-  soldier: { name: "Soldat de Godrick", hp: 30, atk: 5, runes: 15 },
-  wolf: { name: "Loup Affamé", hp: 15, atk: 8, runes: 10 },
+  soldier: { name: "Soldat de Godrick", hp: 30, atk: 5, runes: 15, type: "normal" },
+  wolf: { name: "Loup Affamé", hp: 15, atk: 8, runes: 10, type: "normal" },
+  knight_elite: {
+    name: "Chevalier d'Élite",
+    hp: 80,
+    atk: 15,
+    runes: 100,
+    type: "rare",
+    loot: "keen_dagger",
+  },
   margit: {
     name: "Margit le Déchu",
     hp: 200,
     atk: 25,
     runes: 500,
     isBoss: true,
+    type: "boss",
   },
-  rotten_stray: { name: "Chien Errant Putréfié", hp: 70, atk: 18, runes: 80 },
-  giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150 },
+  rotten_stray: { name: "Chien Errant Putréfié", hp: 70, atk: 18, runes: 80, type: "normal" },
+  giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150, type: "normal" },
+  rot_apostle: {
+    name: "Apôtre de la Pourriture",
+    hp: 120,
+    atk: 22,
+    runes: 200,
+    type: "rare",
+    loot: "scavenger_mask",
+  },
   radahn: {
     name: "Vestige de Radahn",
     hp: 500,
     atk: 45,
     runes: 3000,
     isBoss: true,
+    type: "boss",
   },
 };
+
 export const BIOMES = {
   necrolimbe: {
     name: "Nécrolimbe",
     monsters: ["soldier", "wolf"],
+    rareMonster: "knight_elite",
     boss: "margit",
     length: 10,
     unlocks: "caelid",
+    firstClearReward: "slots", // Unlocks all 4 slot types
   },
   caelid: {
     name: "Caelid",
     monsters: ["rotten_stray", "giant_crow"],
+    rareMonster: "rot_apostle",
     boss: "radahn",
     length: 15,
     unlocks: null,
+    firstClearReward: "accessory", // Unlocks new accessory slot
   },
 };

@@ -113,6 +113,39 @@ header {
   text-align: center;
   font-size: 10px;
   color: var(--disabled-btn);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slot:hover {
+  transform: scale(1.05);
+}
+
+.slot[data-slot-type="shield"] {
+  border-color: #4a7c8c;
+  background-color: rgba(74, 124, 140, 0.1);
+}
+
+.slot[data-slot-type="weapon"] {
+  border-color: #c45d4b;
+  background-color: rgba(196, 93, 75, 0.1);
+}
+
+.slot[data-slot-type="armor"] {
+  border-color: #5a5a5a;
+  background-color: rgba(90, 90, 90, 0.1);
+}
+
+.slot[data-slot-type="accessory"] {
+  border-color: #b8a438;
+  background-color: rgba(184, 164, 56, 0.1);
+}
+
+/* Two-handed weapon display in left hand slot */
+.slot[data-slot-type="shield"]:has(+ .slot[data-slot-type="weapon"]),
+.slot[style*="border-style: double"] {
+  opacity: 0.7;
+  border-style: double;
 }
 
 /* Boutons universels avec tes animations d'origine */
@@ -225,6 +258,33 @@ button:disabled {
   border: 1px solid var(--disabled-btn);
   font-size: 0.8em;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inventory-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.inventory-item[data-category="shield"] {
+  border-color: #4a7c8c;
+  border-left: 4px solid #4a7c8c;
+}
+
+.inventory-item[data-category="weapon"],
+.inventory-item[data-category="two_handed_weapon"] {
+  border-color: #c45d4b;
+  border-left: 4px solid #c45d4b;
+}
+
+.inventory-item[data-category="armor"] {
+  border-color: #5a5a5a;
+  border-left: 4px solid #5a5a5a;
+}
+
+.inventory-item[data-category="accessory"] {
+  border-color: #b8a438;
+  border-left: 4px solid #b8a438;
 }
 
 .reset-btn {
