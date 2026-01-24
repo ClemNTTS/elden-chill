@@ -25,38 +25,101 @@
         </div>
       </header>
 
-      <section id="camp-view">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>Vigueur</h3>
-            <p id="stat-vigor">10</p>
-            <button onclick="upgradeStat('vigor')">
-              Améliorer (<span id="cost-vigor">10</span>)
-            </button>
+      <div id="character-sheet">
+        <div class="stat-line">
+          <div class="stat-info">
+            <span>❤️ Vigueur</span>
+            <span class="stat-values">
+              <b id="base-vigor">0</b>
+              <small id="bonus-vigor" class="bonus-val"></small>
+            </span>
           </div>
-          <div class="stat-card">
-            <h3>Force</h3>
-            <p id="stat-strength">10</p>
-            <button onclick="upgradeStat('strength')">
-              Améliorer (<span id="cost-strength">10</span>)
-            </button>
-          </div>
-          <div class="stat-card">
-            <h3>Critique %</h3>
-            <p id="stat-crit-chance">5%</p>
-            <button onclick="upgradeStat('critChance')">
-              Améliorer (<span id="cost-critChance">25</span>)
-            </button>
-          </div>
-          <div class="stat-card">
-            <h3>Dégâts Crit.</h3>
-            <p id="stat-crit-damage">1.5x</p>
-            <button onclick="upgradeStat('critDamage')">
-              Améliorer (<span id="cost-critDamage">25</span>)
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-vigor">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('vigor')">
+              +
             </button>
           </div>
         </div>
 
+        <div class="stat-line">
+          <div class="stat-info">
+            <span>⚔️ Force</span>
+            <span class="stat-values">
+              <b id="base-strength">0</b>
+              <small id="bonus-strength" class="bonus-val"></small>
+            </span>
+          </div>
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-strength">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('strength')">
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="stat-line">
+          <div class="stat-info">
+            <span>💨 Dextérité</span>
+            <span class="stat-values">
+              <b id="base-dexterity">0</b>
+              <small id="bonus-dexterity" class="bonus-val"></small>
+            </span>
+          </div>
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-dexterity">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('dexterity')">
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="stat-line">
+          <div class="stat-info">
+            <span>🧠 Intelligence</span>
+            <span class="stat-values">
+              <b id="base-intelligence">0</b>
+              <small id="bonus-intelligence" class="bonus-val"></small>
+            </span>
+          </div>
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-intelligence">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('intelligence')">
+              +
+            </button>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="stat-line secondary">
+          <div class="stat-info">
+            <span>Crit %</span>
+            <b id="eff-critChance">0%</b>
+          </div>
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-critChance">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('critChance')">
+              +
+            </button>
+          </div>
+        </div>
+
+        <div class="stat-line secondary">
+          <div class="stat-info">
+            <span>Crit Dmg</span>
+            <b id="eff-critDamage">0x</b>
+          </div>
+          <div class="upgrade-action">
+            <span class="cost-label" id="cost-critDamage">0</span>
+            <button class="mini-upgrade" onclick="upgradeStat('critDamage')">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section id="camp-view">
         <div id="equipment-section">
           <h3>Équipement Actif (3 slots)</h3>
           <div class="slots-container">
@@ -103,7 +166,10 @@
       </section>
 
       <section id="biome-view" style="display: none">
-        <h2 id="current-biome-name">Nécrolimbe</h2>
+        <h2 id="current-biome-header">
+          <span id="current-biome-text">Nécrolimbe</span>
+          <span id="cycle-count"></span>
+        </h2>
         <div id="dungeon-stepper-container">
           <div id="stepper-track">
             <div id="stepper-fill"></div>

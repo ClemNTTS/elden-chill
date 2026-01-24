@@ -4,6 +4,7 @@ const SAVE_NAME = "eldenChillSave";
 let currentEnemy = null;
 let playerCurrentHp = 0;
 let currentCombatSession = 0;
+let currentLoopCount = 0;
 
 let gameState = {
   runes: {
@@ -13,6 +14,8 @@ let gameState = {
   stats: {
     vigor: 10,
     strength: 10,
+    dexterity: 10,
+    intelligence: 10,
     critChance: 0.05,
     critDamage: 1.5,
   },
@@ -32,6 +35,8 @@ let gameState = {
 const upgradeCosts = {
   vigor: 10,
   strength: 10,
+  dexterity: 15,
+  intelligence: 15,
   critChance: 150,
   critDamage: 1500,
 };
@@ -76,27 +81,101 @@ const loadGame = () => {
   if (savedData) {
     const decrypted = decodeSave(savedData);
     if (decrypted) {
-      gameState = { ...gameState, ...decrypted };
-    } else {
-      alert("Erreur de chargement : sauvegarde corrompue ou format obsolète.");
+      gameState = {
+        ...gameState,
+        ...decrypted,
+        stats: { ...gameState.stats, ...decrypted.stats },
+        world: { ...gameState.world, ...decrypted.world },
+      };
     }
   }
-  updateStepper();
   updateUI();
 };
 
+const updateCycleDisplay = () => {
+  const el = document.getElementById("cycle-count");
+
+  if (!el) return;
+
+  if (currentLoopCount > 0) {
+    el.innerText = `+${currentLoopCount}`;
+    el.style.color = "var(--hover-btn)";
+  } else {
+    el.innerText = "";
+  }
+};
+
 const updateUI = () => {
-  document.getElementById("banked-runes").innerText = gameState.runes.banked;
-  document.getElementById("carried-runes").innerText = gameState.runes.carried;
+  updateRuneDisplay();
+  updateStatDisplay();
+  updateEquipmentDisplay();
+  updateBiomeDisplay();
+  updateInventoryDisplay();
+  updateCycleDisplay();
+};
 
-  document.getElementById("stat-vigor").innerText = gameState.stats.vigor;
-  document.getElementById("stat-strength").innerText = gameState.stats.strength;
+const updateRuneDisplay = () => {
+  document.getElementById("banked-runes").innerText = formatNumber(
+    gameState.runes.banked,
+  );
+  document.getElementById("carried-runes").innerText = formatNumber(
+    gameState.runes.carried,
+  );
+};
 
-  document.getElementById("stat-crit-chance").innerText =
-    (gameState.stats.critChance * 100).toFixed(0) + "%";
-  document.getElementById("stat-crit-damage").innerText =
-    gameState.stats.critDamage.toFixed(1) + "x";
+const updateStatDisplay = () => {
+  const eff = getEffectiveStats();
+  const base = gameState.stats;
 
+  // 1. Stats de base (Vigueur, Force, Dex, Int)
+  const statsList = ["vigor", "strength", "dexterity", "intelligence"];
+  statsList.forEach((s) => {
+    // Sécurité NaN : si la stat n'existe pas, on affiche 10 par défaut
+    const baseVal = base[s] || 10;
+    document.getElementById(`base-${s}`).innerText = baseVal;
+
+    // Calcul du bonus (Eff - Base)
+    const bonus = eff[s] - baseVal;
+    const bonusEl = document.getElementById(`bonus-${s}`);
+    if (bonus !== 0) {
+      bonusEl.innerText = bonus > 0 ? ` (+${bonus})` : ` (${bonus})`;
+      bonusEl.style.color = bonus > 0 ? "#4dff4d" : "#ff4d4d";
+    } else {
+      bonusEl.innerText = "";
+    }
+
+    // Prix et activation du bouton
+    const cost = getUpgradeCost(s);
+    document.getElementById(`cost-${s}`).innerText = formatNumber(cost);
+    const btn = document.querySelector(`button[onclick="upgradeStat('${s}')"]`);
+    if (btn) btn.disabled = gameState.runes.banked < cost;
+  });
+
+  // 2. Statistiques Critiques
+  const updateCrit = (id, statName, isPercent) => {
+    const val = eff[statName];
+    const cost = getUpgradeCost(statName);
+    const btn = document.querySelector(
+      `button[onclick="upgradeStat('${statName}')"]`,
+    );
+
+    document.getElementById(`eff-${id}`).innerText = isPercent
+      ? (val * 100).toFixed(0) + "%"
+      : val.toFixed(1) + "x";
+    document.getElementById(`cost-${id}`).innerText = formatNumber(cost);
+
+    if (btn) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn.disabled = isMax || gameState.runes.banked < cost;
+      if (isMax) btn.innerText = "MAX";
+    }
+  };
+
+  updateCrit("critChance", "critChance", true);
+  updateCrit("critDamage", "critDamage", false);
+};
+
+const updateEquipmentDisplay = () => {
   gameState.equipped.forEach((itemId, index) => {
     const slot = document.getElementById(`slot-${index}`);
     if (itemId) {
@@ -106,62 +185,68 @@ const updateUI = () => {
         slot.onmouseenter = (e) => showTooltip(e, itemInInv);
         slot.onmousemove = (e) => moveTooltip(e);
         slot.onmouseleave = () => hideTooltip();
+        return;
       }
-    } else {
-      slot.innerText = "Vide";
-      slot.onmouseenter = null;
     }
+    // Si pas d'item ou item non trouvé
+    slot.innerText = "Vide";
+    slot.onmouseenter = null;
   });
+};
 
+const updateBiomeDisplay = () => {
   const list = document.getElementById("biome-list");
   list.innerHTML = "";
+
   Object.keys(BIOMES).forEach((id) => {
     const btn = document.createElement("button");
     btn.innerText = BIOMES[id].name;
-    btn.disabled = !gameState.world.unlockedBiomes.includes(id);
+
+    // Désactivé si non débloqué OU si déjà en exploration (pour éviter le spam)
+    btn.disabled =
+      !gameState.world.unlockedBiomes.includes(id) ||
+      gameState.world.isExploring;
+
     btn.onclick = () => startExploration(id);
     list.appendChild(btn);
   });
+};
 
+const updateInventoryDisplay = () => {
   const invGrid = document.getElementById("inventory-grid");
   invGrid.innerHTML = "";
 
   if (gameState.inventory.length === 0) {
-    const empty = document.createElement("div");
-    empty.style.color = "grey";
-    empty.innerText = "Inventaire vide";
-    empty.style.marginBottom = "10px";
-    invGrid.appendChild(empty);
-  } else {
-    gameState.inventory.forEach((item) => {
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "inventory-item";
-
-      const progressText =
-        item.level >= 10 ? "MAX" : `(${item.count}/${item.level})`;
-      itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>${progressText}`;
-
-      itemDiv.onmouseenter = (e) => showTooltip(e, item);
-      itemDiv.onmousemove = (e) => moveTooltip(e);
-      itemDiv.onmouseleave = () => hideTooltip();
-
-      itemDiv.onclick = () => equipItem(item.id);
-      invGrid.appendChild(itemDiv);
-    });
+    invGrid.innerHTML =
+      '<div style="color: grey; margin-bottom: 10px;">Inventaire vide</div>';
+    return;
   }
 
-  Object.keys(upgradeCosts).forEach((stat) => {
-    const costLabel = document.getElementById(`cost-${stat}`);
-    if (costLabel) costLabel.innerText = getUpgradeCost(stat);
+  gameState.inventory.forEach((item) => {
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "inventory-item";
+
+    const progressText =
+      item.level >= 10 ? "MAX" : `(${item.count}/${item.level})`;
+    itemDiv.innerHTML = `<strong>${item.name}</strong><br>Niv.${item.level}<br>${progressText}`;
+
+    itemDiv.onmouseenter = (e) => showTooltip(e, item);
+    itemDiv.onmousemove = (e) => moveTooltip(e);
+    itemDiv.onmouseleave = () => hideTooltip();
+    itemDiv.onclick = () => equipItem(item.id);
+
+    invGrid.appendChild(itemDiv);
   });
+};
 
-  const critBtn = document.querySelector(
-    "button[onclick=\"upgradeStat('critChance')\"]",
-  );
-  if (gameState.stats.critChance >= 1.0) {
-    critBtn.disabled = true;
-    critBtn.innerText = "MAX ATTEINT";
+const formatNumber = (num) => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
   }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  }
+  return num.toString();
 };
 
 const toggleView = (view) => {
@@ -206,6 +291,7 @@ const startExploration = (biomeId) => {
     return;
   }
 
+  currentLoopCount = 0;
   currentCombatSession++;
   const sessionAtStart = currentCombatSession;
   const biome = BIOMES[biomeId];
@@ -219,7 +305,9 @@ const startExploration = (biomeId) => {
   document.getElementById("action-log").innerHTML = "";
 
   toggleView("biome");
-  document.getElementById("current-biome-name").innerText = biome.name;
+
+  document.getElementById("current-biome-text").innerText = biome.name;
+
   updateHealthBars();
   updateStepper();
 
@@ -276,9 +364,19 @@ const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== currentCombatSession) return;
 
   const monster = MONSTERS[monsterId];
-  currentEnemy = { ...monster, currentHp: monster.hp };
+  const multiplier = Math.pow(1.1, currentLoopCount);
+  currentEnemy = {
+    ...monster,
+    currentHp: Math.floor(monster.hp * multiplier),
+    atk: Math.floor(monster.atk * multiplier),
+    runes: Math.floor(monster.runes * multiplier),
+    hp: Math.floor(monster.hp * multiplier),
+  };
 
-  document.getElementById("enemy-name").innerText = currentEnemy.name;
+  document.getElementById("enemy-name").innerText =
+    currentLoopCount > 0
+      ? `${currentEnemy.name} +${currentLoopCount}`
+      : currentEnemy.name;
   updateHealthBars();
 
   ActionLog(`Un ${currentEnemy.name} apparaît !`);
@@ -286,10 +384,15 @@ const spawnMonster = (monsterId, sessionId) => {
   setTimeout(() => combatLoop(sessionId), 500);
 };
 
-const ActionLog = (message) => {
+const ActionLog = (message, className = "") => {
   const log = document.getElementById("action-log");
   const entry = document.createElement("p");
   entry.innerText = `> ${message}`;
+
+  if (className) {
+    entry.className = className;
+  }
+
   log.prepend(entry);
 };
 
@@ -314,9 +417,8 @@ const combatLoop = (sessionId) => {
       }
       currentEnemy.currentHp -= Math.floor(damage);
       updateHealthBars();
-      ActionLog(
-        `Vous infligez ${Math.floor(damage)} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
-      );
+      const message = `Vous infligez ${formatNumber(Math.floor(damage))} dégâts ${isCrit ? "CRITIQUES !" : "."}`;
+      ActionLog(message, isCrit ? "log-crit" : "");
     }
 
     //vérification de mort ennemi
@@ -329,9 +431,27 @@ const combatLoop = (sessionId) => {
     setTimeout(() => {
       if (sessionId !== currentCombatSession || !gameState.world.isExploring)
         return;
+
+      //esquive
+      const eff = getEffectiveStats();
+      const dodgeChance = Math.min(0.5, eff.dexterity / 500);
+
+      if (Math.random() < dodgeChance) {
+        ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
+        setTimeout(() => combatLoop(sessionId), 500);
+        return;
+      }
+
       playerCurrentHp -= currentEnemy.atk;
       updateHealthBars();
-      ActionLog(`${currentEnemy.name} frappe ! -${currentEnemy.atk} PV`);
+
+      if (currentEnemy.atk > stats.vigor * 10 * 0.15) {
+        triggerShake();
+      }
+
+      ActionLog(
+        `${currentEnemy.name} frappe ! -${formatNumber(currentEnemy.atk)} PV`,
+      );
 
       if (playerCurrentHp <= 0) {
         handleDeath();
@@ -342,6 +462,16 @@ const combatLoop = (sessionId) => {
   }, 800);
 };
 
+const triggerShake = () => {
+  const container = document.getElementById("game-container");
+  container.classList.add("shake-effect");
+
+  // On retire la classe après l'animation pour pouvoir la relancer plus tard
+  setTimeout(() => {
+    container.classList.remove("shake-effect");
+  }, 400);
+};
+
 const handleDeath = () => {
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
   gameState.runes.carried = 0;
@@ -350,8 +480,15 @@ const handleDeath = () => {
 };
 
 const handleVictory = (sessionId) => {
-  ActionLog(`Vous avez vaincu ${currentEnemy.name} !`);
-  gameState.runes.carried += currentEnemy.runes;
+  const eff = getEffectiveStats();
+
+  const intBonus = 1 + eff.intelligence / 100;
+  const totalRunes = Math.floor(currentEnemy.runes * intBonus);
+
+  ActionLog(
+    `Vous avez vaincu ${currentEnemy.name} ! (+${formatNumber(totalRunes)} runes)`,
+  );
+  gameState.runes.carried += totalRunes;
   gameState.world.progress++;
 
   updateStepper();
@@ -376,7 +513,18 @@ const handleVictory = (sessionId) => {
     dropItem(rolled.id);
     saveGame();
 
-    setTimeout(() => toggleView("camp"), 3000);
+    currentLoopCount++;
+    gameState.world.progress = 0;
+    gameState.world.checkpointReached = false;
+
+    updateCycleDisplay();
+
+    ActionLog(`--- DÉBUT DU CYCLE ${currentLoopCount + 1} ---`);
+
+    setTimeout(() => {
+      updateStepper();
+      nextEncounter(sessionId);
+    }, 3000);
   } else {
     setTimeout(() => nextEncounter(sessionId), 1000);
   }
@@ -390,8 +538,9 @@ const updateHealthBars = () => {
   const playerPercent = (playerCurrentHp / playerMaxHp) * 100;
   document.getElementById("player-hp-fill").style.width =
     `${Math.max(0, playerPercent)}%`;
+
   document.getElementById("player-hp-text").innerText =
-    `${Math.max(0, Math.floor(playerCurrentHp))} / ${playerMaxHp}`;
+    `${formatNumber(Math.floor(playerCurrentHp))} / ${formatNumber(playerMaxHp)}`;
 
   const enemyBar = document.getElementById("enemy-hp-fill");
   const enemyText = document.getElementById("enemy-hp-text");
@@ -399,7 +548,7 @@ const updateHealthBars = () => {
   if (currentEnemy) {
     const enemyPercent = (currentEnemy.currentHp / currentEnemy.hp) * 100;
     enemyBar.style.width = `${Math.max(0, enemyPercent)}%`;
-    enemyText.innerText = `${Math.max(0, Math.floor(currentEnemy.currentHp))} / ${currentEnemy.hp}`;
+    enemyText.innerText = `${formatNumber(Math.floor(currentEnemy.currentHp))} / ${formatNumber(currentEnemy.hp)}`;
   } else {
     enemyBar.style.width = "0%";
     enemyText.innerText = "0 / 0";
@@ -421,9 +570,10 @@ const dropItem = (itemId) => {
   } else {
     if (inventoryItem.level >= 10) {
       ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
-      gameState.runes.banked += 100 * gameState.world.currentBiome.length;
+      gameState.runes.banked +=
+        100 * BIOMES[gameState.world.currentBiome].length;
       ActionLog(
-        `Vous recevez ${100 * gameState.world.currentBiome.length} runes en compensation.`,
+        `Vous recevez ${formatNumber(100 * BIOMES[gameState.world.currentBiome].length)} runes en compensation.`,
       );
       saveGame();
     }
@@ -462,11 +612,13 @@ const equipItem = (itemId) => {
 };
 
 const getUpgradeCost = (statName) => {
-  const baseCost = upgradeCosts[statName];
-  const val = gameState.stats[statName];
+  const baseCost = upgradeCosts[statName] || 10;
+  const val = gameState.stats[statName] || 0;
 
   let count = 0;
-  if (statName === "vigor" || statName === "strength") count = val - 10;
+  if (["vigor", "strength", "dexterity", "intelligence"].includes(statName)) {
+    count = val - 10;
+  }
   if (statName === "critChance") count = Math.round((val - 0.05) * 100);
   if (statName === "critDamage") count = Math.round((val - 1.5) * 10);
 
