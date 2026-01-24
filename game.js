@@ -160,7 +160,7 @@ const updateStatDisplay = () => {
     );
 
     document.getElementById(`eff-${id}`).innerText = isPercent
-      ? (val * 100).toFixed(0) + "%"
+      ? (val * 100).toFixed(1) + "%"
       : val.toFixed(1) + "x";
     document.getElementById(`cost-${id}`).innerText = formatNumber(cost);
 
@@ -673,6 +673,47 @@ const showTooltip = (e, item) => {
   moveTooltip(e);
 };
 
+const showStatTooltip = (e, statType) => {
+  const tooltip = document.getElementById("tooltip");
+
+  const descriptions = {
+    vigor: {
+      title: "Vigueur",
+      text: "Augmente vos points de vie maximum.<br><strong>1 point = 10 PV.</strong>",
+    },
+    strength: {
+      title: "Force",
+      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 dégât de base.</strong>",
+    },
+    dexterity: {
+      title: "Dextérité",
+      text: "Améliore votre agilité au combat.<br><strong>5 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>",
+    },
+    intelligence: {
+      title: "Intelligence",
+      text: "Augmente votre capacité à absorber l'énergie des runes.<br><strong>1 point = +1% de Runes.</strong>",
+    },
+    critChance: {
+      title: "Chance de Critique",
+      text: "Probabilité d'infliger un coup critique lors d'une attaque.",
+    },
+    critDamage: {
+      title: "Dégâts Critiques",
+      text: "Multiplicateur de dégâts appliqué lors d'un coup critique.",
+    },
+  };
+
+  const data = descriptions[statType];
+
+  tooltip.innerHTML = `
+    <strong style="color:var(--hover-btn)">${data.title}</strong><br>
+    <small style="color:beige;">${data.text}</small>
+  `;
+
+  tooltip.classList.remove("tooltip-hidden");
+  moveTooltip(e);
+};
+
 const moveTooltip = (e) => {
   const tooltip = document.getElementById("tooltip");
 
@@ -836,3 +877,6 @@ window.equipItem = equipItem;
 window.resetGame = resetGame;
 window.toggleOptions = toggleOptions;
 window.dev = dev;
+window.showStatTooltip = showStatTooltip;
+window.moveTooltip = moveTooltip;
+window.hideTooltip = hideTooltip;

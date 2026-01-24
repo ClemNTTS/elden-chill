@@ -27,7 +27,12 @@
 
       <div id="character-sheet">
         <div class="stat-line">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'vigor')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>❤️ Vigueur</span>
             <span class="stat-values">
               <b id="base-vigor">0</b>
@@ -43,7 +48,12 @@
         </div>
 
         <div class="stat-line">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'strength')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>⚔️ Force</span>
             <span class="stat-values">
               <b id="base-strength">0</b>
@@ -59,7 +69,12 @@
         </div>
 
         <div class="stat-line">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'dexterity')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>💨 Dextérité</span>
             <span class="stat-values">
               <b id="base-dexterity">0</b>
@@ -75,7 +90,12 @@
         </div>
 
         <div class="stat-line">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'intelligence')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>🧠 Intelligence</span>
             <span class="stat-values">
               <b id="base-intelligence">0</b>
@@ -93,7 +113,12 @@
         <hr />
 
         <div class="stat-line secondary">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'critChance')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>Crit %</span>
             <b id="eff-critChance">0%</b>
           </div>
@@ -106,7 +131,12 @@
         </div>
 
         <div class="stat-line secondary">
-          <div class="stat-info">
+          <div
+            class="stat-info"
+            onmouseenter="showStatTooltip(event, 'critDamage')"
+            onmousemove="moveTooltip(event)"
+            onmouseleave="hideTooltip()"
+          >
             <span>Crit Dmg</span>
             <b id="eff-critDamage">0x</b>
           </div>

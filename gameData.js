@@ -22,9 +22,9 @@ export const ITEMS = {
   crimson_amber: {
     name: "Médaillon d'Ambre",
     description:
-      "Vigueur x1.2 <em style='color: grey;'>( plus 0.1 par Niv)</em>",
+      "Vigueur x1.1 <em style='color: grey;'>( plus 0.05 par Niv)</em>",
     apply: (stats, itemLevel) => {
-      stats.vigor = Math.floor(stats.vigor * (1.2 + 0.1 * (itemLevel - 1)));
+      stats.vigor = Math.floor(stats.vigor * (1.1 + 0.05 * (itemLevel - 1)));
     },
   },
   great_shield: {

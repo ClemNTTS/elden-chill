@@ -547,3 +547,19 @@ button:disabled {
   font-size: 0.85em;
   font-weight: bold;
 }
+
+/* Dans style.css */
+.stat-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: help; /* Change le curseur en point d'interrogation */
+}
+
+.stat-info:hover span:first-child {
+  color: var(--hover-btn);
+}
+
+.stat-info {
+  cursor: help; /* Affiche un petit point d'interrogation au survol */
+}
