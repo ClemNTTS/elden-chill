@@ -563,3 +563,8 @@ button:disabled {
 .stat-info {
   cursor: help; /* Affiche un petit point d'interrogation au survol */
 }
+
+.log-dodge {
+  color: blue;
+  font-weight: bold;
+}
