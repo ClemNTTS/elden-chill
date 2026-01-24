@@ -565,6 +565,7 @@ button:disabled {
 }
 
 .log-dodge {
-  color: blue;
+  color: skyblue;
   font-weight: bold;
+  text-shadow: skyblue;
 }

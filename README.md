@@ -1,55 +1,38 @@
-📜 Document de Game Design : Elden Chill
+# Elden Chill
 
-1. Vision Globale
+![Elden Ring Inspired](https://img.shields.io/badge/inspired%20by-Elden%20Ring-black?style=for-the-badge&logo=appveyor)
 
-Un RPG d'expédition sur navigateur alliant l'atmosphère sombre et l'exigence d'Elden Ring à une boucle de progression incrémentale satisfaisante. Le jeu se concentre sur la gestion des risques, l'optimisation d'un "build" minimaliste et la collection d'équipement. 2. La Boucle de Gameplay (Core Loop)
+**Elden Chill** est un jeu de rôle incrémental (idle/clicker) développé par un fan, inspiré de l'univers et de l'atmosphère d'Elden Ring. Il se joue directement dans le navigateur.
 
-    Préparation (Menu/Camp) : Le joueur équipe jusqu'à 3 objets et dépense ses runes sécurisées pour augmenter ses statistiques.
+##  Gameplay & Fonctionnalités
 
-    Expédition (Biome) : Le personnage progresse automatiquement à travers une série de combats.
+Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez votre personnage, partez en expédition, et revenez plus fort.
 
-    Gestion du Risque : Entre les combats, des feux de camp permettent de s'arrêter pour sécuriser les runes acquises.
+*   **Progression Continue :** Votre personnage combat automatiquement, accumulant des runes même lorsque vous êtes inactif.
+*   **Gestion du Risque :** Les runes collectées lors d'une expédition ne sont pas sécurisées. Vous devez choisir le bon moment pour vous replier au camp, au risque de tout perdre en cas de défaite.
+*   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
+*   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
+*   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.
+*   **Sauvegarde Locale :** Votre progression est automatiquement sauvegardée dans votre navigateur via `localStorage`.
 
-    Confrontation : Un mini-boss conclut le biome. Sa défaite garantit un loot d'équipement.
+## Comment Jouer ?
 
-    Retour : En cas de victoire ou de repli volontaire, les runes sont sauvées. En cas de défaite, les runes "portées" sont perdues.
+Aucune installation n'est requise. Il suffit d'ouvrir le fichier `index.html` dans un navigateur web moderne (Chrome, Firefox, Edge, etc.).
 
-3.  Système de Progression & Statistiques
+## Technologies Utilisées
 
-    Progression Lente : Le gain de puissance est volontairement progressif pour valoriser chaque palier atteint.
+Ce projet est volontairement simple et est construit avec des technologies web de base :
 
-    Statistiques de Base :
+*   **JavaScript** (ES6+ Modules)
+*   **HTML5**
+*   **CSS3**
 
-        Vigueur : Augmente les points de vie (capacité à encaisser les monstres).
+Il n'y a pas de frameworks, de dépendances ou d'outils de build.
 
-        Force : Augmente les dégâts physiques de base.
+---
 
-    Économie : Les runes servent exclusivement à l'achat de statistiques au menu principal.
+### Clause de non-responsabilité (Disclaimer)
 
-4.  Mécanique d'Équipement (Le "Loot")
+Ce projet est une œuvre de fan à but non lucratif, créée par pur divertissement. Il n'est en aucun cas affilié, approuvé ou sponsorisé par FromSoftware.
 
-    Limitation : 3 slots maximum actifs. Le joueur doit faire des choix cornéliens entre attaque et survie.
-
-    Système d'Amélioration (Stacking) :
-
-        Le niveau d'un objet définit la difficulté de son prochain palier.
-
-        Pour passer au niveau L+1, le joueur doit looter l'objet L fois supplémentaires.
-
-        Exemple : Une épée de Niveau 3 nécessite de trouver 3 copies de cette même épée pour devenir Niveau 4.
-
-        Formule de progression :
-        Copies requises pour (L→L+1)=L
-
-5.  Structure du Monde (Biomes)
-    Type d'étape Description Risque / Récompense
-    Monstres mineurs Combats simples pour accumuler des runes. Risque faible / Gain régulier.
-    Feu de camp Point de décision : Sécuriser les runes et rentrer, ou continuer. Sécurité totale.
-    Mini-Boss Ennemi puissant à la fin de chaque biome. Risque de mort élevé / Drop d'objet garanti.
-6.  Aspect Technique (Stack Moderne)
-
-    Langage : JavaScript (ES6+).
-
-    Interface : HTML5 / CSS3 (Thème Dark/Gothique).
-
-    Sauvegarde : LocalStorage avec sérialisation JSON pour une persistance sur le PC de l'utilisateur.
+**Elden Ring** et tous les éléments associés (noms, personnages, univers) sont la propriété intellectuelle exclusive de **FromSoftware Inc.** Tous les droits leur sont réservés.

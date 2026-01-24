@@ -9,7 +9,7 @@ export const ITEMS = {
   crimson_amber: {
     name: "Médaillon d'Ambre",
     description:
-      "Vigueur x1.1 <em style='color: grey;'>( plus 0.05 par Niv)</em>",
+      "Vigueur +10% <em style='color: grey;'>( plus 5% par Niv)</em>",
     apply: (stats, itemLevel) => {
       stats.vigor = Math.floor(stats.vigor * (1.1 + 0.05 * (itemLevel - 1)));
     },
@@ -17,7 +17,7 @@ export const ITEMS = {
   great_shield: {
     name: "Pavois du Chevalier",
     description:
-      "Vigueur x1.3 mais -50% Dextérité. Ajoute 15% de votre Vigueur à votre Force. <em style='color: grey;'>(+3% / Niv)</em>",
+      "Vigueur +30% mais -50% Dextérité. Ajoute 15% de votre Vigueur à votre Force. <em style='color: grey;'>(+3% / Niv)</em>",
     apply: (stats, itemLevel) => {
       stats.vigor = Math.floor(stats.vigor * 1.3);
 
@@ -38,10 +38,10 @@ export const ITEMS = {
   scavenger_mask: {
     name: "Masque de Pillard",
     description:
-      "Dégâts Crit x2 mais Vigueur x0.4. <em style='color: grey;'>(+0.1x Vigueur par Niv)</em>",
+      "Dégâts Crit x2 mais Vigueur -40% <em style='color: grey;'>(+4% Vigueur par Niv)</em>",
     apply: (stats, itemLevel) => {
       stats.critDamage *= 2;
-      stats.vigor = Math.floor(stats.vigor * (0.4 + 0.1 * (itemLevel - 1)));
+      stats.vigor = Math.floor(stats.vigor * (0.4 + 0.04 * (itemLevel - 1)));
     },
   },
   scholars_ring: {
