@@ -35,12 +35,10 @@ export const loadGame = () => {
   if (savedData) {
     const decrypted = decodeSave(savedData);
     if (decrypted) {
-      // 1. Initialisation des objets s'ils sont absents pour éviter les plantages
       decrypted.world = decrypted.world || { unlockedBiomes: ["necrolimbe"] };
       decrypted.runes = decrypted.runes || { banked: 0, carried: 0 };
       decrypted.inventory = decrypted.inventory || [];
 
-      // 2. Migration structurelle (ton code existant)
       if (decrypted.equipped && Array.isArray(decrypted.equipped)) {
         console.warn(
           "Ancienne structure détectée, réinitialisation de l'équipement.",
@@ -48,14 +46,46 @@ export const loadGame = () => {
         decrypted.equipped = { weapon: null, armor: null, accessory: null };
       }
 
-      // 3. Reset forcé de l'état d'expédition pour éviter le soft-lock
       decrypted.world.isExploring = false;
       decrypted.runes.carried = 0;
 
-      // 4. On applique l'état et on SAUVEGARDE tout de suite sur le disque
       setGameState(decrypted);
-      saveGame(); // Force l'écriture de "isExploring: false" dans le localStorage
+      saveGame();
     }
   }
   updateUI();
+};
+
+export const exportSave = () => {
+  const saveData = localStorage.getItem(SAVE_NAME);
+  if (saveData) {
+    navigator.clipboard.writeText(saveData).then(() => {
+      alert("Sauvegarde copiée dans le presse-papier !");
+    });
+  }
+};
+
+export const importSave = () => {
+  const code = prompt("Entrez le code de la sauvegarde à importer :");
+  if (!code) return;
+  const decrypted = decodeSave(code);
+  if (
+    decrypted &&
+    decrypted.stats &&
+    decrypted.runes &&
+    decrypted.inventory &&
+    decrypted.equipped &&
+    decrypted.world
+  ) {
+    if (
+      confirm("Êtes-vous sûr de vouloir remplacer votre sauvegarde actuelle ?")
+    ) {
+      setGameState(decrypted);
+      saveGame();
+      updateUI();
+      window.location.reload();
+    }
+  } else {
+    alert("Code de sauvegarde invalide.");
+  }
 };

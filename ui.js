@@ -129,9 +129,9 @@ const updateInventoryDisplay = () => {
   }
 
   const typeToSlotKey = {
-    "Arme": "weapon",
-    "Armure": "armor",
-    "Accessoire": "accessory",
+    Arme: "weapon",
+    Armure: "armor",
+    Accessoire: "accessory",
   };
 
   gameState.inventory.forEach((item) => {
@@ -149,7 +149,7 @@ const updateInventoryDisplay = () => {
     // Add a class if there's a type conflict
     const currentlyEquippedId = gameState.equipped[slotKey];
     if (currentlyEquippedId && currentlyEquippedId !== item.id) {
-      itemDiv.classList.add('item-type-conflict');
+      itemDiv.classList.add("item-type-conflict");
     }
 
     const progressText =
@@ -384,32 +384,7 @@ export const updateStepper = () => {
   }
 };
 
-const updateBiomeStats = () => {
-  const list = document.getElementById("biome-stats-list");
-  list.innerHTML = "";
-  Object.keys(BIOMES).forEach((id) => {
-    const biome = BIOMES[id];
-    const loots = LOOT_TABLES[id] || [];
-    let biomeDiv = document.createElement("div");
-    biomeDiv.className = "biome-stat-entry";
-    let lootHtml = loots
-      .map((l) => {
-        const item = ITEMS[l.id];
-        return `<li>${item.name} : <strong>${(l.chance * 100).toFixed(
-          0,
-        )}%</strong></li>`;
-      })
-      .join("");
-    biomeDiv.innerHTML = `
-      <h4>${biome.name}</h4>
-      <ul>${lootHtml || "<li>Aucun objet répertorié</li>"}</ul>
-    `;
-    list.appendChild(biomeDiv);
-  });
-};
-
 export const toggleOptions = (show) => {
   const modal = document.getElementById("options-modal");
   modal.className = show ? "modal-visible" : "modal-hidden";
-  if (show) updateBiomeStats();
 };

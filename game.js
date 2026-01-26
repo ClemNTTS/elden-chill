@@ -1,12 +1,8 @@
 // Main entry point for the game
 import { BIOMES, ITEMS } from "./gameData.js";
 import { gameState, runtimeState } from "./state.js";
-import { loadGame, saveGame } from "./save.js";
-import {
-  equipItem,
-  resetGame,
-  upgradeStat,
-} from "./actions.js";
+import { exportSave, importSave, loadGame, saveGame } from "./save.js";
+import { equipItem, resetGame, upgradeStat } from "./actions.js";
 import {
   hideTooltip,
   moveTooltip,
@@ -29,7 +25,9 @@ const dev = {
     if (ITEMS[itemId]) {
       // Re-implementing dropItem logic for dev purposes to avoid circular deps
       const itemTemplate = ITEMS[itemId];
-      let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
+      let inventoryItem = gameState.inventory.find(
+        (item) => item.id === itemId,
+      );
       if (!inventoryItem) {
         gameState.inventory.push({
           id: itemId,
@@ -39,7 +37,10 @@ const dev = {
         });
       } else {
         inventoryItem.count++;
-        if (inventoryItem.count >= inventoryItem.level && inventoryItem.level < 10) {
+        if (
+          inventoryItem.count >= inventoryItem.level &&
+          inventoryItem.level < 10
+        ) {
           inventoryItem.level++;
           inventoryItem.count = 0;
         }
@@ -85,6 +86,8 @@ window.showStatTooltip = showStatTooltip;
 window.moveTooltip = moveTooltip;
 window.hideTooltip = hideTooltip;
 window.dev = dev;
+window.exportSave = exportSave;
+window.importSave = importSave;
 
 // --- Game Initialization ---
 // Set the onload handler

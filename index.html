@@ -190,16 +190,19 @@
             >
             <h2>Paramètres du Monde</h2>
 
-            <div id="biome-details">
-              <h3>Codex des Biomes</h3>
-              <div id="biome-stats-list"></div>
-            </div>
-
             <hr />
-            <h3>Zone de Danger</h3>
+            <h3>Zone de sans retour</h3>
             <button class="reset-btn" onclick="resetGame()">
               Réinitialiser la Sauvegarde
             </button>
+
+            <div class="options-container">
+              <h3>Gestion de Sauvegarde</h3>
+              <div class="save-buttons">
+                <button onclick="exportSave()">📤 Exporter (Copier)</button>
+                <button onclick="importSave()">📥 Importer</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
