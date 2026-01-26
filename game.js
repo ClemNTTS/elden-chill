@@ -11,7 +11,7 @@ import {
   toggleView,
   updateUI,
 } from "./ui.js";
-import { startExploration } from "./core.js";
+import { startExploration,enqueueDevSpawn } from "./core.js";
 
 // Dev tools
 const dev = {
@@ -72,6 +72,46 @@ const dev = {
     toggleView("camp");
     console.log("Reset complete. You are back at the camp.");
   },
+  giveAllItems: () => {
+    Object.keys(ITEMS).forEach((itemId) => {
+      const itemTemplate = ITEMS[itemId];
+
+      let inventoryItem = gameState.inventory.find(
+        (item) => item.id === itemId
+      );
+
+      if (!inventoryItem) {
+        gameState.inventory.push({
+          id: itemId,
+          name: itemTemplate.name,
+          level: 1,
+          count: 0,
+        });
+      }
+    });
+
+    console.log("🔧 DEV : Tous les objets ont été ajoutés à l'inventaire.");
+    updateUI();
+    saveGame();
+  },
+  maxAllItems: () => {
+    gameState.inventory.forEach((item) => {
+      item.level = 10;
+      item.count = 0;
+    });
+
+    console.log("🔧 DEV : Tous les objets ont été montés niveau 10.");
+    updateUI();
+    saveGame();
+  },
+  
+  spawnEnemy: (monsterId) => {
+  if (enqueueDevSpawn(monsterId)) {
+    console.log(`🔧 DEV : ${monsterId} ajouté à la file de spawn.`);
+    }
+  },
+
+
 };
 
 // --- Global Function Assignments ---

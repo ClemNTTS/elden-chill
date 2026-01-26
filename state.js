@@ -14,6 +14,7 @@ export let gameState = {
     intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
+    splashDamage: 0,
   },
   equipped: {
     weapon: "fists",

@@ -113,6 +113,26 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BURN", duration: 2, chance: 0.3 },
   },
+  bloodhound_fang: {
+    name: "Croc de Limier",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Convertit 10% de la Dextérité en Dégats critiques bonus. <em style='color: grey;'>(+1% par Niv)</em>",
+    apply: (stats, itemLevel) => {
+      const conversionRatio = 0.1 + 0.02 * (itemLevel - 1);
+      stats.critDamage += Math.floor(stats.dexterity * conversionRatio);
+    },
+  },
+  astronomer_staff: {
+    name: "Bâton de l'Astronome",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Convertit 20% de l'Intelligence en Dégâts de zone bonus. <em style='color: grey;'>(+2% par Niv)</em>",
+    apply: (stats, itemLevel) => {
+      const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
+      stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
+    },
+  },
 };
 
 export const LOOT_TABLES = {
@@ -146,9 +166,9 @@ export const MONSTERS = {
     atk: 8,
     runes: 10,
     groupCombinations: [
-      { size: 1, chance: 0.5 },
-      { size: 2, chance: 0.3 },
-      { size: 3, chance: 0.2 },
+      { size: 5, chance: 0.5 },
+      { size: 5, chance: 0.3 },
+      { size: 5, chance: 0.2 },
     ],
   },
   margit: {

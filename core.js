@@ -23,6 +23,8 @@ import {
   updateUI,
 } from "./ui.js";
 
+const devSpawnQueue = [];
+
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
   let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
@@ -157,9 +159,9 @@ const combatLoop = (sessionId) => {
     currentHp: runtimeState.playerCurrentHp,
     maxHp: getEffectiveStats().vigor * 10,
   };
+
   setTimeout(() => {
     const playerStatus = processTurnEffects(playerObj, gameState.playerEffects);
-
     runtimeState.playerCurrentHp = playerObj.currentHp;
 
     if (playerStatus.logMessages.length > 0) {
@@ -171,28 +173,43 @@ const combatLoop = (sessionId) => {
       return;
     }
 
+    /* ================= PLAYER TURN ================= */
+
     if (!playerStatus.skipTurn) {
       const stats = getEffectiveStats();
+      let splashDmg = stats.splashDamage;
+
       for (let i = 0; i < stats.attacksPerTurn; i++) {
         let damage = stats.strength;
         const isCrit = Math.random() < stats.critChance;
-        if (isCrit) {
-          damage *= stats.critDamage;
-        }
+        if (isCrit) damage *= stats.critDamage;
+
+        // main target
         runtimeState.currentEnemyGroup[0].hp -= Math.floor(damage);
         updateHealthBars();
-        const message = `Vous infligez ${formatNumber(
-          Math.floor(damage),
-        )} dégâts ${isCrit ? "CRITIQUES !" : "."}`;
-        ActionLog(message, isCrit ? "log-crit" : "");
 
+        ActionLog(
+          `Vous infligez ${formatNumber(Math.floor(damage))} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
+          isCrit ? "log-crit" : ""
+        );
+
+        // splash damage
+        if (splashDmg > 0 && runtimeState.currentEnemyGroup.length > 1) {
+          for (let j = 1; j < runtimeState.currentEnemyGroup.length; j++) {
+            runtimeState.currentEnemyGroup[j].hp -= splashDmg;
+          }
+
+          ActionLog(
+            `Vous infligez ${formatNumber(splashDmg)} dégâts de zone au reste du groupe de ${runtimeState.currentEnemyGroup[0].name}.`
+          );
+        }
+
+        // enemy reactive effects
         gameState.ennemyEffects.forEach((eff) => {
           const effectData = STATUS_EFFECTS[eff.id];
           if (effectData.onBeingHit) {
             const result = effectData.onBeingHit({ name: "player" }, damage);
-            if (result?.message) {
-              ActionLog(result.message, "log-warning");
-            }
+            if (result?.message) ActionLog(result.message, "log-warning");
             if (runtimeState.playerCurrentHp <= 0) {
               handleDeath();
               return;
@@ -200,15 +217,16 @@ const combatLoop = (sessionId) => {
           }
         });
 
+        // item on-hit effects
         Object.values(gameState.equipped).forEach((itemId) => {
           const item = ITEMS[itemId];
-          if (item && item.onHitEffect) {
+          if (item?.onHitEffect) {
             const { id, duration, chance } = item.onHitEffect;
             if (Math.random() < chance) {
               applyEffect(gameState.ennemyEffects, id, duration);
               ActionLog(
                 `Vous appliquez ${duration} ${STATUS_EFFECTS[id].name} à l'ennemi !`,
-                "log-warning",
+                "log-warning"
               );
             }
           }
@@ -216,57 +234,78 @@ const combatLoop = (sessionId) => {
       }
     }
 
-    if (runtimeState.currentEnemyGroup[0].hp <= 0) {
-      const defeatedEnemy = runtimeState.currentEnemyGroup.shift();
-      
-      // Award runes for the defeated enemy
-      const eff = getEffectiveStats();
-      const intBonus = 1 + eff.intelligence / 100;
-      const runesAwarded = Math.floor(defeatedEnemy.runes * intBonus);
-      gameState.runes.carried += runesAwarded;
-      
-      ActionLog(
-        `${defeatedEnemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
-        "log-runes"
-      );
-      
-      if (runtimeState.currentEnemyGroup.length === 0) {
-        runtimeState.lastDefeatedEnemy = defeatedEnemy;
-        setTimeout(() => handleVictory(sessionId), 500);
-        return;
-      } else {
-        ActionLog(`Un ${runtimeState.currentEnemyGroup[0].name} reste ! (x${runtimeState.currentEnemyGroup.length})`);
-        const groupSizeText = runtimeState.currentEnemyGroup.length > 1 ? ` (x${runtimeState.currentEnemyGroup.length})` : "";
-        document.getElementById("enemy-name").innerText =
-          runtimeState.currentLoopCount > 0
-            ? `${runtimeState.currentEnemyGroup[0].name}${groupSizeText} +${runtimeState.currentLoopCount}`
-            : `${runtimeState.currentEnemyGroup[0].name}${groupSizeText}`;
-        updateHealthBars();
-        updateUI();
-        setTimeout(() => combatLoop(sessionId), 500);
-        return;
+    /* ================= KILL CHECK ================= */
+
+    let defeatedEnemies = [];
+
+    for (let i = runtimeState.currentEnemyGroup.length - 1; i >= 0; i--) {
+      const enemy = runtimeState.currentEnemyGroup[i];
+      if (enemy.hp <= 0) {
+        defeatedEnemies.push(enemy);
+        runtimeState.currentEnemyGroup.splice(i, 1);
       }
     }
+
+    if (defeatedEnemies.length > 0) {
+      let eff = getEffectiveStats();
+      let intBonus = 1 + eff.intelligence / 100;
+
+      defeatedEnemies.forEach((enemy) => {
+        let runesAwarded = Math.floor(enemy.runes * intBonus);
+        gameState.runes.carried += runesAwarded;
+
+        ActionLog(
+          `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
+          "log-runes"
+        );
+      });
+    }
+
+    /* ================= VICTORY CHECK ================= */
+
+    if (runtimeState.currentEnemyGroup.length === 0) {
+      runtimeState.lastDefeatedEnemy =
+        defeatedEnemies[defeatedEnemies.length - 1] || null;
+
+      setTimeout(() => handleVictory(sessionId), 500);
+      return;
+    }
+
+    /* ================= UI UPDATE ================= */
+
+    const front = runtimeState.currentEnemyGroup[0];
+    const groupSizeText =
+      runtimeState.currentEnemyGroup.length > 1
+        ? ` (x${runtimeState.currentEnemyGroup.length})`
+        : "";
+
+    ActionLog(`Un ${front.name} reste !${groupSizeText}`);
+
+    document.getElementById("enemy-name").innerText =
+      runtimeState.currentLoopCount > 0
+        ? `${front.name}${groupSizeText} +${runtimeState.currentLoopCount}`
+        : `${front.name}${groupSizeText}`;
+
+    updateHealthBars();
+    updateUI();
+
+    /* ================= ENEMY TURN ================= */
 
     setTimeout(() => {
       if (
         sessionId !== runtimeState.currentCombatSession ||
         !gameState.world.isExploring
-      )
-        return;
+      ) return;
 
       const enemyStatus = processTurnEffects(
         runtimeState.currentEnemyGroup[0],
-        gameState.ennemyEffects,
+        gameState.ennemyEffects
       );
 
       if (enemyStatus.logMessages.length > 0) {
-        setTimeout(() => {
-          enemyStatus.logMessages.forEach((msg) =>
-            ActionLog(msg, "log-status"),
-          );
-          updateHealthBars();
-        }, 500);
+        enemyStatus.logMessages.forEach((msg) =>
+          ActionLog(msg, "log-status")
+        );
       }
 
       if (!enemyStatus.skipTurn) {
@@ -279,30 +318,19 @@ const combatLoop = (sessionId) => {
           return;
         }
 
-        // All enemies attack
         runtimeState.currentEnemyGroup.forEach((enemy) => {
           runtimeState.playerCurrentHp -= enemy.atk;
           updateHealthBars();
 
-          if (enemy.atk > getHealth(eff.vigor) * 0.15) {
-            triggerShake();
-          }
+          if (enemy.atk > getHealth(eff.vigor) * 0.15) triggerShake();
 
-          ActionLog(
-            `${enemy.name} frappe ! -${formatNumber(enemy.atk)} PV`,
-          );
+          ActionLog(`${enemy.name} frappe ! -${formatNumber(enemy.atk)} PV`);
 
           gameState.playerEffects.forEach((eff) => {
             const effectData = STATUS_EFFECTS[eff.id];
             if (effectData.onBeingHit) {
-              const result = effectData.onBeingHit(
-                enemy,
-                enemy.atk,
-              );
-
-              if (result?.message) {
-                ActionLog(result.message, "log-status");
-              }
+              const result = effectData.onBeingHit(enemy, enemy.atk);
+              if (result?.message) ActionLog(result.message, "log-status");
             }
           });
 
@@ -312,7 +340,7 @@ const combatLoop = (sessionId) => {
               applyEffect(gameState.playerEffects, id, duration);
               ActionLog(
                 `L'attaque vous a appliqué ${duration} ${STATUS_EFFECTS[id].name} !`,
-                "log-warning",
+                "log-warning"
               );
             }
           }
@@ -330,6 +358,7 @@ const combatLoop = (sessionId) => {
     }, 800);
   }, 800);
 };
+
 
 const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
@@ -396,18 +425,6 @@ const spawnMonster = (monsterId, sessionId) => {
   setTimeout(() => combatLoop(sessionId), 500);
 };
 
-const spawnMonsters = (monsterId, sessionId) => {
-  const monster = MONSTERS[monsterId];
-  const groupSize = getGroupSize(monster.groupCombinations);
-  const enemies = [];
-
-  for (let i = 0; i < groupSize; i++) {
-    enemies.push({ id: monsterId, ...monster });
-  }
-
-  return enemies; // Return the array of spawned enemies
-};
-
 const handleMonsterAttack = (enemies) => {
   enemies.forEach((enemy) => {
     // Logic for each enemy to attack
@@ -459,6 +476,11 @@ export function nextEncounter(sessionId) {
     !gameState.world.checkpointReached
   ) {
     handleCampfireEvent(sessionId);
+    return;
+  }
+  if (devSpawnQueue.length > 0) {
+    const devMonsterId = devSpawnQueue.shift();
+    spawnMonster(devMonsterId, sessionId);
     return;
   }
 
@@ -551,4 +573,19 @@ const processTurnEffects = (entity, effectsArray) => {
     }
   }
   return { logMessages, skipTurn };
+};
+
+export const enqueueDevSpawn = (monsterId) => {
+  if (!MONSTERS[monsterId]) {
+    console.error("DEV SPAWN: Unknown monster id:", monsterId);
+    return false;
+  }
+
+  devSpawnQueue.push(monsterId);
+  console.log("🔧 DEV SPAWN QUEUE:", [...devSpawnQueue]);
+  return true;
+};
+
+export const getDevSpawn = () => {
+  return devSpawnQueue.length > 0 ? devSpawnQueue.shift() : null;
 };
