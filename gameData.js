@@ -165,10 +165,31 @@ export const MONSTERS = {
     runes: 15000,
     isBoss: true,
   },
+  crucible_knight: {
+    name: "Chevalier du Creuset",
+    hp: 180,
+    atk: 22,
+    runes: 450,
+    isRare: true,
+    drops: [
+      { id: "briar_armor", chance: 0.2 },
+      { ashId: "ash_stomp", chance: 0.5, unique: true },
+    ],
+  },
+  beastman: {
+    name: "Homme-Bête de Farum Azula",
+    hp: 140,
+    atk: 18,
+    runes: 300,
+    isRare: true,
+    drops: [{ id: "iron_sword", chance: 0.8 }],
+  },
 };
 export const BIOMES = {
   necrolimbe: {
     name: "Nécrolimbe",
+    rareMonsters: ["crucible_knight", "beastman"],
+    maxRareSpawns: 2,
     monsters: ["soldier", "wolf"],
     boss: "margit",
     length: 10,

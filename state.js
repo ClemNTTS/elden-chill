@@ -26,6 +26,7 @@ export let gameState = {
     progress: 0,
     isExploring: false,
     checkpointReached: false,
+    rareSpawnsCount: 0,
   },
   playerEffects: [],
   ennemyEffects: [],

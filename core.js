@@ -82,6 +82,27 @@ const handleVictory = (sessionId) => {
     } ! (+${formatNumber(totalRunes)} runes)`,
   );
 
+  const enemy = runtimeState.currentEnemy;
+
+  if (enemy.isRare && enemy.drops) {
+    enemy.drops.forEach((loot) => {
+      if (loot.ashId) {
+        if (
+          !gameState.ashesOfWarOwned.includes(loot.ashId) &&
+          Math.random() < loot.chance
+        ) {
+          gameState.ashesOfWarOwned.push(loot.ashId);
+          ActionLog(
+            `OBJET UNIQUE OBTENU : Cendre de Guerre - ${loot.ashId} !`,
+            "log-crit",
+          );
+        }
+      } else if (loot.id && Math.random() < loot.chance) {
+        dropItem(loot.id);
+      }
+    });
+  }
+
   gameState.ennemyEffects = [];
   gameState.runes.carried += totalRunes;
   gameState.world.progress++;
@@ -90,6 +111,7 @@ const handleVictory = (sessionId) => {
 
   if (runtimeState.currentEnemy.isBoss) {
     const currentBiome = BIOMES[gameState.world.currentBiome];
+    gameState.world.rareSpawnsCount = 0;
     ActionLog("BOSS VAINCU !");
 
     if (
@@ -295,7 +317,9 @@ const spawnMonster = (monsterId, sessionId) => {
   });
   updateUI();
 
-  ActionLog(`Un ${runtimeState.currentEnemy.name} apparaît !`);
+  ActionLog(
+    `Un ${runtimeState.currentEnemy.isRare ? "⭐ " + runtimeState.currentEnemy.name : runtimeState.currentEnemy.name} apparaît !`,
+  );
 
   setTimeout(() => combatLoop(sessionId), 500);
 };
@@ -336,11 +360,25 @@ export function nextEncounter(sessionId) {
 
   if (gameState.world.progress >= biome.length) {
     spawnMonster(biome.boss, sessionId);
+    return;
+  }
+
+  const canSpawnRare =
+    biome.rareMonsters &&
+    gameState.world.rareSpawnsCount < (biome.maxRareSpawns || 0);
+
+  if (canSpawnRare && Math.random() < 0.15) {
+    const rareId =
+      biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
+    gameState.world.rareSpawnsCount++;
+    spawnMonster(rareId, sessionId);
+    return;
   } else {
     spawnMonster(
       biome.monsters[Math.floor(Math.random() * biome.monsters.length)],
       sessionId,
     );
+    return;
   }
 }
 
