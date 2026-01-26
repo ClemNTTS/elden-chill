@@ -113,13 +113,24 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BURN", duration: 2, chance: 0.3 },
   },
+  kama: {
+    name: "Kama (Faucille)",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Une faucille rapide qui inflige Saignement. +5 Dextérité <em style='color: grey;'>(+1 / Niv)</em>",
+    apply: (stats, itemLevel) => {
+      stats.dexterity += 5 + (itemLevel - 1);
+    },
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.3 },
+  },
 };
 
 export const LOOT_TABLES = {
   limgrave_west: [
-    { id: "iron_sword", chance: 0.6 },
+    { id: "iron_sword", chance: 0.5 },
     { id: "crimson_amber", chance: 0.3 },
     { id: "scholars_ring", chance: 0.1 },
+    { id: "kama", chance: 0.1 },
   ],
   caelid: [
     { id: "great_shield", chance: 0.1 },
@@ -150,6 +161,13 @@ export const MONSTERS = {
       { size: 2, chance: 0.3 },
       { size: 3, chance: 0.2 },
     ],
+  },
+  ripper_boar: {
+    name: "Sanglier Éventreur",
+    hp: 80,
+    atk: 15,
+    runes: 90,
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
   },
   margit: {
     name: "Margit le Déchu",
@@ -218,7 +236,7 @@ export const BIOMES = {
     name: "Nécrolimbe Ouest",
     rareMonsters: ["crucible_knight", "beastman"],
     maxRareSpawns: 2,
-    monsters: ["soldier", "wolf"],
+    monsters: ["soldier", "wolf", "ripper_boar"],
     boss: "margit",
     length: 10,
     unlocks: "caelid",
@@ -261,7 +279,7 @@ export const STATUS_EFFECTS = {
     id: "THORNS",
     name: "Épines",
     color: "#148d0b",
-    onBeingHit: (attacker, damageTaken) => {
+    onBeingHit: (attacker, _, damageTaken) => {
       const reflectDamage = Math.max(1, Math.floor(damageTaken * 0.15));
       if (attacker.name && attacker.name === "player") {
         runtimeState.playerCurrentHp -= reflectDamage;
@@ -280,11 +298,19 @@ export const STATUS_EFFECTS = {
     name: "Saignement",
     color: "#e74c3c",
     onBeingHit: (attacker, defender, damageTaken) => {
-      // Le saignement pourrait avoir une chance de proc des dégâts bonus
       if (Math.random() < 0.2) {
-        const bonus = Math.floor(defender.maxHp * 0.1);
-        defender.currentHp -= bonus;
-        return { damage: bonus, message: "HÉMORRAGIE ! Dégâts massifs !" };
+        let bonus;
+        let message;
+        if (defender.name === "player") {
+          bonus = Math.floor(getHealth(gameState.stats.vigor) * 0.1);
+          runtimeState.playerCurrentHp -= bonus;
+          message = `HÉMORRAGIE ! Vous subissez ${bonus} dégâts !`;
+        } else {
+          bonus = Math.floor(defender.maxHp * 0.1);
+          defender.hp -= bonus;
+          message = `HÉMORRAGIE ! ${defender.name} subit ${bonus} dégâts !`;
+        }
+        return { damage: bonus, message: message };
       }
     },
   },

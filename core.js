@@ -79,7 +79,9 @@ const handleDeath = () => {
 const handleVictory = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus = 1 + eff.intelligence / 100;
-  const totalRunes = Math.floor(runtimeState.lastDefeatedEnemy.runes * intBonus);
+  const totalRunes = Math.floor(
+    runtimeState.lastDefeatedEnemy.runes * intBonus,
+  );
 
   gameState.runes.carried += totalRunes;
 
@@ -189,7 +191,11 @@ const combatLoop = (sessionId) => {
         gameState.ennemyEffects.forEach((eff) => {
           const effectData = STATUS_EFFECTS[eff.id];
           if (effectData.onBeingHit) {
-            const result = effectData.onBeingHit({ name: "player" }, damage);
+            const result = effectData.onBeingHit(
+              { name: "player" },
+              runtimeState.currentEnemyGroup[0],
+              damage,
+            );
             if (result?.message) {
               ActionLog(result.message, "log-warning");
             }
@@ -218,25 +224,30 @@ const combatLoop = (sessionId) => {
 
     if (runtimeState.currentEnemyGroup[0].hp <= 0) {
       const defeatedEnemy = runtimeState.currentEnemyGroup.shift();
-      
+
       // Award runes for the defeated enemy
       const eff = getEffectiveStats();
       const intBonus = 1 + eff.intelligence / 100;
       const runesAwarded = Math.floor(defeatedEnemy.runes * intBonus);
       gameState.runes.carried += runesAwarded;
-      
+
       ActionLog(
         `${defeatedEnemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
-        "log-runes"
+        "log-runes",
       );
-      
+
       if (runtimeState.currentEnemyGroup.length === 0) {
         runtimeState.lastDefeatedEnemy = defeatedEnemy;
         setTimeout(() => handleVictory(sessionId), 500);
         return;
       } else {
-        ActionLog(`Un ${runtimeState.currentEnemyGroup[0].name} reste ! (x${runtimeState.currentEnemyGroup.length})`);
-        const groupSizeText = runtimeState.currentEnemyGroup.length > 1 ? ` (x${runtimeState.currentEnemyGroup.length})` : "";
+        ActionLog(
+          `Un ${runtimeState.currentEnemyGroup[0].name} reste ! (x${runtimeState.currentEnemyGroup.length})`,
+        );
+        const groupSizeText =
+          runtimeState.currentEnemyGroup.length > 1
+            ? ` (x${runtimeState.currentEnemyGroup.length})`
+            : "";
         document.getElementById("enemy-name").innerText =
           runtimeState.currentLoopCount > 0
             ? `${runtimeState.currentEnemyGroup[0].name}${groupSizeText} +${runtimeState.currentLoopCount}`
@@ -288,15 +299,14 @@ const combatLoop = (sessionId) => {
             triggerShake();
           }
 
-          ActionLog(
-            `${enemy.name} frappe ! -${formatNumber(enemy.atk)} PV`,
-          );
+          ActionLog(`${enemy.name} frappe ! -${formatNumber(enemy.atk)} PV`);
 
           gameState.playerEffects.forEach((eff) => {
             const effectData = STATUS_EFFECTS[eff.id];
             if (effectData.onBeingHit) {
               const result = effectData.onBeingHit(
                 enemy,
+                { name: "player" },
                 enemy.atk,
               );
 
@@ -336,7 +346,7 @@ const spawnMonster = (monsterId, sessionId) => {
 
   const template = MONSTERS[monsterId];
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
-  
+
   // Determine group size
   let groupSize = 1;
   if (template.groupCombinations) {
