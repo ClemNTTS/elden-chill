@@ -182,7 +182,7 @@ const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
 
   const monster = MONSTERS[monsterId];
-  const multiplier = Math.pow(1.1, runtimeState.currentLoopCount);
+  const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
   runtimeState.currentEnemy = {
     ...monster,
     currentHp: Math.floor(monster.hp * multiplier),
