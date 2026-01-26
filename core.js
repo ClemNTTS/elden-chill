@@ -257,13 +257,6 @@ const combatLoop = (sessionId) => {
           runtimeState.currentEnemy.atk,
         )} PV`,
       );
-        runtimeState.playerCurrentHp -= runtimeState.currentEnemy.atk;
-        ActionLog(
-          `${runtimeState.currentEnemy.name} frappe ! -${formatNumber(
-            runtimeState.currentEnemy.atk,
-          )} PV`,
-        );
-
         gameState.playerEffects.forEach((eff) => {
           const effectData = STATUS_EFFECTS[eff.id];
           if (effectData.onBeingHit) {
@@ -296,10 +289,6 @@ const combatLoop = (sessionId) => {
 
         updateHealthBars();
         updateUI();
-
-        if (runtimeState.currentEnemy.atk > eff.vigor * 10 * 0.15) {
-          triggerShake();
-        }
       }
 
       if (runtimeState.playerCurrentHp <= 0) {
