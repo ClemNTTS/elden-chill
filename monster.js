@@ -24,13 +24,6 @@ export const MONSTERS = {
     runes: 90,
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
   },
-  ripper_boar: {
-    name: "Sanglier Éventreur",
-    hp: 22,
-    atk: 15,
-    runes: 90,
-    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
-  },
   margit: {
     name: "Margit le Déchu",
     hp: 200,

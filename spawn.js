@@ -5,6 +5,9 @@ import { MONSTERS } from "./monster.js";
 import { gameState } from "./state.js";
 import { ITEMS } from "./item.js";
 
+
+export const devSpawnQueue = [];
+
 export const enqueueDevSpawn = (monsterId) => {
   if (!MONSTERS[monsterId]) {
     console.error("DEV SPAWN: Unknown monster id:", monsterId);

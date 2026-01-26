@@ -37,26 +37,37 @@ export const STATUS_EFFECTS = {
     },
   },
   BLEED: {
-    id: "BLEED",
-    name: "Saignement",
-    color: "#e74c3c",
-    onBeingHit: (attacker, defender, damageTaken) => {
-      if (Math.random() < 0.2) {
-        let bonus;
-        let message;
-        if (defender.name === "player") {
-          bonus = Math.floor(getHealth(gameState.stats.vigor) * 0.1);
-          runtimeState.playerCurrentHp -= bonus;
-          message = `HÉMORRAGIE ! Vous subissez ${bonus} dégâts !`;
-        } else {
-          bonus = Math.floor(defender.maxHp * 0.1);
-          defender.hp -= bonus;
-          message = `HÉMORRAGIE ! ${defender.name} subit ${bonus} dégâts !`;
-        }
-        return { damage: bonus, message: message };
+  id: "BLEED",
+  name: "Saignement",
+  color: "#e74c3c",
+  onBeingHit: (attacker, defender, damageTaken) => {
+    if (Math.random() < 0.2) {
+      let bonus;
+      let message;
+
+      // Use currentHp / hp consistently
+      const currentHp = defender.currentHp ?? defender.hp ?? 0;
+      const maxHp = defender.maxHp ?? getHealth(gameState.stats.vigor);
+
+      bonus = Math.floor(maxHp * 0.1);
+
+      // Apply damage to the entity passed in
+      if ("currentHp" in defender) {
+        defender.currentHp = Math.max(0, currentHp - bonus);
+      } else if ("hp" in defender) {
+        defender.hp = Math.max(0, currentHp - bonus);
       }
-    },
+
+      if ("currentHp" in defender) { //la repetition est volontaire pour garder la clarté et permettre des messages différents si besoin
+        message = `HÉMORRAGIE ! ${defender.name} subit ${bonus} dégâts !`;
+      } else {
+        message = `HÉMORRAGIE ! ${defender.name} subit ${bonus} dégâts !`;
+      }
+
+      return { damage: bonus, message };
+    }
   },
+},
   STUN: {
     id: "STUN",
     name: "Étourdi",

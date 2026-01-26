@@ -46,6 +46,7 @@ export const runtimeState = {
   currentLoopCount: 0,
   ashUsesLeft: 0,
   ashIsPrimed: false,
+  combatFrozen: false,
 };
 
 export function setGameState(newState) {

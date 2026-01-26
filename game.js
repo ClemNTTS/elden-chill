@@ -5,6 +5,7 @@ import { gameState, runtimeState } from "./state.js";
 import { exportSave, importSave, loadGame, saveGame } from "./save.js";
 import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
 import { startExploration } from "./core.js";
+import { stopCombat } from "./combatController.js";
 import {
   hideTooltip,
   moveTooltip,
@@ -115,13 +116,18 @@ const dev = {
     saveGame();
   },
   
-  spawnEnemy: (monsterId) => {
-  if (enqueueDevSpawn(monsterId)) {
-    console.log(`🔧 DEV : ${monsterId} ajouté à la file de spawn.`);
+  spawnEnemy: (monsterId,amount) => {
+    if(!amount) amount = 1;
+    for(let i=0;i<amount;i++) {
+      if (enqueueDevSpawn(monsterId)) {
+        console.log(`🔧 DEV : ${monsterId} ajouté à la file de spawn.`);
+      };
     }
   },
-
-
+  toggleCombat:() => {
+  runtimeState.combatFrozen = !runtimeState.combatFrozen;
+  console.log(`🔧 DEV : Combat ${runtimeState.combatFrozen ? "gelé" : "dégelé"} !`);
+  },
 };
 
 // --- Global Function Assignments ---

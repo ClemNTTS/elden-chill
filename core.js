@@ -3,7 +3,7 @@ import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { MONSTERS } from "./monster.js";
 import { ITEMS } from "./item.js";
 import { STATUS_EFFECTS } from "./status.js";
-import { spawnMonster } from "./spawn.js";
+import { devSpawnQueue, spawnMonster } from "./spawn.js";
 import {
   gameState,
   getEffectiveStats,
@@ -21,8 +21,6 @@ import {
   updateStepper,
   updateUI,
 } from "./ui.js";
-
-const devSpawnQueue = [];
 
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
