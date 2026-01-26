@@ -47,6 +47,8 @@ export const loadGame = () => {
       }
 
       decrypted.world.isExploring = false;
+      decrypted.playerEffects = [];
+      decrypted.ennemyEffects = [];
       decrypted.runes.carried = 0;
 
       setGameState(decrypted);

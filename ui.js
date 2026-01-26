@@ -1,4 +1,4 @@
-import { BIOMES, ITEMS, LOOT_TABLES } from "./gameData.js";
+import { BIOMES, ITEMS, LOOT_TABLES, STATUS_EFFECTS } from "./gameData.js";
 import { gameState, getEffectiveStats, runtimeState } from "./state.js";
 import { getUpgradeCost, upgradeStat, equipItem } from "./actions.js";
 import { startExploration } from "./core.js";
@@ -163,6 +163,31 @@ const updateInventoryDisplay = () => {
   });
 };
 
+export const updateStatusIcons = () => {
+  const pContainer = document.getElementById("player-status-container");
+  const eContainer = document.getElementById("enemy-status-container");
+
+  const renderStatus = (eff) => {
+    const data = STATUS_EFFECTS[eff.id];
+    if (!data) return "";
+
+    // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
+    const durationText = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+
+    return `<div class="status-icon" style="background-color: ${data.color}" title="${data.name}">
+              ${data.name}${durationText}
+            </div>`;
+  };
+
+  if (pContainer) {
+    pContainer.innerHTML = gameState.playerEffects.map(renderStatus).join("");
+  }
+
+  if (eContainer) {
+    eContainer.innerHTML = gameState.ennemyEffects.map(renderStatus).join("");
+  }
+};
+
 export const updateUI = () => {
   updateRuneDisplay();
   updateStatDisplay();
@@ -170,6 +195,7 @@ export const updateUI = () => {
   updateBiomeDisplay();
   updateInventoryDisplay();
   updateCycleDisplay();
+  updateStatusIcons();
 };
 
 export const toggleView = (view) => {

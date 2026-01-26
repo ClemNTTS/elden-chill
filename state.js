@@ -27,6 +27,9 @@ export let gameState = {
     isExploring: false,
     checkpointReached: false,
   },
+  playerEffects: [],
+  ennemyEffects: [],
+  ashesOfWaruses: {},
 };
 
 // Non-saved, runtime state
@@ -41,6 +44,13 @@ export function setGameState(newState) {
   if (newState.runes) Object.assign(gameState.runes, newState.runes);
   if (newState.stats) Object.assign(gameState.stats, newState.stats);
   if (newState.equipped) Object.assign(gameState.equipped, newState.equipped);
+  if (newState.playerEffects)
+    Object.assign(gameState.playerEffects, newState.playerEffects);
+  if (newState.ennemyEffects)
+    Object.assign(gameState.ennemyEffects, newState.ennemyEffects);
+
+  if (newState.ashesOfWaruses)
+    Object.assign(gameState.ashesOfWaruses, newState.ashesOfWaruses);
 
   if (newState.world) {
     Object.assign(gameState.world, newState.world);

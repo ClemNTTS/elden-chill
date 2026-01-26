@@ -1,3 +1,5 @@
+import { runtimeState } from "./state.js";
+
 export const ITEM_TYPES = {
   WEAPON: "Arme",
   ARMOR: "Armure",
@@ -84,6 +86,15 @@ export const ITEMS = {
       stats.dexterity += 5 + 2 * (itemLevel - 1);
     },
   },
+  briar_armor: {
+    name: "Armure de Ronce",
+    type: ITEM_TYPES.ARMOR,
+    description: "Renvoie 15% des dégâts subis à l'attaquant.",
+    apply: (stats, itemLevel) => {
+      stats.vigor += 2 * itemLevel;
+    },
+    passiveStatus: "THORNS",
+  },
 };
 
 export const LOOT_TABLES = {
@@ -113,7 +124,24 @@ export const MONSTERS = {
     runes: 500,
     isBoss: true,
   },
-  rotten_stray: { name: "Chien Errant Putréfié", hp: 70, atk: 18, runes: 80 },
+  godrick_knight: {
+    name: "Chevalier de Godrick",
+    hp: 75,
+    atk: 10,
+    runes: 270,
+    isRare: true,
+    drops: [
+      { item: "knight_greatsword", chance: 0.05 },
+      { ash: "storm_stomp", chance: 0.2, unique: true },
+    ],
+  },
+  rotten_stray: {
+    name: "Chien Errant Putréfié",
+    hp: 70,
+    atk: 18,
+    runes: 80,
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.3 },
+  },
   giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150 },
   radahn: {
     name: "Vestige de Radahn",
@@ -153,5 +181,76 @@ export const BIOMES = {
     boss: "rennala",
     length: 18,
     unlocks: null,
+  },
+};
+
+export const STATUS_EFFECTS = {
+  POISON: {
+    id: "POISON",
+    name: "Poison",
+    color: "#2ecc71",
+    onTurnStart: (entity, isPlayer) => {
+      const damage = Math.max(1, Math.floor(entity.maxHp * 0.03));
+      entity.currentHp -= damage;
+      return {
+        damage,
+        message: `${entity.name} subit ${damage} dégâts de poison !`,
+      };
+    },
+  },
+  THORNS: {
+    id: "THORNS",
+    name: "Épines",
+    color: "#148d0b",
+    onBeingHit: (attacker, damageTaken) => {
+      const reflectDamage = Math.max(1, Math.floor(damageTaken * 0.15));
+      if (attacker.name && attacker.name === "player") {
+        runtimeState.playerCurrentHp -= reflectDamage;
+      } else {
+        attacker.currentHp -= reflectDamage;
+      }
+
+      return {
+        damage: reflectDamage,
+        message: `${attacker.name === "player" ? "Vous vous blessez" : attacker.name + " se blesse"} sur les épines ! (-${reflectDamage} PV)`,
+      };
+    },
+  },
+  BLEED: {
+    id: "BLEED",
+    name: "Saignement",
+    color: "#e74c3c",
+    onBeingHit: (attacker, defender, damageTaken) => {
+      // Le saignement pourrait avoir une chance de proc des dégâts bonus
+      if (Math.random() < 0.2) {
+        const bonus = Math.floor(defender.maxHp * 0.1);
+        defender.currentHp -= bonus;
+        return { damage: bonus, message: "HÉMORRAGIE ! Dégâts massifs !" };
+      }
+    },
+  },
+  STUN: {
+    id: "STUN",
+    name: "Étourdi",
+    color: "#f1c40f",
+    onTurnStart: (entity) => {
+      return {
+        skipTurn: true,
+        message: `${entity.name} est étourdi et ne peut pas agir !`,
+      };
+    },
+  },
+  SCARLET_ROT: {
+    id: "SCARLET_ROT",
+    name: "Putréfaction",
+    color: "#922b21",
+    onTurnStart: (entity) => {
+      const damage = Math.max(2, Math.floor(entity.maxHp * 0.05));
+      entity.currentHp -= damage;
+      return {
+        damage,
+        message: `${entity.name} est rongé par la putréfaction (-${damage} PV) !`,
+      };
+    },
   },
 };

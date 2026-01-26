@@ -1,4 +1,10 @@
-import { BIOMES, ITEMS, LOOT_TABLES, MONSTERS } from "./gameData.js";
+import {
+  BIOMES,
+  ITEMS,
+  LOOT_TABLES,
+  MONSTERS,
+  STATUS_EFFECTS,
+} from "./gameData.js";
 import { gameState, getEffectiveStats, runtimeState } from "./state.js";
 import { saveGame } from "./save.js";
 import {
@@ -58,6 +64,10 @@ const handleDeath = () => {
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
   gameState.runes.carried = 0;
   gameState.world.isExploring = false;
+  gameState.playerEffects = [];
+  gameState.ennemyEffects = [];
+  gameState.ashesOfWaruses = {};
+  saveGame();
   setTimeout(() => toggleView("camp"), 3000);
 };
 
@@ -71,6 +81,8 @@ const handleVictory = (sessionId) => {
       runtimeState.currentEnemy.name
     } ! (+${formatNumber(totalRunes)} runes)`,
   );
+
+  gameState.ennemyEffects = [];
   gameState.runes.carried += totalRunes;
   gameState.world.progress++;
 
@@ -119,20 +131,54 @@ const combatLoop = (sessionId) => {
   if (!gameState.world.isExploring) return;
   if (sessionId !== runtimeState.currentCombatSession) return;
 
+  const playerObj = {
+    name: "player",
+    currentHp: runtimeState.playerCurrentHp,
+    maxHp: getEffectiveStats().vigor * 10,
+  };
   setTimeout(() => {
-    const stats = getEffectiveStats();
-    for (let i = 0; i < stats.attacksPerTurn; i++) {
-      let damage = stats.strength;
-      const isCrit = Math.random() < stats.critChance;
-      if (isCrit) {
-        damage *= stats.critDamage;
+    const playerStatus = processTurnEffects(playerObj, gameState.playerEffects);
+
+    runtimeState.playerCurrentHp = playerObj.currentHp;
+
+    if (playerStatus.logMessages.length > 0) {
+      playerStatus.logMessages.forEach((msg) => ActionLog(msg, "log-warning"));
+    }
+
+    if (runtimeState.playerCurrentHp <= 0) {
+      handleDeath();
+      return;
+    }
+
+    if (!playerStatus.skipTurn) {
+      const stats = getEffectiveStats();
+      for (let i = 0; i < stats.attacksPerTurn; i++) {
+        let damage = stats.strength;
+        const isCrit = Math.random() < stats.critChance;
+        if (isCrit) {
+          damage *= stats.critDamage;
+        }
+        runtimeState.currentEnemy.currentHp -= Math.floor(damage);
+        updateHealthBars();
+        const message = `Vous infligez ${formatNumber(
+          Math.floor(damage),
+        )} dégâts ${isCrit ? "CRITIQUES !" : "."}`;
+        ActionLog(message, isCrit ? "log-crit" : "");
+
+        gameState.ennemyEffects.forEach((eff) => {
+          const effectData = STATUS_EFFECTS[eff.id];
+          if (effectData.onBeingHit) {
+            const result = effectData.onBeingHit({ name: "player" }, damage);
+            if (result?.message) {
+              ActionLog(result.message, "log-warning");
+            }
+            if (runtimeState.playerCurrentHp <= 0) {
+              handleDeath();
+              return;
+            }
+          }
+        });
       }
-      runtimeState.currentEnemy.currentHp -= Math.floor(damage);
-      updateHealthBars();
-      const message = `Vous infligez ${formatNumber(
-        Math.floor(damage),
-      )} dégâts ${isCrit ? "CRITIQUES !" : "."}`;
-      ActionLog(message, isCrit ? "log-crit" : "");
     }
 
     if (runtimeState.currentEnemy.currentHp <= 0) {
@@ -147,27 +193,65 @@ const combatLoop = (sessionId) => {
       )
         return;
 
-      const eff = getEffectiveStats();
-      const dodgeChance = Math.min(0.5, eff.dexterity / 500);
-
-      if (Math.random() < dodgeChance) {
-        ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
-        setTimeout(() => combatLoop(sessionId), 500);
-        return;
-      }
-
-      runtimeState.playerCurrentHp -= runtimeState.currentEnemy.atk;
-      updateHealthBars();
-
-      if (runtimeState.currentEnemy.atk > stats.vigor * 10 * 0.15) {
-        triggerShake();
-      }
-
-      ActionLog(
-        `${runtimeState.currentEnemy.name} frappe ! -${formatNumber(
-          runtimeState.currentEnemy.atk,
-        )} PV`,
+      const enemyStatus = processTurnEffects(
+        runtimeState.currentEnemy,
+        gameState.ennemyEffects,
       );
+
+      if (!enemyStatus.skipTurn) {
+        const eff = getEffectiveStats();
+        const dodgeChance = Math.min(0.5, eff.dexterity / 500);
+
+        if (Math.random() < dodgeChance) {
+          ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
+          setTimeout(() => combatLoop(sessionId), 500);
+          return;
+        }
+
+        runtimeState.playerCurrentHp -= runtimeState.currentEnemy.atk;
+        ActionLog(
+          `${runtimeState.currentEnemy.name} frappe ! -${formatNumber(
+            runtimeState.currentEnemy.atk,
+          )} PV`,
+        );
+
+        gameState.playerEffects.forEach((eff) => {
+          const effectData = STATUS_EFFECTS[eff.id];
+          if (effectData.onBeingHit) {
+            const result = effectData.onBeingHit(
+              runtimeState.currentEnemy,
+              runtimeState.currentEnemy.atk,
+            );
+
+            if (result?.message) {
+              ActionLog(result.message, "log-status");
+            }
+          }
+        });
+        if (runtimeState.currentEnemy.currentHp <= 0) {
+          handleVictory(sessionId);
+          return;
+        }
+
+        if (runtimeState.currentEnemy.onHitEffect) {
+          const { id, duration, chance } =
+            runtimeState.currentEnemy.onHitEffect;
+          if (Math.random() < chance) {
+            applyEffect(gameState.playerEffects, id, duration);
+            ActionLog(
+              `L'attaque vous a appliqué ${duration} ${STATUS_EFFECTS[id].name} !`,
+              "log-warning",
+            );
+          }
+        }
+
+        updateHealthBars();
+        updateUI();
+
+        if (runtimeState.currentEnemy.atk > eff.vigor * 10 * 0.15) {
+          triggerShake();
+        }
+      }
 
       if (runtimeState.playerCurrentHp <= 0) {
         handleDeath();
@@ -196,6 +280,20 @@ const spawnMonster = (monsterId, sessionId) => {
       ? `${runtimeState.currentEnemy.name} +${runtimeState.currentLoopCount}`
       : runtimeState.currentEnemy.name;
   updateHealthBars();
+
+  Object.values(gameState.equipped).forEach((itemId) => {
+    const item = ITEMS[itemId];
+    if (item && item.passiveStatus) {
+      const statusId = item.passiveStatus;
+
+      const hasEffect = gameState.playerEffects.some((e) => e.id === statusId);
+
+      if (!hasEffect) {
+        gameState.playerEffects.push({ id: statusId, duration: 999 });
+      }
+    }
+  });
+  updateUI();
 
   ActionLog(`Un ${runtimeState.currentEnemy.name} apparaît !`);
 
@@ -260,6 +358,9 @@ export const startExploration = (biomeId) => {
   gameState.world.currentBiome = biomeId;
   gameState.world.progress = 0;
   gameState.world.checkpointReached = false;
+  gameState.ashesOfWaruses = {};
+  gameState.playerEffects = [];
+  gameState.ennemyEffects = [];
 
   runtimeState.playerCurrentHp = getEffectiveStats().vigor * 10;
 
@@ -273,4 +374,39 @@ export const startExploration = (biomeId) => {
   updateStepper();
 
   nextEncounter(sessionAtStart);
+};
+
+export const applyEffect = (targetEffects, effectId, duration) => {
+  const existing = targetEffects.find((e) => e.id === effectId);
+  if (existing) {
+    existing.duration = Math.max(existing.duration, duration);
+  } else {
+    targetEffects.push({ id: effectId, duration });
+  }
+};
+
+const processTurnEffects = (entity, effectsArray) => {
+  let logMessages = [];
+  let skipTurn = false;
+
+  for (let i = effectsArray.length - 1; i >= 0; i--) {
+    const effectRef = effectsArray[i];
+    const effectData = STATUS_EFFECTS[effectRef.id];
+
+    if (effectData.onTurnStart) {
+      const result = effectData.onTurnStart(entity);
+      if (result?.message) {
+        logMessages.push(result.message);
+      }
+      if (result?.skipTurn) {
+        skipTurn = true;
+      }
+    }
+
+    effectRef.duration--;
+    if (effectRef.duration <= 0) {
+      effectsArray.splice(i, 1);
+    }
+  }
+  return { logMessages, skipTurn };
 };
