@@ -1,8 +1,10 @@
 // Main entry point for the game
-import { BIOMES, ITEMS } from "./gameData.js";
+import { BIOMES } from "./biome.js";
+import { ITEMS } from "./item.js";
 import { gameState, runtimeState } from "./state.js";
 import { exportSave, importSave, loadGame, saveGame } from "./save.js";
 import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
+import { startExploration } from "./core.js";
 import {
   hideTooltip,
   moveTooltip,
@@ -11,7 +13,7 @@ import {
   toggleView,
   updateUI,
 } from "./ui.js";
-import { startExploration,enqueueDevSpawn } from "./core.js";
+import { enqueueDevSpawn } from "./spawn.js";
 
 // Dev tools
 const dev = {

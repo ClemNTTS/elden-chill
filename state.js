@@ -1,4 +1,4 @@
-import { ITEMS } from "./gameData.js";
+import { ITEMS } from "./item.js";
 
 // Saved state
 export let gameState = {
