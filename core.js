@@ -79,25 +79,14 @@ const handleDeath = () => {
 const handleVictory = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus = 1 + eff.intelligence / 100;
-  const totalRunes = Math.floor(runtimeState.currentEnemy.runes * intBonus);
+  const totalRunes = Math.floor(runtimeState.lastDefeatedEnemy.runes * intBonus);
 
   gameState.runes.carried += totalRunes;
 
-  let monster = runtimeState.currentEnemy;
-  console.log(monster);
-  while (monster.linkedFight != null) {
-    monster = MONSTERS[monster.linkedFight];
-    console.log("dernier monstre trouvé :", monster);
-  }
+  const firstEnemy = runtimeState.lastDefeatedEnemy;
 
-  ActionLog(
-    `Vous avez vaincu ${monster.name} ! (+${formatNumber(totalRunes)} runes)`,
-  );
-
-  const enemy = runtimeState.currentEnemy;
-
-  if (enemy.isRare && enemy.drops) {
-    enemy.drops.forEach((loot) => {
+  if (firstEnemy.isRare && firstEnemy.drops) {
+    firstEnemy.drops.forEach((loot) => {
       if (loot.ashId) {
         if (
           !gameState.ashesOfWarOwned.includes(loot.ashId) &&
@@ -116,18 +105,10 @@ const handleVictory = (sessionId) => {
   }
 
   gameState.ennemyEffects = [];
-
-  if (runtimeState.currentEnemy.linkedFight) {
-    const nextMonster = MONSTERS[runtimeState.currentEnemy.linkedFight];
-    ActionLog(` Il vous reste encore à vaincre ${nextMonster.name} !`);
-    spawnMonster(runtimeState.currentEnemy.linkedFight, sessionId);
-    updateHealthBars();
-    return;
-  }
   gameState.world.progress++;
   updateStepper();
 
-  if (runtimeState.currentEnemy.isBoss) {
+  if (firstEnemy.isBoss) {
     const currentBiome = BIOMES[gameState.world.currentBiome];
     gameState.world.rareSpawnsCount = 0;
     ActionLog("BOSS VAINCU !");
@@ -198,7 +179,7 @@ const combatLoop = (sessionId) => {
         if (isCrit) {
           damage *= stats.critDamage;
         }
-        runtimeState.currentEnemy.hp -= Math.floor(damage);
+        runtimeState.currentEnemyGroup[0].hp -= Math.floor(damage);
         updateHealthBars();
         const message = `Vous infligez ${formatNumber(
           Math.floor(damage),
@@ -235,9 +216,36 @@ const combatLoop = (sessionId) => {
       }
     }
 
-    if (runtimeState.currentEnemy.hp <= 0) {
-      setTimeout(() => handleVictory(sessionId), 500);
-      return;
+    if (runtimeState.currentEnemyGroup[0].hp <= 0) {
+      const defeatedEnemy = runtimeState.currentEnemyGroup.shift();
+      
+      // Award runes for the defeated enemy
+      const eff = getEffectiveStats();
+      const intBonus = 1 + eff.intelligence / 100;
+      const runesAwarded = Math.floor(defeatedEnemy.runes * intBonus);
+      gameState.runes.carried += runesAwarded;
+      
+      ActionLog(
+        `${defeatedEnemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
+        "log-runes"
+      );
+      
+      if (runtimeState.currentEnemyGroup.length === 0) {
+        runtimeState.lastDefeatedEnemy = defeatedEnemy;
+        setTimeout(() => handleVictory(sessionId), 500);
+        return;
+      } else {
+        ActionLog(`Un ${runtimeState.currentEnemyGroup[0].name} reste ! (x${runtimeState.currentEnemyGroup.length})`);
+        const groupSizeText = runtimeState.currentEnemyGroup.length > 1 ? ` (x${runtimeState.currentEnemyGroup.length})` : "";
+        document.getElementById("enemy-name").innerText =
+          runtimeState.currentLoopCount > 0
+            ? `${runtimeState.currentEnemyGroup[0].name}${groupSizeText} +${runtimeState.currentLoopCount}`
+            : `${runtimeState.currentEnemyGroup[0].name}${groupSizeText}`;
+        updateHealthBars();
+        updateUI();
+        setTimeout(() => combatLoop(sessionId), 500);
+        return;
+      }
     }
 
     setTimeout(() => {
@@ -248,7 +256,7 @@ const combatLoop = (sessionId) => {
         return;
 
       const enemyStatus = processTurnEffects(
-        runtimeState.currentEnemy,
+        runtimeState.currentEnemyGroup[0],
         gameState.ennemyEffects,
       );
 
@@ -261,11 +269,6 @@ const combatLoop = (sessionId) => {
         }, 500);
       }
 
-      if (runtimeState.currentEnemy.hp <= 0) {
-        setTimeout(() => handleVictory(sessionId), 500);
-        return;
-      }
-
       if (!enemyStatus.skipTurn) {
         const eff = getEffectiveStats();
         const dodgeChance = Math.min(0.5, eff.dexterity / 500);
@@ -276,47 +279,44 @@ const combatLoop = (sessionId) => {
           return;
         }
 
-        runtimeState.playerCurrentHp -= runtimeState.currentEnemy.atk;
-        updateHealthBars();
+        // All enemies attack
+        runtimeState.currentEnemyGroup.forEach((enemy) => {
+          runtimeState.playerCurrentHp -= enemy.atk;
+          updateHealthBars();
 
-        if (runtimeState.currentEnemy.atk > getHealth(eff.vigor) * 0.15) {
-          triggerShake();
-        }
+          if (enemy.atk > getHealth(eff.vigor) * 0.15) {
+            triggerShake();
+          }
 
-        ActionLog(
-          `${runtimeState.currentEnemy.name} frappe ! -${formatNumber(
-            runtimeState.currentEnemy.atk,
-          )} PV`,
-        );
-        gameState.playerEffects.forEach((eff) => {
-          const effectData = STATUS_EFFECTS[eff.id];
-          if (effectData.onBeingHit) {
-            const result = effectData.onBeingHit(
-              runtimeState.currentEnemy,
-              runtimeState.currentEnemy.atk,
-            );
+          ActionLog(
+            `${enemy.name} frappe ! -${formatNumber(enemy.atk)} PV`,
+          );
 
-            if (result?.message) {
-              ActionLog(result.message, "log-status");
+          gameState.playerEffects.forEach((eff) => {
+            const effectData = STATUS_EFFECTS[eff.id];
+            if (effectData.onBeingHit) {
+              const result = effectData.onBeingHit(
+                enemy,
+                enemy.atk,
+              );
+
+              if (result?.message) {
+                ActionLog(result.message, "log-status");
+              }
+            }
+          });
+
+          if (enemy.onHitEffect) {
+            const { id, duration, chance } = enemy.onHitEffect;
+            if (Math.random() < chance) {
+              applyEffect(gameState.playerEffects, id, duration);
+              ActionLog(
+                `L'attaque vous a appliqué ${duration} ${STATUS_EFFECTS[id].name} !`,
+                "log-warning",
+              );
             }
           }
         });
-        if (runtimeState.currentEnemy.hp <= 0) {
-          handleVictory(sessionId);
-          return;
-        }
-
-        if (runtimeState.currentEnemy.onHitEffect) {
-          const { id, duration, chance } =
-            runtimeState.currentEnemy.onHitEffect;
-          if (Math.random() < chance) {
-            applyEffect(gameState.playerEffects, id, duration);
-            ActionLog(
-              `L'attaque vous a appliqué ${duration} ${STATUS_EFFECTS[id].name} !`,
-              "log-warning",
-            );
-          }
-        }
 
         updateHealthBars();
         updateUI();
@@ -334,21 +334,43 @@ const combatLoop = (sessionId) => {
 const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
 
-  const monster = MONSTERS[monsterId];
+  const template = MONSTERS[monsterId];
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
-  runtimeState.currentEnemy = {
-    ...monster,
-    maxHp: Math.floor(monster.hp * multiplier),
-    hp: Math.floor(monster.hp * multiplier),
-    atk: Math.floor(monster.atk * multiplier),
-    runes: Math.floor(monster.runes * multiplier),
-    hp: Math.floor(monster.hp * multiplier),
-  };
+  
+  // Determine group size
+  let groupSize = 1;
+  if (template.groupCombinations) {
+    const random = Math.random();
+    let cumulativeChance = 0;
+    for (const combination of template.groupCombinations) {
+      cumulativeChance += combination.chance;
+      if (random <= cumulativeChance) {
+        groupSize = combination.size;
+        break;
+      }
+    }
+  }
+
+  // Create the enemy group
+  runtimeState.currentEnemyGroup = [];
+  for (let i = 0; i < groupSize; i++) {
+    const enemy = {
+      ...template,
+      maxHp: Math.floor(template.hp * multiplier),
+      atk: Math.floor(template.atk * multiplier),
+      runes: Math.floor(template.runes * multiplier),
+      hp: Math.floor(template.hp * multiplier),
+    };
+    runtimeState.currentEnemyGroup.push(enemy);
+  }
+
+  const firstEnemy = runtimeState.currentEnemyGroup[0];
+  const groupSizeText = groupSize > 1 ? ` (x${groupSize})` : "";
 
   document.getElementById("enemy-name").innerText =
     runtimeState.currentLoopCount > 0
-      ? `${runtimeState.currentEnemy.name} +${runtimeState.currentLoopCount}`
-      : runtimeState.currentEnemy.name;
+      ? `${firstEnemy.name}${groupSizeText} +${runtimeState.currentLoopCount}`
+      : `${firstEnemy.name}${groupSizeText}`;
   updateHealthBars();
 
   Object.values(gameState.equipped).forEach((itemId) => {
@@ -366,10 +388,44 @@ const spawnMonster = (monsterId, sessionId) => {
   updateUI();
 
   ActionLog(
-    `Un ${runtimeState.currentEnemy.isRare ? "⭐ " + runtimeState.currentEnemy.name : runtimeState.currentEnemy.name} apparaît !`,
+    groupSize > 1
+      ? `Un Groupe de ${groupSize} ${firstEnemy.name} apparaît !`
+      : `Un ${firstEnemy.isRare ? "⭐ " + firstEnemy.name : firstEnemy.name} apparaît !`,
   );
 
   setTimeout(() => combatLoop(sessionId), 500);
+};
+
+const spawnMonsters = (monsterId, sessionId) => {
+  const monster = MONSTERS[monsterId];
+  const groupSize = getGroupSize(monster.groupCombinations);
+  const enemies = [];
+
+  for (let i = 0; i < groupSize; i++) {
+    enemies.push({ id: monsterId, ...monster });
+  }
+
+  return enemies; // Return the array of spawned enemies
+};
+
+const handleMonsterAttack = (enemies) => {
+  enemies.forEach((enemy) => {
+    // Logic for each enemy to attack
+    console.log(`${enemy.name} attacks!`);
+    // Implement attack logic here
+  });
+};
+
+const getGroupSize = (groupCombinations) => {
+  const random = Math.random();
+  let cumulativeChance = 0;
+  for (const combination of groupCombinations) {
+    cumulativeChance += combination.chance;
+    if (random <= cumulativeChance) {
+      return combination.size;
+    }
+  }
+  return 1; // Default to 1 if no match
 };
 
 const handleCampfireEvent = (sessionId) => {

@@ -140,20 +140,16 @@ export const MONSTERS = {
     runes: 15,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.1 },
   },
-  wolf: { name: "Loup Affamé", hp: 15, atk: 8, runes: 10 },
-  wolf_2: {
-    name: "Couple de Loups Affamés",
+  wolf: {
+    name: "Loup Affamé",
     hp: 15,
-    atk: 16,
+    atk: 8,
     runes: 10,
-    linkedFight: "wolf",
-  },
-  wolf_3: {
-    name: "Meute de Loups Affamés",
-    hp: 15,
-    atk: 24,
-    runes: 10,
-    linkedFight: "wolf_2",
+    groupCombinations: [
+      { size: 1, chance: 0.5 },
+      { size: 2, chance: 0.3 },
+      { size: 3, chance: 0.2 },
+    ],
   },
   margit: {
     name: "Margit le Déchu",
@@ -222,7 +218,7 @@ export const BIOMES = {
     name: "Nécrolimbe Ouest",
     rareMonsters: ["crucible_knight", "beastman"],
     maxRareSpawns: 2,
-    monsters: ["soldier", "wolf", "wolf_3"],
+    monsters: ["soldier", "wolf"],
     boss: "margit",
     length: 10,
     unlocks: "caelid",

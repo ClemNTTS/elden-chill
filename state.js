@@ -36,7 +36,8 @@ export let gameState = {
 
 // Non-saved, runtime state
 export const runtimeState = {
-  currentEnemy: null,
+  currentEnemyGroup: [],
+  lastDefeatedEnemy: null,
   playerCurrentHp: 0,
   currentCombatSession: 0,
   currentLoopCount: 0,
