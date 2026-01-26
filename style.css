@@ -437,6 +437,12 @@ button:disabled {
   text-transform: uppercase;
 }
 
+/* Style pour les récompenses de runes */
+.log-runes {
+  color: #d4af37; /* Or dimé */
+  font-weight: bold;
+}
+
 /* Animation de secousse (Shake) */
 @keyframes shake {
   0% {

@@ -243,14 +243,14 @@ export const updateHealthBars = () => {
 
   const enemyBar = document.getElementById("enemy-hp-fill");
   const enemyText = document.getElementById("enemy-hp-text");
-  if (runtimeState.currentEnemy) {
+  if (runtimeState.currentEnemyGroup && runtimeState.currentEnemyGroup.length > 0) {
+    const firstEnemy = runtimeState.currentEnemyGroup[0];
     const enemyPercent =
-      (runtimeState.currentEnemy.currentHp / runtimeState.currentEnemy.hp) *
-      100;
+      (firstEnemy.currentHp / firstEnemy.hp) * 100;
     enemyBar.style.width = `${Math.max(0, enemyPercent)}%`;
     enemyText.innerText = `${formatNumber(
-      Math.floor(runtimeState.currentEnemy.currentHp),
-    )} / ${formatNumber(runtimeState.currentEnemy.hp)}`;
+      Math.floor(firstEnemy.currentHp),
+    )} / ${formatNumber(firstEnemy.hp)}`;
   } else {
     enemyBar.style.width = "0%";
     enemyText.innerText = "0 / 0";
