@@ -115,7 +115,13 @@ export const LOOT_TABLES = {
 };
 
 export const MONSTERS = {
-  soldier: { name: "Soldat de Godrick", hp: 30, atk: 5, runes: 15 },
+  soldier: {
+    name: "Soldat de Godrick",
+    hp: 30,
+    atk: 5,
+    runes: 15,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.1 },
+  },
   wolf: { name: "Loup Affamé", hp: 15, atk: 8, runes: 10 },
   margit: {
     name: "Margit le Déchu",
