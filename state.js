@@ -7,22 +7,23 @@ export let gameState = {
     carried: 0,
   },
   stats: {
-    vigor: 10,
-    strength: 10,
-    dexterity: 10,
-    intelligence: 10,
+    level: 0,
+    vigor: 0,
+    strength: 0,
+    dexterity: 0,
+    intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
   },
   equipped: {
-    weapon: null,
+    weapon: "fists",
     armor: null,
     accessory: null,
   },
-  inventory: [],
+  inventory: [{id: "fists", name: "poings", level: 10, count: 0}],
   world: {
-    currentBiome: "necrolimbe",
-    unlockedBiomes: ["necrolimbe"],
+    currentBiome: "limgrave_west",
+    unlockedBiomes: ["limgrave_west"],
     progress: 0,
     isExploring: false,
     checkpointReached: false,
@@ -59,7 +60,7 @@ export function setGameState(newState) {
       !gameState.world.unlockedBiomes ||
       gameState.world.unlockedBiomes.length === 0
     ) {
-      gameState.world.unlockedBiomes = ["necrolimbe"];
+      gameState.world.unlockedBiomes = ["limgrave_west"];
     }
   }
 
@@ -78,4 +79,10 @@ export function getEffectiveStats() {
     }
   });
   return effStats;
+}
+
+export function getHealth(vigor) {
+  return Math.floor(300 
+      + 1650 * (1 - Math.exp(-0.035 * vigor)) 
+      + 0.18 * vigor * vigor);
 }

@@ -4,26 +4,19 @@ import { updateUI } from "./ui.js";
 import { ITEM_TYPES, ITEMS } from "./gameData.js";
 
 const upgradeCosts = {
-  vigor: 10,
-  strength: 10,
-  dexterity: 15,
-  intelligence: 15,
-  critChance: 150,
-  critDamage: 1500,
+  vigor: 1,
+  strength: 1,
+  dexterity: 1.5,
+  intelligence: 1.5,
+  critChance: 2,
+  critDamage: 3,
 };
 
 export const getUpgradeCost = (statName) => {
   const baseCost = upgradeCosts[statName] || 10;
-  const val = gameState.stats[statName] || 0;
-
-  let count = 0;
-  if (["vigor", "strength", "dexterity", "intelligence"].includes(statName)) {
-    count = val - 10;
-  }
-  if (statName === "critChance") count = Math.round((val - 0.05) * 100);
-  if (statName === "critDamage") count = Math.round((val - 1.5) * 10);
-
-  return Math.floor(baseCost * Math.pow(1.3, count));
+  let count = gameState.stats.level;
+  let x = Math.max((count-11)*0.02, 0);
+  return Math.floor(baseCost*((x+0.1)*(Math.pow(count+81,2))+1));
 };
 
 export const upgradeStat = (statName) => {
@@ -44,6 +37,7 @@ export const upgradeStat = (statName) => {
     } else {
       gameState.stats[statName] += 1;
     }
+    gameState.stats.level++;
     saveGame();
     updateUI();
   } else {

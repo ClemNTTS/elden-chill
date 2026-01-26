@@ -1,5 +1,5 @@
 import { BIOMES, ITEMS, LOOT_TABLES, STATUS_EFFECTS } from "./gameData.js";
-import { gameState, getEffectiveStats, runtimeState } from "./state.js";
+import { gameState, getEffectiveStats, runtimeState, getHealth } from "./state.js";
 import { getUpgradeCost, upgradeStat, equipItem } from "./actions.js";
 import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
@@ -40,7 +40,7 @@ const updateStatDisplay = () => {
 
   const statsList = ["vigor", "strength", "dexterity", "intelligence"];
   statsList.forEach((s) => {
-    const baseVal = base[s] || 10;
+    const baseVal = base[s];
     document.getElementById(`base-${s}`).innerText = baseVal;
 
     const bonus = eff[s] - baseVal;
@@ -231,7 +231,7 @@ export const ActionLog = (message, className = "") => {
 
 export const updateHealthBars = () => {
   const stats = getEffectiveStats();
-  const playerMaxHp = stats.vigor * 10;
+  const playerMaxHp = getHealth(stats.vigor);
   const playerPercent = (runtimeState.playerCurrentHp / playerMaxHp) * 100;
   document.getElementById("player-hp-fill").style.width = `${Math.max(
     0,
@@ -269,10 +269,10 @@ export const showTooltip = (e, item) => {
   const tooltip = document.getElementById("tooltip");
   const itemData = ITEMS[item.id];
   let base = {
-    vigor: 10,
-    strength: 10,
-    dexterity: 10,
-    intelligence: 10,
+    vigor: 0,
+    strength: 0,
+    dexterity: 0,
+    intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
     attacksPerTurn: 1,
@@ -326,11 +326,11 @@ export const showStatTooltip = (e, statType) => {
   const descriptions = {
     vigor: {
       title: "Vigueur",
-      text: "Augmente vos points de vie maximum.<br><strong>1 point = 10 PV.</strong>",
+      text: "Augmente vos points de vie maximum.<br>",
     },
     strength: {
       title: "Force",
-      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 dégât de base.</strong>",
+      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 dégât de base. 10 dégats de base.</strong>",
     },
     dexterity: {
       title: "Dextérité",

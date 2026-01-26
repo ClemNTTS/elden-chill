@@ -7,6 +7,14 @@ export const ITEM_TYPES = {
 };
 
 export const ITEMS = {
+  fists: {
+    name: "poings",
+    description: "+5 Force",
+    type: ITEM_TYPES.WEAPON,
+    apply: (stats, itemLevel) => {
+      stats.strength += 5;
+    },
+  },
   iron_sword: {
     name: "Épée en Fer",
     description: "+5 Force <em style='color: grey;'>(+ 2 / Niv)</em>",
@@ -98,7 +106,7 @@ export const ITEMS = {
 };
 
 export const LOOT_TABLES = {
-  necrolimbe: [
+  limgrave_west: [
     { id: "iron_sword", chance: 0.6 },
     { id: "crimson_amber", chance: 0.3 },
     { id: "scholars_ring", chance: 0.1 },
@@ -123,6 +131,8 @@ export const MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.1 },
   },
   wolf: { name: "Loup Affamé", hp: 15, atk: 8, runes: 10 },
+  wolf_2: { name: "Couple de Loups Affamés", hp: 15, atk: 16, runes: 10, linkedFight:"wolf" },
+  wolf_3: { name: "Meute de Loups Affamés", hp: 15, atk: 24, runes: 10, linkedFight:"wolf_2" },
   margit: {
     name: "Margit le Déchu",
     hp: 200,
@@ -186,11 +196,11 @@ export const MONSTERS = {
   },
 };
 export const BIOMES = {
-  necrolimbe: {
-    name: "Nécrolimbe",
+  limgrave_west: {
+    name: "Nécrolimbe Ouest",
     rareMonsters: ["crucible_knight", "beastman"],
     maxRareSpawns: 2,
-    monsters: ["soldier", "wolf"],
+    monsters: ["soldier", "wolf", "wolf_3"],
     boss: "margit",
     length: 10,
     unlocks: "caelid",
