@@ -329,6 +329,31 @@ export const combatLoop = (sessionId) => {
     if (playerStatus.logMessages.length)
       playerStatus.logMessages.forEach((msg) => ActionLog(msg, "log-warning"));
 
+    // --- STYPTIC BOLUSES LOGIC ---
+    let hasStypticBoluses = false;
+    for (const itemId of Object.values(gameState.equipped)) {
+      if (ITEMS[itemId]?.passiveEffect === "HALVE_BLEED") {
+        hasStypticBoluses = true;
+        break;
+      }
+    }
+
+    if (hasStypticBoluses) {
+      const bleedEffect = gameState.playerEffects.find((e) => e.id === "BLEED");
+      if (bleedEffect && bleedEffect.stacks > 0) {
+        const stacksBefore = bleedEffect.stacks;
+        bleedEffect.stacks = Math.floor(bleedEffect.stacks / 2);
+        const stacksRemoved = stacksBefore - bleedEffect.stacks;
+        if (stacksRemoved > 0) {
+          ActionLog(
+            `Vos Boluses Styptiques réduisent le saignement de ${stacksRemoved} charges.`,
+            "log-heal", // Using a heal-like color for positive feedback
+          );
+        }
+      }
+    }
+    // --- END STYPTIC BOLUSES LOGIC ---
+
     if (runtimeState.playerCurrentHp <= 0) {
       handleDeath();
       return;

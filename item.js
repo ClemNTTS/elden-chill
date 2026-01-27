@@ -36,12 +36,12 @@ export const ITEMS = {
     name: "Croc de Limier",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Convertit 20% de la Dextérité en force bonus. 20% chance d'appliquer saignement pour 2 tours.<em style='color: grey;'>(+2% dext scaling par Niv)</em>",
+      "Convertit 20% de la Dextérité en force bonus. 35% chance d'appliquer 3 saignements.<em style='color: grey;'>(+5% dext scaling par Niv)</em>",
     apply: (stats, itemLevel) => {
-      const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
+      const conversionRatio = 0.2 + 0.05 * (itemLevel - 1);
       stats.strength += Math.floor(stats.dexterity * conversionRatio);
     },
-    onHitEffect: { id: "BLEED", duration: 2, chance: 0.2 },
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
   },
   leather_vest: {
     name: "Veste en Cuir",
@@ -153,5 +153,27 @@ export const ITEMS = {
       const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
       stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
     },
+  },
+
+  styptic_boluses: {
+    name: "Boluses Styptiques",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "+10 d'armure <em style='color: grey;'>(+2 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
+    passiveEffect: "HALVE_BLEED",
+    apply: (stats, itemLevel) => {
+      stats.armor += 10 + 2 * (itemLevel - 1);
+    },
+  },
+
+  troll_necklace: {
+    name: "Pendentif de Troll",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "+30% de chance d'appliquer 4 poisons. +1% Crit Chance <em style='color: grey;'>(+1% par Niv)",
+    apply: (stats, itemLevel) => {
+      stats.critChance += 0.01 + 0.01 * (itemLevel - 1);
+    },
+    onHitEffect: { id: "POISON", duration: 4, chance: 0.3 },
   },
 };

@@ -55,6 +55,10 @@ export const MONSTERS = {
       { size: 1, chance: 0.9 },
       { size: 2, chance: 0.1 },
     ],
+    drops: [
+      { id: "styptic_boluses", chance: 0.2 },
+      { id: "leather_vest", chance: 0.8 },
+    ],
   },
   troll1_duo: {
     name: "Troll des Collines",
@@ -68,6 +72,7 @@ export const MONSTERS = {
     dmgMultPhase2: 2,
     flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
     groupCombinations: [{ size: 2, chance: 1.0 }],
+    drops: [{ id: "troll_necklace", chance: 0.8 }],
   },
   kaiden_sellsword: {
     name: "Mercenaire de Kaiden",
