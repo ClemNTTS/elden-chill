@@ -6,6 +6,7 @@ import { exportSave, importSave, loadGame, saveGame } from "./save.js";
 import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
 import { startExploration } from "./core.js";
 import {
+  createFireParticles,
   hideTooltip,
   moveTooltip,
   showStatTooltip,
@@ -147,7 +148,10 @@ window.equipAsh = equipAsh;
 
 // --- Game Initialization ---
 // Set the onload handler
-window.onload = loadGame;
+window.onload = () => {
+  loadGame();
+  createFireParticles();
+};
 
 // Start the auto-save interval
 setInterval(saveGame, 30000);

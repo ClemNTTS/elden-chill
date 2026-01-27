@@ -276,11 +276,13 @@ export const updateUI = () => {
 export const toggleView = (view) => {
   const camp = document.getElementById("camp-view");
   const biome = document.getElementById("biome-view");
+  const particles = document.getElementById("fire-particles");
 
   if (view === "biome") {
     camp.style.display = "none";
     biome.style.display = "block";
     gameState.world.isExploring = true;
+    if (particles) particles.classList.add("hidden");
   } else {
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
@@ -289,6 +291,7 @@ export const toggleView = (view) => {
     camp.style.display = "block";
     biome.style.display = "none";
     gameState.world.isExploring = false;
+    if (particles) particles.classList.remove("hidden");
     saveGame();
   }
   updateUI();
@@ -502,4 +505,21 @@ export const updateStepper = () => {
 export const toggleOptions = (show) => {
   const modal = document.getElementById("options-modal");
   modal.className = show ? "modal-visible" : "modal-hidden";
+};
+
+export const createFireParticles = () => {
+  const container = document.getElementById("fire-particles");
+  if (!container) return;
+  const particleCount = 50;
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement("div");
+    particle.className = "particle";
+    const size = Math.random() * 7 + 3;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.animationDelay = `${Math.random() * 10}s`;
+    particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    container.appendChild(particle);
+  }
 };
