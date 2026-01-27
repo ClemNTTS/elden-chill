@@ -149,6 +149,7 @@ export const MONSTERS = {
     atk: 60,
     runes: 2400,
     isBoss: true,
+    dodgeChance: 0.2,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.5 },
   },
   // === LIMGRAVE LAKE===
