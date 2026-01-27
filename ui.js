@@ -1,3 +1,54 @@
+// Audio management
+const campSongs = ["./assets/camp_song_1.mp3", "./assets/camp_song_2.mp3"];
+const dungeonSongs = [
+  "./assets/dungeon_song_1.mp3",
+  "./assets/dungeon_song_2.mp3",
+];
+
+let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
+let currentDungeonSongIndex = 0;
+
+const campAudio = new Audio();
+campAudio.volume = 0.3;
+const dungeonAudio = new Audio();
+dungeonAudio.volume = 0.3;
+
+function playNextCampSong() {
+  currentCampSongIndex = (currentCampSongIndex + 1) % campSongs.length;
+  campAudio.src = campSongs[currentCampSongIndex];
+  campAudio.play();
+}
+
+function playNextDungeonSong() {
+  currentDungeonSongIndex = (currentDungeonSongIndex + 1) % dungeonSongs.length;
+  dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  dungeonAudio.play();
+}
+
+campAudio.addEventListener("ended", playNextCampSong);
+dungeonAudio.addEventListener("ended", playNextDungeonSong);
+
+export function playCampMusic() {
+  dungeonAudio.pause();
+  // Check if the src is already set to avoid reloading
+  if (!campAudio.src.endsWith(campSongs[currentCampSongIndex])) {
+    campAudio.src = campSongs[currentCampSongIndex];
+  }
+  campAudio.play().catch((e) => {
+    /* Autoplay was prevented */
+  });
+}
+
+function playDungeonMusic() {
+  campAudio.pause();
+  if (!dungeonAudio.src.endsWith(dungeonSongs[currentDungeonSongIndex])) {
+    dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  }
+  dungeonAudio.play().catch((e) => {
+    /* Autoplay was prevented */
+  });
+}
+
 import { ASHES_OF_WAR } from "./ashes.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { MONSTERS } from "./monster.js";
@@ -196,11 +247,11 @@ export const updateStatusIcons = () => {
     if (!data) return "";
 
     let text = "";
-    if (eff.id === 'BLEED') {
-        text = ` (${eff.stacks})`;
+    if (eff.id === "BLEED") {
+      text = ` (${eff.stacks})`;
     } else {
-        // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
-        text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+      // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
+      text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
     }
 
     return `<div class="status-icon" style="background-color: ${data.color}" title="${data.name}">
@@ -288,6 +339,7 @@ export const toggleView = (view) => {
     biome.style.display = "block";
     gameState.world.isExploring = true;
     if (particles) particles.classList.add("hidden");
+    playDungeonMusic();
   } else {
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
@@ -297,6 +349,7 @@ export const toggleView = (view) => {
     biome.style.display = "none";
     gameState.world.isExploring = false;
     if (particles) particles.classList.remove("hidden");
+    playCampMusic();
     saveGame();
   }
   updateUI();
