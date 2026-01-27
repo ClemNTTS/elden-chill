@@ -195,11 +195,16 @@ export const updateStatusIcons = () => {
     const data = STATUS_EFFECTS[eff.id];
     if (!data) return "";
 
-    // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
-    const durationText = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+    let text = "";
+    if (eff.id === 'BLEED') {
+        text = ` (${eff.stacks})`;
+    } else {
+        // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
+        text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+    }
 
     return `<div class="status-icon" style="background-color: ${data.color}" title="${data.name}">
-              ${data.name}${durationText}
+              ${data.name}${text}
             </div>`;
   };
 

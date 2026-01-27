@@ -20,12 +20,20 @@ import {
 
 /* ================= STATUS EFFECTS ================= */
 
-export const applyEffect = (targetEffects, effectId, duration) => {
+export const applyEffect = (targetEffects, effectId, value) => { // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
-  if (existing) {
-    existing.duration = Math.max(existing.duration, duration);
+  if (effectId === "BLEED") {
+    if (existing) {
+      existing.stacks = (existing.stacks || 0) + (value || 1);
+    } else {
+      targetEffects.push({ id: effectId, stacks: (value || 1) });
+    }
   } else {
-    targetEffects.push({ id: effectId, duration });
+    if (existing) {
+      existing.duration = Math.max(existing.duration, value);
+    } else {
+      targetEffects.push({ id: effectId, duration: value });
+    }
   }
 };
 
@@ -43,9 +51,11 @@ const processTurnEffects = (entity, effectsArray) => {
       if (result?.skipTurn) skipTurn = true;
     }
 
-    effectRef.duration--;
-    if (effectRef.duration <= 0) {
-      effectsArray.splice(i, 1);
+    if (effectRef.id !== 'BLEED') {
+        effectRef.duration--;
+        if (effectRef.duration <= 0) {
+          effectsArray.splice(i, 1);
+        }
     }
   }
   return { logMessages, skipTurn };
@@ -89,8 +99,31 @@ export function performAttack({
   attackers.forEach((attacker) => {
     let damage = attacker.atk ?? stats?.strength ?? 0;
 
+    // --- NEW BLEED LOGIC ---
+    const bleedEffect = targetEffects.find(eff => eff.id === 'BLEED');
+    if (bleedEffect && bleedEffect.stacks > 0) {
+        const procChance = bleedEffect.stacks * 0.1;
+        if (Math.random() < procChance) {
+            const bleedDamage = Math.floor(damage * (0.20 * bleedEffect.stacks));
+            damage += bleedDamage;
+            
+            ActionLog(`HÉMORRAGIE ! Le saignement inflige ${formatNumber(bleedDamage)} dégâts supplémentaires !`, 'log-crit');
+
+            // Consume stacks
+            const bleedIndex = targetEffects.findIndex(eff => eff.id === 'BLEED');
+            if (bleedIndex > -1) {
+                targetEffects.splice(bleedIndex, 1);
+            }
+        }
+    }
+    // --- END NEW BLEED LOGIC ---
+
     if (ashEffect?.damageMult) {
       damage *= ashEffect.damageMult;
+    }
+
+    if (ashEffect?.status) {
+        applyEffect(targetEffects, ashEffect.status.id, ashEffect.status.duration);
     }
 
     let isCrit = false;
@@ -152,10 +185,14 @@ export function performAttack({
       const { id, duration, chance } = attacker.onHitEffect;
       if (Math.random() < chance) {
         applyEffect(targetEffects, id, duration);
-        ActionLog(
-          `${isPlayer ? "Vous appliquez" : "L'attaque applique"} ${duration} ${STATUS_EFFECTS[id].name} !`,
-          "log-warning"
-        );
+        if (id === 'BLEED') {
+            ActionLog(`Saignement appliqué ! (+${duration} stack(s))`, "log-status");
+        } else {
+            ActionLog(
+              `${isPlayer ? "Vous appliquez" : "L'attaque applique"} ${duration} ${STATUS_EFFECTS[id].name} !`,
+              "log-warning"
+            );
+        }
       }
     }
 
@@ -167,10 +204,14 @@ export function performAttack({
           const { id, duration, chance } = item.onHitEffect;
           if (Math.random() < chance) {
             applyEffect(targetEffects, id, duration);
-            ActionLog(
-              `Vous appliquez ${duration} ${STATUS_EFFECTS[id].name} à l'ennemi !`,
-              "log-warning"
-            );
+            if (id === 'BLEED') {
+                ActionLog(`Saignement appliqué ! (+${duration} stack(s))`, "log-status");
+            } else {
+                ActionLog(
+                  `Vous appliquez ${duration} ${STATUS_EFFECTS[id].name} à l'ennemi !`,
+                  "log-warning"
+                );
+            }
           }
         }
       });
