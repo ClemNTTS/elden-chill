@@ -48,7 +48,7 @@ export const ITEMS = {
     type: ITEM_TYPES.ARMOR,
     description: "réduit les dégats subits de 2. <em style='color: grey;'>(+1 par Niv)</em>",
     apply: (stats, itemLevel) => {
-      const flatDamageReduction = 2 * (1 * (itemLevel - 1));
+      const flatDamageReduction = 2 + (1 * (itemLevel - 1));
       stats.flatDamageReduction += flatDamageReduction;
     },
   },

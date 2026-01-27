@@ -1,3 +1,54 @@
+// Audio management
+const campSongs = ["./assets/camp_song_1.mp3", "./assets/camp_song_2.mp3"];
+const dungeonSongs = [
+  "./assets/dungeon_song_1.mp3",
+  "./assets/dungeon_song_2.mp3",
+];
+
+let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
+let currentDungeonSongIndex = 0;
+
+const campAudio = new Audio();
+campAudio.volume = 0.3;
+const dungeonAudio = new Audio();
+dungeonAudio.volume = 0.3;
+
+function playNextCampSong() {
+  currentCampSongIndex = (currentCampSongIndex + 1) % campSongs.length;
+  campAudio.src = campSongs[currentCampSongIndex];
+  campAudio.play();
+}
+
+function playNextDungeonSong() {
+  currentDungeonSongIndex = (currentDungeonSongIndex + 1) % dungeonSongs.length;
+  dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  dungeonAudio.play();
+}
+
+campAudio.addEventListener("ended", playNextCampSong);
+dungeonAudio.addEventListener("ended", playNextDungeonSong);
+
+export function playCampMusic() {
+  dungeonAudio.pause();
+  // Check if the src is already set to avoid reloading
+  if (!campAudio.src.endsWith(campSongs[currentCampSongIndex])) {
+    campAudio.src = campSongs[currentCampSongIndex];
+  }
+  campAudio.play().catch((e) => {
+    /* Autoplay was prevented */
+  });
+}
+
+function playDungeonMusic() {
+  campAudio.pause();
+  if (!dungeonAudio.src.endsWith(dungeonSongs[currentDungeonSongIndex])) {
+    dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  }
+  dungeonAudio.play().catch((e) => {
+    /* Autoplay was prevented */
+  });
+}
+
 import { ASHES_OF_WAR } from "./ashes.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { MONSTERS } from "./monster.js";
@@ -195,11 +246,16 @@ export const updateStatusIcons = () => {
     const data = STATUS_EFFECTS[eff.id];
     if (!data) return "";
 
-    // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
-    const durationText = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+    let text = "";
+    if (eff.id === "BLEED") {
+      text = ` (${eff.stacks})`;
+    } else {
+      // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre
+      text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
+    }
 
     return `<div class="status-icon" style="background-color: ${data.color}" title="${data.name}">
-              ${data.name}${durationText}
+              ${data.name}${text}
             </div>`;
   };
 
@@ -276,11 +332,14 @@ export const updateUI = () => {
 export const toggleView = (view) => {
   const camp = document.getElementById("camp-view");
   const biome = document.getElementById("biome-view");
+  const particles = document.getElementById("fire-particles");
 
   if (view === "biome") {
     camp.style.display = "none";
     biome.style.display = "block";
     gameState.world.isExploring = true;
+    if (particles) particles.classList.add("hidden");
+    playDungeonMusic();
   } else {
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
@@ -289,6 +348,8 @@ export const toggleView = (view) => {
     camp.style.display = "block";
     biome.style.display = "none";
     gameState.world.isExploring = false;
+    if (particles) particles.classList.remove("hidden");
+    playCampMusic();
     saveGame();
   }
   updateUI();
@@ -502,4 +563,21 @@ export const updateStepper = () => {
 export const toggleOptions = (show) => {
   const modal = document.getElementById("options-modal");
   modal.className = show ? "modal-visible" : "modal-hidden";
+};
+
+export const createFireParticles = () => {
+  const container = document.getElementById("fire-particles");
+  if (!container) return;
+  const particleCount = 50;
+  for (let i = 0; i < particleCount; i++) {
+    const particle = document.createElement("div");
+    particle.className = "particle";
+    const size = Math.random() * 7 + 3;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    particle.style.left = `${Math.random() * 100}%`;
+    particle.style.animationDelay = `${Math.random() * 10}s`;
+    particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    container.appendChild(particle);
+  }
 };

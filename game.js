@@ -6,12 +6,14 @@ import { exportSave, importSave, loadGame, saveGame } from "./save.js";
 import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
 import { startExploration } from "./core.js";
 import {
+  createFireParticles,
   hideTooltip,
   moveTooltip,
   showStatTooltip,
   toggleOptions,
   toggleView,
   updateUI,
+  playCampMusic,
 } from "./ui.js";
 import { enqueueDevSpawn } from "./spawn.js";
 
@@ -87,7 +89,7 @@ const dev = {
       const itemTemplate = ITEMS[itemId];
 
       let inventoryItem = gameState.inventory.find(
-        (item) => item.id === itemId
+        (item) => item.id === itemId,
       );
 
       if (!inventoryItem) {
@@ -114,18 +116,20 @@ const dev = {
     updateUI();
     saveGame();
   },
-  
-  spawnEnemy: (monsterId,amount) => {
-    if(!amount) amount = 1;
-    for(let i=0;i<amount;i++) {
+
+  spawnEnemy: (monsterId, amount) => {
+    if (!amount) amount = 1;
+    for (let i = 0; i < amount; i++) {
       if (enqueueDevSpawn(monsterId)) {
         console.log(`🔧 DEV : ${monsterId} ajouté à la file de spawn.`);
-      };
+      }
     }
   },
-  toggleCombat:() => {
-  runtimeState.combatFrozen = !runtimeState.combatFrozen;
-  console.log(`🔧 DEV : Combat ${runtimeState.combatFrozen ? "gelé" : "dégelé"} !`);
+  toggleCombat: () => {
+    runtimeState.combatFrozen = !runtimeState.combatFrozen;
+    console.log(
+      `🔧 DEV : Combat ${runtimeState.combatFrozen ? "gelé" : "dégelé"} !`,
+    );
   },
 };
 
@@ -147,7 +151,15 @@ window.equipAsh = equipAsh;
 
 // --- Game Initialization ---
 // Set the onload handler
-window.onload = loadGame;
+window.onload = () => {
+  loadGame();
+  createFireParticles();
+  const startAudioOnInteraction = () => {
+    playCampMusic();
+    window.removeEventListener("click", startAudioOnInteraction);
+  };
+  window.addEventListener("click", startAudioOnInteraction);
+};
 
 // Start the auto-save interval
 setInterval(saveGame, 30000);

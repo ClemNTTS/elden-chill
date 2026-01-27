@@ -735,3 +735,38 @@ button:disabled {
   animation: pulse-gold 1.5s infinite;
   border: 1px solid gold;
 }
+
+#fire-particles {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+#fire-particles.hidden {
+  display: none;
+}
+
+.particle {
+  position: absolute;
+  bottom: -20px;
+  background-color: var(--pressed-btn);
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: rise 10s infinite;
+}
+
+@keyframes rise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.5);
+    opacity: 0;
+  }
+}

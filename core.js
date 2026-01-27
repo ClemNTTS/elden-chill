@@ -112,6 +112,10 @@ export const handleVictory = (sessionId) => {
   if (firstEnemy.isBoss) {
     const currentBiome = BIOMES[gameState.world.currentBiome];
     gameState.world.rareSpawnsCount = 0;
+    runtimeState.ashUsesLeft = gameState.equippedAsh
+      ? ASHES_OF_WAR[gameState.equippedAsh].maxUses
+      : 0;
+
     ActionLog("BOSS VAINCU !");
 
     if (
@@ -247,5 +251,3 @@ export const startExploration = (biomeId) => {
 
   nextEncounter(sessionAtStart);
 };
-
-
