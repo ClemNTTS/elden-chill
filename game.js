@@ -1,8 +1,10 @@
 // Main entry point for the game
-import { BIOMES, ITEMS } from "./gameData.js";
+import { BIOMES } from "./biome.js";
+import { ITEMS } from "./item.js";
 import { gameState, runtimeState } from "./state.js";
 import { exportSave, importSave, loadGame, saveGame } from "./save.js";
 import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
+import { startExploration } from "./core.js";
 import {
   hideTooltip,
   moveTooltip,
@@ -11,7 +13,7 @@ import {
   toggleView,
   updateUI,
 } from "./ui.js";
-import { startExploration } from "./core.js";
+import { enqueueDevSpawn } from "./spawn.js";
 
 // Dev tools
 const dev = {
@@ -79,6 +81,51 @@ const dev = {
     // Switch view and save
     toggleView("camp");
     console.log("Reset complete. You are back at the camp.");
+  },
+  giveAllItems: () => {
+    Object.keys(ITEMS).forEach((itemId) => {
+      const itemTemplate = ITEMS[itemId];
+
+      let inventoryItem = gameState.inventory.find(
+        (item) => item.id === itemId
+      );
+
+      if (!inventoryItem) {
+        gameState.inventory.push({
+          id: itemId,
+          name: itemTemplate.name,
+          level: 1,
+          count: 0,
+        });
+      }
+    });
+
+    console.log("🔧 DEV : Tous les objets ont été ajoutés à l'inventaire.");
+    updateUI();
+    saveGame();
+  },
+  maxAllItems: () => {
+    gameState.inventory.forEach((item) => {
+      item.level = 10;
+      item.count = 0;
+    });
+
+    console.log("🔧 DEV : Tous les objets ont été montés niveau 10.");
+    updateUI();
+    saveGame();
+  },
+  
+  spawnEnemy: (monsterId,amount) => {
+    if(!amount) amount = 1;
+    for(let i=0;i<amount;i++) {
+      if (enqueueDevSpawn(monsterId)) {
+        console.log(`🔧 DEV : ${monsterId} ajouté à la file de spawn.`);
+      };
+    }
+  },
+  toggleCombat:() => {
+  runtimeState.combatFrozen = !runtimeState.combatFrozen;
+  console.log(`🔧 DEV : Combat ${runtimeState.combatFrozen ? "gelé" : "dégelé"} !`);
   },
 };
 

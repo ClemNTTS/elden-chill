@@ -1,0 +1,107 @@
+/*regles de bases que je vais tester
+hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur de 1 a 2 sure la vie et le drop de runes
+mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
+*/
+export const MONSTERS = {
+  soldier1: {
+    name: "Soldat de Godrick",
+    hp: 19,
+    atk: 5,
+    runes: 40,
+    //onHitEffect: { id: "STUN", duration: 1, chance: 0.1 },
+  },
+  wolf1: {
+    name: "Loup Affamé",
+    hp: 8,
+    atk: 6,
+    runes: 60,
+    groupCombinations: [
+      { size: 1, chance: 0.5 },
+      { size: 2, chance: 0.3 },
+      { size: 3, chance: 0.2 },
+    ],
+  },
+   beastman1: {
+    name: "Homme-Bête de Farum Azula",
+    hp: 142,
+    atk: 18,
+    runes: 333,
+    isRare: true,
+    drops: [
+      { id: "iron_sword", chance: 0.95 },
+      { ashId: "storm_stomp", chance: 0.05, unique: true },
+    ],
+  },
+  troll1_boss: {
+    name: "Troll des Collines",
+    hp: 217,
+    atk: 20,
+    runes: 500,
+    isBoss : true,
+    hasSecondPhase: true,
+    isInSecondPhase: false,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 2,
+    flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
+    },
+  ripper_boar: {
+    name: "Sanglier Éventreur",
+    hp: 22,
+    atk: 15,
+    runes: 100,
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
+  },
+  margit: {
+    name: "Margit le Déchu",
+    hp: 200,
+    atk: 25,
+    runes: 1200,
+    isBoss: true,
+  },
+  godrick_knight: {
+    name: "Chevalier de Godrick",
+    hp: 75,
+    atk: 10,
+    runes: 270,
+    isRare: true,
+    drops: [
+      { item: "knight_greatsword", chance: 0.95 },
+      { ashId: "storm_stomp", chance: 0.05, unique: true },
+    ],
+  },
+  rotten_stray: {
+    name: "Chien Errant Putréfié",
+    hp: 70,
+    atk: 18,
+    runes: 80,
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.3 },
+  },
+  giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150 },
+  radahn: {
+    name: "Vestige de Radahn",
+    hp: 500,
+    atk: 45,
+    runes: 3000,
+    isBoss: true,
+  },
+  clayman: { name: "Homme d'Argile", hp: 250, atk: 35, runes: 400 },
+  sorcerer: { name: "Sorcier de Raya Lucaria", hp: 180, atk: 55, runes: 550 },
+  rennala: {
+    name: "Rennala, Reine de la Pleine Lune",
+    hp: 1200,
+    atk: 80,
+    runes: 15000,
+    isBoss: true,
+  },
+  crucible_knight: {
+    name: "Chevalier du Creuset",
+    hp: 180,
+    atk: 22,
+    runes: 450,
+    isRare: true,
+    drops: [
+      { id: "briar_armor", chance: 0.95 },
+      { ashId: "storm_stomp", chance: 0.05, unique: true },
+    ],
+  },
+};

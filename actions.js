@@ -1,7 +1,8 @@
 import { gameState } from "./state.js";
 import { saveGame, SAVE_NAME } from "./save.js";
 import { updateUI } from "./ui.js";
-import { ITEM_TYPES, ITEMS } from "./gameData.js";
+import { ASHES_OF_WAR } from "./ashes.js";
+import { ITEMS } from "./item.js";
 
 const upgradeCosts = {
   vigor: 1,

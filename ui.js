@@ -1,10 +1,8 @@
-import {
-  ASHES_OF_WAR,
-  BIOMES,
-  ITEMS,
-  LOOT_TABLES,
-  STATUS_EFFECTS,
-} from "./gameData.js";
+import { ASHES_OF_WAR } from "./ashes.js";
+import { BIOMES, LOOT_TABLES } from "./biome.js";
+import { MONSTERS } from "./monster.js";
+import { ITEMS } from "./item.js";
+import { STATUS_EFFECTS } from "./status.js";
 import {
   gameState,
   getEffectiveStats,

@@ -1,4 +1,4 @@
-import { ITEMS } from "./gameData.js";
+import { ITEMS } from "./item.js";
 
 // Saved state
 export let gameState = {
@@ -14,6 +14,11 @@ export let gameState = {
     intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
+    splashDamage: 0,
+    flatDamageReduction: 0,
+    percentDamageReduction: 0,
+    flatDamagePenetration: 0,
+    percentDamagePenetration: 0,
   },
   equipped: {
     weapon: "fists",
@@ -45,6 +50,7 @@ export const runtimeState = {
   currentLoopCount: 0,
   ashUsesLeft: 0,
   ashIsPrimed: false,
+  combatFrozen: false,
 };
 
 export function setGameState(newState) {

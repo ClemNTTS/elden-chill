@@ -443,6 +443,12 @@ button:disabled {
   font-weight: bold;
 }
 
+/* Style pour les textes additionels en combat */
+.log-flavor-orange {
+  color: rgb(212, 129, 4);
+  font-weight: bold;
+}
+
 /* Animation de secousse (Shake) */
 @keyframes shake {
   0% {
