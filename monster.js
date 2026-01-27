@@ -3,6 +3,7 @@ hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur d
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
 export const MONSTERS = {
+  // === LIMGRAVE WEST===
   soldier1: {
     name: "Soldat de Godrick",
     hp: 19,
@@ -44,6 +45,33 @@ export const MONSTERS = {
     dmgMultPhase2: 2,
     flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
   },
+  // === LIMGRAVE EAST===
+  godrick_knight1: {
+    name: "Chevalier de Godrick",
+    hp: 75,
+    atk: 10,
+    runes: 270,
+  },
+  kaiden_sellsword: {
+    name: "Mercenaire de Kaiden",
+    hp: 35,
+    atk: 28,
+    runes: 55,
+  },
+  troll1_duo: {
+    name: "Troll des Collines",
+    hp: 150,
+    atk: 20,
+    runes: 300,
+    isRare: true,
+    hasSecondPhase: true,
+    isInSecondPhase: false,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 2,
+    flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
+    groupCombinations: [{ size: 2, chance: 1.0 }],
+    drops: [{ id: "troll_necklace", chance: 0.8 }],
+  },
   runeBear1: {
     name: "Ours Runique",
     hp: 294,
@@ -60,26 +88,6 @@ export const MONSTERS = {
       { id: "leather_vest", chance: 0.8 },
     ],
   },
-  troll1_duo: {
-    name: "Troll des Collines",
-    hp: 150,
-    atk: 20,
-    runes: 300,
-    isRare: true,
-    hasSecondPhase: true,
-    isInSecondPhase: false,
-    thresholdForPhase2: 0.5,
-    dmgMultPhase2: 2,
-    flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
-    groupCombinations: [{ size: 2, chance: 1.0 }],
-    drops: [{ id: "troll_necklace", chance: 0.8 }],
-  },
-  kaiden_sellsword: {
-    name: "Mercenaire de Kaiden",
-    hp: 35,
-    atk: 28,
-    runes: 55,
-  },
   bloodhound_knight_darriwil: {
     name: "Chevalier Limier Darriwil",
     hp: 300, //2x health compared to ingame
@@ -88,23 +96,95 @@ export const MONSTERS = {
     isBoss: true,
     onHitEffect: { id: "BLEED", duration: 5, chance: 0.8 },
   },
-  margit: {
-    name: "Margit le Déchu",
-    hp: 200,
-    atk: 25,
-    runes: 1200,
-    isBoss: true,
+  // === LIMGRAVE NORTH===
+  white_wolf: {
+    name: "Loup Blanc",
+    hp: 40,
+    atk: 30,
+    runes: 100,
+    groupCombinations: [
+      { size: 1, chance: 0.7 },
+      { size: 2, chance: 0.3 },
+    ],
+    companion: ["wolf2"],
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.4 },
   },
-  godrick_knight: {
-    name: "Chevalier de Godrick",
-    hp: 75,
-    atk: 10,
-    runes: 270,
+  wolf2: {
+    name: "Loup Affamé",
+    hp: 16,
+    atk: 12,
+    runes: 80,
+    groupCombinations: [
+      { size: 1, chance: 0.5 },
+      { size: 2, chance: 0.5 },
+    ],
+  },
+  bell_bearing_hunter1: {
+    name: "Porteur de Cloche",
+    hp: 405,
+    atk: 80,
+    runes: 600,
+    isRare: true,
+    onHitEffect: { id: "BLEED", duration: 1, chance: 1.0 },
     drops: [
       { item: "knight_greatsword", chance: 0.95 },
+      { ashId: "bloody_slash", chance: 0.05, unique: true },
+    ],
+  },
+  crucible_knight1: {
+    name: "Chevalier du Creuset",
+    hp: 280,
+    atk: 40,
+    runes: 440,
+    dodgeChance: 0.333,
+    isRare: true,
+    drops: [
+      { id: "briar_armor", chance: 0.95 },
       { ashId: "storm_stomp", chance: 0.05, unique: true },
     ],
   },
+  margit: {
+    name: "Margit le Déchu",
+    hp: 420,
+    atk: 60,
+    runes: 2400,
+    isBoss: true,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.5 },
+  },
+  // === LIMGRAVE LAKE===
+  noble_sword: {
+    name: "Épéiste Noble",
+    hp: 9,
+    atk: 5,
+    runes: 10,
+  },
+  giant_crab: {
+    name: "Crabe Géant",
+    hp: 80,
+    atk: 15,
+    runes: 62,
+  },
+  noble_mage: {
+    name: "Mage Noble",
+    hp: 25,
+    atk: 7,
+    runes: 15,
+    isRare: true,
+    drops: [
+      { id: "astronomer_staff", chance: 0.5 },
+      { id: "crimson_amber", chance: 0.5 },
+    ],
+  },
+  limgrave_dragon: {
+    name: "Dragon de Nécrolimbe",
+    hp: 1600,
+    atk: 90,
+    runes: 2500,
+    isBoss: true,
+    onHitEffect: { id: "BURN", duration: 2, chance: 0.5 },
+  },
+
+  // === CAELID WEST===
   rotten_stray: {
     name: "Chien Errant Putréfié",
     hp: 70,
@@ -120,6 +200,8 @@ export const MONSTERS = {
     runes: 3000,
     isBoss: true,
   },
+
+  // === LIURNIA===
   clayman: { name: "Homme d'Argile", hp: 250, atk: 35, runes: 400 },
   sorcerer: { name: "Sorcier de Raya Lucaria", hp: 180, atk: 55, runes: 550 },
   rennala: {
@@ -128,16 +210,5 @@ export const MONSTERS = {
     atk: 80,
     runes: 15000,
     isBoss: true,
-  },
-  crucible_knight: {
-    name: "Chevalier du Creuset",
-    hp: 180,
-    atk: 22,
-    runes: 450,
-    isRare: true,
-    drops: [
-      { id: "briar_armor", chance: 0.95 },
-      { ashId: "storm_stomp", chance: 0.05, unique: true },
-    ],
   },
 };

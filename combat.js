@@ -98,6 +98,18 @@ export function performAttack({
   attackers.forEach((attacker) => {
     let damage = attacker.atk ?? stats?.strength ?? 0;
 
+    /* ================= ENEMY DODGE (PLAYER ATTACK ONLY) ================= */
+    if (isPlayer && target) {
+      const isStunned = targetEffects?.some(e => e.id === "STUN");
+      const dodgeChance = target.dodgeChance ?? 0;
+
+      if (!isStunned && dodgeChance > 0 && Math.random() < dodgeChance) {
+        ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
+        return; // cancel this hit completely
+      }
+    }
+
+
     // --- NEW BLEED LOGIC ---
     const bleedEffect = targetEffects.find((eff) => eff.id === "BLEED");
     if (bleedEffect && bleedEffect.stacks > 0) {

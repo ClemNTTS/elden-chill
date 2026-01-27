@@ -176,4 +176,17 @@ export const ITEMS = {
     },
     onHitEffect: { id: "POISON", duration: 4, chance: 0.3 },
   },
+
+  knight_greatsword: {
+    name: "Grande Épée de Chevalier",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "+15 Force, -5 Vigueur, +20% Force <em style='color: grey;'>(+5 Force/ Niv)</em>",
+    apply: (stats, itemLevel) => {
+      stats.strength += 15 + 5 * (itemLevel - 1);
+      stats.strength *= 1.2;
+      stats.vigor -= 5;
+      if (stats.vigor < 0) stats.vigor = 0;
+    },
+  },
 };
