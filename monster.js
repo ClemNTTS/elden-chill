@@ -43,13 +43,47 @@ export const MONSTERS = {
     thresholdForPhase2: 0.5,
     dmgMultPhase2: 2,
     flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
-  },
-  ripper_boar: {
-    name: "Sanglier Éventreur",
-    hp: 22,
-    atk: 15,
-    runes: 100,
+    },
+  runeBear1: {
+    name: "Ours Runique",
+    hp: 294,
+    atk: 30,
+    runes: 398,
+    isRare: true,
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
+    groupCombinations: [
+      { size: 1, chance: 0.9 },
+      { size: 2, chance: 0.1 },
+    ],
+  },
+  troll1_duo: {
+    name: "Troll des Collines",
+    hp: 150,
+    atk: 20,
+    runes: 300,
+    isRare: true,
+    hasSecondPhase: true,
+    isInSecondPhase: false,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 2,
+    flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
+    groupCombinations: [
+      { size: 2, chance: 1.0 },
+    ],
+  },
+  kaiden_sellsword: {
+    name: "Mercenaire de Kaiden",
+    hp: 35,
+    atk: 28,
+    runes: 55,
+  },
+  bloodhound_knight_darriwil: {
+    name: "Chevalier Limier Darriwil",
+    hp: 300, //2x health compared to ingame
+    atk: 40,
+    runes: 975,
+    isBoss: true,
+    onHitEffect: { id: "BLEED", duration: 5, chance: 0.8 },
   },
   margit: {
     name: "Margit le Déchu",

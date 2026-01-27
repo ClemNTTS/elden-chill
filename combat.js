@@ -1,8 +1,6 @@
 import { ASHES_OF_WAR } from "./ashes.js";
-import { BIOMES, LOOT_TABLES } from "./biome.js";
-import { MONSTERS } from "./monster.js";
-import { ITEMS } from "./item.js";
 import { STATUS_EFFECTS } from "./status.js";
+import { ITEMS } from "./item.js";
 import { handleDeath, handleVictory } from "./core.js";
 import {
   gameState,
@@ -17,6 +15,28 @@ import {
   updateHealthBars,
   updateUI,
 } from "./ui.js";
+
+/* ================= HELPERS ================= */
+
+function getEntityHp(entity) {
+  if ("currentHp" in entity) return entity.currentHp;
+  if ("hp" in entity) return entity.hp;
+  return 0;
+}
+
+function setEntityHp(entity, value) {
+  if ("currentHp" in entity) entity.currentHp = value;
+  else if ("hp" in entity) entity.hp = value;
+}
+
+function getMonsterArmor(monster) {
+  if (monster && typeof monster.armor === "number") return monster.armor;
+  return 100;
+}
+
+function clamp(v, min = 0) {
+  return Math.max(min, v);
+}
 
 /* ================= STATUS EFFECTS ================= */
 
@@ -59,40 +79,18 @@ const processTurnEffects = (entity, effectsArray) => {
       }
     }
   }
+
   return { logMessages, skipTurn };
 };
 
-/* ================= ENTITY HP ACCESSORS ================= */
-
-function getEntityHp(entity) {
-  if ("hp" in entity) return entity.hp;
-  if ("currentHp" in entity) return entity.currentHp;
-  return 0;
-}
-
-function setEntityHp(entity, value) {
-  if ("hp" in entity) entity.hp = value;
-  else if ("currentHp" in entity) entity.currentHp = value;
-}
-
-function getEntityMaxHp(entity) {
-  if ("maxHp" in entity) return entity.maxHp;
-  if ("currentHp" in entity) {
-    const stats = getEffectiveStats();
-    return stats.vigor * 10;
-  }
-  return 0;
-}
-
-/* ================= GENERIC ATTACK SYSTEM ================= */
+/* ================= GENERIC ATTACK ================= */
 
 export function performAttack({
   attackers,
   target,
   targetGroup,
-  attackerEffects,
-  targetEffects,
   stats,
+  targetEffects,
   logPrefix,
   isPlayer = false,
   ashEffect = null,
@@ -141,38 +139,76 @@ export function performAttack({
       isCrit = true;
       damage *= critDamage;
     }
-    damage = Math.max(0, Math.floor(damage || 0));
 
-    // -------------------- APPLY REDUCTIONS/PENETRATIONS --------------------
-    const flatReduction = target.flatDamageReduction ?? 0;
-    const percentReduction = target.percentDamageReduction ?? 0;
+    damage = Math.max(0, damage);
 
-    const flatPenetration = attacker.flatDamagePenetration ?? 0;
-    const percentPenetration = attacker.percentDamagePenetration ?? 0;
+    /* ================= ARMOR SYSTEM ================= */
 
-    let effectiveFlat = Math.max(0, flatReduction - flatPenetration);
-    let effectivePercent = Math.max(0, percentReduction - percentPenetration);
+    let armor;
+    const eff = getEffectiveStats();
+    if (isPlayer) {
+      /* PLAYER ATTACKING MONSTER */
+      const monsterArmor = getMonsterArmor(target);
+      const playerPercentPen = eff.percentDamagePenetration ?? 0;
+      const playerFlatPen = eff.flatDamagePenetration ?? 0;
 
-    damage = damage - effectiveFlat;
-    damage = damage * (1 - effectivePercent);
+      armor = monsterArmor;
+      armor *= (1 - playerPercentPen);
+      armor -= playerFlatPen;
 
-    damage = Math.max(0, Math.floor(damage)); // no negative damage
-    // ------------------------------------------------------------------------
+    } else {
+      /* MONSTER ATTACKING PLAYER */
+      const playerFlatRed = eff.flatDamageReduction ?? 0;
+      const playerPercentRed = eff.percentDamageReduction ?? 0;
+      const monsterPercentPen = attacker.percentDamagePenetration ?? 0;
+      const monsterFlatPen = attacker.flatDamagePenetration ?? 0;
 
-    /* ===== MAIN TARGET ===== */
-    setEntityHp(target, getEntityHp(target) - damage);
+      armor = 100;
+      armor += playerFlatRed;
+      armor *= (1 + playerPercentRed);
+      armor *= (1 - monsterPercentPen);
+      armor -= monsterFlatPen;
+    }
+
+    armor = clamp(armor, 1); // avoid division by 0
+
+    const damageMultiplier = 100 / armor;
+
+    let finalDamage = Math.floor(damage * damageMultiplier);
+    finalDamage = Math.max(0, finalDamage);
+
+    /* ===== APPLY DAMAGE ===== */
+    setEntityHp(target, getEntityHp(target) - finalDamage);
     updateHealthBars();
 
     ActionLog(
-      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(damage)} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
-      isCrit ? "log-crit" : "",
+      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(finalDamage)} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
+      isCrit ? "log-crit" : ""
     );
 
+    /* ================= PHASE CHECK ================= */
+    if (target?.hasSecondPhase && !target.isInSecondPhase) {
+      const maxHp = target.maxHp ?? target.hp;
+      const hpRatio = getEntityHp(target) / maxHp;
+
+      if (hpRatio <= target.thresholdForPhase2) {
+        target.isInSecondPhase = true;
+
+        if (target.dmgMultPhase2 && target.atk) {
+          target.atk *= target.dmgMultPhase2;
+        }
+
+        if (target.flavorTextPhase2) {
+          ActionLog(target.flavorTextPhase2, "log-flavor-orange");
+        }
+      }
+    }
+
     /* ===== SPLASH ===== */
-    const splash = stats?.splashDamage ?? attacker.splashDamage ?? 0;
+    const splash = stats?.splashDamage ?? 0;
     if (splash > 0 && targetGroup?.length > 1) {
       for (let i = 1; i < targetGroup.length; i++) {
-        setEntityHp(targetGroup[i], getEntityHp(targetGroup[i]) - splash);
+        targetGroup[i].hp -= splash;
       }
 
       ActionLog(
@@ -180,14 +216,12 @@ export function performAttack({
       );
     }
 
-    /* ===== TARGET REACTIVE EFFECTS ===== */
+    /* ===== TARGET EFFECT REACTIONS ===== */
     targetEffects.forEach((eff) => {
       const effectData = STATUS_EFFECTS[eff.id];
       if (effectData.onBeingHit) {
-        const result = effectData.onBeingHit(attacker, target, damage);
-        if (result?.message) {
-          ActionLog(result.message, "log-warning");
-        }
+        const result = effectData.onBeingHit(attacker, target, finalDamage);
+        if (result?.message) ActionLog(result.message, "log-warning");
       }
     });
 
@@ -280,7 +314,6 @@ const generateRemainingEnemiesMessage = (enemies) => {
 /* ================= COMBAT LOOP ================= */
 
 export const combatLoop = (sessionId) => {
-  if (runtimeState.combatFrozen) return;
   if (!gameState.world.isExploring) return;
   if (sessionId !== runtimeState.currentCombatSession) return;
 
@@ -294,9 +327,8 @@ export const combatLoop = (sessionId) => {
     const playerStatus = processTurnEffects(playerObj, gameState.playerEffects);
     runtimeState.playerCurrentHp = playerObj.currentHp;
 
-    if (playerStatus.logMessages.length > 0) {
+    if (playerStatus.logMessages.length)
       playerStatus.logMessages.forEach((msg) => ActionLog(msg, "log-warning"));
-    }
 
     if (runtimeState.playerCurrentHp <= 0) {
       handleDeath();
@@ -304,10 +336,10 @@ export const combatLoop = (sessionId) => {
     }
 
     /* ================= PLAYER TURN ================= */
+
     if (!playerStatus.skipTurn) {
       const stats = getEffectiveStats();
 
-      // ash of war
       let ashEffect = null;
       if (runtimeState.ashIsPrimed && runtimeState.ashUsesLeft > 0) {
         const ash = ASHES_OF_WAR[gameState.equippedAsh];
@@ -323,9 +355,8 @@ export const combatLoop = (sessionId) => {
           attackers: [{ atk: stats.strength }],
           target: runtimeState.currentEnemyGroup[0],
           targetGroup: runtimeState.currentEnemyGroup,
-          attackerEffects: gameState.playerEffects,
-          targetEffects: gameState.ennemyEffects,
           stats,
+          targetEffects: gameState.ennemyEffects,
           logPrefix: "Vous",
           isPlayer: true,
           ashEffect,

@@ -32,6 +32,26 @@ export const ITEMS = {
       stats.vigor = Math.floor(stats.vigor * (1.1 + 0.05 * (itemLevel - 1)));
     },
   },
+  bloodhound_fang: {
+    name: "Croc de Limier",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Convertit 20% de la Dextérité en force bonus. 20% chance d'appliquer saignement pour 2 tours.<em style='color: grey;'>(+2% dext scaling par Niv)</em>",
+    apply: (stats, itemLevel) => {
+      const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
+      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+    },
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.2 },
+  },
+  leather_vest: {
+    name: "Veste en Cuir",
+    type: ITEM_TYPES.ARMOR,
+    description: "réduit les dégats subits de 2. <em style='color: grey;'>(+1 par Niv)</em>",
+    apply: (stats, itemLevel) => {
+      const flatDamageReduction = 2 + (1 * (itemLevel - 1));
+      stats.flatDamageReduction += flatDamageReduction;
+    },
+  },
   great_shield: {
     name: "Pavois du Chevalier",
     type: ITEM_TYPES.ARMOR,
@@ -122,16 +142,6 @@ export const ITEMS = {
       stats.dexterity += 5 + (itemLevel - 1);
     },
     onHitEffect: { id: "BLEED", duration: 2, chance: 0.3 },
-  },
-  bloodhound_fang: {
-    name: "Croc de Limier",
-    type: ITEM_TYPES.WEAPON,
-    description:
-      "Convertit 10% de la Dextérité en Dégats critiques bonus. <em style='color: grey;'>(+1% par Niv)</em>",
-    apply: (stats, itemLevel) => {
-      const conversionRatio = 0.1 + 0.02 * (itemLevel - 1);
-      stats.critDamage += Math.floor(stats.dexterity * conversionRatio);
-    },
   },
   astronomer_staff: {
     name: "Bâton de l'Astronome",
