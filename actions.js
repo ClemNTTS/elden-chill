@@ -54,21 +54,23 @@ export const upgradeStat = (statName) => {
 };
 
 export const refundRunes = () => {
-  console.log("Remboursement des runes investies...");
-  console.log("Runes actuelles : ", gameState.runes.banked);
-  console.log("Runes investies : ", gameState.stats.runesSpent);
-  gameState.runes.banked += gameState.stats.runesSpent;
-  console.log("Nouvelles runes : ", gameState.runes.banked);
-  gameState.stats.runesSpent = 0;
-  gameState.stats.level = 0;
-  gameState.stats.vigor = 0;
-  gameState.stats.strength = 0;
-  gameState.stats.dexterity = 0;
-  gameState.stats.intelligence = 0;
-  gameState.stats.critChance = 0.05;
-  gameState.stats.critDamage = 1.5;
-  saveGame();
-  updateUI();
+  if (
+    confirm(
+      "Êtes-vous sûr de vouloir récuperer vos runes ? Vous en perdrez 10%.",
+    )
+  ) {
+    gameState.runes.banked += (gameState.stats.runesSpent * 0.9);
+    gameState.stats.runesSpent = 0;
+    gameState.stats.level = 0;
+    gameState.stats.vigor = 0;
+    gameState.stats.strength = 0;
+    gameState.stats.dexterity = 0;
+    gameState.stats.intelligence = 0;
+    gameState.stats.critChance = 0.05;
+    gameState.stats.critDamage = 1.5;
+    saveGame();
+    updateUI();
+  }
 };
 
 export const equipItem = (itemId) => {
