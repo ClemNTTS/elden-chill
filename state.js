@@ -8,6 +8,7 @@ export let gameState = {
   },
   stats: {
     level: 0,
+    runesSpent: 0,
     vigor: 0,
     strength: 0,
     dexterity: 0,
