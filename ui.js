@@ -9,9 +9,7 @@ let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
 let currentDungeonSongIndex = 0;
 
 const campAudio = new Audio();
-campAudio.volume = 0.3;
 const dungeonAudio = new Audio();
-dungeonAudio.volume = 0.3;
 
 function playNextCampSong() {
   currentCampSongIndex = (currentCampSongIndex + 1) % campSongs.length;
@@ -406,55 +404,74 @@ export const triggerShake = () => {
 export const showTooltip = (e, item) => {
   const tooltip = document.getElementById("tooltip");
   const itemData = ITEMS[item.id];
-  let base = {
-    vigor: 0,
-    strength: 0,
-    dexterity: 0,
-    intelligence: 0,
-    critChance: 0.05,
-    critDamage: 1.5,
-    attacksPerTurn: 1,
+
+  // 1. On utilise tes VRAIES statistiques actuelles comme base de calcul
+  const base = {
+    ...gameState.stats,
+    // Valeurs par défaut si non définies dans ton state initial
+    critChance: gameState.stats.critChance ?? 0.05,
+    critDamage: gameState.stats.critDamage ?? 1.5,
+    attacksPerTurn: gameState.stats.attacksPerTurn ?? 1,
+    armor: gameState.stats.armor ?? 0,
+    flatDamageReduction: gameState.stats.flatDamageReduction ?? 0,
+    splashDamage: gameState.stats.splashDamage ?? 0,
   };
-  let modified = { ...base };
+
+  // 2. Deep copy pour simuler l'application de l'item sans modifier ton vrai perso
+  const modified = JSON.parse(JSON.stringify(base));
   itemData.apply(modified, item.level);
+
   let statBonus = "";
-  const statsToCompare = ["strength", "vigor", "dexterity", "intelligence"];
-  const isMultiplicative =
-    itemData.description.includes("%") || itemData.description.includes("*");
+  // Liste des stats à comparer
+  const statsToCompare = [
+    "vigor",
+    "strength",
+    "dexterity",
+    "intelligence",
+    "armor",
+    "flatDamageReduction",
+    "splashDamage",
+  ];
+
   statsToCompare.forEach((s) => {
+    if (base[s] === undefined) return;
+
     const diff = modified[s] - base[s];
+
     if (diff !== 0) {
-      let displayValue = "";
       const isPos = diff > 0;
       const color = isPos ? "#4dff4d" : "#ff4d4d";
-      if (isMultiplicative) {
-        const percent = (modified[s] / base[s] - 1) * 100;
-        displayValue = `${isPos ? "+" : ""}${percent.toFixed(0)}%`;
-      } else {
-        displayValue = `${isPos ? "+" : ""}${diff.toFixed(0)}`;
-      }
-      statBonus += `<br><span class="tooltip-stat" style="color:${color}">${displayValue} ${
+      const sign = isPos ? "+" : "";
+
+      // On affiche la valeur absolue de la différence (ex: +3 Vigueur)
+      statBonus += `<br><span class="tooltip-stat" style="color:${color}">${sign}${diff.toFixed(0)} ${
         s.charAt(0).toUpperCase() + s.slice(1)
       }</span>`;
     }
   });
-  if (modified.critChance !== base.critChance) {
+
+  // Gestion des statistiques secondaires (Critiques et Attaques)
+  if (Math.abs(modified.critChance - base.critChance) > 0.001) {
     const cDiff = (modified.critChance - base.critChance) * 100;
-    statBonus += `<br><span style="color:#4dff4d">+${cDiff.toFixed(
-      0,
-    )}% Crit</span>`;
+    statBonus += `<br><span style="color:#4dff4d">+${cDiff.toFixed(1)}% Chance Crit</span>`;
   }
-  if (modified.attacksPerTurn > 1) {
-    statBonus += `<br><span style="color:#4dff4d">+${
-      modified.attacksPerTurn - 1
-    } Attaque(s)</span>`;
+
+  if (Math.abs(modified.critDamage - base.critDamage) > 0.01) {
+    const dDiff = modified.critDamage - base.critDamage;
+    statBonus += `<br><span style="color:#4dff4d">+${dDiff.toFixed(1)}x Dégâts Crit</span>`;
   }
+
+  if (modified.attacksPerTurn > base.attacksPerTurn) {
+    statBonus += `<br><span style="color:#4dff4d">+${modified.attacksPerTurn - base.attacksPerTurn} Attaque(s)</span>`;
+  }
+
   tooltip.innerHTML = `
     <strong style="color:var(--active-btn)">${itemData.name} (Niv.${item.level})</strong><br>
     <small style="font-style:italic; color:#aaa;">${itemData.description}</small>
     <hr style="border:0; border-top:1px solid #444; margin:5px 0;">
-    <strong>Effet actuel :</strong>${statBonus}
+    <strong>Bonus actuels :</strong>${statBonus || "<br><span style='color:grey'>Aucun effet</span>"}
   `;
+
   tooltip.classList.remove("tooltip-hidden");
   moveTooltip(e);
 };
@@ -579,5 +596,29 @@ export const createFireParticles = () => {
     particle.style.animationDelay = `${Math.random() * 10}s`;
     particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
     container.appendChild(particle);
+  }
+};
+
+export const setAudioListener = () => {
+  const volumeSlider = document.getElementById("music-volume");
+
+  if (volumeSlider) {
+    const currentVolume = gameState.save?.audioVolume ?? 0.3;
+    volumeSlider.value = currentVolume;
+
+    campAudio.volume = currentVolume;
+    dungeonAudio.volume = currentVolume;
+
+    volumeSlider.addEventListener("input", (e) => {
+      const volume = parseFloat(e.target.value);
+
+      campAudio.volume = volume;
+      dungeonAudio.volume = volume;
+
+      if (!gameState.save) gameState.save = {};
+      gameState.save.audioVolume = volume;
+
+      saveGame();
+    });
   }
 };

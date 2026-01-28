@@ -1,5 +1,5 @@
 import { gameState, setGameState } from "./state.js";
-import { updateUI } from "./ui.js";
+import { setAudioListener, updateUI } from "./ui.js";
 
 export const SAVE_NAME = "eldenChillSave";
 
@@ -55,6 +55,7 @@ export const loadGame = () => {
       saveGame();
     }
   }
+  setAudioListener();
   updateUI();
 };
 

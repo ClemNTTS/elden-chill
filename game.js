@@ -131,6 +131,22 @@ const dev = {
       `🔧 DEV : Combat ${runtimeState.combatFrozen ? "gelé" : "dégelé"} !`,
     );
   },
+  //reset biome unlocks
+  resetBiomes: () => {
+    gameState.world.unlockedBiomes = ["limgrave_west"];
+    console.log("🔧 DEV : Biomes débloqués réinitialisés.");
+    updateUI();
+    saveGame();
+  },
+
+  unlockBiome: (biomeId) => {
+    if (!gameState.world.unlockedBiomes.includes(biomeId)) {
+      gameState.world.unlockedBiomes.push(biomeId);
+      console.log(`🔧 DEV : Biome ${biomeId} débloqué.`);
+      updateUI();
+      saveGame();
+    }
+  },
 };
 
 // --- Global Function Assignments ---

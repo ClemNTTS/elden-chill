@@ -26,10 +26,9 @@ export const ITEMS = {
   crimson_amber: {
     name: "Médaillon d'Ambre",
     type: ITEM_TYPES.ACCESSORY,
-    description:
-      "Vigueur +10% <em style='color: grey;'>( plus 5% par Niv)</em>",
+    description: "Vigueur +6% <em style='color: grey;'>( plus 3% par Niv)</em>",
     apply: (stats, itemLevel) => {
-      stats.vigor = Math.floor(stats.vigor * (1.1 + 0.05 * (itemLevel - 1)));
+      stats.vigor = Math.floor(stats.vigor * (1.06 + 0.03 * (itemLevel - 1)));
     },
   },
   bloodhound_fang: {
@@ -183,8 +182,8 @@ export const ITEMS = {
     description:
       "+15 Force, -5 Vigueur, +20% Force <em style='color: grey;'>(+5 Force/ Niv)</em>",
     apply: (stats, itemLevel) => {
-      stats.strength += 15 + 5 * (itemLevel - 1);
-      stats.strength *= 1.2;
+      stats.strength += Math.floor(15 + 5 * (itemLevel - 1));
+      stats.strength = Math.floor(1.2 * stats.strength);
       stats.vigor -= 5;
       if (stats.vigor < 0) stats.vigor = 0;
     },

@@ -39,6 +39,7 @@ export let gameState = {
   ashesOfWaruses: {},
   ashesOfWarOwned: [],
   equippedAsh: null,
+  save: {},
 };
 
 // Non-saved, runtime state
@@ -67,6 +68,8 @@ export function setGameState(newState) {
   if (newState.ashesOfWarOwned)
     Object.assign(gameState.ashesOfWarOwned, newState.ashesOfWarOwned);
   if (newState.equippedAsh) gameState.equippedAsh = newState.equippedAsh;
+
+  if (newState.save) Object.assign(gameState.save, newState.save);
 
   if (newState.world) {
     Object.assign(gameState.world, newState.world);

@@ -122,13 +122,16 @@ export const handleVictory = (sessionId) => {
       currentBiome.unlocks &&
       !gameState.world.unlockedBiomes.includes(currentBiome.unlocks[0])
     ) {
-      
-      for(let i = 0; i<currentBiome.unlocks.length;i++){
+      for (let i = 0; i < currentBiome.unlocks.length; i++) {
+        if (!BIOMES[currentBiome.unlocks[i]]) {
+          continue;
+        }
+
         gameState.world.unlockedBiomes.push(currentBiome.unlocks[i]);
         ActionLog(
           `Nouvelle zone découverte : ${BIOMES[currentBiome.unlocks[i]].name} !`,
         );
-      };
+      }
       saveGame();
       updateUI();
     }
