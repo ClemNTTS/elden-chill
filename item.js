@@ -49,9 +49,9 @@ export const ITEMS = {
     name: "Veste en Cuir",
     type: ITEM_TYPES.ARMOR,
     description:
-      "réduit les dégats subits de 2. <em style='color: grey;'>(+1 par Niv)</em>",
+      "Augmente l'armure de 5. <em style='color: grey;'>(+2 par Niv)</em>",
     apply: (stats, itemLevel) => {
-      const flatDamageReduction = 2 + 1 * (itemLevel - 1);
+      const flatDamageReduction = 5 + 2 * (itemLevel - 1);
       stats.flatDamageReduction += flatDamageReduction;
     },
   },
@@ -162,9 +162,10 @@ export const ITEMS = {
     name: "Bâton de l'Astronome",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Convertit 20% de l'Intelligence en Dégâts de zone bonus. <em style='color: grey;'>(+2% par Niv)</em>",
+      "Convertit 20% de l'Intelligence en Force et en Dégâts de zone bonus. <em style='color: grey;'>(+5% par Niv)</em>",
     apply: (stats, itemLevel) => {
-      const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
+      const conversionRatio = 0.2 + 0.05 * (itemLevel - 1);
+      stats.strength     += Math.floor(stats.intelligence * conversionRatio);
       stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
     },
   },
