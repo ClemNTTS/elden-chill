@@ -120,7 +120,7 @@ export const MONSTERS = {
     ],
   },
   bell_bearing_hunter1: {
-    name: "Porteur de Cloche",
+    name: "Chasseur de Clochettes",
     hp: 405,
     atk: 80,
     runes: 600,
@@ -177,7 +177,7 @@ export const MONSTERS = {
     ],
   },
   limgrave_dragon: {
-    name: "Dragon de Nécrolimbe",
+    name: "Dragon volant Agheel",
     hp: 1600,
     atk: 90,
     runes: 2500,

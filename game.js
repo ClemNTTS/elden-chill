@@ -3,7 +3,7 @@ import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { gameState, runtimeState } from "./state.js";
 import { exportSave, importSave, loadGame, saveGame } from "./save.js";
-import { equipAsh, equipItem, resetGame, upgradeStat } from "./actions.js";
+import { equipAsh, equipItem, resetGame, upgradeStat, refundRunes } from "./actions.js";
 import { startExploration } from "./core.js";
 import {
   createFireParticles,
@@ -140,6 +140,7 @@ window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;
 window.resetGame = resetGame;
+window.refundRunes = refundRunes;
 window.toggleOptions = toggleOptions;
 window.showStatTooltip = showStatTooltip;
 window.moveTooltip = moveTooltip;
