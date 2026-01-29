@@ -186,9 +186,8 @@ export const ITEMS = {
       "Requiert 20 Dextérité de base pour être utilisé. Donne 20% de Force par +1% / Niveau, +100% de la Dextérité en Dégats de zone, et 5% de chance d'étourdir l'ennemi pendant 2 tours.",
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
-      const eff = getEffectiveStats();
       if (baseDex >= 20) {
-        stats.splashDamage += Math.floor(eff.dexterity);
+        stats.splashDamage += Math.floor(stats.dexterity);
       }
     },
     applyMult: (stats, itemLevel) => {
