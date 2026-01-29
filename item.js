@@ -97,20 +97,6 @@ export const ITEMS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
   },
 
-  great_shield: {
-    name: "Pavois du Chevalier",
-    type: ITEM_TYPES.ARMOR,
-    description:
-      "Vigueur +30% mais -50% Dextérité. Ajoute 15% de votre Vigueur à votre Force. <em style='color: grey;'>(+3% / Niv)</em>",
-    applyMult: (stats, itemLevel) => {
-      stats.vigor = Math.floor(stats.vigor * 1.3);
-
-      stats.dexterity = Math.floor(stats.dexterity * 0.5);
-
-      const conversionRatio = 0.15 + 0.03 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.vigor * conversionRatio);
-    },
-  },
   briar_armor: {
     name: "Armure de Ronce",
     type: ITEM_TYPES.ARMOR,
@@ -156,14 +142,14 @@ export const ITEMS = {
     name: "Grande Épée de Chevalier",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+15 Force, -5 Vigueur, +20% Force <em style='color: grey;'>(+5 Force/ Niv)</em>",
+      "+10 Force, -5 Vigueur, +15% Force <em style='color: grey;'>(+4 Force/ Niv)</em>",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += Math.floor(15 + 5 * (itemLevel - 1));
+      stats.strength += Math.floor(10 + 4 * (itemLevel - 1));
       stats.vigor -= 5;
       if (stats.vigor < 0) stats.vigor = 0;
     },
     applyMult: (stats, itemLevel) => {
-      stats.strength = Math.floor(1.2 * stats.strength);
+      stats.strength = Math.floor(1.15 * stats.strength);
     },
   },
   /*===========================
@@ -225,6 +211,22 @@ export const ITEMS = {
     },
     applyMult: (stats, itemLevel) => {
       stats.percentDamagePenetration += 0.1 + 0.03 * (itemLevel - 1);
+    },
+  },
+
+  //========== TIER CAELID
+  great_shield: {
+    name: "Pavois du Chevalier",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Vigueur +30% mais -50% Dextérité. Ajoute 15% de votre Vigueur à votre Force. <em style='color: grey;'>(+3% / Niv)</em>",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor = Math.floor(stats.vigor * 1.3);
+
+      stats.dexterity = Math.floor(stats.dexterity * 0.5);
+
+      const conversionRatio = 0.15 + 0.03 * (itemLevel - 1);
+      stats.strength += Math.floor(stats.vigor * conversionRatio);
     },
   },
 };
