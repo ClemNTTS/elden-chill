@@ -1,4 +1,9 @@
-import { gameState, getHealth, runtimeState } from "./state.js";
+import {
+  gameState,
+  getEffectiveStats,
+  getHealth,
+  runtimeState,
+} from "./state.js";
 
 export const STATUS_EFFECTS = {
   POISON: {
@@ -35,7 +40,8 @@ export const STATUS_EFFECTS = {
       let reflectDamage = Math.floor(damageTaken * 0.15);
 
       if (isPlayerTarget) {
-        reflectDamage += Math.floor(gameState.stats.vigor * 0.5);
+        const effectiveStats = getEffectiveStats();
+        reflectDamage += Math.floor(effectiveStats.vigor * 0.5);
       } else {
         reflectDamage += 5;
       }

@@ -1,7 +1,7 @@
 import { ITEMS } from "./item.js";
 
 // Saved state
-export let gameState = {
+export const DEFAULT_GAME_STATE = {
   runes: {
     banked: 0,
     carried: 0,
@@ -42,6 +42,8 @@ export let gameState = {
   equippedAsh: null,
   save: {},
 };
+
+export let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
 
 // Non-saved, runtime state
 export const runtimeState = {

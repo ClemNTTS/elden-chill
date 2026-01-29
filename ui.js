@@ -375,9 +375,10 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Pénétration (Fixe):</span> <b>${flatPen.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Pénétration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
-    <div class="rt-stat"><span>Armure:</span> <b>${(eff.flatDamageReduction || 0).toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Armure:</span> <b>${(100 + eff.flatDamageReduction || 100).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
     <div class="rt-stat"><span>Dégâts Zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Deg. Min. Épines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
   `;
 };
 

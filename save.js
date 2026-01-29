@@ -1,4 +1,4 @@
-import { gameState, setGameState } from "./state.js";
+import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 import { setAudioListener, updateUI } from "./ui.js";
 
 export const SAVE_NAME = "eldenChillSave";
@@ -70,28 +70,46 @@ export const exportSave = () => {
   }
 };
 
+const sanitizeData = (schema, data) => {
+  const result = Array.isArray(schema) ? [] : {};
+
+  Object.keys(schema).forEach((key) => {
+    if (data[key] === undefined) {
+      result[key] = schema[key];
+    } else if (
+      typeof schema[key] === "object" &&
+      schema[key] !== null &&
+      !Array.isArray(schema[key])
+    ) {
+      result[key] = sanitizeData(schema[key], data[key]);
+    } else {
+      result[key] = data[key];
+    }
+  });
+
+  return result;
+};
+
 export const importSave = () => {
   const code = prompt("Entrez le code de la sauvegarde à importer :");
   if (!code) return;
+
   const decrypted = decodeSave(code);
-  if (
-    decrypted &&
-    decrypted.stats &&
-    decrypted.runes &&
-    decrypted.inventory &&
-    decrypted.equipped &&
-    decrypted.order &&
-    decrypted.world
-  ) {
-    if (
-      confirm("Êtes-vous sûr de vouloir remplacer votre sauvegarde actuelle ?")
-    ) {
-      setGameState(decrypted);
-      saveGame();
-      updateUI();
-      window.location.reload();
-    }
-  } else {
-    alert("Code de sauvegarde invalide.");
+
+  if (!decrypted) {
+    alert("❌ Code de sauvegarde invalide.");
+    return;
   }
+
+  const sanitized = sanitizeData(DEFAULT_GAME_STATE, decrypted);
+
+  sanitized.world.isExploring = false;
+  sanitized.playerEffects = [];
+  sanitized.ennemyEffects = [];
+
+  setGameState(sanitized);
+  saveGame();
+
+  alert("✅ Sauvegarde importée avec succès !");
+  window.location.reload();
 };
