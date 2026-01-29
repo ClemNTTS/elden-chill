@@ -102,7 +102,8 @@ export const STATUS_EFFECTS = {
       const max = entity.maxHp || entity.hp || 100;
       let damage = 0;
       if (entity.hasOwnProperty("currentHp")) {
-        const maxHealth = getHealth(gameState.stats.vigor);
+        const eff = getEffectiveStats();
+        const maxHealth = getHealth(eff.vigor);
         damage = Math.min(
           Math.floor(maxHealth * 0.03),
           Math.floor((maxHealth - entity.currentHp) * 0.1),

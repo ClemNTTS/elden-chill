@@ -114,7 +114,15 @@ export function getEffectiveStats() {
 }
 
 export function getHealth(vigor) {
-  return Math.floor(
-    300 + 1650 * (1 - Math.exp(-0.035 * vigor)) + 0.18 * vigor * vigor,
-  );
+  let hp = 300;
+
+  if (vigor <= 40) {
+    hp += vigor * 50;
+  } else if (vigor <= 60) {
+    hp += 2200 + (vigor - 40) * 35;
+  } else {
+    hp += 3000 + (vigor - 60) * 25;
+  }
+
+  return Math.floor(hp);
 }

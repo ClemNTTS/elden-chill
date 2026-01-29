@@ -51,10 +51,9 @@ export const ITEMS = {
   keen_dagger: {
     name: "Dague Afilée",
     type: ITEM_TYPES.WEAPON,
-    description:
-      "+10% Chance Crit. <em style='color: grey;'>(+2% par Niv)</em>",
+    description: "+5% Chance Crit. <em style='color: grey;'>(+2% par Niv)</em>",
     applyMult: (stats, itemLevel) => {
-      stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
+      stats.critChance += 0.5 + 0.02 * (itemLevel - 1);
     },
   },
   scholars_ring: {
@@ -97,7 +96,7 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
   },
-  
+
   great_shield: {
     name: "Pavois du Chevalier",
     type: ITEM_TYPES.ARMOR,
@@ -229,4 +228,3 @@ export const ITEMS = {
     },
   },
 };
-
