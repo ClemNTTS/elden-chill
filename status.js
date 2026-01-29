@@ -15,13 +15,10 @@ export const STATUS_EFFECTS = {
       let damage = 0;
 
       if (isPlayer) {
-        const eff = getEffectiveStats();
-        damage = Math.max(
-          2,
-          Math.floor(entity.maxHp * 0.02 + 0.5 * eff.intelligence),
-        );
+        damage = Math.floor((entity.maxHp || 100) * 0.02);
         entity.currentHp -= damage;
       } else {
+        const eff = getEffectiveStats();
         const baseDot = Math.floor((entity.maxHp || 100) * 0.01);
         const bonusInt = Math.floor(gameState.stats.intelligence * 0.5);
 
