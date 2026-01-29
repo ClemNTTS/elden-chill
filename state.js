@@ -16,8 +16,7 @@ export const DEFAULT_GAME_STATE = {
     critChance: 0.05,
     critDamage: 1.5,
     splashDamage: 0,
-    flatDamageReduction: 0,
-    percentDamageReduction: 0,
+    armor: 100,
     flatDamagePenetration: 0,
     percentDamagePenetration: 0,
   },
@@ -106,10 +105,11 @@ export function getEffectiveStats() {
 
   // Premier passage : Les bonus "Flat" (additions)
   applyItemBonus("applyFlat");
-
+  effStats.armor += Math.floor((effStats.dexterity * 1.5) / 4);
+  console.log(effStats.armor);
   // Second passage : Les bonus "Mult" (multiplications)
   applyItemBonus("applyMult");
-
+  
   return effStats;
 }
 

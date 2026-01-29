@@ -69,6 +69,8 @@ export const refundRunes = () => {
     gameState.stats.intelligence = 0;
     gameState.stats.critChance = 0.05;
     gameState.stats.critDamage = 1.5;
+    gameState.stats.splashDamage = 0;
+    gameState.stats.armor = 100;
     gameState.equipped = { weapon: null, armor: null, accessory: null };
     ((gameState.order = [null, null, null]), saveGame());
     updateUI();

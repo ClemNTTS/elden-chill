@@ -49,8 +49,8 @@ export const ITEMS = {
     description:
       "Augmente l'armure de 5. <em style='color: grey;'>(+2 par Niv)</em>",
     applyFlat: (stats, itemLevel) => {
-      const flatDamageReduction = 5 + 2 * (itemLevel - 1);
-      stats.flatDamageReduction += flatDamageReduction;
+      const armor = 5 + 2 * (itemLevel - 1);
+      stats.armor += armor;
     },
   },
   keen_dagger: {
@@ -145,7 +145,7 @@ export const ITEMS = {
       "+5 d'armure <em style='color: grey;'>(+0.5 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
     passiveEffect: "HALVE_BLEED",
     applyFlat: (stats, itemLevel) => {
-      stats.flatDamageReduction += 5 + Math.floor(0.5 * (itemLevel - 1));
+      stats.armor += 5 + Math.floor(0.5 * (itemLevel - 1));
     },
   },
 

@@ -169,14 +169,9 @@ export function performAttack({
       armor -= playerFlatPen;
     } else {
       /* MONSTER ATTACKING PLAYER */
-      const playerFlatRed = eff.flatDamageReduction ?? 0;
-      const playerPercentRed = eff.percentDamageReduction ?? 0;
+      armor = eff.armor ?? 100;
       const monsterPercentPen = attacker.percentDamagePenetration ?? 0;
       const monsterFlatPen = attacker.flatDamagePenetration ?? 0;
-
-      armor = 100;
-      armor += playerFlatRed + Math.floor((eff.dexterity * 1.5) / 4);
-      armor *= 1 + playerPercentRed;
       armor *= 1 - monsterPercentPen;
       armor -= monsterFlatPen;
     }
@@ -342,7 +337,7 @@ const generateRemainingEnemiesMessage = (enemies) => {
 /* ================= COMBAT LOOP ================= */
 
 export const combatLoop = (sessionId) => {
-  if (!gameState.world.isExploring) return;
+  if (!gameState.world.isExploring || runtimeState.combatFrozen) return;
   if (sessionId !== runtimeState.currentCombatSession) return;
 
   const playerObj = {
@@ -508,7 +503,7 @@ export const combatLoop = (sessionId) => {
 
         if (!enemyStatus.skipTurn) {
           const eff = getEffectiveStats();
-          const dodgeChance = Math.min(0.5, eff.dexterity / 400);
+          const dodgeChance = Math.floor(Math.min(0.5, eff.dexterity / 400));
 
           if (Math.random() < dodgeChance) {
             ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");

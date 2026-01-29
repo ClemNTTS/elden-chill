@@ -363,7 +363,7 @@ export const updateRealTimeStatsDisplay = () => {
   const container = document.getElementById("real-time-content");
 
   // Calcul des stats spécifiques
-  const dodgeChance = Math.min(0.5, eff.dexterity / 200) * 100;
+  const dodgeChance = Math.floor(Math.min(0.5, eff.dexterity / 400) * 100);
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
 
@@ -377,7 +377,7 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Pénétration (Fixe):</span> <b>${flatPen.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Pénétration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
-    <div class="rt-stat"><span>Armure:</span> <b>${(100 + eff.flatDamageReduction || 100).toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
     <div class="rt-stat"><span>Dégâts Zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Deg. Min. Épines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
@@ -483,7 +483,6 @@ export const showTooltip = (e, item) => {
     critDamage: gameState.stats.critDamage ?? 1.5,
     attacksPerTurn: gameState.stats.attacksPerTurn ?? 1,
     armor: gameState.stats.armor ?? 0,
-    flatDamageReduction: gameState.stats.flatDamageReduction ?? 0,
     splashDamage: gameState.stats.splashDamage ?? 0,
   };
 
@@ -502,7 +501,6 @@ export const showTooltip = (e, item) => {
     "dexterity",
     "intelligence",
     "armor",
-    "flatDamageReduction",
     "splashDamage",
   ];
 
