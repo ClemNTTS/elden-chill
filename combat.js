@@ -107,9 +107,8 @@ export function performAttack({
         ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
         return; // cancel this hit completely
       }
-    } else {
-      logPrefix = attacker.name;
     }
+
     // --- NEW BLEED LOGIC ---
     const bleedEffect = targetEffects.find((eff) => eff.id === "BLEED");
     if (bleedEffect && bleedEffect.stacks > 0) {
@@ -175,7 +174,7 @@ export function performAttack({
       const monsterFlatPen = attacker.flatDamagePenetration ?? 0;
 
       armor = 100;
-      armor += playerFlatRed + Math.floor((eff.dexterity * 1.5) / 4);
+      armor += playerFlatRed;
       armor *= 1 + playerPercentRed;
       armor *= 1 - monsterPercentPen;
       armor -= monsterFlatPen;
@@ -216,10 +215,7 @@ export function performAttack({
     }
 
     /* ===== SPLASH ===== */
-    let splash = stats?.splashDamage ?? 0;
-    if (isCrit) {
-      splash *= critDamage;
-    }
+    const splash = stats?.splashDamage ?? 0;
     if (splash > 0 && targetGroup?.length > 1) {
       for (let i = 1; i < targetGroup.length; i++) {
         targetGroup[i].hp -= splash;
@@ -404,17 +400,25 @@ export const combatLoop = (sessionId) => {
       }
 
       for (let i = 0; i < stats.attacksPerTurn; i++) {
-        performAttack({
-          attackers: [{ atk: stats.strength }],
-          target: runtimeState.currentEnemyGroup[0],
-          targetGroup: runtimeState.currentEnemyGroup,
-          stats,
-          targetEffects: gameState.ennemyEffects,
-          logPrefix: "Vous",
-          isPlayer: true,
-          ashEffect,
-        });
-      }
+      // Find first alive enemy
+      const currentTarget = runtimeState.currentEnemyGroup.find(e => e.hp > 0);
+
+      // No alive enemies left
+      if (!currentTarget) break;
+
+      performAttack({
+        attackers: [{ atk: stats.strength }],
+        target: currentTarget,
+        targetGroup: runtimeState.currentEnemyGroup,
+        stats,
+        targetEffects: gameState.ennemyEffects,
+        logPrefix: "Vous",
+        isPlayer: true,
+        ashEffect,
+      });
+    }
+
+
     }
 
     const enemyIsDefeated =
@@ -500,7 +504,7 @@ export const combatLoop = (sessionId) => {
 
         if (!enemyStatus.skipTurn) {
           const eff = getEffectiveStats();
-          const dodgeChance = Math.min(0.5, eff.dexterity / 400);
+          const dodgeChance = Math.min(0.5, eff.dexterity / 200);
 
           if (Math.random() < dodgeChance) {
             ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
