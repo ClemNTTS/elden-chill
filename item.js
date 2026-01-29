@@ -121,7 +121,7 @@ export const ITEMS = {
   briar_armor: {
     name: "Armure de Ronce",
     type: ITEM_TYPES.ARMOR,
-    description: "+2 Vigueur /Niv, Renvoie 15% des dégâts subis à l'attaquant.",
+    description: "+2 Vigueur /Niv, Votre armure vous done épine constament.",
     applyFlat: (stats, itemLevel) => {
       stats.vigor += 2 * itemLevel;
     },
