@@ -204,7 +204,7 @@ export const MONSTERS = {
   giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150 },
   radahn: {
     name: "Vestige de Radahn",
-    hp: 500,
+    hp: 9572,
     atk: 45,
     runes: 3000,
     isBoss: true,
@@ -215,7 +215,7 @@ export const MONSTERS = {
   sorcerer: { name: "Sorcier de Raya Lucaria", hp: 180, atk: 55, runes: 550 },
   rennala: {
     name: "Rennala, Reine de la Pleine Lune",
-    hp: 1200,
+    hp: 3200,
     atk: 80,
     runes: 15000,
     isBoss: true,

@@ -43,7 +43,7 @@ function clamp(v, min = 0) {
 export const applyEffect = (targetEffects, effectId, value) => {
   // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
-  if (effectId === "BLEED") {
+  if (effectId === "BLEED" || effectId === "FROSTBITE") {
     if (existing) {
       existing.stacks = (existing.stacks || 0) + (value || 1);
     } else {
@@ -72,7 +72,7 @@ const processTurnEffects = (entity, effectsArray) => {
       if (result?.skipTurn) skipTurn = true;
     }
 
-    if (effectRef.id !== "BLEED") {
+    if (effectRef.id !== "BLEED" && effectRef.id !== "FROSTBITE") {
       effectRef.duration--;
       if (effectRef.duration <= 0) {
         effectsArray.splice(i, 1);

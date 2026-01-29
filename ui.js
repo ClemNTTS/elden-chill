@@ -275,7 +275,7 @@ export const updateStatusIcons = () => {
     if (!data) return "";
 
     let text = "";
-    if (eff.id === "BLEED") {
+    if (eff.id === "BLEED" || eff.id === "FROSTBITE") {
       text = ` (${eff.stacks})`;
     } else {
       // Si la durée est >= 50, on considère que c'est un passif et on n'affiche pas de chiffre

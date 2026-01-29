@@ -119,4 +119,39 @@ export const STATUS_EFFECTS = {
       };
     },
   },
+  FROSTBITE: {
+  id: "FROSTBITE",
+  name: "Gelure",
+  color: "#3dd6c9",
+
+  onTurnStart: (entity) => {return null;},
+  onBeingHit: (attacker, target) => {
+    if (!target.__effects) return null; // safety (if ever needed)
+
+    const frost = target.__effects.find(e => e.id === "FROSTBITE");
+    if (!frost || !frost.stacks) return null;
+
+    if (frost.stacks < 10) return null;
+    const maxHp = target.maxHp || target.hp || 100;
+    let damage = Math.floor(maxHp * 0.10) + 30;
+    if (target.isBoss) {
+      damage = Math.floor(damage * 0.7);
+    }
+    if ("currentHp" in target) {
+      target.currentHp -= damage;
+    } else {
+      target.hp -= damage;
+    }
+    if (typeof target.armor === "number") { 
+      target.armor -= 20;
+    } else {
+      target.armor = 80;
+    }
+    frost.stacks = 0;
+    return {
+      damage,
+      message: `❄️ GELURE ! ${target.name} subit ${damage} dégâts, perd 20 d'armure et est brisé par le froid !`,
+      };
+    },
+  },
 };
