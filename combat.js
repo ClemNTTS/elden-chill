@@ -235,9 +235,10 @@ export function performAttack({
       }
     });
 
-    //Check death
-    if (target.hp <= 0) {
-      return;
+    const attackerHp =
+      "currentHp" in attacker ? attacker.currentHp : attacker.hp;
+    if (attackerHp <= 0) {
+      return; // On arrête l'attaque immédiatement
     }
 
     /* ===== ATTACKER ON-HIT EFFECT ===== */
@@ -538,6 +539,8 @@ export const combatLoop = (sessionId) => {
 
         if (runtimeState.playerCurrentHp <= 0) {
           handleDeath();
+        } else if (runtimeState.currentEnemyGroup[0].hp <= 0) {
+          setTimeout(continueCombat, 500);
         } else {
           setTimeout(() => combatLoop(sessionId), 500);
         }
