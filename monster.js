@@ -127,7 +127,7 @@ export const MONSTERS = {
     isRare: true,
     onHitEffect: { id: "BLEED", duration: 1, chance: 1.0 },
     drops: [
-      { item: "knight_greatsword", chance: 0.95 },
+      { id: "knight_greatsword", chance: 0.95 },
       { ashId: "bloody_slash", chance: 0.05, unique: true },
     ],
   },
