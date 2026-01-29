@@ -32,7 +32,7 @@ export const STATUS_EFFECTS = {
     color: "#148d0b",
     onBeingHit: (attacker, target, damageTaken) => {
       const isPlayerTarget = "currentHp" in target;
-      let reflectDamage = Math.floor(damageTaken * 0.1);
+      let reflectDamage = Math.floor(damageTaken * 0.15);
 
       if (isPlayerTarget) {
         reflectDamage += Math.floor(gameState.stats.vigor * 0.5);
