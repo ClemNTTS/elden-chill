@@ -7,10 +7,10 @@ import { ITEMS } from "./item.js";
 const upgradeCosts = {
   vigor: 1,
   strength: 1,
-  dexterity: 1.5,
-  intelligence: 1.5,
-  critChance: 2,
-  critDamage: 3,
+  dexterity: 1,
+  intelligence: 1,
+  critChance: 1.5,
+  critDamage: 2.2,
 };
 
 export const equipAsh = (ashId) => {

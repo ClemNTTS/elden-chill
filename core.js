@@ -36,6 +36,7 @@ const dropItem = (itemId) => {
     ActionLog(`Vous avez trouvé : ${itemTemplate.name} !`);
   } else {
     if (inventoryItem.level >= 10) {
+      if (inventoryItem.level > 10) inventoryItem.level = 10;
       ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
       const compensation = 7 * gameState.stats.level;
       gameState.runes.banked += compensation;
