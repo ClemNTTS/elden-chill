@@ -1,5 +1,3 @@
-//import { gameState, getHealth, runtimeState } from "./state.js";
-
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog } from "./ui.js";
 
@@ -10,6 +8,9 @@ export const ITEM_TYPES = {
 };
 
 export const ITEMS = {
+  /*===========================
+            TIER 0
+  ============================*/
   fists: {
     name: "poings",
     description: "+5 Force",
@@ -18,6 +19,9 @@ export const ITEMS = {
       stats.strength += 5;
     },
   },
+  /*===========================
+            TIER 1
+  ============================*/
   iron_sword: {
     name: "Épée en Fer",
     description: "+5 Force <em style='color: grey;'>(+ 2 / Niv)</em>",
@@ -34,6 +38,54 @@ export const ITEMS = {
       stats.vigor = Math.floor(stats.vigor * (1.06 + 0.03 * (itemLevel - 1)));
     },
   },
+  leather_vest: {
+    name: "Veste en Cuir",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Augmente l'armure de 5. <em style='color: grey;'>(+2 par Niv)</em>",
+    applyFlat: (stats, itemLevel) => {
+      const flatDamageReduction = 5 + 2 * (itemLevel - 1);
+      stats.flatDamageReduction += flatDamageReduction;
+    },
+  },
+  keen_dagger: {
+    name: "Dague Afilée",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "+10% Chance Crit. <em style='color: grey;'>(+2% par Niv)</em>",
+    applyMult: (stats, itemLevel) => {
+      stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
+    },
+  },
+  scholars_ring: {
+    name: "Anneau d'Érudit",
+    type: ITEM_TYPES.ACCESSORY,
+    description: "+5 Intelligence <em style='color: grey;'>(+2 / Niv)</em>",
+    applyFlat: (stats, itemLevel) => {
+      stats.intelligence += 5 + 2 * (itemLevel - 1);
+    },
+  },
+  leather_boots: {
+    name: "Bottes de Cuir",
+    type: ITEM_TYPES.ARMOR,
+    description: "+5 Dextérité <em style='color: grey;'>(+2 / Niv)</em>",
+    applyFlat: (stats, itemLevel) => {
+      stats.dexterity += 5 + 2 * (itemLevel - 1);
+    },
+  },
+  kama: {
+    name: "Kama (Faucille)",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Une faucille rapide qui inflige 2 Poison. +5 Intelligence <em style='color: grey;'>(+2 / Niv)</em>",
+    applyFlat: (stats, itemLevel) => {
+      stats.intelligence += 5 + 2 * (itemLevel - 1);
+    },
+    onHitEffect: { id: "POISON", duration: 2, chance: 1 },
+  },
+  /*===========================
+            TIER 2
+  ============================*/
   bloodhound_fang: {
     name: "Croc de Limier",
     type: ITEM_TYPES.WEAPON,
@@ -45,16 +97,7 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
   },
-  leather_vest: {
-    name: "Veste en Cuir",
-    type: ITEM_TYPES.ARMOR,
-    description:
-      "Augmente l'armure de 5. <em style='color: grey;'>(+2 par Niv)</em>",
-    applyFlat: (stats, itemLevel) => {
-      const flatDamageReduction = 5 + 2 * (itemLevel - 1);
-      stats.flatDamageReduction += flatDamageReduction;
-    },
-  },
+  
   great_shield: {
     name: "Pavois du Chevalier",
     type: ITEM_TYPES.ARMOR,
@@ -69,15 +112,64 @@ export const ITEMS = {
       stats.strength += Math.floor(stats.vigor * conversionRatio);
     },
   },
-  keen_dagger: {
-    name: "Dague Afilée",
+  briar_armor: {
+    name: "Armure de Ronce",
+    type: ITEM_TYPES.ARMOR,
+    description: "+2 Vigueur /Niv, Votre armure vous done épine constament.",
+    applyFlat: (stats, itemLevel) => {
+      stats.vigor += 2 * itemLevel;
+    },
+    passiveStatus: "THORNS",
+  },
+  astronomer_staff: {
+    name: "Bâton de l'Astronome",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+10% Chance Crit. <em style='color: grey;'>(+2% par Niv)</em>",
+      "Convertit 20% de l'Intelligence en Force et en Dégâts de zone bonus. <em style='color: grey;'>(+5% par Niv)</em>",
     applyMult: (stats, itemLevel) => {
-      stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
+      const conversionRatio = 0.2 + 0.05 * (itemLevel - 1);
+      stats.strength += Math.floor(stats.intelligence * conversionRatio);
+      stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
     },
   },
+  styptic_boluses: {
+    name: "Boluses Styptiques",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "+5 d'armure <em style='color: grey;'>(+0.5 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
+    passiveEffect: "HALVE_BLEED",
+    applyFlat: (stats, itemLevel) => {
+      stats.flatDamageReduction += 5 + Math.floor(0.5 * (itemLevel - 1));
+    },
+  },
+
+  troll_necklace: {
+    name: "Pendentif de Troll",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "+30% de chance d'appliquer 4 poisons. +1% Crit Chance <em style='color: grey;'>(+1% par Niv)",
+    applyMult: (stats, itemLevel) => {
+      stats.critChance += 0.01 + 0.01 * (itemLevel - 1);
+    },
+    onHitEffect: { id: "POISON", duration: 4, chance: 0.3 },
+  },
+  knight_greatsword: {
+    name: "Grande Épée de Chevalier",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "+15 Force, -5 Vigueur, +20% Force <em style='color: grey;'>(+5 Force/ Niv)</em>",
+    applyFlat: (stats, itemLevel) => {
+      stats.strength += Math.floor(15 + 5 * (itemLevel - 1));
+      stats.vigor -= 5;
+      if (stats.vigor < 0) stats.vigor = 0;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.strength = Math.floor(1.2 * stats.strength);
+    },
+  },
+  /*===========================
+            TIER 3
+  ============================*/
   scavenger_mask: {
     name: "Masque de Pillard",
     type: ITEM_TYPES.ACCESSORY,
@@ -86,14 +178,6 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       stats.critDamage *= 2;
       stats.vigor = Math.floor(stats.vigor * (0.4 + 0.04 * (itemLevel - 1)));
-    },
-  },
-  scholars_ring: {
-    name: "Anneau d'Érudit",
-    type: ITEM_TYPES.ACCESSORY,
-    description: "+5 Intelligence <em style='color: grey;'>(+2 / Niv)</em>",
-    applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 5 + 2 * (itemLevel - 1);
     },
   },
 
@@ -105,28 +189,11 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       stats.attacksPerTurn = 2;
       const penaltyReduction = 0.03 * (itemLevel - 1);
-      stats.strength = Math.floor(stats.strength * (0.4 + penaltyReduction));
+      stats.strength *= 0.4 + penaltyReduction;
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
   },
 
-  leather_boots: {
-    name: "Bottes de Cuir",
-    type: ITEM_TYPES.ARMOR,
-    description: "+5 Dextérité <em style='color: grey;'>(+2 / Niv)</em>",
-    applyFlat: (stats, itemLevel) => {
-      stats.dexterity += 5 + 2 * (itemLevel - 1);
-    },
-  },
-  briar_armor: {
-    name: "Armure de Ronce",
-    type: ITEM_TYPES.ARMOR,
-    description: "+2 Vigueur /Niv, Votre armure vous done épine constament.",
-    applyFlat: (stats, itemLevel) => {
-      stats.vigor += 2 * itemLevel;
-    },
-    passiveStatus: "THORNS",
-  },
   burn_sword: {
     name: "Épée Brûlante",
     type: ITEM_TYPES.WEAPON,
@@ -149,64 +216,6 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BURN", duration: 3, chance: 0.3 },
   },
-  kama: {
-    name: "Kama (Faucille)",
-    type: ITEM_TYPES.WEAPON,
-    description:
-      "Une faucille rapide qui inflige 2 Poison. +5 Intelligence <em style='color: grey;'>(+2 / Niv)</em>",
-    applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 5 + 2 * (itemLevel - 1);
-    },
-    onHitEffect: { id: "POISON", duration: 2, chance: 1 },
-  },
-  astronomer_staff: {
-    name: "Bâton de l'Astronome",
-    type: ITEM_TYPES.WEAPON,
-    description:
-      "Convertit 20% de l'Intelligence en Force et en Dégâts de zone bonus. <em style='color: grey;'>(+5% par Niv)</em>",
-    applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.2 + 0.05 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.intelligence * conversionRatio);
-      stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
-    },
-  },
-
-  styptic_boluses: {
-    name: "Boluses Styptiques",
-    type: ITEM_TYPES.ARMOR,
-    description:
-      "+5 d'armure <em style='color: grey;'>(+0.5 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
-    passiveEffect: "HALVE_BLEED",
-    applyFlat: (stats, itemLevel) => {
-      stats.flatDamageReduction += 5 + Math.floor(0.5 * (itemLevel - 1));
-    },
-  },
-
-  troll_necklace: {
-    name: "Pendentif de Troll",
-    type: ITEM_TYPES.ACCESSORY,
-    description:
-      "+30% de chance d'appliquer 4 poisons. +1% Crit Chance <em style='color: grey;'>(+1% par Niv)",
-    applyMult: (stats, itemLevel) => {
-      stats.critChance += 0.01 + 0.01 * (itemLevel - 1);
-    },
-    onHitEffect: { id: "POISON", duration: 4, chance: 0.3 },
-  },
-
-  knight_greatsword: {
-    name: "Grande Épée de Chevalier",
-    type: ITEM_TYPES.WEAPON,
-    description:
-      "+15 Force, -5 Vigueur, +20% Force <em style='color: grey;'>(+5 Force/ Niv)</em>",
-    applyFlat: (stats, itemLevel) => {
-      stats.strength += Math.floor(15 + 5 * (itemLevel - 1));
-      stats.vigor -= 5;
-      if (stats.vigor < 0) stats.vigor = 0;
-    },
-    applyMult: (stats, itemLevel) => {
-      stats.strength = Math.floor(1.2 * stats.strength);
-    },
-  },
   piercing_talisman: {
     name: "Sceau de la Grande Brèche",
     type: ITEM_TYPES.ACCESSORY,
@@ -220,3 +229,4 @@ export const ITEMS = {
     },
   },
 };
+
