@@ -9,10 +9,17 @@ if (wikiBtn) {
 }
 
 // Audio management
-const campSongs = ["./assets/camp_song_1.mp3", "./assets/camp_song_2.mp3"];
+const campSongs = [
+  "./assets/camp_song_1.mp3",
+  "./assets/camp_song_2.mp3",
+  "./assets/camp_song_3.mp3",
+  "./assets/camp_song_4.mp3",
+];
 const dungeonSongs = [
   "./assets/dungeon_song_1.mp3",
   "./assets/dungeon_song_2.mp3",
+  "./assets/dungeon_song_3.mp3",
+  "./assets/dungeon_song_4.mp3",
 ];
 
 let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
@@ -21,14 +28,26 @@ let currentDungeonSongIndex = 0;
 const campAudio = new Audio();
 const dungeonAudio = new Audio();
 
+function getRandomIndex(array, currentIndex) {
+  if (array.length <= 1) return 0;
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * array.length);
+  } while (newIndex === currentIndex);
+  return newIndex;
+}
+
 function playNextCampSong() {
-  currentCampSongIndex = (currentCampSongIndex + 1) % campSongs.length;
+  currentCampSongIndex = getRandomIndex(campSongs, currentCampSongIndex);
   campAudio.src = campSongs[currentCampSongIndex];
   campAudio.play();
 }
 
 function playNextDungeonSong() {
-  currentDungeonSongIndex = (currentDungeonSongIndex + 1) % dungeonSongs.length;
+  currentDungeonSongIndex = getRandomIndex(
+    dungeonSongs,
+    currentDungeonSongIndex,
+  );
   dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
   dungeonAudio.play();
 }
