@@ -20,7 +20,7 @@ export const STATUS_EFFECTS = {
       } else {
         const eff = getEffectiveStats();
         const baseDot = Math.floor((entity.maxHp || 100) * 0.01);
-        const bonusInt = Math.floor(eff.stats.intelligence * 0.5);
+        const bonusInt = Math.floor(eff.intelligence * 0.5);
 
         damage = Math.max(2, Math.floor(baseDot + bonusInt));
         entity.hp -= damage;
