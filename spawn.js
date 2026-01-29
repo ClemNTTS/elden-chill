@@ -161,7 +161,7 @@ export const spawnMonster = (monsterId, sessionId) => {
   // Spawn log
   ActionLog(
     displayCount > 1
-      ? `Un Groupe de ${firstEnemy.isRare ? "⭐ " : ""}${displayCount} ${firstEnemy.name} apparaît !`
+      ? `Un Groupe mené par ${firstEnemy.isRare ? "⭐ " : ""}${displayCount} ${firstEnemy.name} apparaît !`
       : `Un ${firstEnemy.isRare ? "⭐ " + firstEnemy.name : firstEnemy.name} apparaît !`
   );
 

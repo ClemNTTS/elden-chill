@@ -107,8 +107,7 @@ export function performAttack({
         ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
         return; // cancel this hit completely
       }
-    }
-
+    } else { logPrefix = attacker.name; }
     // --- NEW BLEED LOGIC ---
     const bleedEffect = targetEffects.find((eff) => eff.id === "BLEED");
     if (bleedEffect && bleedEffect.stacks > 0) {
