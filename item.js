@@ -251,7 +251,7 @@ export const ITEMS = {
       stats.flatDamagePenetration += 5;
     },
     applyMult: (stats, itemLevel) => {
-      stats.percentDamagePenetration += 0.1 + 0.01 * (itemLevel - 1);
+      stats.percentDamagePenetration += 0.05 + 0.01 * (itemLevel - 1);
     },
   },
 
