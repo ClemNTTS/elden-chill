@@ -72,7 +72,7 @@ export const MONSTERS = {
     groupCombinations: [{ size: 2, chance: 1.0 }],
     drops: [
       { id: "troll_necklace", chance: 0.8 },
-      { id: "leather_boots", chance: 0.2 },
+      { id: "leather_boots", chance: 0.8 },
     ],
   },
   runeBear1: {
@@ -215,6 +215,10 @@ export const MONSTERS = {
     hp: 50,
     atk: 12,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
+    groupCombinations: [
+      { size: 2, chance: 0.5 },
+      { size: 3, chance: 0.5 },
+    ],
   },
 
   half_human_queen: {
