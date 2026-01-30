@@ -123,7 +123,7 @@ export const ITEMS = {
     name: "Armure de Ronce",
     type: ITEM_TYPES.ARMOR,
     description:
-      "+5  Vigueur  + 1/Niv, Votre armure vous done épine constament.",
+      "+5  Vigueur  + 1/Niv, Votre armure vous donne épine constament.",
     applyFlat: (stats, itemLevel) => {
       stats.vigor += 5 + 1 * (itemLevel - 1);
     },

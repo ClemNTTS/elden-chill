@@ -13,8 +13,8 @@ export const LOOT_TABLES = {
     Tier 1 -> 2 Biomes
   ============================*/
   limgrave_east: [
-    { id: "bloodhound_fang", chance: 0.2 },
-    { id: "leather_vest", chance: 0.3 },
+    { id: "bloodhound_fang", chance: 0.25 },
+    { id: "leather_vest", chance: 0.25 },
     { id: "kama", chance: 0.5 },
   ],
   limgrave_north: [

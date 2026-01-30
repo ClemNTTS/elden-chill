@@ -275,7 +275,7 @@ export const MONSTERS = {
   hero_of_zamor: {
     name: "Héros de Zamor",
     isBoss: true,
-    hp: 1650,
+    hp: 1450,
     atk: 105,
     armor: 125,
     runes: 3000,
