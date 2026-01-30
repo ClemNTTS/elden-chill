@@ -90,6 +90,7 @@ import {
 import { getUpgradeCost, upgradeStat, equipItem } from "./actions.js";
 import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
+import { checkForUpdate } from "./game.js";
 
 export const formatNumber = (num) => {
   if (num >= 1000000) {
@@ -439,6 +440,7 @@ export const toggleView = (view) => {
     gameState.world.isExploring = false;
     if (particles) particles.classList.remove("hidden");
     playCampMusic();
+    checkForUpdate();
     saveGame();
   }
   updateUI();
@@ -581,11 +583,11 @@ export const showStatTooltip = (e, statType) => {
     },
     dexterity: {
       title: "Dextérité",
-      text: "Améliore votre agilité au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +1.5 d'Armure",
+      text: "Améliore votre agilité au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +1.5 d'Armure. 4 points en dextérité = 1 force. ",
     },
     intelligence: {
       title: "Intelligence",
-      text: "Augmente votre capacité à absorber l'énergie des runes.<br><strong>1 point = +1% de Runes.</strong>",
+      text: "Augmente votre capacité à absorber l'énergie des runes.<br><strong>1 point = +1% de Runes.</strong>. 4 points en dextérité = 1 force.",
     },
     critChance: {
       title: "Chance de Critique",

@@ -19,6 +19,16 @@ export const ITEMS = {
       stats.strength += 5;
     },
   },
+
+  rune_fragment: {
+    name: "Fragment de Runes",
+    type: ITEM_TYPES.ACCESSORY,
+    description: "C'es super joli mais pas très utile ...",
+    isAlwaysMax: true,
+    applyFlat: (stats, itemLevel) => {
+      stats.intelligence += 1;
+    },
+  },
   /*===========================
             TIER 1
   ============================*/
@@ -178,12 +188,13 @@ export const ITEMS = {
     name: "Marteau de Margit",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 20 Dextérité de base pour être utilisé. Donne 20% de Force  (+1% / Niveau), Convertit +100% de la Dextérité en Dégats de zone. Converit 50% de la Dextérité en Force. <em style='color: grey;'>(+5% de chance d'étourdir l'ennemi pendant 2 tours.</em>",
+      "Requiert 20 Dextérité de base pour être utilisé.+3 Force par level. Donne 20% de Force  (+1% / Niveau), Convertit +100% de la Dextérité en Dégats de zone. Converit 50% de la Dextérité en Force. <em style='color: grey;'>(+5% de chance d'étourdir l'ennemi pendant 2 tours.</em>",
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
         stats.splashDamage += Math.floor(stats.dexterity);
         stats.strength += Math.floor(0.5 * stats.dexterity);
+        stats.strength += 3 * itemLevel;
       }
     },
     applyMult: (stats, itemLevel) => {
@@ -192,7 +203,7 @@ export const ITEMS = {
         stats.strength = Math.floor((1.2 + 0.01 * itemLevel) * stats.strength);
       }
     },
-    onHitEffect: { id: "STUN", duration: 2, chance: 0.05 },
+    onHitEffect: { id: "STUN", duration: 2, chance: 0.15 },
   },
 
   burned_dragon_hearth: {
@@ -255,6 +266,32 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       const conversion = Math.floor(0.75 * stats.intelligence);
       stats.strength += conversion;
+    },
+  },
+
+  radagon_scarseal: {
+    name: "Sceau Meurtri de Radagon",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Vous gagnez un peu de points dans toutes les stats (+1/Niv) mais perdez 20 d'armure",
+    applyFlat: (stats, itemLevel) => {
+      const bonusStats = itemLevel;
+      stats.strength += bonusStats;
+      stats.dexterity += bonusStats;
+      stats.intelligence += bonusStats;
+      stats.vigor += bonusStats;
+      stats.armor -= 20;
+    },
+  },
+
+  sentinel_armor: {
+    name: "Armure de Sentinelle",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Gagnez +5 vigueur <em style='color: grey;'>(+2 / Niv) et +1 d'armure / Niv</em>",
+    applyFlat: (stats, itemLevel) => {
+      stats.vigor += 5 + 2 * (itemLevel - 1);
+      stats.armor += 1 + (itemLevel - 1);
     },
   },
 

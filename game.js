@@ -1,7 +1,7 @@
 // Main entry point for the game
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
-import { gameState, runtimeState } from "./state.js";
+import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
 import {
   exportSave,
   importSave,
@@ -179,7 +179,7 @@ window.toggleOptions = toggleOptions;
 window.showStatTooltip = showStatTooltip;
 window.moveTooltip = moveTooltip;
 window.hideTooltip = hideTooltip;
-//window.dev = dev;
+window.dev = dev;
 window.exportSave = exportSave;
 window.importSave = importSave;
 window.equipAsh = equipAsh;
@@ -189,32 +189,43 @@ window.joinDiscord = joinDiscord;
 // --- Game Initialization ---
 
 const CHECK_REFRESH_KEY = "last_hard_refresh_timestamp";
-const FORCE_VERSION_KEY = "app_version_code";
-const CURRENT_VERSION = "1.0.3"; // Change ceci pour forcer un refresh immédiat de TOUT LE MONDE
+export const FORCE_VERSION_KEY = "app_version_code";
+export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
 
 const checkScheduledReset = () => {
-  // Date cible : 30 Janvier 2026 à 00:00:00
-  const TARGET_DATE = new Date("2026-01-30T00:00:00").getTime();
-  const RESET_FLAG = "wipe_jan_30_done";
+  // const FINAL_WIPE_FLAG = "wipe_v110_final";
 
-  // Si on est le 30 (ou après) et que ce reset n'a pas encore été fait localement
-  if (Date.now() >= TARGET_DATE && !localStorage.getItem(RESET_FLAG)) {
-    console.warn("Événement de reset global : Nettoyage de la progression...");
+  // if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
+  //   console.warn(
+  //     "Dernière maintenance majeure DESOLE : Réinitialisation du système de sauvegarde.",
+  //   );
 
-    // On marque le reset comme effectué pour ce joueur
-    localStorage.setItem(RESET_FLAG, "true");
+  //   localStorage.clear();
+  //   localStorage.setItem(FINAL_WIPE_FLAG, "true");
 
-    // On utilise ta fonction existante pour remettre l'état à zéro
-    resetGameState();
+  //   alert(
+  //     "MISE À JOUR : Le système de sauvegarde a été sécurisé. Pour garantir la stabilité, une dernière réinitialisation est nécessaire. Bonne chance, Sans-éclat ! Et désolé.",
+  //   );
 
-    alert(
-      "Une nouvelle ère commence sur Elden Chill ! Votre progression a été réinitialisée pour la mise à jour du 30 janvier.",
-    );
-
-    // On force un reload pour repartir sur un gameState propre
-    window.location.reload();
-  }
+  //   window.location.reload();
+  //}
+  return;
 };
+
+export async function checkForUpdate() {
+  try {
+    const response = await fetch(`./version.json?t=${Date.now()}`);
+    const data = await response.json();
+
+    if (data.version !== CURRENT_VERSION) {
+      console.log("🛠️ Mise à jour détectée ! Refresh en cours...");
+      saveGame();
+      window.location.reload(true);
+    }
+  } catch (err) {
+    console.error("Impossible de vérifier les mises à jour", err);
+  }
+}
 
 const handleAutoRefresh = () => {
   const now = Date.now();

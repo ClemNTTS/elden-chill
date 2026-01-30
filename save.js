@@ -66,15 +66,6 @@ export const resetGameState = () => {
   saveGame();
 };
 
-export const exportSave = () => {
-  const saveData = localStorage.getItem(SAVE_NAME);
-  if (saveData) {
-    navigator.clipboard.writeText(saveData).then(() => {
-      alert("Sauvegarde copiée dans le presse-papier !");
-    });
-  }
-};
-
 const sanitizeData = (schema, data) => {
   const result = Array.isArray(schema) ? [] : {};
 
@@ -94,27 +85,45 @@ const sanitizeData = (schema, data) => {
 
   return result;
 };
-
-export const importSave = () => {
-  const code = prompt("Entrez le code de la sauvegarde à importer :");
-  if (!code) return;
-
-  const decrypted = decodeSave(code);
-
-  if (!decrypted) {
-    alert("❌ Code de sauvegarde invalide.");
-    return;
-  }
-
-  const sanitized = sanitizeData(DEFAULT_GAME_STATE, decrypted);
-
-  sanitized.world.isExploring = false;
-  sanitized.playerEffects = [];
-  sanitized.ennemyEffects = [];
-
-  setGameState(sanitized);
+export const exportSave = () => {
+  gameState.save.version = DEFAULT_GAME_STATE.save.version;
   saveGame();
+  const saveData = localStorage.getItem(SAVE_NAME);
 
-  alert("✅ Sauvegarde importée avec succès !");
-  window.location.reload();
+  if (saveData) {
+    navigator.clipboard.writeText(saveData).then(() => {
+      alert("Sauvegarde copiée dans le presse-papier !");
+    });
+    return;
+  } else {
+    alert("Aucune sauvegarde trouvée.");
+  }
+};
+
+// save.js
+export const importSave = () => {
+  const base64Data = prompt("Collez votre code de sauvegarde ici :");
+  if (!base64Data) return;
+
+  try {
+    const reversed = base64Data.split("").reverse().join("");
+    const jsonString = decodeURIComponent(escape(atob(reversed)));
+    const importedData = JSON.parse(jsonString);
+
+    const importedVersion = importedData.save?.version;
+    const currentVersion = DEFAULT_GAME_STATE.save.version;
+
+    if (importedVersion !== currentVersion) {
+      alert(
+        `❌ IMPORT IMPOSSIBLE : Cette sauvegarde (v${importedVersion || "inconnue"}) est incompatible avec la version actuelle (v${currentVersion}).`,
+      );
+      return;
+    }
+
+    localStorage.setItem(SAVE_NAME, base64Data);
+    location.reload();
+  } catch (err) {
+    console.error(err);
+    alert("❌ Code de sauvegarde invalide ou corrompu.");
+  }
 };

@@ -447,7 +447,9 @@ export const combatLoop = (sessionId) => {
 
         defeatedEnemies.forEach((enemy) => {
           const runesAwarded = Math.floor(enemy.runes * intBonus);
-          gameState.runes.carried += runesAwarded;
+          gameState.runes.carried += Math.floor(
+            runesAwarded * (runtimeState.currentLoopCount * 0.2),
+          );
           ActionLog(
             `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
             "log-runes",
@@ -507,7 +509,7 @@ export const combatLoop = (sessionId) => {
 
         if (!enemyStatus.skipTurn) {
           const eff = getEffectiveStats();
-          const dodgeChance = Math.floor(Math.min(0.5, eff.dexterity / 400));
+          const dodgeChance = Math.min(0.5, eff.dexterity / 400);
 
           if (Math.random() < dodgeChance) {
             ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");

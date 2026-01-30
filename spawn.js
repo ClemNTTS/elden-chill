@@ -58,7 +58,12 @@ function createEnemyInstance(template, multiplier) {
   };
 }
 
-function spawnEnemyWithCompanions(template, multiplier, depth = 0, maxDepth = 3) {
+function spawnEnemyWithCompanions(
+  template,
+  multiplier,
+  depth = 0,
+  maxDepth = 3,
+) {
   let group = [];
 
   // === Main enemy ===
@@ -66,13 +71,10 @@ function spawnEnemyWithCompanions(template, multiplier, depth = 0, maxDepth = 3)
   group.push(enemy);
 
   // === Companion logic ===
-  if (
-    depth < maxDepth &&
-    template.companion &&
-    template.groupCombinations &&
-    template.groupCombinations.length > 0
-  ) {
-    const companionCount = rollGroupSize(template.groupCombinations);
+  if (depth < maxDepth && template.companion) {
+    const companionCount = template.groupCombinations
+      ? rollGroupSize(template.groupCombinations)
+      : template.companion.length;
 
     for (let i = 0; i < companionCount; i++) {
       const compId =
@@ -87,7 +89,7 @@ function spawnEnemyWithCompanions(template, multiplier, depth = 0, maxDepth = 3)
         compTemplate,
         multiplier,
         depth + 1,
-        maxDepth
+        maxDepth,
       );
 
       group.push(...subGroup);
@@ -161,8 +163,8 @@ export const spawnMonster = (monsterId, sessionId) => {
   // Spawn log
   ActionLog(
     displayCount > 1
-      ? `Un Groupe mené par ${firstEnemy.isRare ? "⭐ " : ""}${displayCount} ${firstEnemy.name} apparaît !`
-      : `Un ${firstEnemy.isRare ? "⭐ " + firstEnemy.name : firstEnemy.name} apparaît !`
+      ? `Un Groupe de ${displayCount} ennemis mené par ${firstEnemy.isRare ? "⭐ " : ""} ${firstEnemy.name} apparaît !`
+      : `Un ${firstEnemy.isRare ? "⭐ " + firstEnemy.name : firstEnemy.name} apparaît !`,
   );
 
   setTimeout(() => combatLoop(sessionId), 500);

@@ -39,7 +39,9 @@ export const DEFAULT_GAME_STATE = {
   ashesOfWaruses: {},
   ashesOfWarOwned: [],
   equippedAsh: null,
-  save: {},
+  save: {
+    version: "0.0.5",
+  },
 };
 
 export let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
@@ -106,7 +108,11 @@ export function getEffectiveStats() {
   // Premier passage : Les bonus "Flat" (additions)
   applyItemBonus("applyFlat");
   effStats.armor += Math.floor((effStats.dexterity * 1.5) / 4);
-  console.log(effStats.armor);
+
+  effStats.strength += Math.floor(
+    gameState.stats.dexterity / 4 + gameState.stats.intelligence / 4,
+  );
+
   // Second passage : Les bonus "Mult" (multiplications)
   applyItemBonus("applyMult");
 

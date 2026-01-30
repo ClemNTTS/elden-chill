@@ -179,6 +179,10 @@ export const MONSTERS = {
     runes: 15,
     isRare: true,
     companion: ["noble_sword"],
+    groupCombinations: [
+      { size: 1, chance: 0.5 },
+      { size: 2, chance: 0.5 },
+    ],
     drops: [
       { id: "astronomer_staff", chance: 0.5 },
       { id: "scholars_ring", chance: 0.5 },
@@ -191,6 +195,41 @@ export const MONSTERS = {
     runes: 2500,
     isBoss: true,
     onHitEffect: { id: "BURN", duration: 2, chance: 0.5 },
+  },
+  // === WEEPING PENINSULA ===
+  servant_poison: {
+    name: "Servante empoisonée",
+    hp: 122,
+    atk: 25,
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
+    runes: 153,
+    groupCombinations: [
+      { size: 1, chance: 0.5 },
+      { size: 2, chance: 0.5 },
+    ],
+  },
+
+  servant_poison_companion: {
+    name: "Servante empoisonée",
+    rune: 113,
+    hp: 50,
+    atk: 12,
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
+  },
+
+  half_human_queen: {
+    name: "Reine Demi-Humaine",
+    hp: 824,
+    atk: 35,
+    runes: 1005,
+    isRare: true,
+    companion: ["servant_poison_companion"],
+    drops: [
+      {
+        id: "queen_staff",
+        chance: 0.5,
+      },
+    ],
   },
 
   // === CAELID WEST===
