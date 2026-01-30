@@ -447,9 +447,7 @@ export const combatLoop = (sessionId) => {
 
         defeatedEnemies.forEach((enemy) => {
           const runesAwarded = Math.floor(enemy.runes * intBonus);
-          gameState.runes.carried += Math.floor(
-            runesAwarded * (runtimeState.currentLoopCount * 0.2),
-          );
+          gameState.runes.carried += Math.floor(runesAwarded);
           ActionLog(
             `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
             "log-runes",
