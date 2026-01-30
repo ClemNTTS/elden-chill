@@ -41,6 +41,9 @@ function clamp(v, min = 0) {
 /* ================= STATUS EFFECTS ================= */
 
 export const applyEffect = (targetEffects, effectId, value) => {
+  if (!targetEffects.__owner) {
+  targetEffects.__owner = true;
+}
   // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
   if (effectId === "BLEED" || effectId === "FROSTBITE") {
@@ -131,7 +134,26 @@ export function performAttack({
       }
     }
     // --- END NEW BLEED LOGIC ---
+    // --- FROSTBITE LOGIC ---
 
+    let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
+    if (frostEffect && frostEffect.stacks >= 10) {
+      let frostDamage = Math.floor(target.maxHp * 0.10) + 30;
+      if (target.isBoss) {
+        frostDamage = Math.floor(frostDamage * 0.7);
+      }
+      damage += frostDamage;
+      if (typeof target.armor === "number") { 
+        target.armor -= 20;
+      } else {
+        target.armor = 80;
+      }
+      ActionLog(
+        `❄️ GELURE ! ${target.name} subit ${frostDamage} dégâts, perd 20 d'armure et est brisé par le froid !`,
+        "log-dodge",
+      );
+      frostEffect.stacks -= 10;
+    }
     if (ashEffect?.damageMult) {
       damage *= ashEffect.damageMult;
     }
@@ -237,7 +259,9 @@ export function performAttack({
     targetEffects.forEach((eff) => {
       const effectData = STATUS_EFFECTS[eff.id];
       if (effectData.onBeingHit) {
+        target.__effects = targetEffects;
         const result = effectData.onBeingHit(attacker, target, finalDamage);
+
         if (result?.message) ActionLog(result.message, "log-warning");
       }
     });
