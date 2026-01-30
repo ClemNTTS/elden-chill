@@ -25,7 +25,7 @@ export const MONSTERS = {
   beastman1: {
     name: "Homme-Bête de Farum Azula",
     hp: 142,
-    atk: 18,
+    atk: 16,
     runes: 333,
     isRare: true,
     drops: [
