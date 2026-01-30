@@ -36,7 +36,7 @@ export const LOOT_TABLES = {
     Tier 3
   ============================*/
   weeping_peninsula: [
-    { id: "night_cavalry_armor", chance: 0.3 },
+    { id: "zamor_curved_sword", chance: 0.3 },
     { id: "piercing_talisman", chance: 0.3 },
     { id: "radagon_scarseal", chance: 0.3 },
   ],
@@ -94,7 +94,7 @@ export const BIOMES = {
     rareMonsters: ["nighth_cavalery", "half_human_queen"],
     maxRareSpawns: 3,
     monsters: ["servant_poison", "bats"],
-    boss: "phantom_night_cavalery",
+    boss: "hero_of_zamor",
     length: 13,
     unlocks: ["morne_castle"],
   },

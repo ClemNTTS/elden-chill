@@ -272,18 +272,19 @@ export const MONSTERS = {
     ],
   },
 
-  phantom_nighth_cavalery: {
+  hero_of_zamor: {
+    name: "Héros de Zamor",
     isBoss: true,
-    name: "Cavalier Fantôme de la Nuit",
-    hp: 2000,
-    atk: 110,
+    hp: 1300,
+    atk: 105,
+    armor: 120,
     runes: 3000,
-    dodgeChance: 0.18,
-    effectsPhase2: { id: "BLEED", duration: 4, chance: 0.5 },
+    dodgeChance: 0.22,
+    effectsPhase2: { id: "FROSTBITE", duration: 5, chance: 0.5 },
     hasSecondPhase: true,
     isInSecondPhase: false,
-    thresholdForPhase2: 0.55,
-    flavorTextPhase2: "Le Cavalier Fantôme affûte sa hâche!",
+    thresholdForPhase2: 0.57,
+    flavorTextPhase2: "La lame du Hero de Zamor se refroidit!",
   },
 
   // === CAELID WEST===

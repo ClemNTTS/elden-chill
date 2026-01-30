@@ -204,6 +204,10 @@ export function performAttack({
           target.atk *= target.dmgMultPhase2;
         }
 
+        if (target.dodgePhase2) {
+          target.dodgeChance = target.dodgePhase2;
+        }
+
         if (target.effectsPhase2) {
           target.onHitEffect = target.effectsPhase2;
         }

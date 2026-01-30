@@ -255,6 +255,26 @@ export const ITEMS = {
     },
   },
 
+  zamor_curved_sword: {
+    name: "Épée Courbe de Zamor",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Requiert 18 de Force et 15 de Dextérité de base pour être utilisé. +2 de Force et de Dextérité par Niveau. Convertit +6% de la dextérité en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
+    applyFlat: (stats, itemLevel) => {
+      stats.strength += 2 * itemLevel;
+      stats.dexterity += 2 * itemLevel;
+    },
+    applyMult: (stats, itemLevel) => {
+      const baseStr = gameState.stats.strength || 0;
+      const baseDex = gameState.stats.dexterity || 0;
+      const ratio = 0.06 * itemLevel;
+      if (baseStr >= 18 && baseDex >= 15) {
+        stats.strength += Math.floor(ratio * stats.dexterity);
+      }
+    },
+    onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
+  },
+
   queen_staff: {
     name: "Bâton de la Reine",
     type: ITEM_TYPES.WEAPON,
