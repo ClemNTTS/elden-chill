@@ -584,7 +584,7 @@ export const showStatTooltip = (e, statType) => {
     },
     dexterity: {
       title: "Dextérité",
-      text: "Améliore votre agilité au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +1.5 d'Armure. 4 points en dextérité = 1 force. ",
+      text: "Améliore votre agilité au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +0.5 d'Armure. 4 points en dextérité = 1 force. ",
     },
     intelligence: {
       title: "Intelligence",

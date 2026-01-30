@@ -275,9 +275,9 @@ export const MONSTERS = {
   hero_of_zamor: {
     name: "Héros de Zamor",
     isBoss: true,
-    hp: 1300,
+    hp: 1650,
     atk: 105,
-    armor: 120,
+    armor: 125,
     runes: 3000,
     dodgeChance: 0.22,
     effectsPhase2: { id: "FROSTBITE", duration: 5, chance: 0.5 },
