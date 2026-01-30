@@ -188,13 +188,13 @@ export const ITEMS = {
     name: "Marteau de Margit",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 20 Dextérité de base pour être utilisé.+3 Force par level. Donne 20% de Force  (+1% / Niveau), Convertit +100% de la Dextérité en Dégats de zone. Converit 50% de la Dextérité en Force. <em style='color: grey;'>(+5% de chance d'étourdir l'ennemi pendant 2 tours.</em>",
+      "Requiert 20 Dextérité de base pour être utilisé.+10 Force par level. Donne 20% de Force  (+1% / Niveau), Convertit +100% de la Dextérité en Dégats de zone. Converit 50% de la Dextérité en Force. <em style='color: grey;'>(+5% de chance d'étourdir l'ennemi pendant 2 tours.</em>",
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
         stats.splashDamage += Math.floor(stats.dexterity);
         stats.strength += Math.floor(0.5 * stats.dexterity);
-        stats.strength += 3 * itemLevel;
+        stats.strength += 10 * itemLevel;
       }
     },
     applyMult: (stats, itemLevel) => {
@@ -216,7 +216,6 @@ export const ITEMS = {
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (!itemLevel) {
-        console.log(itemLevel);
         return;
       }
       if (targetEffects.some((eff) => eff.id === "BURN")) {
@@ -242,6 +241,7 @@ export const ITEMS = {
     },
     onHitEffect: { id: "BURN", duration: 3, chance: 0.3 },
   },
+
   piercing_talisman: {
     name: "Sceau de la Grande Brèche",
     type: ITEM_TYPES.ACCESSORY,
@@ -282,6 +282,21 @@ export const ITEMS = {
       stats.vigor += bonusStats;
       stats.armor -= 20;
     },
+  },
+
+  night_cavalry_armor: {
+    name: "Armure de Cavalier de la Nuit",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Requiert 30 de vigueur de base pour être utilisé. Une armure sombre qui augmente la Force de 10 (+3 / Niv) et réduit les dégâts subis en augmentant l'Armure de 15 (+5 / Niv). Et donne 15% de chance d'appliquer 2 saignements",
+    applyFlat: (stats, itemLevel) => {
+      const baseVigor = gameState.stats.vigor || 0;
+      if (baseVigor >= 30) {
+        stats.strength += 10 + 3 * (itemLevel - 1);
+        stats.armor += 15 + 5 * (itemLevel - 1);
+      }
+    },
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.15 },
   },
 
   sentinel_armor: {

@@ -35,6 +35,11 @@ export const LOOT_TABLES = {
   /*===========================
     Tier 3
   ============================*/
+  weeping_peninsula: [
+    { id: "night_cavalry_armor", chance: 0.3 },
+    { id: "piercing_talisman", chance: 0.3 },
+    { id: "radagon_scarseal", chance: 0.3 },
+  ],
   liurnia_south: [
     { id: "twin_blade", chance: 0.2 },
     { id: "scavenger_mask", chance: 0.8 },
@@ -86,11 +91,11 @@ export const BIOMES = {
   ============================*/
   weeping_peninsula: {
     name: "Péninsule larmoyante",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
+    rareMonsters: ["nighth_cavalery", "half_human_queen"],
+    maxRareSpawns: 3,
+    monsters: ["servant_poison", "bats"],
+    boss: "phantom_nighth_cavalery",
+    length: 15,
     unlocks: ["morne_castle"],
   },
   morne_castle: {

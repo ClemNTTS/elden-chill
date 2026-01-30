@@ -588,7 +588,7 @@ export const showStatTooltip = (e, statType) => {
     },
     intelligence: {
       title: "Intelligence",
-      text: "Augmente votre capacité à absorber l'énergie des runes.<br><strong>1 point = +1% de Runes.</strong>. 4 points en dextérité = 1 force.",
+      text: "Augmente votre capacité à absorber l'énergie des runes.<br><strong>1 point = +1% de Runes.</strong>. 4 points en Intelligence = 1 force.",
     },
     critChance: {
       title: "Chance de Critique",

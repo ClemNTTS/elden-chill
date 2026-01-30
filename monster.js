@@ -85,7 +85,7 @@ export const MONSTERS = {
     groupCombinations: [
       { size: 1, chance: 0.9 },
       { size: 2, chance: 0.1 },
-      { ashId: "bloody_slash", chance: 0.05, unique: true },
+      { ashId: "bloody_slash", chance: 0.02, unique: true },
     ],
     drops: [
       { id: "styptic_boluses", chance: 0.2 },
@@ -130,7 +130,10 @@ export const MONSTERS = {
     runes: 600,
     isRare: true,
     onHitEffect: { id: "BLEED", duration: 1, chance: 1.0 },
-    drops: [{ id: "knight_greatsword", chance: 0.95 }],
+    drops: [
+      { id: "knight_greatsword", chance: 0.95 },
+      { ashId: "bloody_slash", chance: 0.03, unique: true },
+    ],
   },
   crucible_knight1: {
     name: "Chevalier du Creuset",
@@ -142,7 +145,6 @@ export const MONSTERS = {
     drops: [
       { id: "briar_armor", chance: 0.15 },
       { id: "styptic_boluses", chance: 0.8 },
-      { ashId: "storm_stomp", chance: 0.05, unique: true },
     ],
   },
   margit: {
@@ -204,16 +206,36 @@ export const MONSTERS = {
     onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
     runes: 153,
     groupCombinations: [
-      { size: 1, chance: 0.5 },
       { size: 2, chance: 0.5 },
+      { size: 3, chance: 0.5 },
     ],
+  },
+
+  bats: {
+    name: "Chauve-souris",
+    hp: 28,
+    atk: 10,
+    runes: 95,
+    companion: ["chanting_dame"],
+    companionCount: 1,
+    groupCombinations: [
+      { size: 3, chance: 0.5 },
+      { size: 5, chance: 0.5 },
+    ],
+  },
+  chanting_dame: {
+    name: "Sirène Chantante",
+    hp: 185,
+    atk: 20,
+    runes: 250,
+    onHitEffect: { id: "STUN", duration: 2, chance: 0.15 },
   },
 
   servant_poison_companion: {
     name: "Servante empoisonée",
-    rune: 113,
+    runes: 113,
     hp: 50,
-    atk: 12,
+    atk: 13,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
     groupCombinations: [
       { size: 2, chance: 0.5 },
@@ -224,16 +246,44 @@ export const MONSTERS = {
   half_human_queen: {
     name: "Reine Demi-Humaine",
     hp: 824,
-    atk: 35,
-    runes: 1005,
+    atk: 45,
+    runes: 1605,
     isRare: true,
     companion: ["servant_poison_companion"],
+    companionCount: 3,
     drops: [
       {
         id: "queen_staff",
         chance: 0.5,
       },
     ],
+  },
+
+  nighth_cavalery: {
+    name: "Cavalier de la Nuit",
+    hp: 100,
+    atk: 75,
+    runes: 1200,
+    isBoss: true,
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.5 },
+    drops: [
+      { id: "night_cavalry_armor", chance: 0.75 },
+      // { ashId: "blood_blade", chance: 0.1, unique: true },
+    ],
+  },
+
+  phantom_nighth_cavalery: {
+    isBoss: true,
+    name: "Cavalier Fantôme de la Nuit",
+    hp: 2000,
+    atk: 110,
+    runes: 3000,
+    dodgeChance: 0.18,
+    effectsPhase2: { id: "BLEED", duration: 4, chance: 0.5 },
+    hasSecondPhase: true,
+    isInSecondPhase: false,
+    thresholdForPhase2: 0.55,
+    flavorTextPhase2: "Le Cavalier Fantôme affûte sa hâche!",
   },
 
   // === CAELID WEST===

@@ -72,9 +72,12 @@ function spawnEnemyWithCompanions(
 
   // === Companion logic ===
   if (depth < maxDepth && template.companion) {
-    const companionCount = template.groupCombinations
-      ? rollGroupSize(template.groupCombinations)
-      : template.companion.length;
+    const companionCount =
+      template.companionCount !== undefined
+        ? template.companionCount
+        : template.groupCombinations
+          ? rollGroupSize(template.groupCombinations)
+          : 1;
 
     for (let i = 0; i < companionCount; i++) {
       const compId =
@@ -109,31 +112,30 @@ export const spawnMonster = (monsterId, sessionId) => {
   const template = MONSTERS[monsterId];
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
 
-  // Determine base group size
   let groupSize = 1;
   if (template.groupCombinations) {
-    const random = Math.random();
-    let cumulativeChance = 0;
-    for (const combination of template.groupCombinations) {
-      cumulativeChance += combination.chance;
-      if (random <= cumulativeChance) {
-        groupSize = combination.size;
-        break;
-      }
+    groupSize = rollGroupSize(template.groupCombinations);
+  }
+
+  const primaryEnemies = [];
+  const companions = [];
+
+  for (let i = 0; i < groupSize; i++) {
+    const result =
+      i === 0
+        ? spawnEnemyWithCompanions(template, multiplier, 0)
+        : spawnEnemyWithCompanions(template, multiplier, 3);
+
+    primaryEnemies.push(result[0]);
+
+    if (i === 0 && result.length > 1) {
+      companions.push(...result.slice(1));
     }
   }
 
-  // === Build full enemy group ===
-  runtimeState.currentEnemyGroup = [];
-
-  for (let i = 0; i < groupSize; i++) {
-    const subGroup = spawnEnemyWithCompanions(template, multiplier);
-    runtimeState.currentEnemyGroup.push(...subGroup);
-  }
+  runtimeState.currentEnemyGroup = [...primaryEnemies, ...companions];
 
   const firstEnemy = runtimeState.currentEnemyGroup[0];
-
-  // Display name
   const displayCount = runtimeState.currentEnemyGroup.length;
   const groupSizeText = displayCount > 1 ? ` (x${displayCount})` : "";
 
@@ -144,14 +146,11 @@ export const spawnMonster = (monsterId, sessionId) => {
 
   updateHealthBars();
 
-  // Passive effects from items
   Object.values(gameState.equipped).forEach((itemId) => {
     const item = ITEMS[itemId];
     if (item && item.passiveStatus) {
       const statusId = item.passiveStatus;
-
       const hasEffect = gameState.playerEffects.some((e) => e.id === statusId);
-
       if (!hasEffect) {
         gameState.playerEffects.push({ id: statusId, duration: 999 });
       }
@@ -160,10 +159,9 @@ export const spawnMonster = (monsterId, sessionId) => {
 
   updateUI();
 
-  // Spawn log
   ActionLog(
     displayCount > 1
-      ? `Un Groupe de ${displayCount} ennemis mené par ${firstEnemy.isRare ? "⭐ " : ""} ${firstEnemy.name} apparaît !`
+      ? `Un Groupe de ${displayCount} ennemis mené par ${firstEnemy.isRare ? "⭐ " : ""}${firstEnemy.name} apparaît !`
       : `Un ${firstEnemy.isRare ? "⭐ " + firstEnemy.name : firstEnemy.name} apparaît !`,
   );
 

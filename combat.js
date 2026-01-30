@@ -204,6 +204,10 @@ export function performAttack({
           target.atk *= target.dmgMultPhase2;
         }
 
+        if (target.effectsPhase2) {
+          target.onHitEffect = target.effectsPhase2;
+        }
+
         if (target.flavorTextPhase2) {
           ActionLog(target.flavorTextPhase2, "log-flavor-orange");
         }

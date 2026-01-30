@@ -40,7 +40,7 @@ export const DEFAULT_GAME_STATE = {
   ashesOfWarOwned: [],
   equippedAsh: null,
   save: {
-    version: "0.0.5",
+    version: "0.0.6",
   },
 };
 
