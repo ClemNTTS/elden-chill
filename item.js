@@ -246,7 +246,7 @@ export const ITEMS = {
     name: "Sceau de la Grande Brèche",
     type: ITEM_TYPES.ACCESSORY,
     description:
-      "Pénétration fixe +10. Gagnez 5% de pénétration d'armure <em style='color: grey;'>(+1% / Niv)</em>",
+      "Pénétration fixe +5. Gagnez 5% de pénétration d'armure <em style='color: grey;'>(+1% / Niv)</em>",
     applyFlat: (stats, itemLevel) => {
       stats.flatDamagePenetration += 5;
     },
