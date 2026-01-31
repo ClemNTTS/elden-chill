@@ -36,7 +36,7 @@ export const MONSTERS = {
   troll1_boss: {
     name: "Troll des Collines",
     hp: 147,
-    atk: 20,
+    atk: 15,
     runes: 500,
     isBoss: true,
     hasSecondPhase: true,
@@ -60,7 +60,7 @@ export const MONSTERS = {
   },
   troll1_duo: {
     name: "Troll des Collines",
-    hp: 130,
+    hp: 120,
     atk: 15,
     runes: 450,
     isRare: true,
