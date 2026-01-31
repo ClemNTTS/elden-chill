@@ -482,12 +482,13 @@ export const combatLoop = (sessionId) => {
         const intBonus = 1 + eff.intelligence / 100;
 
         defeatedEnemies.forEach((enemy) => {
-          const runesAwarded = Math.floor(enemy.runes * intBonus);
+          runtimeState.defeatedEnemies.push(enemy);
+          /*const runesAwarded = Math.floor(enemy.runes * intBonus);
           gameState.runes.carried += Math.floor(runesAwarded);
           ActionLog(
             `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
             "log-runes",
-          );
+          );*/
         });
 
         // Show remaining enemies message only if there are enemies left

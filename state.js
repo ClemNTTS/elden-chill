@@ -49,7 +49,8 @@ export let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
 // Non-saved, runtime state
 export const runtimeState = {
   currentEnemyGroup: [],
-  lastDefeatedEnemy: null,
+  defeatedEnemies:  [],
+  areaCleared: false,
   playerCurrentHp: 0,
   currentCombatSession: 0,
   currentLoopCount: 0,

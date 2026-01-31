@@ -85,34 +85,53 @@ export const handleDeath = () => {
   setTimeout(() => toggleView("camp"), 3000);
 };
 
-export const handleVictory = (sessionId) => {
-  const firstEnemy = runtimeState.lastDefeatedEnemy;
-
-  if (firstEnemy.isRare && firstEnemy.drops) {
-    firstEnemy.drops.forEach((loot) => {
-      if (loot.ashId) {
-        if (
-          !gameState.ashesOfWarOwned.includes(loot.ashId) &&
-          Math.random() < loot.chance
-        ) {
-          gameState.ashesOfWarOwned.push(loot.ashId);
-          ActionLog(
-            `OBJET UNIQUE OBTENU : Cendre de Guerre - ${ASHES_OF_WAR[loot.ashId].name} !`,
-            "log-crit",
-          );
-        }
-      } else if (loot.id && Math.random() < loot.chance) {
-        dropItem(loot.id);
-      }
-    });
+export const handleDrops = (sessionId) => {
+  const eff = getEffectiveStats();
+  const intBonus = 1 + eff.intelligence / 100;
+  let wasABossEncounter = false;
+  if (runtimeState.defeatedEnemies.length > 1) {
+    ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
   }
+  runtimeState.defeatedEnemies.forEach((enemy) => {
+    if (enemy.isBoss) { wasABossEncounter = true; }
+    const runesAwarded = Math.floor(enemy.runes * intBonus);
+    gameState.runes.carried += Math.floor(runesAwarded);
+    ActionLog(
+      `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
+      "log-runes",
+    );
+    if (enemy.isRare && enemy.drops) {
+      enemy.drops.forEach((loot) => {
+        if (loot.ashId) {
+          if (
+            !gameState.ashesOfWarOwned.includes(loot.ashId) &&
+            Math.random() < loot.chance
+          ) {
+            gameState.ashesOfWarOwned.push(loot.ashId);
+            ActionLog(
+              `OBJET UNIQUE OBTENU : Cendre de Guerre - ${ASHES_OF_WAR[loot.ashId].name} !`,
+              "log-crit",
+            );
+          }
+        } else if (loot.id && Math.random() < loot.chance) {
+          dropItem(loot.id);
+        }
+      });
+    }
+  });
+  if (wasABossEncounter) { runtimeState.areaCleared = true; }
+  runtimeState.defeatedEnemies = []; // Clear after processing
+};
 
+export const handleVictory = (sessionId) => {
+  handleDrops(sessionId);
   gameState.ennemyEffects = [];
   runtimeState.playerArmorDebuff = 0;
   gameState.world.progress++;
   updateStepper();
 
-  if (firstEnemy.isBoss) {
+  if (runtimeState.areaCleared) {
+    runtimeState.areaCleared = false;
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
 
