@@ -44,7 +44,7 @@ export const STATUS_EFFECTS = {
         const effectiveStats = getEffectiveStats();
         reflectDamage += Math.floor(effectiveStats.vigor * 0.5);
       } else {
-        reflectDamage += 5;
+        reflectDamage += Math.floor(damageTaken * 0.15);
       }
 
       reflectDamage = Math.max(1, reflectDamage);
@@ -57,7 +57,7 @@ export const STATUS_EFFECTS = {
 
       return {
         damage: reflectDamage,
-        message: `${attacker.name === "Vôtre héro" ? "Vous vous blessez" : attacker.name + " se blesse"} sur les épines ! (-${reflectDamage} PV)`,
+        message: `${!isPlayerTarget ? "Vous vous blessez" : attacker.name + " se blesse"} sur les épines ! (-${reflectDamage} PV)`,
       };
     },
   },
