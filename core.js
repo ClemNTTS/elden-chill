@@ -148,25 +148,27 @@ export const handleVictory = (sessionId) => {
 
     ActionLog("BOSS VAINCU !");
 
-    if (
-      currentBiome.unlocks &&
-      !gameState.world.unlockedBiomes.includes(currentBiome.unlocks[0])
-    ) {
-      //appel webhook discord
-      sendDiscordAnnouncement(MONSTERS[currentBiome.boss].name);
+    if (currentBiome.unlocks) {
+      let newlyUnlockedCount = 0;
 
-      for (let i = 0; i < currentBiome.unlocks.length; i++) {
-        if (!BIOMES[currentBiome.unlocks[i]]) {
-          continue;
+      currentBiome.unlocks.forEach((biomeId) => {
+        // On vérifie si le biome existe et s'il n'est pas déjà débloqué
+        if (
+          BIOMES[biomeId] &&
+          !gameState.world.unlockedBiomes.includes(biomeId)
+        ) {
+          gameState.world.unlockedBiomes.push(biomeId);
+          ActionLog(`Nouvelle zone découverte : ${BIOMES[biomeId].name} !`);
+          newlyUnlockedCount++;
         }
+      });
 
-        gameState.world.unlockedBiomes.push(currentBiome.unlocks[i]);
-        ActionLog(
-          `Nouvelle zone découverte : ${BIOMES[currentBiome.unlocks[i]].name} !`,
-        );
+      // Si au moins une zone a été découverte, on fait l'annonce et on sauvegarde
+      if (newlyUnlockedCount > 0) {
+        sendDiscordAnnouncement(MONSTERS[currentBiome.boss].name);
+        saveGame();
+        updateUI();
       }
-      saveGame();
-      updateUI();
     }
 
     const loot = LOOT_TABLES[gameState.world.currentBiome];
