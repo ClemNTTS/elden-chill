@@ -1,3 +1,4 @@
+import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 import { setAudioListener, updateUI } from "./ui.js";
 
@@ -52,6 +53,12 @@ export const loadGame = () => {
       decrypted.playerEffects = [];
       decrypted.ennemyEffects = [];
       decrypted.runes.carried = 0;
+
+      if (decrypted.inventory) {
+        decrypted.inventory = decrypted.inventory.filter(
+          (item) => ITEMS[item.id],
+        );
+      }
 
       setGameState(decrypted);
       saveGame();

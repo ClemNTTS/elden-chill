@@ -37,7 +37,6 @@ export const LOOT_TABLES = {
   ============================*/
   weeping_peninsula: [
     { id: "zamor_curved_sword", chance: 0.3 },
-    //{ id: "piercing_talisman", chance: 0.3 },
     { id: "radagon_scarseal", chance: 0.3 },
   ],
   liurnia_south: [
