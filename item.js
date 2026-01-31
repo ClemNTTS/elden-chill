@@ -620,12 +620,19 @@ export const ITEMS = {
     name: "Graine de Vermillon",
     type: ITEM_TYPES.ACCESSORY,
     description:
-      "Requiert 24 de Vigueur. +15% Vigueur (+2% / Niv). Vous soigne de 5% de vos PV Max à chaque coup porté.",
+      "Requiert 42 de Vigueur. +15% Vigueur (+1% / Niv). Vous soigne de 3% de vos PV Max à chaque coup porté.",
     applyMult: (stats, itemLevel) => {
-      stats.vigor *= 1.15 + 0.02 * (itemLevel - 1);
+      const baseVig = gameState.stats.vigor || 0;
+      if (baseVig >= 42) {
+        stats.vigor *= 1.15 + 0.01 * (itemLevel - 1);
+      }
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      const heal = Math.floor(getHealth(stats.vigor) * 0.05);
+      if (!itemLevel) return;
+      const baseVig = gameState.stats.vigor || 0;
+      if (baseVig < 42) return;
+
+      const heal = Math.floor(getHealth(stats.vigor) * 0.03);
       runtimeState.playerCurrentHp = Math.min(
         getHealth(stats.vigor),
         runtimeState.playerCurrentHp + heal,

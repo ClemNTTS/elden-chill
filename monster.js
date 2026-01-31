@@ -195,8 +195,8 @@ export const MONSTERS = {
   },
   limgrave_dragon: {
     name: "Dragon volant Agheel",
-    hp: 980,
-    atk: 60,
+    hp: 880,
+    atk: 62,
     runes: 2500,
     isBoss: true,
     onHitEffect: { id: "BURN", duration: 2, chance: 0.5 },

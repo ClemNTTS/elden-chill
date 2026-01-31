@@ -146,7 +146,7 @@ export const BIOMES = {
 
   caelid_west: {
     name: "Entrée de Caélid",
-    rareMonsters: ["caelid_knight"],
+    rareMonsters: ["caelid_knight", "crystal_snail"],
     maxRareSpawns: 5,
     monsters: ["rotten_stray", "kindred_of_rot"],
     boss: "commander_oneil_weak",
