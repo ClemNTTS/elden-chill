@@ -30,6 +30,7 @@ export const MONSTERS = {
     isRare: true,
     drops: [
       { id: "iron_sword", chance: 0.95 },
+      { id: "keen_dagger", chance: 0.45 },
       { ashId: "beginer_tarnished_heal", chance: 0.8, unique: true },
     ],
   },
@@ -127,7 +128,7 @@ export const MONSTERS = {
   },
   bell_bearing_hunter1: {
     name: "Chasseur de Clochettes",
-    hp: 305,
+    hp: 245,
     atk: 35,
     runes: 600,
     isRare: true,
@@ -203,31 +204,31 @@ export const MONSTERS = {
   // === WEEPING PENINSULA ===
   servant_poison: {
     name: "Servante empoisonée",
-    hp: 95,
+    hp: 55,
     atk: 20,
-    onHitEffect: { id: "POISON", duration: 2, chance: 0.8 },
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.5 },
     runes: 153,
     groupCombinations: [
+      { size: 1, chance: 0.5 },
       { size: 2, chance: 0.5 },
-      { size: 3, chance: 0.5 },
     ],
   },
 
   bats: {
     name: "Chauve-souris",
-    hp: 28,
-    atk: 10,
+    hp: 22,
+    atk: 8,
     runes: 95,
     companion: ["chanting_dame"],
     companionCount: 1,
     groupCombinations: [
       { size: 3, chance: 0.5 },
-      { size: 5, chance: 0.5 },
+      { size: 4, chance: 0.5 },
     ],
   },
   chanting_dame: {
     name: "Sirène Chantante",
-    hp: 185,
+    hp: 90,
     atk: 20,
     runes: 250,
     onHitEffect: { id: "STUN", duration: 2, chance: 0.15 },
@@ -247,9 +248,9 @@ export const MONSTERS = {
 
   half_human_queen: {
     name: "Reine Demi-Humaine",
-    hp: 524,
+    hp: 324,
     atk: 35,
-    runes: 1605,
+    runes: 605,
     isRare: true,
     companion: ["servant_poison_companion"],
     companionCount: 3,
@@ -263,9 +264,9 @@ export const MONSTERS = {
 
   nighth_cavalery: {
     name: "Cavalier de la Nuit",
-    hp: 580,
+    hp: 380,
     atk: 55,
-    runes: 1200,
+    runes: 700,
     isRare: true,
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.5 },
     drops: [
@@ -280,7 +281,7 @@ export const MONSTERS = {
     hp: 950,
     atk: 75,
     armor: 125,
-    runes: 3000,
+    runes: 2000,
     dodgeChance: 0.22,
     effectsPhase2: { id: "FROSTBITE", duration: 5, chance: 0.5 },
     hasSecondPhase: true,
@@ -289,21 +290,228 @@ export const MONSTERS = {
     flavorTextPhase2: "La lame du Hero de Zamor se refroidit!",
   },
 
+  // === MORNE CASTLE ===
+  misbegotten_warrior: {
+    name: "Chimère Léonine",
+    hp: 120,
+    atk: 35,
+    runes: 280,
+    groupCombinations: [
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
+    ],
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.3 },
+  },
+
+  misbegotten_servant: {
+    name: "Serviteur Chimérique",
+    hp: 65,
+    atk: 18,
+    runes: 110,
+    groupCombinations: [
+      { size: 2, chance: 0.6 },
+      { size: 3, chance: 0.4 },
+    ],
+  },
+
+  lesser_mad_pumkin_head: {
+    name: "Tête de Citrouille Mineure",
+    hp: 340,
+    atk: 38,
+    runes: 640,
+    armor: 150,
+    isRare: true,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.35 },
+    drops: [
+      { id: "pumkin_helm", chance: 0.6 },
+      { id: "grafted_blade_greatsword", chance: 0.02 },
+    ],
+  },
+
+  misbegotten_leonine: {
+    name: "Chimère Léonine",
+    hp: 1100,
+    atk: 45,
+    runes: 3800,
+    isBoss: true,
+    armor: 115,
+    dodgeChance: 0.25,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.25 },
+
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.4,
+    dmgMultPhase2: 1.4,
+    flavorTextPhase2:
+      "La Chimère pousse un rugissement bestial, sa soif de vengeance décuple sa force !",
+  },
+
+  // === ENTER STORMWIND CASTLE ===
+  exile_soldier1: {
+    name: "Soldat d'Exil",
+    hp: 110,
+    atk: 25,
+    armor: 120,
+    runes: 210,
+    groupCombinations: [
+      { size: 1, chance: 0.6 },
+      { size: 2, chance: 0.4 },
+    ],
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
+  },
+  exile_soldier2: {
+    name: "Soldat d'Exil",
+    hp: 100,
+    atk: 25,
+    armor: 110,
+    runes: 210,
+    groupCombinations: [
+      { size: 1, chance: 0.6 },
+      { size: 2, chance: 0.4 },
+    ],
+    onHitEffect: { id: "BURN", duration: 3, chance: 0.4 },
+  },
+  exile_soldier3: {
+    name: "Soldat d'Exil",
+    hp: 120,
+    atk: 25,
+    armor: 130,
+    runes: 210,
+    groupCombinations: [
+      { size: 1, chance: 0.6 },
+      { size: 2, chance: 0.4 },
+    ],
+  },
+  banished_knight: {
+    name: "Chevalier Banni",
+    hp: 450,
+    atk: 50,
+    runes: 600,
+    isRare: true,
+    armor: 135,
+    drops: [
+      { id: "hunter_cap", chance: 0.4 },
+      { id: "alchimist_suit", chance: 0.4 },
+      { ashId: "storm_stomp", chance: 0.025, unique: true },
+    ],
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.1 },
+  },
+
+  grafted_scion: {
+    name: "Rejeton Greffé",
+    hp: 1200,
+    atk: 35,
+    runes: 2200,
+    isBoss: true,
+    armor: 110,
+    hasSecondPhase: true,
+    isInSecondPhase: false,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 2,
+    flavorTextPhase2: "Le Rejeton Greffé hurle et déchaîne ses nombreux bras !",
+    effectsPhase2: { id: "BLEED", duration: 4, chance: 0.5 },
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "BLEED", duration: 2, chance: 0.3 },
+  },
+
+  // === STORMWIND CASTLE ===
+
+  stormveil_hawk: {
+    name: "Faucon de Tempête",
+    hp: 65,
+    atk: 32,
+    runes: 180,
+    dodgeChance: 0.3,
+    groupCombinations: [
+      { size: 2, chance: 0.4 },
+      { size: 3, chance: 0.6 },
+    ],
+    onHitEffect: { id: "BLEED", duration: 1, chance: 0.3 },
+  },
+
+  godrick: {
+    name: "Godrick le Greffé",
+    hp: 1800,
+    atk: 85,
+    runes: 5000,
+    armor: 125,
+    dodgeChance: 0.05,
+    isBoss: true,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.55,
+    flavorTextPhase2: "GUEEERRIER ! Je t'ordonne de t'agenouiller !",
+    effectsPhase2: { id: "BURN", duration: 3, chance: 0.9 },
+  },
+
   // === CAELID WEST===
+
   rotten_stray: {
     name: "Chien Errant Putréfié",
-    hp: 70,
-    atk: 18,
-    runes: 80,
-    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.3 },
+    hp: 85,
+    atk: 32,
+    runes: 210,
+    onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.35 },
+    groupCombinations: [
+      { size: 1, chance: 0.6 },
+      { size: 2, chance: 0.4 },
+    ],
   },
-  giant_crow: { name: "Corbeau Géant", hp: 135, atk: 20, runes: 150 },
-  radahn: {
-    name: "Vestige de Radahn",
-    hp: 9572,
-    atk: 45,
-    runes: 3000,
+
+  kindred_of_rot: {
+    name: "Serviteur de la Putréfaction",
+    hp: 120,
+    atk: 28,
+    runes: 250,
+    groupCombinations: [
+      { size: 2, chance: 0.6 },
+      { size: 3, chance: 0.4 },
+    ],
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.4 },
+  },
+
+  crystal_snail: {
+    name: "Escargot de Cristal",
+    hp: 340,
+    atk: 15,
+    runes: 300,
+    armor: 250,
+    isRare: true,
+    passiveStatus: "THORNS",
+    onHitEffect: { id: "POISON", duration: 3, chance: 0.2 },
+    drops: [
+      { id: "crystal_shell_mail", chance: 0.15 },
+      { id: "snail_slime_mantle", chance: 0.15 },
+    ],
+  },
+
+  caelid_knight: {
+    name: "Chevalier de Caélid",
+    hp: 550,
+    atk: 55,
+    runes: 1200,
+    isRare: true,
+    armor: 140,
+    drops: [
+      { id: "stormhawk_feather", chance: 0.15 },
+      { id: "winged_sword_insignia", chance: 0.35 },
+    ],
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.2 },
+  },
+
+  commander_oneil_weak: {
+    name: "Commandant O'Neil (Exilé)",
+    hp: 1400,
+    atk: 50,
+    runes: 4500,
     isBoss: true,
+    armor: 150,
+    companion: ["exile_soldier2"],
+    companionCount: 2,
+    flavorTextPhase2:
+      "Le Commandant plante son étendard dans la terre corrompue !",
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 1.3,
   },
 
   // === LIURNIA===

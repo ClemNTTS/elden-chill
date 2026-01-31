@@ -295,6 +295,10 @@ export const updateStatusIcons = () => {
   const renderStatus = (eff) => {
     const data = STATUS_EFFECTS[eff.id];
     if (!data) return "";
+    if (eff.id !== "BLEED" && eff.id !== "FROSTBITE" && eff.duration <= 0)
+      return "";
+    if ((eff.id === "BLEED" || eff.id === "FROSTBITE") && eff.stacks <= 0)
+      return "";
 
     let text = "";
     if (eff.id === "BLEED" || eff.id === "FROSTBITE") {

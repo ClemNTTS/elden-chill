@@ -157,6 +157,14 @@ export const spawnMonster = (monsterId, sessionId) => {
     }
   });
 
+  if (template.passiveStatus) {
+    const statusId = template.passiveStatus;
+    const hasEffect = gameState.ennemyEffects.some((e) => e.id === statusId);
+    if (!hasEffect) {
+      gameState.ennemyEffects.push({ id: statusId, duration: 999 });
+    }
+  }
+
   updateUI();
 
   ActionLog(

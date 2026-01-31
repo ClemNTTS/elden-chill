@@ -58,6 +58,7 @@ export const runtimeState = {
   ashIsPrimed: false,
   combatFrozen: false,
   playerArmorDebuff: 0,
+  nextAtkMultBonus: 1,
 };
 
 export function setGameState(newState) {

@@ -36,12 +36,32 @@ export const LOOT_TABLES = {
     Tier 3
   ============================*/
   weeping_peninsula: [
-    { id: "zamor_curved_sword", chance: 0.3 },
-    { id: "radagon_scarseal", chance: 0.3 },
+    { id: "zamor_curved_sword", chance: 0.5 },
+    { id: "radagon_scarseal", chance: 0.5 },
   ],
-  liurnia_south: [
-    { id: "twin_blade", chance: 0.2 },
-    { id: "scavenger_mask", chance: 0.8 },
+
+  enter_stormwind_castle: [
+    { id: "twin_blade", chance: 0.5 },
+    { id: "forged_grip", chance: 0.5 },
+  ],
+
+  stormwind_castle: [
+    { id: "godrick_knight_armor", chance: 0.1 },
+    { id: "godrick_great_rune", chance: 0.4 },
+    { id: "godrick_axe", chance: 0.5 },
+  ],
+
+  morne_castle: [
+    { id: "rune_fragment", chance: 0.2 },
+    { id: "pumkin_helm", chance: 0.2 },
+    { id: "grafted_blade_greatsword", chance: 0.6 },
+  ],
+
+  caelid_west: [
+    { id: "rotten_greataxe", chance: 0.15 },
+    { id: "vermilion_seed", chance: 0.2 },
+    { id: "sage_caelid_robe", chance: 0.3 },
+    { id: "winged_sword_insignia", chance: 0.35 },
   ],
 };
 
@@ -63,7 +83,7 @@ export const BIOMES = {
     boss: "bloodhound_knight_darriwil",
     length: 12,
     unlocks: null,
-    unlocks: ["weeping_peninsula"], // "caelid_west"
+    unlocks: ["weeping_peninsula", "caelid_west"],
   },
   limgrave_north: {
     name: "Valorage",
@@ -71,8 +91,8 @@ export const BIOMES = {
     maxRareSpawns: 1,
     monsters: ["white_wolf", "kaiden_sellsword", "godrick_knight1"],
     boss: "margit",
-    length: 12,
-    unlocks: null,
+    length: 10,
+    unlocks: ["enter_stormwind_castle"],
     //unlocks: ["enter_stormwind_castle", "liurnia_south"],
   },
   limgrave_lake: {
@@ -94,37 +114,48 @@ export const BIOMES = {
     maxRareSpawns: 3,
     monsters: ["servant_poison", "bats"],
     boss: "hero_of_zamor",
-    length: 13,
-    unlocks: null,
-    //unlocks: ["morne_castle"],
+    length: 11,
+    unlocks: ["morne_castle"],
   },
   morne_castle: {
     name: "Château de Vent-Hurlant",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
+    rareMonsters: ["lesser_mad_pumkin_head"],
+    maxRareSpawns: 2,
+    monsters: ["misbegotten_servant", "misbegotten_warrior"],
+    boss: "misbegotten_leonine",
+    length: 8,
     unlocks: null,
   },
   enter_stormwind_castle: {
     name: "Entrée de Voile Orage",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
+    rareMonsters: ["banished_knight"],
+    maxRareSpawns: 2,
+    monsters: ["exile_soldier1", "exile_soldier2", "exile_soldier3"],
+    boss: "grafted_scion",
+    length: 10,
     unlocks: ["stormwind_castle"],
   },
   stormwind_castle: {
     name: "Château de Voile Orage",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
+    rareMonsters: ["banished_knight"],
+    maxRareSpawns: 6,
+    monsters: ["stormveil_hawk"],
     boss: "godrick",
-    length: 12,
+    length: 6,
     unlocks: null,
   },
+
+  caelid_west: {
+    name: "Entrée de Caélid",
+    rareMonsters: ["caelid_knight"],
+    maxRareSpawns: 5,
+    monsters: ["rotten_stray", "kindred_of_rot"],
+    boss: "commander_oneil_weak",
+    length: 18,
+    unlocks: null,
+    //unlocks: ["redmane_castle"]
+  },
+
   /*===========================
     Tier 4
   ============================*/
@@ -190,16 +221,7 @@ export const BIOMES = {
     boss: "",
     length: 12,
   },
-  //Quand débloqué tu as accés mais tu te fais péter la gueule
-  caelid_west: {
-    name: "Entrée de Caélid",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["rotten_stray", "giant_crow"],
-    boss: "",
-    length: 15,
-    unlocks: ["redmane_castle"],
-  },
+
   redmane_castle: {
     name: "Château du Lion rouge",
     monsters: ["rotten_stray", "giant_crow"],

@@ -19,6 +19,7 @@ import {
   updateStepper,
   updateUI,
 } from "./ui.js";
+import { MONSTERS } from "./monster.js";
 
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
@@ -93,7 +94,9 @@ export const handleDrops = (sessionId) => {
     ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
   }
   runtimeState.defeatedEnemies.forEach((enemy) => {
-    if (enemy.isBoss) { wasABossEncounter = true; }
+    if (enemy.isBoss) {
+      wasABossEncounter = true;
+    }
     const runesAwarded = Math.floor(enemy.runes * intBonus);
     gameState.runes.carried += Math.floor(runesAwarded);
     ActionLog(
@@ -119,7 +122,9 @@ export const handleDrops = (sessionId) => {
       });
     }
   });
-  if (wasABossEncounter) { runtimeState.areaCleared = true; }
+  if (wasABossEncounter) {
+    runtimeState.areaCleared = true;
+  }
   runtimeState.defeatedEnemies = []; // Clear after processing
 };
 
@@ -147,6 +152,9 @@ export const handleVictory = (sessionId) => {
       currentBiome.unlocks &&
       !gameState.world.unlockedBiomes.includes(currentBiome.unlocks[0])
     ) {
+      //appel webhook discord
+      sendDiscordAnnouncement(MONSTERS[currentBiome.boss].name);
+
       for (let i = 0; i < currentBiome.unlocks.length; i++) {
         if (!BIOMES[currentBiome.unlocks[i]]) {
           continue;
@@ -284,3 +292,32 @@ export const startExploration = (biomeId) => {
 
   nextEncounter(sessionAtStart);
 };
+
+const DISCORD_WEBHOOK_URL =
+  "https://discord.com/api/webhooks/1467277773524566066/xGqF5Tb3YrQ7CKU5f50pdOdLsQsp3c0AUIBMJOE_i3_KDCV4B8Y0UqqdpgpVbDBaH0Ec";
+
+async function sendDiscordAnnouncement(bossName) {
+  const message = {
+    content: `🔥 **ANNONCE DE GRÂCE** 🔥\nUn Sans-éclat a terrassé pour la première fois **${bossName}** !`,
+  };
+
+  try {
+    // On passe par un proxy pour éviter l'erreur CORS
+    const proxyUrl =
+      "https://corsproxy.io/?" + encodeURIComponent(DISCORD_WEBHOOK_URL);
+
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
+
+    if (response.ok) {
+      console.log("✅ Annonce Discord envoyée !");
+    }
+  } catch (err) {
+    console.error("❌ Erreur lors de l'envoi Discord :", err);
+  }
+}
