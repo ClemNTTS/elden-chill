@@ -1,3 +1,4 @@
+import { applyEffect } from "./combat.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog, formatNumber } from "./ui.js";
 
@@ -163,7 +164,7 @@ export const ITEMS = {
     name: "Pendentif de Troll",
     type: ITEM_TYPES.ACCESSORY,
     description:
-      "+30% de chance d'appliquer 4 poisons. BONUS : Si vous avez 20 Intelligence de base, +2% Crit Chance par Niveau",
+      "+45% de chance d'appliquer 3 poisons. BONUS : Si vous avez 20 Intelligence de base, +2% Crit Chance par Niveau",
     applyFlat: (stats, itemLevel) => {
       const baseInt = gameState.stats.intelligence || 0;
       if (baseInt >= 20) {
@@ -278,12 +279,14 @@ export const ITEMS = {
     name: "Bâton de la Reine",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Vous convertissez 7% de votre intelligence par Niveau en force. +10% d'intelligence",
+      "Vous convertissez 50% (+2% par Niveau) de votre intelligence par Niveau en force. +10% d'intelligence",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence *= 1.1;
     },
     applyMult: (stats, itemLevel) => {
-      const conversion = Math.floor(0.07 * itemLevel * stats.intelligence);
+      const conversion = Math.floor(
+        (0.5 + 0.02 * (itemLevel - 1)) * stats.intelligence,
+      );
       stats.strength += conversion;
     },
   },
@@ -317,17 +320,83 @@ export const ITEMS = {
     onHitEffect: { id: "BLEED", duration: 2, chance: 0.15 },
   },
 
+  forged_grip: {
+    name: "Manche Forgée",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Vous convertissez -15% de Dex et de Force en dégats de zone. Chaque niveau du Manche forgé multiplie le gain de 20% ",
+    applyMult: (stats, itemLevel) => {
+      const gain = stats.strength * 0.15 + stats.dexterity * 0.15;
+      stats.splashDamage += Math.floor(gain * (1 + 0.2 * (itemLevel - 1)));
+      stats.strength *= 1 - 0.15;
+      stats.dexterity *= 1 - 0.15;
+    },
+  },
+
+  hunter_cap: {
+    name: "Cape du Chasseur",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Requiert 10 de dextérité de base. Pour chaque tranche de 10 points de dextérité de BASE -> +5% de Chance de Critique . Augmente votre armure de 10% (+1% / Niv)",
+    applyFlat: (stats, itemLevel) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      if (baseDex >= 10) {
+        stats.armor *= 1.1 + 0.01 * itemLevel;
+        stats.critChance += 0.05 * Math.floor(baseDex / 10);
+      }
+    },
+  },
+
+  alchimist_suit: {
+    name: "Veste de l'Alchimiste",
+    type: ITEM_TYPES.ARMOR,
+    description:
+      "Requiert 20 Intelligence de base. Vous gagnez 10% (+2%/Niv) de votre intelligence de base en vigueur. Vos sorts se divisent ! -30% d'Intelligence de base convertis en dégats de zone",
+    applyFlat: (stats, itemLevel) => {
+      const baseInt = gameState.stats.intelligence || 0;
+      if (baseInt >= 20) {
+        stats.intelligence -= Math.floor(baseInt * 0.3);
+        stats.vigor += Math.floor((0.1 + 0.02 * itemLevel) * baseInt);
+        const bonus = Math.floor(0.3 * baseInt);
+        stats.splashDamage += bonus;
+      }
+    },
+  },
+
   twin_blade: {
     name: "Lames Jumelles",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Attaque 2 fois, 35% de chance d'appliquer 3 saignements mais réduit la Force de 60%. <em style='color: grey;'>(Malus réduit de 3% par Niv)</em>",
-    applyMult: (stats, itemLevel) => {
-      stats.attacksPerTurn = 2;
-      const penaltyReduction = 0.03 * (itemLevel - 1);
-      stats.strength *= 0.4 + penaltyReduction;
+      "Requiert 20 de dextérité et 10% de chance de Crit de base pour être utilisé. Attaque 2 fois, 35% (+1% / Niveau) de chance d'appliquer 3 saignements. Vous gagnez 35% (+1% / Niv) de votre Dextérité en Force.",
+    applyFlat: (stats, itemLevel) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      const baseCrit = gameState.stats.critChance || 0;
+      if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
+        stats.attacksPerTurn = 2;
+      }
     },
-    onHitEffect: { id: "BLEED", duration: 3, chance: 0.35 },
+    applyMult: (stats, itemLevel) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      const baseCrit = gameState.stats.critChance || 0;
+      if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
+        const ratio = 0.35 + 0.01 * itemLevel;
+        stats.strength += Math.floor(stats.dexterity * ratio);
+      }
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (
+        !itemLevel ||
+        gameState.stats.dexterity < 20 ||
+        gameState.stats.critChance < 0.1 - 0.0001
+      ) {
+        return;
+      }
+      const chance = 0.35 + 0.01 * itemLevel;
+      if (Math.random() < chance) {
+        applyEffect(targetEffects, "BLEED", 3);
+        ActionLog("Lames Jumelles : 3 Saignements appliqués !", "log-status");
+      }
+    },
   },
 
   //========== TIER CAELID
