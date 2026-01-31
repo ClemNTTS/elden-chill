@@ -292,13 +292,13 @@ export const ITEMS = {
     name: "Sceau Meurtri de Radagon",
     type: ITEM_TYPES.ACCESSORY,
     description:
-      "Vous gagnez un peu de points dans toutes les stats +5% (+1%/Niv) mais perdez 25 d'armure",
+      "Vous gagnez un peu de points dans toutes les stats +5% (+1%/Niv) mais perdez 20 d'armure",
     applyFlat: (stats, itemLevel) => {
       stats.strength *= 1.05 + 0.01 * itemLevel;
       stats.dexterity *= 1.05 + 0.01 * itemLevel;
       stats.intelligence *= 1.05 + 0.01 * itemLevel;
       stats.vigor *= 1.05 + 0.01 * itemLevel;
-      stats.armor -= 25;
+      stats.armor -= 20;
     },
   },
   //nighth_cavalery 75%
