@@ -71,8 +71,9 @@ export const MONSTERS = {
     flavorTextPhase2: "Le Troll, fou de rage, sort sont épée !",
     groupCombinations: [{ size: 2, chance: 1.0 }],
     drops: [
-      { id: "troll_necklace", chance: 0.8 },
-      { id: "leather_boots", chance: 0.8 },
+      { id: "troll_necklace", chance: 0.35 },
+      { id: "leather_boots", chance: 0.45 },
+      { id: "kama", chance: 0.2 },
     ],
   },
   runeBear1: {
@@ -85,11 +86,12 @@ export const MONSTERS = {
     groupCombinations: [
       { size: 1, chance: 0.9 },
       { size: 2, chance: 0.1 },
-      { ashId: "bloody_slash", chance: 0.02, unique: true },
     ],
     drops: [
       { id: "styptic_boluses", chance: 0.2 },
-      { id: "leather_vest", chance: 0.8 },
+      { id: "leather_vest", chance: 0.6 },
+      { id: "bloodhound_fang", chance: 0.2 },
+      { ashId: "bloody_slash", chance: 0.02, unique: true },
     ],
   },
   bloodhound_knight_darriwil: {

@@ -170,7 +170,7 @@ export const ITEMS = {
         stats.critChance += 0.02 * itemLevel;
       }
     },
-    onHitEffect: { id: "POISON", duration: 4, chance: 0.3 },
+    onHitEffect: { id: "POISON", duration: 3, chance: 0.45 },
   },
   knight_greatsword: {
     name: "Grande Épée de Chevalier",
