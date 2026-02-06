@@ -175,12 +175,19 @@ export const ITEMS = {
     },
   },
   keen_dagger: {
-    name: "Dague Afilée",
+    name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
+    set: "FROST_ASSASSIN",
     description:
-      "+5% Chance Crit. <em style='color: grey;'>(+1% par Niv)</em>, ",
+      "Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
     applyMult: (stats, itemLevel) => {
-      stats.critChance += 0.05 + 0.01 * (itemLevel - 1);
+    
+      stats.dexterity *= 1.15;
+      const ratio = 0.30 + (0.01 * (itemLevel - 1));
+      stats.strength += Math.floor(stats.dexterity * ratio);
+      
+      // 3. Scaling Crit boosté (Base 10% au lieu de 5%, +2%/lv au lieu de 1%)
+      stats.critChance += 0.10 + 0.02 * (itemLevel - 1);
     },
   },
   scholars_ring: {
