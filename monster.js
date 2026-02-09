@@ -533,7 +533,7 @@ export const MONSTERS = {
     name: "Sorcier de l'Académie",
     hp: 98,
     atk: 30,
-    armor : 85,
+    armor: 85,
     runes: 520,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.05 },
     groupCombinations: [
@@ -656,7 +656,7 @@ export const MONSTERS = {
 
   rennala: {
     name: "Rennala, Reine de la Pleine Lune",
-    hp: 2200,
+    hp: 2600,
     atk: 70,
     runes: 10000,
     isBoss: true,
@@ -664,9 +664,9 @@ export const MONSTERS = {
     hasSecondPhase: true,
     thresholdForPhase2: 0.4,
     flavorTextPhase2: "Naîs à nouveau, sous la lune de sang !",
-    effectsPhase2: { id: "STUN", duration: 2, chance: 0.4 },
+    effectsPhase2: { id: "STUN", duration: 2, chance: 0.1 },
     specificStats: { attacksPerTurn: 1, critChance: 0.2, critDamage: 2.0 },
-    onHitEffect: { id: "STUN", duration: 1, chance: 0.2 },
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.15 },
   },
 
   // === MARAIS DE LIURNIA

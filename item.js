@@ -80,7 +80,6 @@ export const ITEM_SETS = {
         desc: "Marteau de Haima : Convertit 80% de votre Intelligence totale en Force.",
         effect: (stats) => {
           stats.strength += Math.floor(stats.intelligence * 0.8);
-         
         },
       },
     },
@@ -179,15 +178,17 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     set: "FROST_ASSASSIN",
     description:
-      "Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
-    applyMult: (stats, itemLevel) => {
-    
+      "+4 de Force. Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
+    applyFlat: (stats, itemLevel) => {
+      stats.strength += 4;
       stats.dexterity *= 1.15;
-      const ratio = 0.30 + (0.01 * (itemLevel - 1));
+    },
+    applyMult: (stats, itemLevel) => {
+      const ratio = 0.3 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor(stats.dexterity * ratio);
-      
+
       // 3. Scaling Crit boosté (Base 10% au lieu de 5%, +2%/lv au lieu de 1%)
-      stats.critChance += 0.10 + 0.02 * (itemLevel - 1);
+      stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
     },
   },
   scholars_ring: {
@@ -215,7 +216,9 @@ export const ITEMS = {
       stats.intelligence += 5;
     },
     applyMult: (stats, itemLevel) => {
-      stats.strength += Math.floor(stats.intelligence * (0.3 + 0.02*itemLevel));
+      stats.strength += Math.floor(
+        stats.intelligence * (0.3 + 0.02 * itemLevel),
+      );
     },
     onHitEffect: { id: "POISON", duration: 2, chance: 1 },
   },
@@ -879,7 +882,7 @@ export const ITEMS = {
     },
     applyMult: (stats, itemLevel) => {
       stats.vigor *= 0.65;
-    }
+    },
   },
 
   // --- SET DE L'ACADÉMIE ---
@@ -930,7 +933,7 @@ export const ITEMS = {
     set: "ACADEMY_PRIME",
     description:
       "Intelligence +15%. Augmente votre armure de 2% par Niveau. 40% de chance d'infliger brûlure.",
-onHitEffect: { id: "BURN", duration: 2, chance: 0.4},
+    onHitEffect: { id: "BURN", duration: 2, chance: 0.4 },
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.15;
       stats.armor *= 1 + 0.02 * itemLevel;
@@ -1013,15 +1016,15 @@ onHitEffect: { id: "BURN", duration: 2, chance: 0.4},
     set: "MARSH_WARDEN",
     description:
       "Vigueur +20%. La pression du marais renforce vos coups : chaque points de Vigueur de base ajoute 0.25 à votre Pénétration d'Armure Fixe. (+0.05 / Niv) pour un maximum de 30",
-    applyFlat : (stats, itemLevel) => {
+    applyFlat: (stats, itemLevel) => {
       stats.vigor *= 1.2;
-},
+    },
     applyMult: (stats, itemLevel) => {
-      
       const baseVig = gameState.stats.vigor || 0;
-      stats.flatDamagePenetration += Math.min(30, Math.floor(
-        baseVig * (0.25 + 0.05 * itemLevel),
-      ));
+      stats.flatDamagePenetration += Math.min(
+        30,
+        Math.floor(baseVig * (0.25 + 0.05 * itemLevel)),
+      );
     },
   },
 

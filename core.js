@@ -313,27 +313,29 @@ const DISCORD_WEBHOOK_URL =
   "https://discord.com/api/webhooks/1467277773524566066/xGqF5Tb3YrQ7CKU5f50pdOdLsQsp3c0AUIBMJOE_i3_KDCV4B8Y0UqqdpgpVbDBaH0Ec";
 
 async function sendDiscordAnnouncement(bossName) {
-  const message = {
-    content: `🔥 **ANNONCE DE GRÂCE** 🔥\nUn Sans-éclat a terrassé pour la première fois **${bossName}** !`,
-  };
+  // const message = {
+  //   content: `🔥 **ANNONCE DE GRÂCE** 🔥\nUn Sans-éclat a terrassé pour la première fois **${bossName}** !`,
+  // };
 
-  try {
-    // On passe par un proxy pour éviter l'erreur CORS
-    const proxyUrl =
-      "https://corsproxy.io/?" + encodeURIComponent(DISCORD_WEBHOOK_URL);
+  // try {
+  //   // On passe par un proxy pour éviter l'erreur CORS
+  //   const proxyUrl =
+  //     "https://corsproxy.io/?" + encodeURIComponent(DISCORD_WEBHOOK_URL);
 
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(message),
-    });
+  //   const response = await fetch(proxyUrl, {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify(message),
+  //   });
 
-    if (response.ok) {
-      console.log("✅ Annonce Discord envoyée !");
-    }
-  } catch (err) {
-    console.error("❌ Erreur lors de l'envoi Discord :", err);
-  }
+  //   if (response.ok) {
+  //     console.log("✅ Annonce Discord envoyée !");
+  //   }
+  // } catch (err) {
+  //   console.error("❌ Erreur lors de l'envoi Discord :", err);
+  // }
+
+  return;
 }

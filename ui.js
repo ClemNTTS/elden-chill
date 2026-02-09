@@ -145,6 +145,8 @@ const updateStatDisplay = () => {
     document.getElementById(`cost-${s}`).innerText = formatNumber(cost);
     const btn = document.querySelector(`button[onclick="upgradeStat('${s}')"]`);
     if (btn) btn.disabled = gameState.runes.banked < cost;
+    if (btn && gameState.stats.level >= gameState.save.maxLevel)
+      btn.disabled = true;
   });
 
   const updateCrit = (id, statName, isPercent) => {
@@ -182,6 +184,8 @@ const updateStatDisplay = () => {
       btn.disabled = isMax || gameState.runes.banked < cost;
       if (isMax) btn.innerText = "MAX";
     }
+    if (btn && gameState.stats.level >= gameState.save.maxLevel)
+      btn.disabled = true;
   };
 
   updateCrit("critChance", "critChance", true);
