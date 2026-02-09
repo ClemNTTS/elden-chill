@@ -88,7 +88,7 @@ export const handleDeath = () => {
 
 export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
-  const intBonus = 1 + eff.intelligence / 100;
+  const intBonus = 1 + Math.min(0.5, eff.intelligence / 100);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
     ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");

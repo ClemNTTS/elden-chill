@@ -105,7 +105,7 @@ export const STATUS_EFFECTS = {
         const eff = getEffectiveStats();
         const maxHealth = getHealth(eff.vigor);
         damage = Math.min(
-          Math.floor(maxHealth * 0.03),
+          Math.floor(maxHealth * 0.02),
           Math.floor((maxHealth - entity.currentHp) * 0.1),
         );
         entity.currentHp -= damage;
