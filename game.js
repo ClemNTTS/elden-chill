@@ -179,7 +179,7 @@ window.toggleOptions = toggleOptions;
 window.showStatTooltip = showStatTooltip;
 window.moveTooltip = moveTooltip;
 window.hideTooltip = hideTooltip;
-//window.dev = dev;
+window.dev = dev;
 window.exportSave = exportSave;
 window.importSave = importSave;
 window.equipAsh = equipAsh;
@@ -193,22 +193,22 @@ export const FORCE_VERSION_KEY = "app_version_code";
 export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
 
 const checkScheduledReset = () => {
-  // const FINAL_WIPE_FLAG = "wipe_v110_final";
+  const FINAL_WIPE_FLAG = "wipe_v120_final";
 
-  // if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
-  //   console.warn(
-  //     "Dernière maintenance majeure DESOLE : Réinitialisation du système de sauvegarde.",
-  //   );
+  if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
+    console.warn(
+      "Dernière maintenance majeure DESOLE : Réinitialisation du système de sauvegarde.",
+    );
 
-  //   localStorage.clear();
-  //   localStorage.setItem(FINAL_WIPE_FLAG, "true");
+    localStorage.clear();
+    localStorage.setItem(FINAL_WIPE_FLAG, "true");
 
-  //   alert(
-  //     "MISE À JOUR : Le système de sauvegarde a été sécurisé. Pour garantir la stabilité, une dernière réinitialisation est nécessaire. Bonne chance, Sans-éclat ! Et désolé.",
-  //   );
+    alert(
+      "MISE À JOUR : Le système de sauvegarde a été sécurisé. Pour garantir la stabilité, une dernière réinitialisation est nécessaire. Bonne chance, Sans-éclat ! Et désolé.",
+    );
 
-  //   window.location.reload();
-  //}
+    window.location.reload();
+  }
   return;
 };
 

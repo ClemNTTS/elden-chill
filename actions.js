@@ -28,6 +28,13 @@ export const getUpgradeCost = (statName) => {
 export const upgradeStat = (statName) => {
   let cost = getUpgradeCost(statName);
 
+  if (gameState.stats.level >= gameState.save.maxLevel) {
+    alert(
+      `Niveau maximum atteint (${gameState.save.maxLevel}). Attendez la prochaine mise à jour pour progresser d'avantage!`,
+    );
+    return;
+  }
+
   if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
     alert("Votre Chance de Critique est déjà au maximum (100%) !");
     return;
