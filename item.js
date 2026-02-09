@@ -838,7 +838,7 @@ export const ITEMS = {
     description:
       "Vigueur +25%. Ajoute 20% de votre Intelligence totale à votre Armure physique. (+2% / Niv)",
     applyMult: (stats, itemLevel) => {
-      stats.vigor *= 1.25;
+      stats.vigor = Math.floor(stats.vigor * 1.25);
       const intToArmor = stats.intelligence * (0.2 + 0.02 * itemLevel);
       stats.armor += Math.floor(intToArmor);
     },
