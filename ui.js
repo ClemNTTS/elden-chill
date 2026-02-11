@@ -246,6 +246,7 @@ const updateBiomeDisplay = () => {
   });
 };
 
+let currentInventoryFilter = "Tous";
 const updateInventoryDisplay = () => {
   const invGrid = document.getElementById("inventory-grid");
   invGrid.innerHTML = "";
@@ -256,26 +257,19 @@ const updateInventoryDisplay = () => {
     return;
   }
 
-  // 1. Définir l'ordre de tri (Arme > Armure > Accessoire)
-  const typeOrder = {
-    Arme: 1,
-    Armure: 2,
-    Accessoire: 3,
-  };
+  const filteredInventory = gameState.inventory.filter((item) => {
+    if (currentInventoryFilter === "Tous") return true;
+    return ITEMS[item.id].type === currentInventoryFilter;
+  });
 
   // 2. Trier une copie de l'inventaire
-  const sortedInventory = [...gameState.inventory].sort((a, b) => {
-    const typeA = ITEMS[a.id].type; // On récupère le type via l'ID
-    const typeB = ITEMS[b.id].type;
+  const sortedInventory = filteredInventory.sort((a, b) => b.level - a.level);
 
-    // Tri par type selon l'ordre défini
-    if (typeOrder[typeA] !== typeOrder[typeB]) {
-      return typeOrder[typeA] - typeOrder[typeB];
-    }
-
-    // Optionnel : trier par niveau si les types sont identiques
-    return b.level - a.level;
-  });
+  if (sortedInventory.length === 0) {
+    invGrid.innerHTML =
+      '<div style="color: grey; padding: 10px;">Aucun objet de ce type</div>';
+    return;
+  }
 
   const typeToSlotKey = {
     Arme: "weapon",
@@ -308,6 +302,27 @@ const updateInventoryDisplay = () => {
     itemDiv.onclick = () => equipItem(item.id);
     invGrid.appendChild(itemDiv);
   });
+};
+
+window.setInventoryFilter = (type) => {
+  currentInventoryFilter = type;
+  updateInventoryDisplay();
+};
+
+window.toggleInventoryCollapse = () => {
+  const grid = document.getElementById("inventory-section");
+  const btn = document.getElementById("btn-collapse");
+  const filters = document.getElementById("filter-buttons");
+
+  if (grid.style.display === "none") {
+    grid.style.display = "grid";
+    filters.style.display = "flex";
+    btn.innerText = "▼ Inventaire";
+  } else {
+    grid.style.display = "none";
+    filters.style.display = "none";
+    btn.innerText = "▲ Inventaire (Replié)";
+  }
 };
 
 export const updateStatusIcons = () => {
@@ -414,6 +429,7 @@ export const updateRealTimeStatsDisplay = () => {
   );
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
+  const maxHp = Math.floor(getHealth(eff.vigor));
 
   container.innerHTML = `
     <div class="rt-stat"><span>Niveau:</span> <b>${eff.level || 0}</b></div>
@@ -421,6 +437,7 @@ export const updateRealTimeStatsDisplay = () => {
     <hr>
     <div class="rt-stat"><span>Force Totale:</span> <b>${eff.strength.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Vigueur Totale:</span> <b>${eff.vigor.toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Points de Vie Max:</span> <b>${maxHp}</b></div> <hr>
     <div class="rt-stat"><span>Dextérité Totale:</span> <b>${eff.dexterity.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Int Totale:</span> <b>${eff.intelligence.toFixed(1)}</b></div>
     <hr>

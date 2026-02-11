@@ -60,6 +60,7 @@ export const runtimeState = {
   combatFrozen: false,
   playerArmorDebuff: 0,
   nextAtkMultBonus: 1,
+  nextNbAtkBonus: 0,
 };
 
 export function setGameState(newState) {

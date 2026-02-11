@@ -479,7 +479,11 @@ export const combatLoop = (sessionId) => {
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }
 
-        for (let i = 0; i < stats.attacksPerTurn; i++) {
+        for (
+          let i = 0;
+          i < stats.attacksPerTurn + runtimeState.nextNbAtkBonus;
+          i++
+        ) {
           // Find first alive enemy
           const currentTarget = runtimeState.currentEnemyGroup.find(
             (e) => e.hp > 0,

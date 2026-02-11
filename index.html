@@ -191,6 +191,20 @@
           <div id="biome-list"></div>
         </div>
 
+        <hr />
+
+        <div class="inventory-toolbar">
+          <button onclick="toggleInventoryCollapse()" id="btn-collapse">
+            ▼ Inventaire
+          </button>
+          <div id="filter-buttons">
+            <button onclick="setInventoryFilter('Tous')">Tous</button>
+            <button onclick="setInventoryFilter('Arme')">⚔️</button>
+            <button onclick="setInventoryFilter('Armure')">🛡️</button>
+            <button onclick="setInventoryFilter('Accessoire')">💍</button>
+          </div>
+        </div>
+
         <div id="inventory-section">
           <h3>Inventaire</h3>
           <div id="inventory-grid"></div>

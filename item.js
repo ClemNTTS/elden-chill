@@ -120,6 +120,44 @@ export const ITEM_SETS = {
       },
     },
   },
+
+  EXECUTIONER: {
+    name: "Tenue du Bourreau",
+    bonuses: {
+      2: {
+        desc: "Sentence Capitale : Force totale +20% mais Armure totale -15%.",
+        effect: (stats) => {
+          stats.strength *= 1.2;
+          stats.armor *= 0.85;
+        },
+      },
+      3: {
+        desc: "L'Heure Sombre : Chance de Critique +15% mais Vigueur totale -15%.",
+        effect: (stats) => {
+          stats.critChance += 0.15;
+          stats.vigor *= 0.85;
+        },
+      },
+    },
+  },
+
+  TREE_SENTINEL: {
+    name: "Armure de la Sentinelle de l'Arbre",
+    bonuses: {
+      2: {
+        desc: "Bénédiction de l'Arbre : Vigueur totale +20%.",
+        effect: (stats) => {
+          stats.vigor *= 1.2;
+        },
+      },
+      3: {
+        desc: "Représailles Dorées : Convertit 15% de votre Vigueur totale en Armure",
+        effect: (stats) => {
+          stats.armor += Math.floor(stats.vigor * 0.15);
+        },
+      },
+    },
+  },
 };
 
 export const ITEMS = {
@@ -189,6 +227,19 @@ export const ITEMS = {
 
       // 3. Scaling Crit boosté (Base 10% au lieu de 5%, +2%/lv au lieu de 1%)
       stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
+    },
+  },
+
+  heavy_club: {
+    name: "Gourdin Lourd",
+    description:
+      "Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
+    type: ITEM_TYPES.WEAPON,
+    applyFlat: (stats, itemLevel) => {
+      const baseVigor = gameState.stats.vigor || 0;
+      const ratio = 0.25 + 0.01 * (itemLevel - 1);
+      stats.strength += Math.floor(baseVigor * ratio);
+      stats.dexterity *= 0.9;
     },
   },
   scholars_ring: {
@@ -734,6 +785,40 @@ export const ITEMS = {
     },
   },
 
+  marionette_scimitar: {
+    name: "Cimeterre de Marionnette",
+    type: ITEM_TYPES.WEAPON,
+    set: "MARIONETTE_MASTER",
+    description:
+      "Dextérité +10%. Vous convertissez 65% de votre Dextérité en Force. Chaque coup a 25% de chance de déclencher une attaque supplémentaire immédiate. (+1% / Niv)",
+    applyFlat: (stats, itemLevel) => {
+      stats.dexterity = Math.floor(stats.dexterity * 1.1);
+    },
+    applyMult: (stats, itemLevel) => {
+      const conversionRatio = 0.65;
+      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+    },
+
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (Math.random() < 0.25 + 0.01 * itemLevel) {
+        runtimeState.nextNbAtkBonus = 1;
+        ActionLog("Cimeterre : Attaque réflexe !", "log-status");
+      }
+    },
+  },
+
+  marionette_mask: {
+    name: "Masque de Soldat Marionnette",
+    type: ITEM_TYPES.ARMOR,
+    set: "MARIONETTE_MASTER",
+    description:
+      "Dextérité +5% (+1% / Niv). Vos mouvements erratiques augmentent votre esquive de 5%.",
+    applyMult: (stats, itemLevel) => {
+      stats.dexterity *= 1.05 + 0.01 * itemLevel;
+      stats.dodgeChance += 0.05;
+    },
+  },
+
   sage_caelid_robe: {
     name: "Robe du Sage de Caélid",
     type: ITEM_TYPES.ARMOR,
@@ -948,8 +1033,10 @@ export const ITEMS = {
     description:
       "Vigueur +15%. Ajoute 20% de votre Vigueur à votre Force. (+2% / Niv). 8% de chance d'étourdissement",
     onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
-    applyMult: (stats, itemLevel) => {
+    applyFlat: (stats, itemLevel) => {
       stats.vigor *= 1.15;
+    },
+    applyMult: (stats, itemLevel) => {
       stats.strength += Math.floor(stats.vigor * (0.2 + 0.02 * itemLevel));
     },
   },
@@ -1038,6 +1125,167 @@ export const ITEMS = {
       stats.strength *= 1.1;
       if (stats.armor > 150) {
         stats.strength *= 1.05 + 0.01 * itemLevel;
+      }
+    },
+  },
+
+  starscourge_greatsword: {
+    name: "Espadon du Fléau des Astres",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Force +25%. La gravité renforce vos coups : ajoute 50% de votre Armure totale à votre Force. (+5% / Niv)",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.25;
+      const gravityBonus = stats.armor * (0.5 + 0.05 * (itemLevel - 1));
+      stats.strength += Math.floor(gravityBonus);
+    },
+  },
+
+  radahn_lion_armor: {
+    name: "Armure du Lion de Radahn",
+    type: ITEM_TYPES.ARMOR,
+    isAlwaysMax: true,
+    description:
+      "Force +15%. Immunité partielle : Réduit de 2 les charges de Putréfaction et de Saignement au début du tour.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.15;
+    },
+    passiveStatusReduction: (playerEffects, itemLevel) => {
+      playerEffects.forEach((eff) => {
+        if (eff.id === "SCARLET_ROT" || eff.id === "BLEED") {
+          eff.duration = Math.max(0, eff.duration - 2);
+          eff.stacks = Math.max(0, (eff.stacks || 0) - 2);
+        }
+      });
+      return playerEffects;
+    },
+  },
+
+  rotten_dragon_heart: {
+    name: "Cœur de Dragon Putréfié",
+    type: ITEM_TYPES.ACCESSORY,
+    isAlwaysMax: true,
+    description:
+      "Vos attaques ont 40% de chance d'infliger 3 Putréfactions. Augmente vos dégâts de 20% contre les ennemis infectés.",
+    onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.4 },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (
+        targetEffects.some((e) => e.id === "SCARLET_ROT" || e.id === "POISON")
+      ) {
+        runtimeState.nextAtkMultBonus = 1.2;
+      }
+    },
+  },
+
+  // --- EXECUTER ---
+
+  executioner_greataxe: {
+    name: "Grande Hache de Bourreau",
+    type: ITEM_TYPES.WEAPON,
+    set: "EXECUTIONER",
+    description:
+      "Force +20% (+2% / Niv). Vos critiques infligent 0.5x dégâts supplémentaires mais votre Armure baisse de 20.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor -= 20;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.strength = Math.floor(stats.strength * 1.2 + 0.02 * itemLevel);
+      stats.critDamage += 0.5;
+    },
+  },
+
+  executioner_hood: {
+    name: "Cagoule de Bourreau",
+    type: ITEM_TYPES.ARMOR,
+    set: "EXECUTIONER",
+    description:
+      "Chance de Critique +10% (+1% / Niv). Vigueur -10% : Le poids de la culpabilité affaiblit le corps.",
+    applyMult: (stats, itemLevel) => {
+      stats.critChance += 0.1 + 0.01 * itemLevel;
+      stats.vigor *= 0.9;
+    },
+  },
+
+  guillotine_pendant: {
+    name: "Pendentif de la Guillotine",
+    type: ITEM_TYPES.ACCESSORY,
+    set: "EXECUTIONER",
+    description:
+      "Force +10%. Si l'ennemi a moins de 30% de PV, vos chances de critique augmentent de 35%.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.1;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const target = runtimeState.currentEnemyGroup[0];
+      if (target && target.hp / target.maxHp < 0.3) {
+        stats.critChance += 0.35;
+      }
+    },
+  },
+
+  // ALTUR
+  golden_tree_halberd: {
+    name: "Hallebarde de l'Arbre d'Or",
+    type: ITEM_TYPES.WEAPON,
+    set: "TREE_SENTINEL",
+    description:
+      "Vigueur +15%. Convertissez 15% (+2%/Niv) de votre Vigueur en Force. 25% de chance d'activer 'Épines' (15% dégâts renvoyés + 0.5x Vigueur) pendant 2 tours.",
+    applyFlat: (stats, itemLevel) => {
+      stats.vigor *= 1.15;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.strength += Math.floor(stats.vigor * (0.15 + 0.02 * itemLevel));
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (Math.random() < 0.25) {
+        applyEffect(gameState.playerEffects, "THORNS", 2);
+        ActionLog("Épines dorées activées !", "log-status");
+      }
+    },
+  },
+
+  golden_sentinel_armor: {
+    name: "Plastron de la Sentinelle",
+    type: ITEM_TYPES.ARMOR,
+    set: "TREE_SENTINEL",
+    description:
+      "Armure +30 (+5 / Niv). Vigueur +10%. Réduit la durée de TOUS les statuts négatifs de 1 tour.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor += 30 + 5 * (itemLevel - 1);
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.vigor *= 1.1;
+    },
+    passiveStatusReduction: (playerEffects, itemLevel) => {
+      playerEffects.forEach((eff) => {
+        if (eff.id !== "THORNS") {
+          eff.duration = Math.max(0, eff.duration - 1);
+        }
+      });
+      return playerEffects;
+    },
+  },
+
+  sentinel_greatshield_talisman: {
+    name: "Talisman du Grand Bouclier",
+    type: ITEM_TYPES.ACCESSORY,
+    set: "TREE_SENTINEL",
+    description:
+      "Vigueur +10% (+1% / Niv). La sève de l'Arbre coule en vous : si vous avez le statut 'Épines', vous récupérez 5 PV (+2 / Niv) au début du tour.",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor *= 1.1 + 0.01 * (itemLevel - 1);
+    },
+
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const hasThorns = gameState.playerEffects.some((e) => e.id === "THORNS");
+      if (hasThorns) {
+        const heal = 5 + 2 * (itemLevel - 1);
+        const maxHp = getHealth(stats.vigor);
+        runtimeState.playerCurrentHp = Math.min(
+          maxHp,
+          runtimeState.playerCurrentHp + heal,
+        );
+        ActionLog(`Sève de l'Arbre : +${heal} PV !`, "log-heal");
       }
     },
   },
