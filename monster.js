@@ -56,8 +56,8 @@ export const MONSTERS = {
   },
   kaiden_sellsword: {
     name: "Mercenaire de Kaiden",
-    hp: 30,
-    atk: 28,
+    hp: 28,
+    atk: 20,
     runes: 155,
   },
   troll1_duo: {
@@ -90,7 +90,7 @@ export const MONSTERS = {
       { size: 2, chance: 0.1 },
     ],
     drops: [
-      { id: "styptic_boluses", chance: 0.35 },
+      { id: "styptic_boluses", chance: 0.45 },
       { id: "leather_vest", chance: 0.6 },
       { id: "bloodhound_fang", chance: 0.45 },
       { ashId: "bloody_slash", chance: 0.02, unique: true },

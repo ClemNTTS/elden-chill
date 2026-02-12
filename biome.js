@@ -140,7 +140,7 @@ export const BIOMES = {
     maxRareSpawns: 1,
     monsters: ["kaiden_sellsword", "godrick_knight1"],
     boss: "bloodhound_knight_darriwil",
-    length: 12,
+    length: 10,
     unlocks: ["weeping_peninsula", "caelid_west"],
   },
   limgrave_north: {
