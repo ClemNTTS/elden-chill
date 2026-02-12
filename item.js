@@ -98,9 +98,14 @@ export const ITEMS = {
   leather_boots: {
     name: "Bottes de Cuir",
     type: ITEM_TYPES.ACCESSORY,
-    description: "+1 Dextérité / Niv",
+    description:
+      "+1 Dextérité / Niv. Chaque point de dextérité de base vous procure également 1 de vigueur (max 15)",
     applyFlat: (stats, itemLevel) => {
       stats.dexterity += itemLevel;
+      const baseDex = gameState.stats.dexterity || 0;
+      if (baseDex > 0) {
+        stats.vigor += Math.min(15, baseDex);
+      }
     },
   },
   kama: {
