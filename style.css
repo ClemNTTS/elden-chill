@@ -811,6 +811,49 @@ button:disabled {
   color: var(--disabled-btn);
 }
 
+/* Offline controls styling for camp/options area */
+.offline-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.offline-controls .bank-text {
+  font-size: 0.9em;
+  color: var(--disabled-btn);
+  font-family: inherit;
+}
+.offline-controls button {
+  padding: 6px 10px;
+}
+
+/* Biome view top actions: align camp button and offline controls */
+.biome-actions-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  width: 100%;
+}
+.biome-bottom-left { display: flex; align-items: center; }
+.biome-top-button {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.offline-controls-b {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.offline-controls-b .bank-text { color: var(--disabled-btn); font-size:0.9em; font-family: inherit; }
+
+/* ensure biome view container can position the top actions */
+#biome-view { position: relative; padding-top: 18px; }
+
 /* style.css */
 .inventory-item,
 .slot,

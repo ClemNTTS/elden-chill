@@ -14,6 +14,7 @@ import {
   equipItem,
   resetGame,
   upgradeStat,
+  upgradeStatMultiple,
   refundRunes,
 } from "./actions.js";
 import { startExploration } from "./core.js";
@@ -138,6 +139,26 @@ const dev = {
       }
     }
   },
+  addOfflineTime: (seconds) => {
+    if (!gameState.save) gameState.save = {};
+    seconds = Math.max(0, Math.floor(seconds || 0));
+    gameState.save.offlineTimeBank = (gameState.save.offlineTimeBank || 0) + seconds;
+    console.log(`🔧 DEV : Ajout de ${seconds}s au bank offline (now ${gameState.save.offlineTimeBank}s)`);
+    updateUI();
+    saveGame();
+  },
+  removeOfflineTime: (seconds) => {
+    if (!gameState.save) gameState.save = {};
+    seconds = Math.max(0, Math.floor(seconds || 0));
+    gameState.save.offlineTimeBank = Math.max(0, (gameState.save.offlineTimeBank || 0) - seconds);
+    console.log(`🔧 DEV : Retrait de ${seconds}s du bank offline (now ${gameState.save.offlineTimeBank}s)`);
+    updateUI();
+    saveGame();
+  },
+  setOfflineSpeed: (mult) => {
+    runtimeState.offlineSpeedMultiplier = Math.max(1, Number(mult) || 1);
+    console.log(`🔧 DEV : offline speed multiplier set to ${runtimeState.offlineSpeedMultiplier}`);
+  },
   toggleCombat: () => {
     runtimeState.combatFrozen = !runtimeState.combatFrozen;
     console.log(
@@ -170,6 +191,7 @@ const joinDiscord = () => {
 // --- Global Function Assignments ---
 // Assign all functions that are called from the HTML (onclick) to the window object
 window.upgradeStat = upgradeStat;
+window.upgradeStatMultiple = upgradeStatMultiple;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;

@@ -43,6 +43,9 @@ export const DEFAULT_GAME_STATE = {
   save: {
     version: "0.2.0",
     maxLevel: 100,
+    offlineTimeBank: 0,
+    useOfflineTime: false, 
+    lastSavedAt: 0,
   },
 };
 
@@ -65,6 +68,7 @@ export const runtimeState = {
   usedRenaissance: false,
   usedAbsolution: false,
   filterChanged: false,
+  offlineSpeedMultiplier: 3, // default speed multiplier when using offline bank (reduced to x3)
 };
 
 export function setGameState(newState) {

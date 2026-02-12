@@ -53,7 +53,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-vigor">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('vigor')">
+            <button class="mini-upgrade" id="btn-vigor-1" onclick="upgradeStat('vigor')">
+              +
+            </button>
+            <span class="cost-label" id="cost-vigor-5">0</span>
+            <button class="mini-upgrade" id="btn-vigor-5" onclick="upgradeStatMultiple('vigor', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-vigor-10">0</span>
+            <button class="mini-upgrade" id="btn-vigor-10" onclick="upgradeStatMultiple('vigor', 10)">
               +
             </button>
           </div>
@@ -74,7 +82,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-strength">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('strength')">
+            <button class="mini-upgrade" id="btn-strength-1" onclick="upgradeStat('strength')">
+              +
+            </button>
+            <span class="cost-label" id="cost-strength-5">0</span>
+            <button class="mini-upgrade" id="btn-strength-5" onclick="upgradeStatMultiple('strength', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-strength-10">0</span>
+            <button class="mini-upgrade" id="btn-strength-10" onclick="upgradeStatMultiple('strength', 10)">
               +
             </button>
           </div>
@@ -95,7 +111,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-dexterity">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('dexterity')">
+            <button class="mini-upgrade" id="btn-dexterity-1" onclick="upgradeStat('dexterity')">
+              +
+            </button>
+            <span class="cost-label" id="cost-dexterity-5">0</span>
+            <button class="mini-upgrade" id="btn-dexterity-5" onclick="upgradeStatMultiple('dexterity', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-dexterity-10">0</span>
+            <button class="mini-upgrade" id="btn-dexterity-10" onclick="upgradeStatMultiple('dexterity', 10)">
               +
             </button>
           </div>
@@ -116,7 +140,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-intelligence">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('intelligence')">
+            <button class="mini-upgrade" id="btn-intelligence-1" onclick="upgradeStat('intelligence')">
+              +
+            </button>
+            <span class="cost-label" id="cost-intelligence-5">0</span>
+            <button class="mini-upgrade" id="btn-intelligence-5" onclick="upgradeStatMultiple('intelligence', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-intelligence-10">0</span>
+            <button class="mini-upgrade" id="btn-intelligence-10" onclick="upgradeStatMultiple('intelligence', 10)">
               +
             </button>
           </div>
@@ -137,7 +169,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-critChance">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('critChance')">
+            <button class="mini-upgrade" id="btn-critChance-1" onclick="upgradeStat('critChance')">
+              +
+            </button>
+            <span class="cost-label" id="cost-critChance-5">0</span>
+            <button class="mini-upgrade" id="btn-critChance-5" onclick="upgradeStatMultiple('critChance', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-critChance-10">0</span>
+            <button class="mini-upgrade" id="btn-critChance-10" onclick="upgradeStatMultiple('critChance', 10)">
               +
             </button>
           </div>
@@ -156,7 +196,15 @@
           </div>
           <div class="upgrade-action">
             <span class="cost-label" id="cost-critDamage">0</span>
-            <button class="mini-upgrade" onclick="upgradeStat('critDamage')">
+            <button class="mini-upgrade" id="btn-critDamage-1" onclick="upgradeStat('critDamage')">
+              +
+            </button>
+            <span class="cost-label" id="cost-critDamage-5">0</span>
+            <button class="mini-upgrade" id="btn-critDamage-5" onclick="upgradeStatMultiple('critDamage', 5)">
+              +
+            </button>
+            <span class="cost-label" id="cost-critDamage-10">0</span>
+            <button class="mini-upgrade" id="btn-critDamage-10" onclick="upgradeStatMultiple('critDamage', 10)">
               +
             </button>
           </div>
@@ -217,10 +265,14 @@
           </div>
         </div>
 
-        <div class="options-zone">
+        <div class="options-zone" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
           <button id="open-options-btn" onclick="toggleOptions(true)">
             Options & Infos
           </button>
+          <div id="offline-controls" class="offline-controls">
+            <div class="bank-text">Temps Sauvegardé: <span id="offline-bank">0s</span></div>
+            <button id="btn-use-offline" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
+          </div>
         </div>
 
         <div id="options-modal" class="modal-hidden">
@@ -286,16 +338,16 @@
           <span id="current-biome-text">Nécrolimbe</span>
           <span id="cycle-count"></span>
         </h2>
+        <!-- Biome header (kept minimal) -->
+        
         <div id="dungeon-stepper-container">
-          <div id="stepper-track">
-            <div id="stepper-fill"></div>
-            <div id="stepper-markers"></div>
+            <div id="stepper-track">
+              <div id="stepper-fill"></div>
+              <div id="stepper-markers"></div>
+            </div>
+            <p id="stepper-text">Progression : 0 / 10</p>
           </div>
-          <p id="stepper-text">Progression : 0 / 10</p>
-        </div>
-        <div id="action-log">
-          <p>Vous avancez dans la brume...</p>
-        </div>
+        <div id="action-log"></div>
         <div id="ash-container" style="margin-top: 10px; text-align: center">
           <button id="ash-button" onclick="primeAsh()">
             Utiliser Cendre : <span id="ash-name">---</span> (<span
@@ -323,9 +375,15 @@
           </div>
           <div id="enemy-status-container" class="status-container"></div>
         </div>
-        <button class="safe-btn" onclick="toggleView('camp')">
-          Se replier au Camp
-        </button>
+        <div class="biome-actions-bottom">
+          <div class="biome-bottom-left">
+            <button class="safe-btn" onclick="toggleView('camp')">Se replier au Camp</button>
+          </div>
+          <div id="offline-controls-b" class="offline-controls-b">
+            <div class="bank-text">Temps Sauvegardé: <span id="offline-bank-b">0s</span></div>
+            <button id="btn-use-offline-b" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
+          </div>
+        </div>
       </section>
     </div>
 

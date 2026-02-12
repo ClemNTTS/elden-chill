@@ -21,6 +21,31 @@ import {
 } from "./ui.js";
 import { MONSTERS } from "./monster.js";
 
+// Helper to use offline-time bank to speed up timeouts when enabled.
+function delayedSetTimeout(fn, ms) {
+  let delay = ms;
+  try {
+    const save = gameState.save || {};
+    const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+    const M = runtimeState.offlineSpeedMultiplier || 3;
+    if (use && M > 1 && ms > 0) {
+      const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
+      const bankMs = (save.offlineTimeBank || 0) * 1000;
+      if (bankMs >= fullSavedMs) {
+        delay = Math.max(0, Math.floor(ms / M));
+        save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+      } else if (bankMs > 0) {
+        delay = Math.max(0, Math.floor(ms - bankMs));
+        save.offlineTimeBank = 0;
+      }
+      try { updateUI(); } catch (e) {}
+    }
+  } catch (e) {
+    console.warn("delayedSetTimeout error:", e);
+  }
+  return setTimeout(fn, delay);
+}
+
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
   let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
@@ -76,6 +101,7 @@ const getWeightedDrop = (lootTable) => {
 
 export const handleDeath = () => {
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
+  const biomeAtDeath = gameState.world.currentBiome;
   gameState.runes.carried = 0;
   gameState.world.isExploring = false;
   gameState.playerEffects = [];
@@ -83,7 +109,17 @@ export const handleDeath = () => {
   gameState.ashesOfWaruses = {};
   runtimeState.playerArmorDebuff = 0;
   saveGame();
-  setTimeout(() => toggleView("camp"), 3000);
+
+  // If offline-time use is enabled and we still have banked time, automatically
+  // restart the exploration in the same biome. Otherwise return to camp as before.
+  if (gameState.save?.useOfflineTime && (gameState.save.offlineTimeBank || 0) > 0) {
+    delayedSetTimeout(() => {
+      runtimeState.currentCombatSession++;
+      startExploration(biomeAtDeath);
+    }, 1000);
+  } else {
+    delayedSetTimeout(() => toggleView("camp"), 3000);
+  }
 };
 
 export const handleDrops = (sessionId) => {
@@ -202,12 +238,12 @@ export const handleVictory = (sessionId) => {
 
     ActionLog(`--- DÉBUT DU CYCLE ${runtimeState.currentLoopCount + 1} ---`);
 
-    setTimeout(() => {
+    delayedSetTimeout(() => {
       updateStepper();
       nextEncounter(sessionId);
     }, 3000);
   } else {
-    setTimeout(() => nextEncounter(sessionId), 1000);
+    delayedSetTimeout(() => nextEncounter(sessionId), 1000);
   }
   updateUI();
 };
@@ -225,7 +261,7 @@ const handleCampfireEvent = (sessionId) => {
   updateUI();
   saveGame();
 
-  setTimeout(() => {
+  delayedSetTimeout(() => {
     container.classList.remove("blink-effect");
     ActionLog("Site de grâce touché. Runes sécurisées.");
     nextEncounter(sessionId);
