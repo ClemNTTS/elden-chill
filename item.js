@@ -207,7 +207,7 @@ export const ITEMS = {
     name: "Grande Épée de Chevalier",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+5 Force, -20% Vigueur, +15% Force <em style='color: grey;'>(+1.5% Force/ Niv)</em>",
+      "+5 Force, -10% Vigueur, +15% Force <em style='color: grey;'>(+1.5% Force/ Niv)</em>",
     applyFlat: (stats, itemLevel) => {
       stats.strength += 5;
     },

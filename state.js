@@ -157,7 +157,7 @@ export function getEffectiveStats() {
     "splashDamage",
   ];
   keysToFloor.forEach((key) => {
-    if (effStats[key] !== undefined) effStats[key] = Math.floor(effStats[key]);
+    if (effStats[key] !== undefined) effStats[key] = Math.round(effStats[key]);
   });
 
   if (gameState.playerEffects.some((e) => e.id === "DEW_PROTECTION")) {
