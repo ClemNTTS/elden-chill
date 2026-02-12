@@ -687,7 +687,7 @@ export const MONSTERS = {
     name: "Smarag, Dragon de Pierre d'Éclat",
     hp: 6600,
     atk: 175,
-    runes: 42000,
+    runes: 22000,
     isBoss: true,
     armor: 140,
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 }, // Le froid magique
@@ -810,9 +810,9 @@ export const MONSTERS = {
 
   radahn: {
     name: "Radahn le Fléau des Astres",
-    hp: 15000,
+    hp: 10000,
     atk: 220,
-    runes: 85000,
+    runes: 55000,
     isBoss: true,
     armor: 220,
     specificStats: { attacksPerTurn: 2, splashDamage: 100 },
@@ -883,7 +883,7 @@ export const MONSTERS = {
     name: "Sentinelle Dracogarde de l'Arbre",
     hp: 8500,
     atk: 165,
-    runes: 15000,
+    runes: 35000,
     isBoss: true,
     armor: 250,
     hasSecondPhase: true,
@@ -917,6 +917,7 @@ export const MONSTERS = {
   ancestral_sniper: {
     name: "Archer Ancestral",
     hp: 1000,
+    runes: 4000,
     armor: 80,
     atk: 83,
     isRare: true,
@@ -1024,7 +1025,7 @@ export const MONSTERS = {
 
   mimic_tear_boss: {
     name: "Larme Imitatrice",
-    hp: 10000,
+    hp: 13000,
     atk: 100,
     runes: 45000,
     isBoss: true,
