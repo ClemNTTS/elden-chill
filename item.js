@@ -50,9 +50,9 @@ export const ITEMS = {
     name: "Veste en Cuir",
     type: ITEM_TYPES.ARMOR,
     description:
-      "Augmente l'armure de 5. <em style='color: grey;'>(+1 par Niv)</em>",
+      "Augmente l'armure de 15. <em style='color: grey;'>(+1 par Niv)</em>",
     applyFlat: (stats, itemLevel) => {
-      const armor = 5 + 1 * (itemLevel - 1);
+      const armor = 15 + 1 * (itemLevel - 1);
       stats.armor += armor;
     },
   },
