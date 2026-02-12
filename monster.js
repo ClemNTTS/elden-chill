@@ -129,8 +129,8 @@ export const MONSTERS = {
   },
   bell_bearing_hunter1: {
     name: "Chasseur de Clochettes",
-    hp: 245,
-    atk: 35,
+    hp: 215,
+    atk: 32,
     runes: 600,
     isRare: true,
     onHitEffect: { id: "BLEED", duration: 1, chance: 1.0 },
@@ -144,7 +144,7 @@ export const MONSTERS = {
     hp: 280,
     atk: 30,
     runes: 440,
-    dodgeChance: 0.333,
+    dodgeChance: 0.15,
     isRare: true,
     drops: [
       { id: "briar_armor", chance: 0.15 },
