@@ -1,4 +1,5 @@
-import { ITEM_SETS, ITEMS } from "./item.js";
+import { ITEM_SETS } from "./constants.js";
+import { ITEMS } from "./item.js";
 
 // Saved state
 export const DEFAULT_GAME_STATE = {
@@ -62,6 +63,7 @@ export const runtimeState = {
   nextAtkMultBonus: 1,
   nextNbAtkBonus: 0,
   usedRenaissance: false,
+  usedAbsolution: false,
   filterChanged: false,
 };
 

@@ -138,6 +138,7 @@ export const handleVictory = (sessionId) => {
   if (runtimeState.areaCleared) {
     runtimeState.areaCleared = false;
     runtimeState.usedRenaissance = false;
+    runtimeState.usedAbsolution = false;
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
 

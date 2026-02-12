@@ -99,7 +99,7 @@ export const RIVER = {
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true, // Objet légendaire, pas de niveaux
     description:
-      "Tier 5. Force et Intelligence +15%. Harmonie Primordiale : Augmente votre Force de 1% pour chaque point d'Intelligence de base. Cycle de Vie : Une fois par donjon, si vos PV tombent sous 5%, vous vous soignez instantanément jusqu'à 25% de vos PV Max.",
+      "Tier 5. Force et Intelligence +15%. Harmonie Primordiale : Augmente votre Force de 1% pour chaque point d'Intelligence de base. Cycle de Vie : Une fois par donjon, si vos PV tombent sous 5%, vos PV sont restaurés à 25% de vos PV Max.",
     applyMult: (stats, itemLevel) => {
       stats.strength *= 1.15;
       stats.intelligence *= 1.15;
@@ -107,18 +107,15 @@ export const RIVER = {
       const baseInt = gameState.stats.intelligence || 0;
       stats.strength *= 1 + baseInt / 100;
     },
-    funcOnHit: (stats, targetEffects, itemLevel) => {
-      const maxHp = getHealth(stats.vigor); //
+    funcOnBeingHit: (stats, attacker, damage, itemLevel) => {
+      const maxHp = getHealth(stats.vigor);
 
+      // Cycle de Vie : Se déclenche sous 5% PV, une fois par donjon
       if (
-        runtimeState.playerCurrentHp < maxHp * 0.25 &&
+        runtimeState.playerCurrentHp < maxHp * 0.05 &&
         !runtimeState.usedRenaissance
       ) {
-        const healAmount = maxHp * 0.5;
-        runtimeState.playerCurrentHp = Math.min(
-          maxHp,
-          runtimeState.playerCurrentHp + healAmount,
-        );
+        runtimeState.playerCurrentHp = maxHp * 0.25; // Soigne à 25%
         runtimeState.usedRenaissance = true;
         ActionLog("LA CORNE RÉSONNE : Renaissance Ancestrale !", "log-heal");
       }

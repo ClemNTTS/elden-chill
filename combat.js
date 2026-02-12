@@ -229,6 +229,21 @@ export function performAttack({
       isCrit ? "log-crit" : "",
     );
 
+    if (!isPlayer) {
+      // Monster is attacking player, check for on-being-hit item effects
+      Object.values(gameState.equipped).forEach((itemId) => {
+        const itemLevel = gameState.inventory.find(
+          (i) => i.id === itemId,
+        )?.level;
+        const item = ITEMS[itemId];
+        if (item && typeof item.funcOnBeingHit === "function") {
+          item.funcOnBeingHit(eff, attackers[0], finalDamage, itemLevel);
+          updateHealthBars();
+          updateUI();
+        }
+      });
+    }
+
     /* ================= PHASE CHECK ================= */
     if (target?.hasSecondPhase && !target.isInSecondPhase) {
       const maxHp = target.maxHp ?? target.hp;

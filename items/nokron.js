@@ -16,7 +16,7 @@ export const NOKRON = {
       );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      const chance = 0.55 + 0.02 * (itemLevel - 1);
+      const chance = 0.3 + 0.02 * (itemLevel - 1);
       if (Math.random() < chance) {
         applyEffect(targetEffects, "BURN", 2);
         applyEffect(targetEffects, "BLEED", 1);
@@ -38,7 +38,7 @@ export const NOKRON = {
       stats.armor += 20 + 1 * (itemLevel - 1);
     },
     funcOnBeingHit: (stats, attacker, damage, itemLevel) => {
-      const bonus = 1 + 0.2(itemLevel - 1);
+      const bonus = 1 + 0.2 * (itemLevel - 1);
       stats.armor += Math.floor(bonus);
       ActionLog(
         `Plastron de Mercure : L'armure se durcit ! (+${bonus} Armure)`,
@@ -71,13 +71,12 @@ export const NOKRON = {
       // Bonus de force : $Stats \times (1 + 0.02 \times \text{Niveau})$
       stats.strength = Math.floor(stats.strength * (1 + 0.02 * itemLevel));
     },
-    funcOnHit: (stats) => {
+    funcOnBeingHit: (stats) => {
       const maxHp = getHealth(stats.vigor);
-      console.log(runtimeState.usedRenaissance);
 
       // Condition d'activation : PV < 30% et non utilisé ce combat
       if (
-        runtimeState.playerCurrentHp < maxHp * 0.99 &&
+        runtimeState.playerCurrentHp < maxHp * 0.3 &&
         !runtimeState.usedAbsolution
       ) {
         // 1. Purification

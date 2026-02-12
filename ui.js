@@ -78,8 +78,6 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
-import { MONSTERS } from "./monster.js";
-import { ITEM_SETS, ITEMS } from "./item.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
   gameState,
@@ -91,6 +89,8 @@ import { getUpgradeCost, upgradeStat, equipItem } from "./actions.js";
 import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
 import { checkForUpdate } from "./game.js";
+import { ITEM_SETS } from "./constants.js";
+import { ITEMS } from "./item.js";
 
 export const formatNumber = (num) => {
   if (num >= 1000000) {
