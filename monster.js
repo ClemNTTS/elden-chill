@@ -30,7 +30,8 @@ export const MONSTERS = {
     isRare: true,
     drops: [
       { id: "iron_sword", chance: 0.95 },
-      { id: "keen_dagger", chance: 0.45 },
+      { id: "keen_dagger", chance: 0.95 },
+      { id: "heavy_club", chance: 0.95 },
       { ashId: "beginer_tarnished_heal", chance: 0.8, unique: true },
     ],
   },
@@ -514,7 +515,21 @@ export const MONSTERS = {
     dmgMultPhase2: 1.3,
   },
 
-  // monster.js
+  commander_oneil_strong: {
+    name: "Commandant O'Neil (Exilé)",
+    hp: 1400,
+    atk: 90,
+    runes: 4500,
+    isBoss: true,
+    armor: 150,
+    companion: ["exile_soldier1"],
+    companionCount: 4,
+    flavorTextPhase2:
+      "Le Commandant plante son étendard dans la terre corrompue !",
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    dmgMultPhase2: 1.3,
+  },
 
   // === LIURNIA SOUTH ===
   clayman: {
@@ -587,7 +602,6 @@ export const MONSTERS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.6 },
   },
 
-  // --- BOSS DE LIURNIA OUEST ---
   carian_knight_bols: {
     name: "Bols, Chevalier Carien",
     hp: 1200,
@@ -598,7 +612,6 @@ export const MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.3 },
   },
 
-  // --- MONSTRES RARES ---
   abductor_virgin: {
     name: "Vierge Ravisseuse",
     hp: 500,
@@ -681,5 +694,353 @@ export const MONSTERS = {
     drops: [
       { id: "glintstone_dragon_heart", chance: 1.0 }, // Drop garanti
     ],
+  },
+
+  // --- CARIA MANSION ---
+  lesser_fingercreeper: {
+    name: "Petite Main de Doigts",
+    hp: 210,
+    atk: 32,
+    runes: 880,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "POISON", duration: 1, chance: 0.15 },
+    groupCombinations: [
+      { size: 2, chance: 0.7 },
+      { size: 3, chance: 0.3 },
+    ],
+  },
+
+  carian_troll_knight: {
+    name: "Chevalier Troll de Caria",
+    hp: 1400,
+    atk: 70,
+    runes: 5500,
+    isRare: true,
+    armor: 180,
+    onHitEffect: { id: "STUN", duration: 2, chance: 0.3 },
+    drops: [
+      { id: "carian_troll_gauntlet", chance: 0.5 },
+      { id: "finger_stitcher_needle", chance: 0.5 },
+    ],
+  },
+
+  royal_knight_loretta: {
+    name: "Loretta, Chevalier Royal",
+    hp: 3200,
+    atk: 105,
+    runes: 12000,
+    isBoss: true,
+    armor: 130,
+    dodgeChance: 0.15,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2:
+      "Loretta prépare son arc de pierre d'éclat... Le grand arc de Loretta !",
+    specificStats: { attacksPerTurn: 1, splashDamage: 40 }, // Dégâts de zone en P2
+    onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
+  },
+
+  // --- MONSTRES DE CAÉLID ---
+  giant_dog: {
+    name: "Chien T-Rex Géant",
+    hp: 450,
+    atk: 55,
+    runes: 850,
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
+    groupCombinations: [
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
+    ],
+  },
+  radahn_soldier: {
+    name: "Soldat de Radahn",
+    hp: 180,
+    atk: 32,
+    runes: 350,
+    armor: 120,
+    onHitEffect: { id: "BURN", duration: 2, chance: 0.2 },
+  },
+  giant_crow: {
+    name: "Corbeau Monstrueux",
+    hp: 380,
+    atk: 65,
+    runes: 920,
+    dodgeChance: 0.15,
+    groupCombinations: [
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
+    ],
+    isRare: true,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.2 },
+    drops: [
+      { id: "stormhawk_feather", chance: 0.5 },
+      { id: "winged_sword_insignia", chance: 0.4 },
+    ],
+  },
+
+  rotten_marionetist: {
+    name: "Marionnettiste Putréfié",
+    hp: 320,
+    atk: 25,
+    runes: 800,
+    isRare: true,
+    specificStats: { attacksPerTurn: 3 },
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.25 },
+    drops: [
+      { id: "marionette_scimitar", chance: 0.55 },
+      { id: "marionette_mask", chance: 0.55 },
+    ],
+  },
+
+  winged_paladin: {
+    name: "Paladin Ailé",
+    hp: 600,
+    atk: 65,
+    runes: 2500,
+    isRare: true,
+    armor: 180,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.2 },
+    drops: [
+      { id: "executioner_greataxe", chance: 0.45 },
+      { id: "executioner_hood", chance: 0.45 },
+      { id: "guillotine_pendant", chance: 0.45 },
+      { ashId: "starcaller_cry", chance: 0.25, unique: true },
+    ],
+  },
+
+  radahn: {
+    name: "Radahn le Fléau des Astres",
+    hp: 15000,
+    atk: 220,
+    runes: 85000,
+    isBoss: true,
+    armor: 220,
+    specificStats: { attacksPerTurn: 2, splashDamage: 100 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2: "Radahn disparaît dans le ciel... UNE MÉTÉORE APPROCHE !",
+    effectsPhase2: { id: "STUN", duration: 2, chance: 0.3 },
+    onHitEffect: { id: "BURN", duration: 3, chance: 0.4 },
+  },
+  // --- BOSS : EKZYKES L'INCURABLE ---
+  ekzykes: {
+    name: "Ekzykes l'Incurable",
+    hp: 9500,
+    atk: 180,
+    runes: 55000,
+    isBoss: true,
+    armor: 160,
+    onHitEffect: { id: "SCARLET_ROT", duration: 5, chance: 0.6 },
+  },
+
+  // --- Plateau ---
+  leyndell_soldier: {
+    name: "Soldat de Leyndell",
+    hp: 220,
+    atk: 58,
+    runes: 850,
+    armor: 150,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
+    groupCombinations: [
+      { size: 2, chance: 0.7 },
+      { size: 3, chance: 0.3 },
+    ],
+  },
+
+  altus_omen: {
+    name: "Augure du Plateau",
+    hp: 650,
+    atk: 75,
+    runes: 1100,
+    onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
+  },
+
+  tree_sentinel_altus: {
+    name: "Sentinelle de l'Arbre (Altus)",
+    hp: 2800,
+    atk: 110,
+    runes: 8500,
+    isRare: true,
+    armor: 220,
+    specificStats: { critChance: 0.15 },
+    drops: [
+      { id: "golden_tree_halberd", chance: 0.5 },
+      { id: "golden_sentinel_armor", chance: 0.5 },
+    ],
+  },
+
+  wormface_altus: {
+    name: "Visage de Ver",
+    hp: 2200,
+    atk: 85,
+    runes: 6200,
+    isRare: true,
+    onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
+    drops: [{ id: "sentinel_greatshield_talisman", chance: 0.7 }],
+  },
+
+  draconic_tree_sentinel: {
+    name: "Sentinelle Dracogarde de l'Arbre",
+    hp: 8500,
+    atk: 165,
+    runes: 15000,
+    isBoss: true,
+    armor: 250,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2:
+      "Les cieux s'assombrissent... La foudre s'abat sur son bouclier !",
+    effectsPhase2: { id: "STUN", duration: 2, chance: 0.12 },
+    onHitEffect: { id: "BURN", duration: 3, chance: 0.3 },
+  },
+
+  // RIVER
+
+  ancestral_follower: {
+    name: "Disciple Ancestral",
+    hp: 550,
+    atk: 45,
+    runes: 450,
+  },
+
+  siofra_rat: {
+    name: "Rat de Siofra",
+    hp: 45,
+    atk: 18,
+    runes: 120,
+    groupCombinations: [
+      { size: 3, chance: 0.6 },
+      { size: 5, chance: 0.4 },
+    ], // Attaques en meute
+  },
+
+  ancestral_sniper: {
+    name: "Archer Ancestral",
+    hp: 1000,
+    armor: 80,
+    atk: 83,
+    isRare: true,
+    isCharging: false,
+    drops: [
+      { id: "starlight_pendant", chance: 0.15 },
+      { id: "horn_bow_talisman", chance: 0.75 },
+    ],
+
+    onTurnAction: (enemy, player) => {
+      if (!enemy.isCharging) {
+        enemy.isCharging = true;
+        return {
+          msg: `${enemy.name} bande son arc de corne...`,
+          skipAttack: true,
+        };
+      } else {
+        enemy.isCharging = false;
+        return { msg: "TIR MAGIQUE !", dmgMult: 3.0 };
+      }
+    },
+  },
+
+  ancestral_spirit: {
+    name: "Esprit Ancestral",
+    hp: 2500,
+    atk: 140,
+    runes: 12000,
+    isBoss: true,
+    dodgeChance: 0.2,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    onTurnAction: (enemy, player) => {
+      // Se soigne de 40 PV s'il est sous 50% de vie
+      if (enemy.hp < enemy.maxHp * 0.5) {
+        const heal = 40;
+        return {
+          msg: "L'esprit absorbe l'essence des forêts...",
+          healAmount: heal,
+        };
+      }
+      return {};
+    },
+  },
+
+  // --- NOKRON, CITÉ ÉTERNELLE ---
+  silver_tear_nokron: {
+    name: "Larme d'Argent",
+    hp: 450,
+    atk: 45,
+    runes: 1200,
+    armor: 80,
+    isHardened: false,
+    onTurnAction: (enemy, player) => {
+      enemy.isHardened = !enemy.isHardened;
+      enemy.armor = enemy.isHardened ? 300 : 80;
+      return {
+        msg: enemy.isHardened
+          ? "La Larme d'Argent se fige et durcit comme de l'acier !"
+          : "La Larme se liquéfie, redevenant vulnérable.",
+      };
+    },
+  },
+
+  nox_monk: {
+    name: "Moine de Nox",
+    hp: 800,
+    atk: 55,
+    runes: 1500,
+    armor: 120,
+    dodgeChance: 0.3,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.2 },
+  },
+
+  giant_silver_tear: {
+    name: "Larme d'Argent Géante",
+    hp: 1800,
+    atk: 90,
+    runes: 8000,
+    isRare: true,
+    armor: 200,
+    isExploding: false,
+    drops: [
+      { id: "silver_tear_mask", chance: 0.75 },
+      { id: "mercury_breastplate", chance: 0.75 },
+    ],
+    onTurnAction: (enemy) => {
+      if (enemy.hp < enemy.maxHp * 0.2 && !enemy.isExploding) {
+        enemy.isExploding = true;
+        return {
+          msg: "La Larme Géante vibre violemment... elle va exploser !",
+        };
+      }
+      if (enemy.isExploding) {
+        enemy.hp = 0; // L'ennemi meurt dans l'explosion
+        return {
+          msg: "BOOM ! La Larme explose en un nuage de givre !",
+          dmgMult: 3.0,
+        };
+      }
+      return {};
+    },
+  },
+
+  mimic_tear_boss: {
+    name: "Larme Imitatrice",
+    hp: 10000,
+    atk: 100,
+    runes: 45000,
+    isBoss: true,
+    copied: false,
+    onTurnAction: (enemy, player) => {
+      // Au premier tour, elle analyse et copie vos statistiques effectives
+      if (!enemy.copied) {
+        const eff = getEffectiveStats();
+        enemy.atk = Math.floor(eff.strength * 1.2); // Elle frappe 20% plus fort que vous
+        enemy.armor = Math.floor(eff.armor);
+        enemy.copied = true;
+        return {
+          msg: "La Larme prend votre forme et reflète votre propre puissance !",
+        };
+      }
+      return {};
+    },
   },
 };

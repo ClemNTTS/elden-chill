@@ -137,6 +137,8 @@ export const handleVictory = (sessionId) => {
 
   if (runtimeState.areaCleared) {
     runtimeState.areaCleared = false;
+    runtimeState.usedRenaissance = false;
+    runtimeState.usedAbsolution = false;
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
 
@@ -281,6 +283,7 @@ export const startExploration = (biomeId) => {
 
   runtimeState.currentLoopCount = 0;
   runtimeState.currentCombatSession++;
+  runtimeState.usedRenaissance = false;
   const sessionAtStart = runtimeState.currentCombatSession;
   const biome = BIOMES[biomeId];
   gameState.world.isExploring = true;

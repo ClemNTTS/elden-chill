@@ -865,3 +865,76 @@ button:disabled {
   color: white;
   border-color: var(--hover-btn);
 }
+
+/* Barre d'outils de l'inventaire */
+.inventory-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.8);
+  padding: 10px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+#filter-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+#filter-buttons button {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: 1.1em; /* Plus gros pour le tactile mobile */
+  transition: 0.2s;
+}
+
+#filter-buttons button:active,
+.active-filter {
+  background: var(--active-btn);
+  color: black;
+  border-color: gold;
+}
+
+/* Animation et Grille */
+#inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  transition: all 0.8s ease-in-out;
+}
+
+#inventory-section {
+  transition: all 0.8s ease-in-out;
+}
+
+/* Surbrillance de l'objet équipé */
+.equipped-highlight {
+  border: 2px solid gold !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  background: rgba(255, 215, 0, 0.05) !important;
+  transform: scale(1.02);
+}
+
+#camp-view {
+  hr {
+    border-bottom: 1px solid var(--active-btn);
+    margin: 20px 0;
+    opacity: 0.3;
+  }
+}
+
+/* Couleurs par type (rappel des classes dans ui.js) */
+.item-type-weapon {
+  border-left: 4px solid #e74c3c;
+} /* Rouge */
+.item-type-armor {
+  border-left: 4px solid #3498db;
+} /* Bleu */
+.item-type-accessory {
+  border-left: 4px solid #f1c40f;
+} /* Or */

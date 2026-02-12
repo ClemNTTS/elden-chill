@@ -1,4 +1,5 @@
-import { ITEM_SETS, ITEMS } from "./item.js";
+import { ITEM_SETS } from "./constants.js";
+import { ITEMS } from "./item.js";
 
 // Saved state
 export const DEFAULT_GAME_STATE = {
@@ -40,8 +41,8 @@ export const DEFAULT_GAME_STATE = {
   ashesOfWarOwned: [],
   equippedAsh: null,
   save: {
-    version: "0.1.2",
-    maxLevel: 70,
+    version: "0.2.0",
+    maxLevel: 100,
   },
 };
 
@@ -60,6 +61,10 @@ export const runtimeState = {
   combatFrozen: false,
   playerArmorDebuff: 0,
   nextAtkMultBonus: 1,
+  nextNbAtkBonus: 0,
+  usedRenaissance: false,
+  usedAbsolution: false,
+  filterChanged: false,
 };
 
 export function setGameState(newState) {
@@ -154,6 +159,10 @@ export function getEffectiveStats() {
   keysToFloor.forEach((key) => {
     if (effStats[key] !== undefined) effStats[key] = Math.floor(effStats[key]);
   });
+
+  if (gameState.playerEffects.some((e) => e.id === "DEW_PROTECTION")) {
+    effStats.armor += 50;
+  }
 
   return effStats;
 }

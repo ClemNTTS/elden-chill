@@ -229,6 +229,21 @@ export function performAttack({
       isCrit ? "log-crit" : "",
     );
 
+    if (!isPlayer) {
+      // Monster is attacking player, check for on-being-hit item effects
+      Object.values(gameState.equipped).forEach((itemId) => {
+        const itemLevel = gameState.inventory.find(
+          (i) => i.id === itemId,
+        )?.level;
+        const item = ITEMS[itemId];
+        if (item && typeof item.funcOnBeingHit === "function") {
+          item.funcOnBeingHit(eff, attackers[0], finalDamage, itemLevel);
+          updateHealthBars();
+          updateUI();
+        }
+      });
+    }
+
     /* ================= PHASE CHECK ================= */
     if (target?.hasSecondPhase && !target.isInSecondPhase) {
       const maxHp = target.maxHp ?? target.hp;
@@ -479,7 +494,11 @@ export const combatLoop = (sessionId) => {
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }
 
-        for (let i = 0; i < stats.attacksPerTurn; i++) {
+        for (
+          let i = 0;
+          i < stats.attacksPerTurn + runtimeState.nextNbAtkBonus;
+          i++
+        ) {
           // Find first alive enemy
           const currentTarget = runtimeState.currentEnemyGroup.find(
             (e) => e.hp > 0,
@@ -612,6 +631,25 @@ export const combatLoop = (sessionId) => {
                 ? runtimeState.currentEnemyGroup[0].specificStats.attacksPerTurn
                 : 1;
 
+            const enemy = runtimeState.currentEnemyGroup[0];
+            let enemyDmgMult = 1;
+            if (enemy.onTurnAction) {
+              const action = enemy.onTurnAction(enemy, playerObj);
+              if (action.msg) ActionLog(action.msg, "log-flavor-orange");
+
+              if (action.skipAttack) {
+                setTimeout(() => combatLoop(sessionId), 800);
+                return;
+              }
+
+              if (action.dmgMult) enemyDmgMult = action.dmgMult;
+
+              if (action.healAmount) {
+                enemy.hp = Math.min(enemy.maxHp, enemy.hp + action.healAmount);
+                updateHealthBars();
+              }
+            }
+
             // Enemy attacks the player
             for (let i = 0; i < loop; i++) {
               playerObj.currentHp = runtimeState.playerCurrentHp; // sync before attack
@@ -626,6 +664,7 @@ export const combatLoop = (sessionId) => {
                   : null,
                 logPrefix: runtimeState.currentEnemyGroup[0].name,
                 isPlayer: false,
+                ashEffect: { damageMult: enemyDmgMult },
               });
               runtimeState.playerCurrentHp = playerObj.currentHp; // sync back
 

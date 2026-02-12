@@ -1,126 +1,9 @@
 import { applyEffect } from "./combat.js";
+import { ITEM_TYPES } from "./constants.js";
+import { NOKRON } from "./items/nokron.js";
+import { RIVER } from "./items/river.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog } from "./ui.js";
-
-export const ITEM_TYPES = {
-  WEAPON: "Arme",
-  ARMOR: "Armure",
-  ACCESSORY: "Accessoire",
-};
-
-// item.js
-
-export const ITEM_SETS = {
-  CARIAN_KNIGHT: {
-    name: "Panoplie du Chevalier Carien",
-    bonuses: {
-      2: {
-        desc: "Intelligence totale +10%.",
-        effect: (stats) => {
-          stats.intelligence *= 1.1;
-        },
-      },
-      3: {
-        desc: "Intelligence totale +20% et Chance Crit +10%.",
-        effect: (stats) => {
-          stats.intelligence *= 1.2;
-          stats.critChance += 0.1;
-        },
-      },
-    },
-  },
-
-  FROST_ASSASSIN: {
-    name: "Set de l'Assassin de Givre",
-    bonuses: {
-      2: {
-        desc: "Dextérité totale +10%.",
-        effect: (stats) => {
-          stats.dexterity *= 1.1;
-        },
-      },
-      3: {
-        desc: "50% de la Dex convertie en Force et +0.2x Dégâts Crit.",
-        effect: (stats) => {
-          stats.strength += Math.floor(stats.dexterity * 0.5);
-          stats.critDamage += 0.2;
-        },
-      },
-    },
-  },
-
-  MARIONETTE_MASTER: {
-    name: "Tenue du Marionnettiste",
-    bonuses: {
-      2: {
-        desc: "Jointures Souples : Dextérité totale +15%.",
-        effect: (stats) => {
-          stats.dexterity *= 1.15;
-        },
-      },
-      3: {
-        desc: "Frénésie : Gagnez +1 Attaque par tour.",
-        effect: (stats) => {
-          stats.attacksPerTurn += 1;
-        },
-      },
-    },
-  },
-
-  ACADEMY_PRIME: {
-    name: "Maîtrise de l'Académie",
-    bonuses: {
-      2: {
-        desc: "Érudition : Intelligence totale +20%.",
-        effect: (stats) => {
-          stats.intelligence *= 1.2;
-        },
-      },
-      3: {
-        desc: "Marteau de Haima : Convertit 80% de votre Intelligence totale en Force.",
-        effect: (stats) => {
-          stats.strength += Math.floor(stats.intelligence * 0.8);
-        },
-      },
-    },
-  },
-
-  MARSH_WARDEN: {
-    name: "Panoplie du Gardien des Marais",
-    bonuses: {
-      2: {
-        desc: "Constitution de Fer : Convertit 20% de votre Vigueur totale en Force.",
-        effect: (stats) => {
-          stats.strength += Math.floor(stats.vigor * 0.2);
-        },
-      },
-      3: {
-        desc: "Force Tellurique : Convertit 10% de votre Vigueur totale en Armure.",
-        effect: (stats) => {
-          stats.armor += Math.floor(stats.vigor * 0.1);
-        },
-      },
-    },
-  },
-
-  CRYSTAL_BULWARK: {
-    name: "Set du Rempart de Cristal",
-    bonuses: {
-      2: {
-        desc: "Impact Lourd : Force totale +15%.",
-        effect: (stats) => {
-          stats.strength *= 1.15;
-        },
-      },
-      3: {
-        desc: "Gravité Cristalline : Convertit 50% de votre Force totale en Armure.",
-        effect: (stats) => {
-          stats.armor += Math.floor(stats.strength * 0.5);
-        },
-      },
-    },
-  },
-};
 
 export const ITEMS = {
   /*===========================
@@ -173,10 +56,10 @@ export const ITEMS = {
       stats.armor += armor;
     },
   },
+
   keen_dagger: {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
-    set: "FROST_ASSASSIN",
     description:
       "+4 de Force. Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
@@ -186,9 +69,22 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       const ratio = 0.3 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor(stats.dexterity * ratio);
-
-      // 3. Scaling Crit boosté (Base 10% au lieu de 5%, +2%/lv au lieu de 1%)
       stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
+    },
+  },
+
+  heavy_club: {
+    name: "Gourdin Lourd",
+    description:
+      "Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
+    type: ITEM_TYPES.WEAPON,
+    applyFlat: (stats, itemLevel) => {
+      const baseVigor = gameState.stats.vigor || 0;
+      const ratio = 0.25 + 0.01 * (itemLevel - 1);
+      stats.strength += Math.floor(baseVigor * ratio);
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.dexterity *= 0.9;
     },
   },
   scholars_ring: {
@@ -377,9 +273,11 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     description:
       "Attaques avec 30% de chance d'infliger 2 Brûlures. +3.5% Force et +2% d'Armure / Niv",
-    applyFlat: (stats, itemLevel) => {
-      stats.strength *= 1 + 0.035 * itemLevel;
-      stats.armor *= 1 + 0.02 * itemLevel;
+    applyMult: (stats, itemLevel) => {
+      stats.strength = Math.floor(
+        stats.strength * (1 + 0.035 * (itemLevel - 1)),
+      );
+      stats.armor = Math.floor(stats.armor * (1 + 0.02 * (itemLevel - 1)));
     },
     onHitEffect: { id: "BURN", duration: 2, chance: 0.3 },
   },
@@ -390,19 +288,17 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 15 de Force et 18 de Dextérité de base pour être utilisé. +1% de Force et +2% de Dextérité par Niveau. Convertit +4% de la dextérité en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
-    applyFlat: (stats, itemLevel) => {
-      const baseStr = gameState.stats.strength || 0;
-      const baseDex = gameState.stats.dexterity || 0;
-      if (baseStr >= 15 && baseDex >= 18) {
-        stats.strength *= 1 + 0.01 * itemLevel;
-        stats.dexterity *= 1 + 0.02 * itemLevel;
-      }
-    },
     applyMult: (stats, itemLevel) => {
       const baseStr = gameState.stats.strength || 0;
       const baseDex = gameState.stats.dexterity || 0;
-      const ratio = 0.04 * itemLevel;
       if (baseStr >= 15 && baseDex >= 18) {
+        stats.strength = Math.floor(
+          stats.strength * (1 + 0.01 * (itemLevel - 1)),
+        );
+        stats.dexterity = Math.floor(
+          stats.dexterity * (1 + 0.02 * (itemLevel - 1)),
+        );
+        const ratio = 0.04 * (itemLevel - 1);
         stats.strength += Math.floor(ratio * stats.dexterity);
       }
     },
@@ -431,11 +327,14 @@ export const ITEMS = {
     description:
       "Vous gagnez un peu de points dans toutes les stats +5% (+1%/Niv) mais perdez 20 d'armure",
     applyFlat: (stats, itemLevel) => {
-      stats.strength *= 1.05 + 0.01 * itemLevel;
-      stats.dexterity *= 1.05 + 0.01 * itemLevel;
-      stats.intelligence *= 1.05 + 0.01 * itemLevel;
-      stats.vigor *= 1.05 + 0.01 * itemLevel;
       stats.armor -= 20;
+    },
+    applyMult: (stats, itemLevel) => {
+      const mult = 1.05 + 0.01 * (itemLevel - 1);
+      stats.strength = Math.floor(stats.strength * mult);
+      stats.dexterity = Math.floor(stats.dexterity * mult);
+      stats.intelligence = Math.floor(stats.intelligence * mult);
+      stats.vigor = Math.floor(stats.vigor * mult);
     },
   },
   //nighth_cavalery 75%
@@ -447,8 +346,15 @@ export const ITEMS = {
     applyFlat: (stats, itemLevel) => {
       const baseVigor = gameState.stats.vigor || 0;
       if (baseVigor >= 40) {
-        stats.strength += 10 + 3 * (itemLevel - 1);
         stats.armor += 15 + 2 * (itemLevel - 1);
+      }
+    },
+    applyMult: (stats, itemLevel) => {
+      const baseVigor = gameState.stats.vigor || 0;
+      if (baseVigor >= 40) {
+        stats.strength = Math.floor(
+          stats.strength * (1.1 + 0.01 * (itemLevel - 1)),
+        );
       }
     },
     onHitEffect: { id: "BLEED", duration: 2, chance: 0.15 },
@@ -464,9 +370,17 @@ export const ITEMS = {
       const baseStr = gameState.stats.strength || 0;
       const baseDex = gameState.stats.dexterity || 0;
       if (baseStr >= 30 && baseDex >= 10) {
-        stats.strength *= 1.15 + 0.02 * (itemLevel - 1);
         stats.intelligence -= 5;
         stats.vigor -= 5;
+      }
+    },
+    applyMult: (stats, itemLevel) => {
+      const baseStr = gameState.stats.strength || 0;
+      const baseDex = gameState.stats.dexterity || 0;
+      if (baseStr >= 30 && baseDex >= 10) {
+        stats.strength = Math.floor(
+          stats.strength * (1.15 + 0.02 * (itemLevel - 1)),
+        );
       }
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -536,8 +450,15 @@ export const ITEMS = {
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 10) {
-        stats.armor *= 1.05 + 0.005 * itemLevel;
         stats.critChance += 0.03 * Math.floor(baseDex / 10);
+      }
+    },
+    applyMult: (stats, itemLevel) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      if (baseDex >= 10) {
+        stats.armor = Math.floor(
+          stats.armor * (1.05 + 0.005 * (itemLevel - 1)),
+        );
       }
     },
   },
@@ -666,11 +587,13 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 30 de Force de base. Inflige d'énormes dégâts de zone (50% de la Force). +20% Force (+2% / Niv).",
-    applyFlat: (stats, itemLevel) => {
+    applyMult: (stats, itemLevel) => {
       const baseStr = gameState.stats.strength || 0;
       if (baseStr >= 30) {
+        stats.strength = Math.floor(
+          stats.strength * (1.2 + 0.02 * (itemLevel - 1)),
+        );
         stats.splashDamage += Math.floor(stats.strength * 0.5);
-        stats.strength *= 1.2 + 0.02 * itemLevel;
       }
     },
   },
@@ -731,6 +654,40 @@ export const ITEMS = {
       const bonusCritDmg = Math.floor(baseDex / 10) * 0.1 + 0.02 * itemLevel;
 
       stats.critDamage += bonusCritDmg;
+    },
+  },
+
+  marionette_scimitar: {
+    name: "Cimeterre de Marionnette",
+    type: ITEM_TYPES.WEAPON,
+    set: "MARIONETTE_MASTER",
+    description:
+      "Dextérité +10%. Vous convertissez 65% de votre Dextérité en Force. Chaque coup a 25% de chance de déclencher une attaque supplémentaire immédiate. (+1% / Niv)",
+    applyFlat: (stats, itemLevel) => {
+      stats.dexterity = Math.floor(stats.dexterity * 1.1);
+    },
+    applyMult: (stats, itemLevel) => {
+      const conversionRatio = 0.65;
+      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+    },
+
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (Math.random() < 0.25 + 0.01 * itemLevel) {
+        runtimeState.nextNbAtkBonus = 1;
+        ActionLog("Cimeterre : Attaque réflexe !", "log-status");
+      }
+    },
+  },
+
+  marionette_mask: {
+    name: "Masque de Soldat Marionnette",
+    type: ITEM_TYPES.ARMOR,
+    set: "MARIONETTE_MASTER",
+    description:
+      "Dextérité +5% (+1% / Niv). Vos mouvements erratiques augmentent votre esquive de 5%.",
+    applyMult: (stats, itemLevel) => {
+      stats.dexterity *= 1.05 + 0.01 * itemLevel;
+      stats.dodgeChance += 0.05;
     },
   },
 
@@ -948,8 +905,10 @@ export const ITEMS = {
     description:
       "Vigueur +15%. Ajoute 20% de votre Vigueur à votre Force. (+2% / Niv). 8% de chance d'étourdissement",
     onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
-    applyMult: (stats, itemLevel) => {
+    applyFlat: (stats, itemLevel) => {
       stats.vigor *= 1.15;
+    },
+    applyMult: (stats, itemLevel) => {
       stats.strength += Math.floor(stats.vigor * (0.2 + 0.02 * itemLevel));
     },
   },
@@ -1016,14 +975,12 @@ export const ITEMS = {
     set: "MARSH_WARDEN",
     description:
       "Vigueur +20%. La pression du marais renforce vos coups : chaque points de Vigueur de base ajoute 0.25 à votre Pénétration d'Armure Fixe. (+0.05 / Niv) pour un maximum de 30",
-    applyFlat: (stats, itemLevel) => {
-      stats.vigor *= 1.2;
-    },
     applyMult: (stats, itemLevel) => {
-      const baseVig = gameState.stats.vigor || 0;
+      stats.vigor = Math.floor(stats.vigor * 1.2); // Apply multiplicative vigor bonus
+      const baseVig = gameState.stats.vigor || 0; // Use original base vigor for calculation as per description
       stats.flatDamagePenetration += Math.min(
         30,
-        Math.floor(baseVig * (0.25 + 0.05 * itemLevel)),
+        Math.floor(baseVig * (0.25 + 0.05 * (itemLevel - 1))),
       );
     },
   },
@@ -1041,4 +998,249 @@ export const ITEMS = {
       }
     },
   },
+
+  starscourge_greatsword: {
+    name: "Espadon du Fléau des Astres",
+    type: ITEM_TYPES.WEAPON,
+    description:
+      "Force +25%. La gravité renforce vos coups : ajoute 50% de votre Armure totale à votre Force. (+5% / Niv)",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.25;
+      const gravityBonus = stats.armor * (0.5 + 0.05 * (itemLevel - 1));
+      stats.strength += Math.floor(gravityBonus);
+    },
+  },
+
+  radahn_lion_armor: {
+    name: "Armure du Lion de Radahn",
+    type: ITEM_TYPES.ARMOR,
+    isAlwaysMax: true,
+    description:
+      "Force +15%. Immunité partielle : Réduit de 2 les charges de Putréfaction et de Saignement au début du tour.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.15;
+    },
+    passiveStatusReduction: (playerEffects, itemLevel) => {
+      playerEffects.forEach((eff) => {
+        if (eff.id === "SCARLET_ROT" || eff.id === "BLEED") {
+          eff.duration = Math.max(0, eff.duration - 2);
+          eff.stacks = Math.max(0, (eff.stacks || 0) - 2);
+        }
+      });
+      return playerEffects;
+    },
+  },
+
+  rotten_dragon_heart: {
+    name: "Cœur de Dragon Putréfié",
+    type: ITEM_TYPES.ACCESSORY,
+    isAlwaysMax: true,
+    description:
+      "Vos attaques ont 40% de chance d'infliger 3 Putréfactions. Augmente vos dégâts de 20% contre les ennemis infectés.",
+    onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.4 },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (
+        targetEffects.some((e) => e.id === "SCARLET_ROT" || e.id === "POISON")
+      ) {
+        runtimeState.nextAtkMultBonus = 1.2;
+      }
+    },
+  },
+
+  // --- EXECUTER ---
+
+  executioner_greataxe: {
+    name: "Grande Hache de Bourreau",
+    type: ITEM_TYPES.WEAPON,
+    set: "EXECUTIONER",
+    description:
+      "Force +20% (+2% / Niv). Vos critiques infligent 0.5x dégâts supplémentaires mais votre Armure baisse de 20.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor -= 20;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.strength = Math.floor(
+        stats.strength * (1.2 + 0.02 * (itemLevel - 1)),
+      );
+      stats.critDamage += 0.5;
+    },
+  },
+
+  executioner_hood: {
+    name: "Cagoule de Bourreau",
+    type: ITEM_TYPES.ARMOR,
+    set: "EXECUTIONER",
+    description:
+      "Chance de Critique +10% (+1% / Niv). Vigueur -10% : Le poids de la culpabilité affaiblit le corps.",
+    applyMult: (stats, itemLevel) => {
+      stats.critChance += 0.1 + 0.01 * itemLevel;
+      stats.vigor *= 0.9;
+    },
+  },
+
+  guillotine_pendant: {
+    name: "Pendentif de la Guillotine",
+    type: ITEM_TYPES.ACCESSORY,
+    set: "EXECUTIONER",
+    description:
+      "Force +10%. Si l'ennemi a moins de 30% de PV, vos chances de critique augmentent de 35%.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.1;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const target = runtimeState.currentEnemyGroup[0];
+      if (target && target.hp / target.maxHp < 0.3) {
+        stats.critChance += 0.35;
+      }
+    },
+  },
+
+  // ALTUR
+  golden_tree_halberd: {
+    name: "Hallebarde de l'Arbre d'Or",
+    type: ITEM_TYPES.WEAPON,
+    set: "TREE_SENTINEL",
+    description:
+      "Vigueur +15%. Convertissez 15% (+2%/Niv) de votre Vigueur en Force. 40% de chance d'activer 'Épines' (15% dégâts renvoyés + 0.5x Vigueur) pendant 2 tours.",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor = Math.floor(stats.vigor * 1.15); // Apply vigor multiplication first
+      stats.strength += Math.floor(
+        stats.vigor * (0.15 + 0.02 * (itemLevel - 1)),
+      ); // Then calculate strength from potentially increased vigor
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      if (Math.random() < 0.4) {
+        applyEffect(gameState.playerEffects, "THORNS", 2);
+        ActionLog("Épines dorées activées !", "log-status");
+      }
+    },
+  },
+
+  golden_sentinel_armor: {
+    name: "Plastron de la Sentinelle",
+    type: ITEM_TYPES.ARMOR,
+    set: "TREE_SENTINEL",
+    description:
+      "Armure +30 (+5 / Niv). Vigueur +10%. Réduit la durée de TOUS les statuts négatifs de 1 tour.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor += 30 + 5 * (itemLevel - 1);
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.vigor *= 1.1;
+    },
+    passiveStatusReduction: (playerEffects, itemLevel) => {
+      playerEffects.forEach((eff) => {
+        if (eff.id !== "THORNS") {
+          eff.duration = Math.max(0, eff.duration - 1);
+        }
+      });
+      return playerEffects;
+    },
+  },
+
+  sentinel_greatshield_talisman: {
+    name: "Talisman du Grand Bouclier",
+    type: ITEM_TYPES.ACCESSORY,
+    set: "TREE_SENTINEL",
+    description:
+      "Vigueur +10% (+1% / Niv). La sève de l'Arbre coule en vous : si vous avez le statut 'Épines', vous récupérez 5 PV (+2 / Niv) au début du tour.",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor *= 1.1 + 0.01 * (itemLevel - 1);
+    },
+
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const hasThorns = gameState.playerEffects.some((e) => e.id === "THORNS");
+      if (hasThorns) {
+        const heal = 5 + 2 * (itemLevel - 1);
+        const maxHp = getHealth(stats.vigor);
+        runtimeState.playerCurrentHp = Math.min(
+          maxHp,
+          runtimeState.playerCurrentHp + heal,
+        );
+        ActionLog(`Sève de l'Arbre : +${heal} PV !`, "log-heal");
+      }
+    },
+  },
+
+  // CARIA MANSION
+
+  loretta_glintstone_sickle: {
+    name: "Faucille d'Éclat de Loretta",
+    type: ITEM_TYPES.WEAPON,
+    isAlwaysMax: true,
+    description:
+      "Intelligence +15%. Convertit 70% de l'Int en Force. Fracassement : Vos attaques contre un ennemi déjà gelé ignorent 50% de son Armure. 40% de chance d'appliquer 2 Gelures.",
+    applyMult: (stats, itemLevel) => {
+      stats.intelligence *= 1.15;
+      stats.strength += Math.floor(stats.intelligence * 0.7);
+    },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.4 },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const isFrozen = targetEffects.some((e) => e.id === "FROSTBITE");
+      if (isFrozen) {
+        stats.percentDamagePenetration = Math.max(
+          stats.percentDamagePenetration,
+          0.5,
+        );
+        ActionLog(
+          "Faucille de Loretta : La glace vole en éclats ! (Pénétration +50%)",
+          "log-status",
+        );
+      }
+    },
+  },
+
+  carian_troll_gauntlet: {
+    name: "Gantelet du Troll de Caria",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Force +10% (+1% / Niv). Force de Frappe : Frapper un ennemi étourdi (STUN) propage 100% de vos dégâts à tous les autres ennemis du groupe.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.1 + 0.01 * itemLevel;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const isStunned = targetEffects.some((e) => e.id === "STUN");
+      if (isStunned) {
+        stats.splashDamage = stats.strength;
+        ActionLog("Gantelet : Onde de choc sur ennemi étourdi !", "log-crit");
+      }
+    },
+  },
+
+  finger_stitcher_needle: {
+    name: "Aiguille à coudre des Doigts",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Dextérité +12% (+1% / Niv). Infection Croisée : Si vous frappez un ennemi qui saigne, vous lui appliquez du poison du même nombre que de saignement.",
+    applyMult: (stats, itemLevel) => {
+      stats.dexterity *= 1.12 + 0.01 * itemLevel;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const bleedEffect = targetEffects.find((e) => e.id === "BLEED");
+      if (bleedEffect && bleedEffect.duration > 0) {
+        applyEffect(targetEffects, "POISON", bleedEffect.duration);
+        ActionLog(
+          `Aiguille : Infection ! +${bleedEffect.duration} Poison appliqué.`,
+          "log-status",
+        );
+      }
+    },
+  },
+
+  lunar_resilience_talisman: {
+    name: "Talisman de Résilience Lunaire",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Vigueur +15% (+2% / Niv). Armure de Souffrance : Gagnez +20 d'Armure pour chaque effet de statut négatif DIFFERENTS qui vous affecte actuellement.",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor = Math.floor(stats.vigor * (1.15 + 0.02 * itemLevel));
+      const statusCount = gameState.playerEffects.filter((e) =>
+        ["POISON", "BLEED", "BURN", "SCARLET_ROT", "FROSTBITE"].includes(e.id),
+      ).length;
+      stats.armor += statusCount * 20;
+    },
+  },
+
+  ...RIVER,
+  ...NOKRON,
 };

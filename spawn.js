@@ -109,6 +109,8 @@ function spawnEnemyWithCompanions(
 export const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
 
+  runtimeState.usedAbsolution = false;
+
   const template = MONSTERS[monsterId];
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
 

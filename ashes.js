@@ -9,12 +9,12 @@ export const ASHES_OF_WAR = {
   beginer_tarnished_heal: {
     name: "Soin du Sans-Éclat",
     description:
-      "Restaure 5PV par niveau. +1 utilisation si vous avez battu un troll",
+      "Restaure 5PV par niveau (max : 250 PV). +1 utilisation si vous avez battu un troll",
     get maxUses() {
       return gameState.world.unlockedBiomes.length > 1 ? 2 : 1;
     },
     effect: (stats, enemy) => {
-      const healAmount = gameState.stats.level * 5;
+      const healAmount = Math.min(gameState.stats.level * 5, 250);
       const maxHp = getHealth(getEffectiveStats().vigor);
 
       runtimeState.playerCurrentHp = Math.min(
@@ -46,7 +46,9 @@ export const ASHES_OF_WAR = {
       "Sacrifie 5% de vos PV max pour infliger d'énormes dégâts (x2.5) et 3 saignements.",
     maxUses: 3,
     effect: (stats, enemy) => {
-      runtimeState.playerCurrentHp -= getHealth(getEffectiveStats().vigor * 0.05);
+      runtimeState.playerCurrentHp -= getHealth(
+        getEffectiveStats().vigor * 0.05,
+      );
       return {
         damageMult: 2.5,
         status: { id: "BLEED", duration: 3 },
@@ -75,6 +77,22 @@ export const ASHES_OF_WAR = {
         damageMult: 1.5,
         status: { id: "FROSTBITE", duration: 5 },
         msg: "Une vague de givre se propage au sol !",
+      };
+    },
+  },
+
+  starcaller_cry: {
+    name: "Cri des Astres",
+    description:
+      "Vous invoquez la gravité. Si l'ennemi principal a un effet de statut il subit 30% de dégâts supplémentaires",
+    maxUses: 4,
+    effect: (stats, enemy) => {
+      const hasStatus = gameState.ennemyEffects.length > 0;
+      return {
+        damageMult: hasStatus ? 1.3 : 1.0,
+        msg: hasStatus
+          ? "La gravité écrase l'ennemi affaibli !"
+          : "L'appel des astres résonne dans le vide...",
       };
     },
   },
