@@ -290,7 +290,7 @@ export const startExploration = (biomeId) => {
   gameState.world.currentBiome = biomeId;
   gameState.world.progress = 0;
   gameState.world.checkpointReached = false;
-  gameState.ashesOfWaruses = {};
+  runtimeState.defeatedEnemies = [];
   gameState.playerEffects = [];
   gameState.ennemyEffects = [];
   gameState.world.rareSpawnsCount = 0;
