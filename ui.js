@@ -600,7 +600,7 @@ export const showTooltip = (e, item) => {
       const sign = isPos ? "+" : "";
 
       // On affiche la valeur absolue de la différence (ex: +3 Vigueur)
-      statBonus += `<br><span class="tooltip-stat" style="color:${color}">${sign}${diff.toFixed(0)} ${
+      statBonus += `<br><span class="tooltip-stat" style="color:${color}">${sign}${Math.floor(diff)} ${
         s.charAt(0).toUpperCase() + s.slice(1)
       }</span>`;
     }
