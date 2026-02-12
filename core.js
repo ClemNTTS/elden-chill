@@ -97,7 +97,10 @@ export const handleDrops = (sessionId) => {
     if (enemy.isBoss) {
       wasABossEncounter = true;
     }
-    const runesAwarded = Math.floor(enemy.runes * intBonus);
+    let runesAwarded = Math.floor(enemy.runes * intBonus);
+    if (!runesAwarded) {
+      runesAwarded = 0;
+    }
     gameState.runes.carried += Math.floor(runesAwarded);
     ActionLog(
       `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
