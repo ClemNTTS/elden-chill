@@ -1,12 +1,9 @@
 import { applyEffect } from "./combat.js";
+import { ITEM_TYPES } from "./constants.js";
+import { NOKRON } from "./items/nokron.js";
+import { RIVER } from "./items/river.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog } from "./ui.js";
-
-export const ITEM_TYPES = {
-  WEAPON: "Arme",
-  ARMOR: "Armure",
-  ACCESSORY: "Accessoire",
-};
 
 // item.js
 
@@ -1229,7 +1226,7 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     set: "TREE_SENTINEL",
     description:
-      "Vigueur +15%. Convertissez 15% (+2%/Niv) de votre Vigueur en Force. 25% de chance d'activer 'Épines' (15% dégâts renvoyés + 0.5x Vigueur) pendant 2 tours.",
+      "Vigueur +15%. Convertissez 15% (+2%/Niv) de votre Vigueur en Force. 40% de chance d'activer 'Épines' (15% dégâts renvoyés + 0.5x Vigueur) pendant 2 tours.",
     applyFlat: (stats, itemLevel) => {
       stats.vigor *= 1.15;
     },
@@ -1237,7 +1234,7 @@ export const ITEMS = {
       stats.strength += Math.floor(stats.vigor * (0.15 + 0.02 * itemLevel));
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      if (Math.random() < 0.25) {
+      if (Math.random() < 0.4) {
         applyEffect(gameState.playerEffects, "THORNS", 2);
         ActionLog("Épines dorées activées !", "log-status");
       }
@@ -1289,4 +1286,86 @@ export const ITEMS = {
       }
     },
   },
+
+  // CARIA MANSION
+
+  loretta_glintstone_sickle: {
+    name: "Faucille d'Éclat de Loretta",
+    type: ITEM_TYPES.WEAPON,
+    isAlwaysMax: true,
+    description:
+      "Intelligence +15%. Convertit 70% de l'Int en Force. Fracassement : Vos attaques contre un ennemi déjà gelé ignorent 50% de son Armure. 40% de chance d'appliquer 2 Gelures.",
+    applyMult: (stats, itemLevel) => {
+      stats.intelligence *= 1.15;
+      stats.strength += Math.floor(stats.intelligence * 0.7);
+    },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.4 },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const isFrozen = targetEffects.some((e) => e.id === "FROSTBITE");
+      if (isFrozen) {
+        stats.percentDamagePenetration = Math.max(
+          stats.percentDamagePenetration,
+          0.5,
+        );
+        ActionLog(
+          "Faucille de Loretta : La glace vole en éclats ! (Pénétration +50%)",
+          "log-status",
+        );
+      }
+    },
+  },
+
+  carian_troll_gauntlet: {
+    name: "Gantelet du Troll de Caria",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Force +10% (+1% / Niv). Force de Frappe : Frapper un ennemi étourdi (STUN) propage 100% de vos dégâts à tous les autres ennemis du groupe.",
+    applyMult: (stats, itemLevel) => {
+      stats.strength *= 1.1 + 0.01 * itemLevel;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const isStunned = targetEffects.some((e) => e.id === "STUN");
+      if (isStunned) {
+        stats.splashDamage = stats.strength;
+        ActionLog("Gantelet : Onde de choc sur ennemi étourdi !", "log-crit");
+      }
+    },
+  },
+
+  finger_stitcher_needle: {
+    name: "Aiguille à coudre des Doigts",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Dextérité +12% (+1% / Niv). Infection Croisée : Si vous frappez un ennemi qui saigne, vous lui appliquez du poison du même nombre que de saignement.",
+    applyMult: (stats, itemLevel) => {
+      stats.dexterity *= 1.12 + 0.01 * itemLevel;
+    },
+    funcOnHit: (stats, targetEffects, itemLevel) => {
+      const bleedEffect = targetEffects.find((e) => e.id === "BLEED");
+      if (bleedEffect && bleedEffect.duration > 0) {
+        applyEffect(targetEffects, "POISON", bleedEffect.duration);
+        ActionLog(
+          `Aiguille : Infection ! +${bleedEffect.duration} Poison appliqué.`,
+          "log-status",
+        );
+      }
+    },
+  },
+
+  lunar_resilience_talisman: {
+    name: "Talisman de Résilience Lunaire",
+    type: ITEM_TYPES.ACCESSORY,
+    description:
+      "Vigueur +15% (+2% / Niv). Armure de Souffrance : Gagnez +20 d'Armure pour chaque effet de statut négatif DIFFERENTS qui vous affecte actuellement.",
+    applyMult: (stats, itemLevel) => {
+      stats.vigor = Math.floor(stats.vigor * (1.15 + 0.02 * itemLevel));
+      const statusCount = gameState.playerEffects.filter((e) =>
+        ["POISON", "BLEED", "BURN", "SCARLET_ROT", "FROSTBITE"].includes(e.id),
+      ).length;
+      stats.armor += statusCount * 20;
+    },
+  },
+
+  ...RIVER,
+  ...NOKRON,
 };

@@ -9,12 +9,12 @@ export const ASHES_OF_WAR = {
   beginer_tarnished_heal: {
     name: "Soin du Sans-Éclat",
     description:
-      "Restaure 5PV par niveau. +1 utilisation si vous avez battu un troll",
+      "Restaure 5PV par niveau (max : 250 PV). +1 utilisation si vous avez battu un troll",
     get maxUses() {
       return gameState.world.unlockedBiomes.length > 1 ? 2 : 1;
     },
     effect: (stats, enemy) => {
-      const healAmount = gameState.stats.level * 5;
+      const healAmount = Math.min(gameState.stats.level * 5, 250);
       const maxHp = getHealth(getEffectiveStats().vigor);
 
       runtimeState.playerCurrentHp = Math.min(

@@ -106,6 +106,22 @@ export const LOOT_TABLES = {
     { id: "golden_sentinel_armor", chance: 0.3 },
     { id: "sentinel_greatshield_talisman", chance: 0.4 },
   ],
+
+  caria_mansion: [
+    { id: "loretta_glintstone_sickle", chance: 0.3 },
+    { id: "lunar_resilience_talisman", chance: 0.7 },
+  ],
+
+  siofra_river: [
+    { id: "ancestral_renaissance_horn", chance: 0.05 },
+    { id: "ancient_bone_axe", chance: 0.45 },
+    { id: "ancestral_spirit_horn", chance: 0.5 },
+  ],
+
+  nokron: [
+    { id: "celestial_dew_talisman", chance: 0.5 },
+    { id: "nokron_flame_dagger", chance: 0.5 },
+  ],
 };
 
 export const BIOMES = {
@@ -248,8 +264,7 @@ export const BIOMES = {
     monsters: ["marionette_soldier", "raya_sorcerer"],
     boss: "rennala",
     length: 12,
-    // unlocks: null,
-    unlocks: ["altus_plateau"],
+    unlocks: ["altus_plateau", "caria_mansion"],
   },
 
   altus_plateau: {
@@ -262,15 +277,17 @@ export const BIOMES = {
     unlocks: null,
     // unlocks: ["leyndell_royal"],
   },
-  // caria_mansion: {
-  //   name: "WIP Manoir de Caria",
-  //   rareMonsters: [""],
-  //   maxRareSpawns: 1,
-  //   monsters: ["", ""],
-  //   boss: "",
-  //   length: 12,
-  //   unlocks: ["siofra_river"],
-  // },
+
+  caria_mansion: {
+    name: "Manoir de Caria",
+    monsters: ["lesser_fingercreeper"],
+    rareMonsters: ["carian_troll_knight"],
+    maxRareSpawns: 3,
+    boss: "royal_knight_loretta",
+    length: 8,
+    unlocks: ["siofra_river"],
+  },
+
   caelid_south: {
     name: "Sud de Caélid",
     monsters: ["radahn_soldier", "giant_dog"],
@@ -296,19 +313,31 @@ export const BIOMES = {
     rareMonsters: ["winged_paladin"],
     boss: "radahn",
     length: 8,
-    unlocks: null,
-    // unlocks: ["nokron"],
+    // unlocks: null,
+    unlocks: ["nokron"],
   },
 
-  // ---
   siofra_river: {
-    name: "WIP Rivière Siofra",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
+    name: "Rivière Siofra",
+    monsters: ["ancestral_follower", "siofra_rat"],
+    rareMonsters: ["ancestral_sniper", "electric_orb"],
+    maxRareSpawns: 2,
+    boss: "ancestral_spirit",
+    length: 15,
+    unlocks: ["redmane_castle"],
   },
+
+  nokron: {
+    name: "Nokron, Cité Éternelle",
+    monsters: ["silver_tear_nokron", "nox_monk"],
+    rareMonsters: ["giant_silver_tear"],
+    maxRareSpawns: 2,
+    boss: "mimic_tear_boss",
+    length: 12,
+    unlocks: null,
+    // unlocks: ["deeproot_depths"],
+  },
+  // ---
   ainsel_river: {
     name: "WIP Rivière Ainsel",
     rareMonsters: [""],
@@ -319,15 +348,6 @@ export const BIOMES = {
     unlocks: null,
   },
 
-  nokron: {
-    name: "WIP Nokron, Cité Éternelle",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: ["deeproot_depths"],
-  },
   deeproot_depths: {
     name: "WIP Profondeurs de la Souche",
     rareMonsters: [""],

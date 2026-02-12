@@ -247,7 +247,22 @@ const updateBiomeDisplay = () => {
 };
 
 let currentInventoryFilter = "Tous";
+let lastInventorySnapshot = "";
 const updateInventoryDisplay = () => {
+  const currentSnapshot = JSON.stringify(
+    gameState.inventory.map((i) => ({ id: i.id, lv: i.level })),
+  );
+  if (gameState.world.isExploring) return;
+  if (
+    currentSnapshot === lastInventorySnapshot &&
+    !runtimeState.filterChanged
+  ) {
+    console.log("MEMORED INVENTORY UPDATE");
+    return;
+  }
+  lastInventorySnapshot = currentSnapshot;
+  runtimeState.filterChanged = false;
+
   const invGrid = document.getElementById("inventory-grid");
   invGrid.innerHTML = "";
 
@@ -306,6 +321,7 @@ const updateInventoryDisplay = () => {
 
 window.setInventoryFilter = (type) => {
   currentInventoryFilter = type;
+  runtimeState.filterChanged = true;
   updateInventoryDisplay();
 };
 

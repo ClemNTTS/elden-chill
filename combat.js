@@ -616,6 +616,25 @@ export const combatLoop = (sessionId) => {
                 ? runtimeState.currentEnemyGroup[0].specificStats.attacksPerTurn
                 : 1;
 
+            const enemy = runtimeState.currentEnemyGroup[0];
+            let enemyDmgMult = 1;
+            if (enemy.onTurnAction) {
+              const action = enemy.onTurnAction(enemy, playerObj);
+              if (action.msg) ActionLog(action.msg, "log-flavor-orange");
+
+              if (action.skipAttack) {
+                setTimeout(() => combatLoop(sessionId), 800);
+                return;
+              }
+
+              if (action.dmgMult) enemyDmgMult = action.dmgMult;
+
+              if (action.healAmount) {
+                enemy.hp = Math.min(enemy.maxHp, enemy.hp + action.healAmount);
+                updateHealthBars();
+              }
+            }
+
             // Enemy attacks the player
             for (let i = 0; i < loop; i++) {
               playerObj.currentHp = runtimeState.playerCurrentHp; // sync before attack
@@ -630,6 +649,7 @@ export const combatLoop = (sessionId) => {
                   : null,
                 logPrefix: runtimeState.currentEnemyGroup[0].name,
                 isPlayer: false,
+                ashEffect: { damageMult: enemyDmgMult },
               });
               runtimeState.playerCurrentHp = playerObj.currentHp; // sync back
 

@@ -127,4 +127,12 @@ export const STATUS_EFFECTS = {
     name: "Gelure",
     color: "#3dd6c9",
   },
+  DEW_PROTECTION: {
+    id: "DEW_PROTECTION",
+    name: "Protection de Rosée",
+    color: "#85c1e9",
+    onTurnStart: (entity) => {
+      return { message: "La rosée céleste renforce votre défense." };
+    },
+  },
 };

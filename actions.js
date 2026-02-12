@@ -1,4 +1,4 @@
-import { gameState } from "./state.js";
+import { gameState, runtimeState } from "./state.js";
 import { saveGame, SAVE_NAME } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
@@ -111,6 +111,7 @@ export const equipItem = (itemId) => {
     gameState.equipped[slotKey] = itemId;
   }
 
+  runtimeState.filterChanged = true;
   saveGame();
   updateUI();
 };

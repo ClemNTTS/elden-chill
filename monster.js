@@ -602,7 +602,6 @@ export const MONSTERS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.6 },
   },
 
-  // --- BOSS DE LIURNIA OUEST ---
   carian_knight_bols: {
     name: "Bols, Chevalier Carien",
     hp: 1200,
@@ -613,7 +612,6 @@ export const MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.3 },
   },
 
-  // --- MONSTRES RARES ---
   abductor_virgin: {
     name: "Vierge Ravisseuse",
     hp: 500,
@@ -698,6 +696,50 @@ export const MONSTERS = {
     ],
   },
 
+  // --- CARIA MANSION ---
+  lesser_fingercreeper: {
+    name: "Petite Main de Doigts",
+    hp: 210,
+    atk: 32,
+    runes: 880,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "POISON", duration: 1, chance: 0.15 },
+    groupCombinations: [
+      { size: 2, chance: 0.7 },
+      { size: 3, chance: 0.3 },
+    ],
+  },
+
+  carian_troll_knight: {
+    name: "Chevalier Troll de Caria",
+    hp: 1400,
+    atk: 70,
+    runes: 5500,
+    isRare: true,
+    armor: 180,
+    onHitEffect: { id: "STUN", duration: 2, chance: 0.3 },
+    drops: [
+      { id: "carian_troll_gauntlet", chance: 0.5 },
+      { id: "finger_stitcher_needle", chance: 0.5 },
+    ],
+  },
+
+  royal_knight_loretta: {
+    name: "Loretta, Chevalier Royal",
+    hp: 3200,
+    atk: 105,
+    runes: 12000,
+    isBoss: true,
+    armor: 130,
+    dodgeChance: 0.15,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2:
+      "Loretta prépare son arc de pierre d'éclat... Le grand arc de Loretta !",
+    specificStats: { attacksPerTurn: 1, splashDamage: 40 }, // Dégâts de zone en P2
+    onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
+  },
+
   // --- MONSTRES DE CAÉLID ---
   giant_dog: {
     name: "Chien T-Rex Géant",
@@ -766,18 +808,6 @@ export const MONSTERS = {
     ],
   },
 
-  // --- BOSS : EKZYKES L'INCURABLE ---
-  ekzykes: {
-    name: "Ekzykes l'Incurable",
-    hp: 9500,
-    atk: 180,
-    runes: 55000,
-    isBoss: true,
-    armor: 160,
-    onHitEffect: { id: "SCARLET_ROT", duration: 5, chance: 0.6 },
-  },
-
-  // --- BOSS FINAL DE ZONE : RADAHN ---
   radahn: {
     name: "Radahn le Fléau des Astres",
     hp: 15000,
@@ -791,6 +821,16 @@ export const MONSTERS = {
     flavorTextPhase2: "Radahn disparaît dans le ciel... UNE MÉTÉORE APPROCHE !",
     effectsPhase2: { id: "STUN", duration: 2, chance: 0.3 },
     onHitEffect: { id: "BURN", duration: 3, chance: 0.4 },
+  },
+  // --- BOSS : EKZYKES L'INCURABLE ---
+  ekzykes: {
+    name: "Ekzykes l'Incurable",
+    hp: 9500,
+    atk: 180,
+    runes: 55000,
+    isBoss: true,
+    armor: 160,
+    onHitEffect: { id: "SCARLET_ROT", duration: 5, chance: 0.6 },
   },
 
   // --- Plateau ---
@@ -815,7 +855,6 @@ export const MONSTERS = {
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
   },
 
-  // --- MONSTRES RARES ---
   tree_sentinel_altus: {
     name: "Sentinelle de l'Arbre (Altus)",
     hp: 2800,
@@ -840,7 +879,6 @@ export const MONSTERS = {
     drops: [{ id: "sentinel_greatshield_talisman", chance: 0.7 }],
   },
 
-  // --- BOSS : SENTINELLE DRACOGARDE DE L'ARBRE ---
   draconic_tree_sentinel: {
     name: "Sentinelle Dracogarde de l'Arbre",
     hp: 8500,
@@ -854,5 +892,155 @@ export const MONSTERS = {
       "Les cieux s'assombrissent... La foudre s'abat sur son bouclier !",
     effectsPhase2: { id: "STUN", duration: 2, chance: 0.12 },
     onHitEffect: { id: "BURN", duration: 3, chance: 0.3 },
+  },
+
+  // RIVER
+
+  ancestral_follower: {
+    name: "Disciple Ancestral",
+    hp: 550,
+    atk: 45,
+    runes: 450,
+  },
+
+  siofra_rat: {
+    name: "Rat de Siofra",
+    hp: 45,
+    atk: 18,
+    runes: 120,
+    groupCombinations: [
+      { size: 3, chance: 0.6 },
+      { size: 5, chance: 0.4 },
+    ], // Attaques en meute
+  },
+
+  ancestral_sniper: {
+    name: "Archer Ancestral",
+    hp: 1000,
+    armor: 80,
+    atk: 83,
+    isRare: true,
+    isCharging: false,
+    drops: [
+      { id: "starlight_pendant", chance: 0.15 },
+      { id: "horn_bow_talisman", chance: 0.75 },
+    ],
+
+    onTurnAction: (enemy, player) => {
+      if (!enemy.isCharging) {
+        enemy.isCharging = true;
+        return {
+          msg: `${enemy.name} bande son arc de corne...`,
+          skipAttack: true,
+        };
+      } else {
+        enemy.isCharging = false;
+        return { msg: "TIR MAGIQUE !", dmgMult: 3.0 };
+      }
+    },
+  },
+
+  ancestral_spirit: {
+    name: "Esprit Ancestral",
+    hp: 2500,
+    atk: 140,
+    runes: 12000,
+    isBoss: true,
+    dodgeChance: 0.2,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    onTurnAction: (enemy, player) => {
+      // Se soigne de 40 PV s'il est sous 50% de vie
+      if (enemy.hp < enemy.maxHp * 0.5) {
+        const heal = 40;
+        return {
+          msg: "L'esprit absorbe l'essence des forêts...",
+          healAmount: heal,
+        };
+      }
+      return {};
+    },
+  },
+
+  // --- NOKRON, CITÉ ÉTERNELLE ---
+  silver_tear_nokron: {
+    name: "Larme d'Argent",
+    hp: 450,
+    atk: 45,
+    runes: 1200,
+    armor: 80,
+    isHardened: false,
+    onTurnAction: (enemy, player) => {
+      enemy.isHardened = !enemy.isHardened;
+      enemy.armor = enemy.isHardened ? 300 : 80;
+      return {
+        msg: enemy.isHardened
+          ? "La Larme d'Argent se fige et durcit comme de l'acier !"
+          : "La Larme se liquéfie, redevenant vulnérable.",
+      };
+    },
+  },
+
+  nox_monk: {
+    name: "Moine de Nox",
+    hp: 800,
+    atk: 55,
+    runes: 1500,
+    armor: 120,
+    dodgeChance: 0.3,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.2 },
+  },
+
+  giant_silver_tear: {
+    name: "Larme d'Argent Géante",
+    hp: 1800,
+    atk: 90,
+    runes: 8000,
+    isRare: true,
+    armor: 200,
+    isExploding: false,
+    drops: [
+      { id: "silver_tear_mask", chance: 0.75 },
+      { id: "mercury_breastplate", chance: 0.75 },
+    ],
+    onTurnAction: (enemy) => {
+      if (enemy.hp < enemy.maxHp * 0.2 && !enemy.isExploding) {
+        enemy.isExploding = true;
+        return {
+          msg: "La Larme Géante vibre violemment... elle va exploser !",
+        };
+      }
+      if (enemy.isExploding) {
+        enemy.hp = 0; // L'ennemi meurt dans l'explosion
+        return {
+          msg: "BOOM ! La Larme explose en un nuage de givre !",
+          dmgMult: 3.0,
+        };
+      }
+      return {};
+    },
+  },
+
+  mimic_tear_boss: {
+    name: "Larme Imitatrice",
+    hp: 10000,
+    atk: 100,
+    runes: 45000,
+    isBoss: true,
+    copied: false,
+    onTurnAction: (enemy, player) => {
+      // Au premier tour, elle analyse et copie vos statistiques effectives
+      if (!enemy.copied) {
+        const eff = getEffectiveStats();
+        enemy.atk = Math.floor(eff.strength * 1.2); // Elle frappe 20% plus fort que vous
+        enemy.armor = Math.floor(eff.armor);
+        enemy.copied = true;
+        return {
+          msg: "La Larme prend votre forme et reflète votre propre puissance !",
+        };
+      }
+      return {};
+    },
   },
 };
