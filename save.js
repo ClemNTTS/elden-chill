@@ -53,6 +53,7 @@ export const loadGame = () => {
       decrypted.playerEffects = [];
       decrypted.ennemyEffects = [];
       decrypted.runes.carried = 0;
+      decrypted.save.maxLevel = DEFAULT_GAME_STATE.save.maxLevel;
 
       if (decrypted.inventory) {
         decrypted.inventory = decrypted.inventory.filter(
