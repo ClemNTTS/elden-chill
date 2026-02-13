@@ -23,6 +23,10 @@ const decodeSave = (encodedData) => {
 
 export const saveGame = () => {
   try {
+    // update lastSavedAt to allow offline-time accumulation
+    if (!gameState.save) gameState.save = {};
+    gameState.save.lastSavedAt = Date.now();
+
     const secretString = encodeSave(gameState);
     localStorage.setItem(SAVE_NAME, secretString);
     console.log("Sauvegarde cryptée effectuée !");
@@ -36,6 +40,26 @@ export const loadGame = () => {
   if (savedData) {
     const decrypted = decodeSave(savedData);
     if (decrypted) {
+      // If there's a saved timestamp, compute the offline gap and bank it
+      try {
+        const last = decrypted.save?.lastSavedAt || 0;
+        const now = Date.now();
+        if (last && now > last) {
+          const gapSec = Math.floor((now - parseInt(last)) / 1000);
+          // Only bank significant gaps (>5s) to avoid small browser pauses
+          if (gapSec > 5) {
+            decrypted.save.offlineTimeBank = Math.min(
+              (decrypted.save.offlineTimeBank || 0) + gapSec,
+              3600,
+            );
+            console.log(
+              `Offline time added: ${gapSec}s (bank now ${decrypted.save.offlineTimeBank}s)`,
+            );
+          }
+        }
+      } catch (e) {
+        console.warn("Error computing offline gap:", e);
+      }
       decrypted.world = decrypted.world || { unlockedBiomes: ["necrolimbe"] };
       decrypted.runes = decrypted.runes || { banked: 0, carried: 0 };
       decrypted.inventory = decrypted.inventory || [];
@@ -62,6 +86,7 @@ export const loadGame = () => {
       }
 
       setGameState(decrypted);
+      // persist updated lastSavedAt and offline bank
       saveGame();
     }
   }
@@ -108,7 +133,6 @@ export const exportSave = () => {
   }
 };
 
-// save.js
 export const importSave = () => {
   const base64Data = prompt("Collez votre code de sauvegarde ici :");
   if (!base64Data) return;

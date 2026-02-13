@@ -917,7 +917,7 @@ export const MONSTERS = {
   ancestral_sniper: {
     name: "Archer Ancestral",
     hp: 1000,
-    runes: 4000,
+    runes: 5000,
     armor: 80,
     atk: 83,
     isRare: true,

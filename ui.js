@@ -85,7 +85,7 @@ import {
   runtimeState,
   getHealth,
 } from "./state.js";
-import { getUpgradeCost, upgradeStat, equipItem } from "./actions.js";
+import { getUpgradeCost, getMultiUpgradeCost, upgradeStat, equipItem } from "./actions.js";
 import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
 import { checkForUpdate } from "./game.js";
@@ -122,6 +122,44 @@ const updateRuneDisplay = () => {
   );
 };
 
+const formatSeconds = (s) => {
+  const total = Math.floor(Number(s) || 0);
+  if (total <= 0) return "0s";
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  const parts = [];
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  if ((!h && !m) || sec) parts.push(`${sec}s`);
+  return parts.join(" ");
+};
+
+export const updateOfflineDisplay = () => {
+  const ids = ["offline-bank", "offline-bank-b"];
+  const btnIds = ["btn-use-offline", "btn-use-offline-b"];
+
+  ids.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = formatSeconds(gameState.save?.offlineTimeBank || 0);
+  });
+
+  btnIds.forEach((id) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const enabled = !!gameState.save?.useOfflineTime;
+    btn.innerText = enabled ? "Utiliser : ON" : "Utiliser : OFF";
+    btn.classList.toggle("active-offline", enabled);
+  });
+};
+
+window.toggleUseOfflineTime = () => {
+  if (!gameState.save) gameState.save = {};
+  gameState.save.useOfflineTime = !gameState.save.useOfflineTime;
+  updateOfflineDisplay();
+  updateUI();
+};
+
 const updateStatDisplay = () => {
   const eff = getEffectiveStats();
   const base = gameState.stats;
@@ -141,12 +179,29 @@ const updateStatDisplay = () => {
       bonusEl.innerText = "";
     }
 
+    // Update +1 button
     const cost = getUpgradeCost(s);
     document.getElementById(`cost-${s}`).innerText = formatNumber(cost);
-    const btn = document.querySelector(`button[onclick="upgradeStat('${s}')"]`);
-    if (btn) btn.disabled = gameState.runes.banked < cost;
-    if (btn && gameState.stats.level >= gameState.save.maxLevel)
-      btn.disabled = true;
+    const btn = document.getElementById(`btn-${s}-1`);
+    if (btn) {
+      btn.disabled = gameState.runes.banked < cost || gameState.stats.level >= gameState.save.maxLevel;
+    }
+
+    // Update +5 button
+    const cost5 = getMultiUpgradeCost(s, 5);
+    document.getElementById(`cost-${s}-5`).innerText = formatNumber(cost5);
+    const btn5 = document.getElementById(`btn-${s}-5`);
+    if (btn5) {
+      btn5.disabled = gameState.runes.banked < cost5 || gameState.stats.level + 5 > gameState.save.maxLevel;
+    }
+
+    // Update +10 button
+    const cost10 = getMultiUpgradeCost(s, 10);
+    document.getElementById(`cost-${s}-10`).innerText = formatNumber(cost10);
+    const btn10 = document.getElementById(`btn-${s}-10`);
+    if (btn10) {
+      btn10.disabled = gameState.runes.banked < cost10 || gameState.stats.level + 10 > gameState.save.maxLevel;
+    }
   });
 
   const updateCrit = (id, statName, isPercent) => {
@@ -155,9 +210,7 @@ const updateStatDisplay = () => {
     const bonus = val - baseVal; // Différence apportée par les items/sets (ex: 0.10)
 
     const cost = getUpgradeCost(statName);
-    const btn = document.querySelector(
-      `button[onclick="upgradeStat('${statName}')"]`,
-    );
+    const btn = document.getElementById(`btn-${id}-1`);
 
     // Affichage de la valeur totale (ex: 15.0%)
     document.getElementById(`eff-${id}`).innerText = isPercent
@@ -181,11 +234,27 @@ const updateStatDisplay = () => {
 
     if (btn) {
       const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn.disabled = isMax || gameState.runes.banked < cost;
+      btn.disabled = isMax || gameState.runes.banked < cost || gameState.stats.level >= gameState.save.maxLevel;
       if (isMax) btn.innerText = "MAX";
     }
-    if (btn && gameState.stats.level >= gameState.save.maxLevel)
-      btn.disabled = true;
+
+    // Update +5 button for crit stats
+    const cost5 = getMultiUpgradeCost(statName, 5);
+    document.getElementById(`cost-${id}-5`).innerText = formatNumber(cost5);
+    const btn5 = document.getElementById(`btn-${id}-5`);
+    if (btn5) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn5.disabled = isMax || gameState.runes.banked < cost5 || gameState.stats.level + 5 > gameState.save.maxLevel;
+    }
+
+    // Update +10 button for crit stats
+    const cost10 = getMultiUpgradeCost(statName, 10);
+    document.getElementById(`cost-${id}-10`).innerText = formatNumber(cost10);
+    const btn10 = document.getElementById(`btn-${id}-10`);
+    if (btn10) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn10.disabled = isMax || gameState.runes.banked < cost10 || gameState.stats.level + 10 > gameState.save.maxLevel;
+    }
   };
 
   updateCrit("critChance", "critChance", true);
@@ -479,6 +548,7 @@ export const updateUI = () => {
   updateAshButton();
   updateAshesDisplay();
   updateRealTimeStatsDisplay();
+  updateOfflineDisplay();
 };
 
 export const toggleView = (view) => {
@@ -551,7 +621,30 @@ export const updateHealthBars = () => {
 export const triggerShake = () => {
   const container = document.getElementById("game-container");
   container.classList.add("shake-effect");
-  setTimeout(() => {
+  // Respect offline bank speedups for the visual shake timeout
+  const delayed = (fn, ms) => {
+    let delay = ms;
+    try {
+      const save = gameState.save || {};
+      const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+      const M = runtimeState.offlineSpeedMultiplier || 3;
+      if (use && M > 1 && ms > 0) {
+        const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
+        const bankMs = (save.offlineTimeBank || 0) * 1000;
+        if (bankMs >= fullSavedMs) {
+          delay = Math.max(0, Math.floor(ms / M));
+          save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+        } else if (bankMs > 0) {
+          delay = Math.max(0, Math.floor(ms - bankMs));
+          save.offlineTimeBank = 0;
+        }
+        try { updateUI(); } catch (e) {}
+      }
+    } catch (e) {}
+    return setTimeout(fn, delay);
+  };
+
+  delayed(() => {
     container.classList.remove("shake-effect");
   }, 400);
 };

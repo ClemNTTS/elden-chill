@@ -25,6 +25,17 @@ export const getUpgradeCost = (statName) => {
   return Math.floor(baseCost * ((x + 0.1) * Math.pow(count + 81, 2) + 1));
 };
 
+export const getMultiUpgradeCost = (statName, count) => {
+  let totalCost = 0;
+  for (let i = 0; i < count; i++) {
+    const baseCost = upgradeCosts[statName] || 10;
+    let level = gameState.stats.level + i;
+    let x = Math.max((level - 11) * 0.02, 0);
+    totalCost += Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
+  }
+  return totalCost;
+};
+
 export const upgradeStat = (statName) => {
   let cost = getUpgradeCost(statName);
 
@@ -52,6 +63,43 @@ export const upgradeStat = (statName) => {
     }
     gameState.stats.level++;
     gameState.stats.runesSpent = Math.floor(gameState.stats.runesSpent + cost);
+    saveGame();
+    updateUI();
+  } else {
+    alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
+  }
+};
+
+export const upgradeStatMultiple = (statName, count) => {
+  let totalCost = getMultiUpgradeCost(statName, count);
+  
+  if (gameState.stats.level + count > gameState.save.maxLevel) {
+    alert(
+      `Vous atteindriez le niveau maximum. Vous ne pouvez ajouter que ${gameState.save.maxLevel - gameState.stats.level} niveaux.`,
+    );
+    return;
+  }
+
+  if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
+    alert("Votre Chance de Critique est déjà au maximum (100%) !");
+    return;
+  }
+
+  if (gameState.runes.banked >= totalCost) {
+    gameState.runes.banked -= totalCost;
+
+    for (let i = 0; i < count; i++) {
+      if (statName === "critChance") {
+        gameState.stats.critChance += 0.01;
+        if (gameState.stats.critChance > 1.0) gameState.stats.critChance = 1.0;
+      } else if (statName === "critDamage") {
+        gameState.stats.critDamage += 0.1;
+      } else {
+        gameState.stats[statName] += 1;
+      }
+      gameState.stats.level++;
+      gameState.stats.runesSpent = Math.floor(gameState.stats.runesSpent + getUpgradeCost(statName));
+    }
     saveGame();
     updateUI();
   } else {

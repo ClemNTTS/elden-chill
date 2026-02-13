@@ -612,7 +612,8 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.15;
       const baseInt = gameState.stats.intelligence || 0;
-      const armorBonus = Math.floor(baseInt / 10) * 0.05 + 0.01 * itemLevel;
+      const armorBonus =
+        Math.floor(baseInt / 10) * (0.05 + 0.01 * (itemLevel - 1));
       stats.armor *= 1 + armorBonus;
     },
   },
@@ -626,7 +627,7 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       stats.dexterity *= 1.15;
       const baseDex = gameState.stats.dexterity || 0;
-      stats.flatDamagePenetration += Math.floor(baseDex / 10) + itemLevel;
+      stats.flatDamagePenetration += Math.floor(baseDex / 10) * itemLevel;
     },
   },
 

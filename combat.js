@@ -16,6 +16,35 @@ import {
   updateUI,
 } from "./ui.js";
 
+// Helper to use offline-time bank to speed up timeouts when enabled.
+function delayedSetTimeout(fn, ms) {
+  let delay = ms;
+  try {
+    const save = gameState.save || {};
+    const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+    const M = runtimeState.offlineSpeedMultiplier || 3;
+    if (use && M > 1 && ms > 0) {
+      const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
+      const bankMs = (save.offlineTimeBank || 0) * 1000;
+      if (bankMs >= fullSavedMs) {
+        delay = Math.max(0, Math.floor(ms / M));
+        save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+      } else if (bankMs > 0) {
+        delay = Math.max(0, Math.floor(ms - bankMs));
+        save.offlineTimeBank = 0;
+      }
+      // reflect UI changes immediately
+      try {
+        updateUI();
+      } catch (e) {}
+    }
+  } catch (e) {
+    console.warn("delayedSetTimeout error:", e);
+  }
+
+  return setTimeout(fn, delay);
+}
+
 /* ================= HELPERS ================= */
 
 function getEntityHp(entity) {
@@ -414,7 +443,7 @@ export const combatLoop = (sessionId) => {
     maxHp: getHealth(gameState.stats.vigor),
   };
 
-  setTimeout(() => {
+  delayedSetTimeout(() => {
     let reductionHappened = false;
     //Applique la réduction de status si le joueur possède des items adéquats
     Object.values(gameState.equipped).forEach((itemId) => {
@@ -434,7 +463,7 @@ export const combatLoop = (sessionId) => {
     updateUI();
 
     let delay = reductionHappened ? 500 : 0;
-    setTimeout(() => {
+    delayedSetTimeout(() => {
       const playerStatus = processTurnEffects(
         playerObj,
         gameState.playerEffects,
@@ -561,10 +590,10 @@ export const combatLoop = (sessionId) => {
         }
 
         /* ================= VICTORY CHECK ================= */
-        if (runtimeState.currentEnemyGroup.length === 0) {
+          if (runtimeState.currentEnemyGroup.length === 0) {
           runtimeState.lastDefeatedEnemy =
             defeatedEnemies[defeatedEnemies.length - 1] || null;
-          setTimeout(() => handleVictory(sessionId), 500);
+          delayedSetTimeout(() => handleVictory(sessionId), 500);
           return;
         }
 
@@ -584,7 +613,7 @@ export const combatLoop = (sessionId) => {
         updateUI();
 
         /* ================= ENEMY TURN ================= */
-        setTimeout(() => {
+        delayedSetTimeout(() => {
           if (
             sessionId !== runtimeState.currentCombatSession ||
             !gameState.world.isExploring
@@ -596,12 +625,12 @@ export const combatLoop = (sessionId) => {
             gameState.ennemyEffects,
           );
 
-          if (runtimeState.currentEnemyGroup[0].hp <= 0) {
+                if (runtimeState.currentEnemyGroup[0].hp <= 0) {
             ActionLog(
               `${runtimeState.currentEnemyGroup[0].name} succombe à ses blessures !`,
             );
             updateHealthBars();
-            setTimeout(continueCombat, 500);
+            delayedSetTimeout(continueCombat, 500);
             return;
           }
 
@@ -621,7 +650,7 @@ export const combatLoop = (sessionId) => {
 
             if (Math.random() < dodgeChance && !playerIsStunned) {
               ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
-              setTimeout(() => combatLoop(sessionId), 500);
+              delayedSetTimeout(() => combatLoop(sessionId), 500);
               return;
             }
 
@@ -638,7 +667,7 @@ export const combatLoop = (sessionId) => {
               if (action.msg) ActionLog(action.msg, "log-flavor-orange");
 
               if (action.skipAttack) {
-                setTimeout(() => combatLoop(sessionId), 800);
+                delayedSetTimeout(() => combatLoop(sessionId), 800);
                 return;
               }
 
@@ -678,18 +707,18 @@ export const combatLoop = (sessionId) => {
           updateHealthBars();
           updateUI();
 
-          if (runtimeState.playerCurrentHp <= 0) {
+            if (runtimeState.playerCurrentHp <= 0) {
             handleDeath();
           } else if (runtimeState.currentEnemyGroup[0].hp <= 0) {
-            setTimeout(continueCombat, 500);
+            delayedSetTimeout(continueCombat, 500);
           } else {
-            setTimeout(() => combatLoop(sessionId), 500);
+            delayedSetTimeout(() => combatLoop(sessionId), 500);
           }
         }, 800);
       };
 
       if (enemyIsDefeated) {
-        setTimeout(continueCombat, 400); // Delay for animation
+        delayedSetTimeout(continueCombat, 400); // Delay for animation
       } else {
         continueCombat();
       }
