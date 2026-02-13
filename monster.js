@@ -404,7 +404,7 @@ export const MONSTERS = {
     atk: 35,
     runes: 2200,
     isBoss: true,
-    armor: 110,
+    armor: 90,
     hasSecondPhase: true,
     isInSecondPhase: false,
     thresholdForPhase2: 0.4,
