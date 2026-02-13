@@ -350,7 +350,7 @@ export const MONSTERS = {
   // === ENTER STORMWIND CASTLE ===
   exile_soldier1: {
     name: "Soldat d'Exil",
-    hp: 70,
+    hp: 40,
     atk: 15,
     armor: 110,
     runes: 210,
@@ -362,7 +362,7 @@ export const MONSTERS = {
   },
   exile_soldier2: {
     name: "Soldat d'Exil",
-    hp: 70,
+    hp: 30,
     atk: 8,
     armor: 110,
     runes: 210,
@@ -374,7 +374,7 @@ export const MONSTERS = {
   },
   exile_soldier3: {
     name: "Soldat d'Exil",
-    hp: 100,
+    hp: 50,
     atk: 20,
     armor: 110,
     runes: 210,
