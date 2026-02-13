@@ -48,8 +48,13 @@ export const loadGame = () => {
           const gapSec = Math.floor((now - parseInt(last)) / 1000);
           // Only bank significant gaps (>5s) to avoid small browser pauses
           if (gapSec > 5) {
-            decrypted.save.offlineTimeBank = (decrypted.save.offlineTimeBank || 0) + gapSec;
-            console.log(`Offline time added: ${gapSec}s (bank now ${decrypted.save.offlineTimeBank}s)`);
+            decrypted.save.offlineTimeBank = Math.min(
+              (decrypted.save.offlineTimeBank || 0) + gapSec,
+              3600,
+            );
+            console.log(
+              `Offline time added: ${gapSec}s (bank now ${decrypted.save.offlineTimeBank}s)`,
+            );
           }
         }
       } catch (e) {
@@ -128,7 +133,6 @@ export const exportSave = () => {
   }
 };
 
-// save.js
 export const importSave = () => {
   const base64Data = prompt("Collez votre code de sauvegarde ici :");
   if (!base64Data) return;

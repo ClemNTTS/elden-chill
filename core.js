@@ -26,19 +26,27 @@ function delayedSetTimeout(fn, ms) {
   let delay = ms;
   try {
     const save = gameState.save || {};
-    const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+    const use =
+      save.useOfflineTime &&
+      (save.offlineTimeBank || 0) > 0 &&
+      gameState.world.isExploring;
     const M = runtimeState.offlineSpeedMultiplier || 3;
     if (use && M > 1 && ms > 0) {
       const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
       const bankMs = (save.offlineTimeBank || 0) * 1000;
       if (bankMs >= fullSavedMs) {
         delay = Math.max(0, Math.floor(ms / M));
-        save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+        save.offlineTimeBank = Math.max(
+          0,
+          (save.offlineTimeBank || 0) - fullSavedMs / 1000,
+        );
       } else if (bankMs > 0) {
         delay = Math.max(0, Math.floor(ms - bankMs));
         save.offlineTimeBank = 0;
       }
-      try { updateUI(); } catch (e) {}
+      try {
+        updateUI();
+      } catch (e) {}
     }
   } catch (e) {
     console.warn("delayedSetTimeout error:", e);
@@ -112,7 +120,10 @@ export const handleDeath = () => {
 
   // If offline-time use is enabled and we still have banked time, automatically
   // restart the exploration in the same biome. Otherwise return to camp as before.
-  if (gameState.save?.useOfflineTime && (gameState.save.offlineTimeBank || 0) > 0) {
+  if (
+    gameState.save?.useOfflineTime &&
+    (gameState.save.offlineTimeBank || 0) > 0
+  ) {
     delayedSetTimeout(() => {
       runtimeState.currentCombatSession++;
       startExploration(biomeAtDeath);
@@ -133,7 +144,7 @@ export const handleDrops = (sessionId) => {
     if (enemy.isBoss) {
       wasABossEncounter = true;
     }
-    const runesAwarded = Math.floor(enemy.runes * intBonus);
+    const runesAwarded = Math.floor(enemy.runes * intBonus) || 1;
     gameState.runes.carried += Math.floor(runesAwarded);
     ActionLog(
       `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
@@ -299,6 +310,11 @@ export function nextEncounter(sessionId) {
   if (canSpawnRare && Math.random() < 0.15) {
     const rareId =
       biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
+    if (!MONSTERS[rareId]) {
+      console.log(`ENNEMI INCONNU : ${rareId}`);
+      nextEncounter(sessionId);
+      return;
+    }
     gameState.world.rareSpawnsCount++;
     spawnMonster(rareId, sessionId);
     return;

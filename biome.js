@@ -320,7 +320,7 @@ export const BIOMES = {
   siofra_river: {
     name: "Rivière Siofra",
     monsters: ["ancestral_follower", "siofra_rat"],
-    rareMonsters: ["ancestral_sniper", "electric_orb"],
+    rareMonsters: ["ancestral_sniper"],
     maxRareSpawns: 2,
     boss: "ancestral_spirit",
     length: 15,
