@@ -355,8 +355,8 @@ export const MONSTERS = {
     armor: 110,
     runes: 210,
     groupCombinations: [
-      { size: 1, chance: 0.6 },
-      { size: 2, chance: 0.4 },
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
     ],
     onHitEffect: { id: "BLEED", duration: 2, chance: 0.4 },
   },
@@ -367,8 +367,8 @@ export const MONSTERS = {
     armor: 110,
     runes: 210,
     groupCombinations: [
-      { size: 1, chance: 0.6 },
-      { size: 2, chance: 0.4 },
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
     ],
     onHitEffect: { id: "BURN", duration: 2, chance: 0.4 },
   },
@@ -379,8 +379,8 @@ export const MONSTERS = {
     armor: 110,
     runes: 210,
     groupCombinations: [
-      { size: 1, chance: 0.6 },
-      { size: 2, chance: 0.4 },
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
     ],
   },
   banished_knight: {
@@ -389,7 +389,7 @@ export const MONSTERS = {
     atk: 35,
     runes: 600,
     isRare: true,
-    armor: 10,
+    armor: 50,
     drops: [
       { id: "hunter_cap", chance: 0.85 },
       { id: "alchimist_suit", chance: 0.75 },
@@ -400,7 +400,7 @@ export const MONSTERS = {
 
   grafted_scion: {
     name: "Rejeton Greffé",
-    hp: 712,
+    hp: 412,
     atk: 35,
     runes: 2200,
     isBoss: true,
