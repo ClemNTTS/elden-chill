@@ -349,6 +349,7 @@ export const startExploration = (biomeId) => {
   const selectedAsh = ASHES_OF_WAR[gameState.equippedAsh];
   runtimeState.ashUsesLeft = selectedAsh ? selectedAsh.maxUses : 0;
   runtimeState.ashIsPrimed = false;
+  runtimeState.nextNbAtkBonus = 0;
 
   runtimeState.playerCurrentHp = getHealth(getEffectiveStats().vigor);
 

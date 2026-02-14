@@ -548,6 +548,7 @@ export const combatLoop = (sessionId) => {
           });
         }
       }
+      runtimeState.nextNbAtkBonus = 0; // reset extra attacks after use
 
       const enemyIsDefeated =
         runtimeState.currentEnemyGroup.length > 0 &&

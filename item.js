@@ -678,7 +678,7 @@ export const ITEMS = {
     },
 
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      if (Math.random() < 0.25 + 0.01 * itemLevel) {
+      if ( runtimeState.nextNbAtkBonus === 0 && Math.random() < 0.25 + 0.01 * itemLevel ) {
         runtimeState.nextNbAtkBonus = 1;
         ActionLog("Cimeterre : Attaque réflexe !", "log-status");
       }
