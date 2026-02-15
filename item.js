@@ -491,7 +491,7 @@ export const ITEMS = {
       const baseDex = gameState.stats.dexterity || 0;
       const baseCrit = gameState.stats.critChance || 0;
       if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
-        stats.attacksPerTurn = 2;
+        stats.attacksPerTurn++;
       }
     },
     applyMult: (stats, itemLevel) => {
