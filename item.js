@@ -491,7 +491,7 @@ export const ITEMS = {
       const baseDex = gameState.stats.dexterity || 0;
       const baseCrit = gameState.stats.critChance || 0;
       if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
-        stats.attacksPerTurn = 2;
+        stats.attacksPerTurn++;
       }
     },
     applyMult: (stats, itemLevel) => {
@@ -678,8 +678,8 @@ export const ITEMS = {
     },
 
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      if (Math.random() < 0.25 + 0.01 * itemLevel) {
-        runtimeState.nextNbAtkBonus = 1;
+      if ( runtimeState.nextNbAtkBonus === 0 && Math.random() < 0.25 + 0.01 * itemLevel ) {
+        runtimeState.nextNbAtkBonus++;
         ActionLog("Cimeterre : Attaque réflexe !", "log-status");
       }
     },
