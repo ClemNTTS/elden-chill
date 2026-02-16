@@ -431,21 +431,9 @@ const generateRemainingEnemiesMessage = (enemies) => {
   return `Il reste encore ${parts.join(", ")}, et ${last} !`;
 };
 
-/* ================= COMBAT LOOP ================= */
-
-export const combatLoop = (sessionId) => {
-  if (!gameState.world.isExploring || runtimeState.combatFrozen) return;
-  if (sessionId !== runtimeState.currentCombatSession) return;
-
-  const playerObj = {
-    name: "Vôtre héro",
-    currentHp: runtimeState.playerCurrentHp,
-    maxHp: getHealth(gameState.stats.vigor),
-  };
-
-  delayedSetTimeout(() => {
-    let reductionHappened = false;
-    //Applique la réduction de status si le joueur possède des items adéquats
+const effectReduction = () => {
+  let reductionHappened = false;
+  //Applique la réduction de status si le joueur possède des items adéquats
     Object.values(gameState.equipped).forEach((itemId) => {
       const item = ITEMS[itemId];
       if (item?.passiveStatusReduction) {
@@ -461,6 +449,23 @@ export const combatLoop = (sessionId) => {
     });
     updateHealthBars();
     updateUI();
+    return reductionHappened;
+};
+
+/* ================= COMBAT LOOP ================= */
+
+export const combatLoop = (sessionId) => {
+  if (!gameState.world.isExploring || runtimeState.combatFrozen) return;
+  if (sessionId !== runtimeState.currentCombatSession) return;
+
+  const playerObj = {
+    name: "Vôtre héro",
+    currentHp: runtimeState.playerCurrentHp,
+    maxHp: getHealth(gameState.stats.vigor),
+  };
+
+  delayedSetTimeout(() => {
+    let reductionHappened = effectReduction();
 
     let delay = reductionHappened ? 500 : 0;
     delayedSetTimeout(() => {
@@ -474,35 +479,6 @@ export const combatLoop = (sessionId) => {
         playerStatus.logMessages.forEach((msg) =>
           ActionLog(msg, "log-warning"),
         );
-
-      // --- STYPTIC BOLUSES LOGIC ---
-      let hasStypticBoluses = false;
-      for (const itemId of Object.values(gameState.equipped)) {
-        if (ITEMS[itemId]?.passiveEffect === "HALVE_BLEED") {
-          hasStypticBoluses = true;
-          break;
-        }
-      }
-
-      if (hasStypticBoluses) {
-        const bleedEffect = gameState.playerEffects.find(
-          (e) => e.id === "BLEED",
-        );
-        if (bleedEffect && bleedEffect.stacks > 0) {
-          const stacksBefore = bleedEffect.stacks;
-          bleedEffect.stacks = Math.floor(bleedEffect.stacks / 2);
-          const stacksRemoved = stacksBefore - bleedEffect.stacks;
-          if (stacksRemoved > 0) {
-            ActionLog(
-              `Vos Boluses Styptiques réduisent le saignement de ${stacksRemoved} charges.`,
-              "log-heal", // Using a heal-like color for positive feedback
-            );
-          }
-        }
-      }
-
-      // --- END STYPTIC BOLUSES LOGIC ---
-
       if (runtimeState.playerCurrentHp <= 0) {
         handleDeath();
         return;
@@ -511,44 +487,8 @@ export const combatLoop = (sessionId) => {
       /* ================= PLAYER TURN ================= */
 
       if (!playerStatus.skipTurn) {
-        const stats = getEffectiveStats();
-
-        let ashEffect = null;
-        if (runtimeState.ashIsPrimed && runtimeState.ashUsesLeft > 0) {
-          const ash = ASHES_OF_WAR[gameState.equippedAsh];
-          ashEffect = ash.effect(stats, runtimeState.currentEnemyGroup[0]);
-          runtimeState.ashUsesLeft--;
-          runtimeState.ashIsPrimed = false;
-          ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
-          if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
-        }
-
-        for (
-          let i = 0;
-          i < stats.attacksPerTurn + runtimeState.nextNbAtkBonus;
-          i++
-        ) {
-          // Find first alive enemy
-          const currentTarget = runtimeState.currentEnemyGroup.find(
-            (e) => e.hp > 0,
-          );
-
-          // No alive enemies left
-          if (!currentTarget) break;
-
-          performAttack({
-            attackers: [{ atk: stats.strength }],
-            target: currentTarget,
-            targetGroup: runtimeState.currentEnemyGroup,
-            stats,
-            targetEffects: gameState.ennemyEffects,
-            logPrefix: "Vous",
-            isPlayer: true,
-            ashEffect,
-          });
-        }
+        playerTurn();
       }
-      runtimeState.nextNbAtkBonus = 0; // reset extra attacks after use
 
       const enemyIsDefeated =
         runtimeState.currentEnemyGroup.length > 0 &&
@@ -566,19 +506,12 @@ export const combatLoop = (sessionId) => {
           }
         }
 
-        // Reward runes
         if (defeatedEnemies.length > 0) {
           const eff = getEffectiveStats();
           const intBonus = 1 + eff.intelligence / 100;
 
           defeatedEnemies.forEach((enemy) => {
             runtimeState.defeatedEnemies.push(enemy);
-            /*const runesAwarded = Math.floor(enemy.runes * intBonus);
-          gameState.runes.carried += Math.floor(runesAwarded);
-          ActionLog(
-            `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
-            "log-runes",
-          );*/
           });
 
           // Show remaining enemies message only if there are enemies left
@@ -726,3 +659,51 @@ export const combatLoop = (sessionId) => {
     }, delay);
   }, 800);
 };
+
+const ashUse = () => {
+  let ashEffect = null;
+  if (runtimeState.ashIsPrimed && runtimeState.ashUsesLeft > 0) {
+    const ash = ASHES_OF_WAR[gameState.equippedAsh];
+    ashEffect = ash.effect(stats, runtimeState.currentEnemyGroup[0]);
+    runtimeState.ashUsesLeft--;
+    runtimeState.ashIsPrimed = false;
+    ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
+    if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
+  };
+  return ashEffect;
+};
+
+const nbrOfAttacksCalculation = (stats) => {
+  let nbrOfAttacks = stats.attacksPerTurn ?? 1;
+  //add bonus attacks from ashes of war and items.
+  nbrOfAttacks += runtimeState.nextNbAtkBonus;
+
+  //reset the bonus for next attack
+  runtimeState.nextNbAtkBonus = 0;
+  return nbrOfAttacks;
+}
+
+
+const playerTurn = () => {
+  const stats = getEffectiveStats();
+  let ashEffect = ashUse();
+  let nbrOfAttacks = nbrOfAttacksCalculation(stats);
+  for ( let i = 0; i < nbrOfAttacks; i++) {
+    // Find first alive enemy
+    const currentTarget = runtimeState.currentEnemyGroup.find( (e) => e.hp > 0, );
+
+    // No alive enemies left
+    if (!currentTarget) break;
+
+    performAttack({
+      attackers: [{ atk: stats.strength }],
+      target: currentTarget,
+      targetGroup: runtimeState.currentEnemyGroup,
+      stats,
+      targetEffects: gameState.ennemyEffects,
+      logPrefix: "Vous",
+      isPlayer: true,
+      ashEffect,
+    });
+  }
+}

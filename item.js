@@ -189,6 +189,21 @@ export const ITEMS = {
     applyFlat: (stats, itemLevel) => {
       stats.armor += 5 + Math.floor(1 * (itemLevel - 1));
     },
+    passiveStatusReduction: (playerEffects, itemLevel) => {
+      const bleedEffect = gameState.playerEffects.find( (e) => e.id === "BLEED",);
+      if (bleedEffect && bleedEffect.stacks > 0) {
+        const stacksBefore = bleedEffect.stacks;
+        bleedEffect.stacks = Math.floor(bleedEffect.stacks / 2);
+        const stacksRemoved = stacksBefore - bleedEffect.stacks;
+        if (stacksRemoved > 0) {
+          ActionLog(
+            `Vos Boluses Styptiques réduisent le saignement de ${stacksRemoved} charges.`,
+            "log-heal",
+            );
+          }
+        }
+      return playerEffects;
+    }
   },
 
   troll_necklace: {
