@@ -6,7 +6,7 @@ import { ActionLog } from "../ui.js";
 export const RIVER = {
   // RIVER
   horn_bow_talisman: {
-    name: "Arc de Corne de Disciple",
+    name: "🌀💨 Arc de Corne de Disciple",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Dex +15%. Tir de Précision : Chaque tranche de 10 Dex de base offre +2% (+0.5% / Niv) de chance d'ÉTOURDIR l'ennemi (max 50%).",
@@ -30,7 +30,7 @@ export const RIVER = {
   },
 
   starlight_pendant: {
-    name: "Pendentif de Lumière Stellaire",
+    name: "🌀❄️🧠 Pendentif de Lumière Stellaire",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
     description:
@@ -50,7 +50,7 @@ export const RIVER = {
   },
 
   ancestral_spirit_horn: {
-    name: "Corne de l'Esprit Ancestral",
+    name: "🌀❤️❤️‍🩹 Corne de l'Esprit Ancestral",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
 
@@ -72,7 +72,7 @@ export const RIVER = {
   },
 
   ancient_bone_axe: {
-    name: "Hache d'Os des Anciens",
+    name: "🌀⚔️🛡️🎯 Hache d'Os des Anciens",
     type: ITEM_TYPES.WEAPON,
     description:
       "Force +20% (+2% / Niv). Poids Ancestral : Si votre Armure est > à l'ennemi, les Critiques peuvent doubler la durée du STUN en cours.",
@@ -95,7 +95,7 @@ export const RIVER = {
   },
 
   ancestral_renaissance_horn: {
-    name: "Corne de la Renaissance Ancestrale",
+    name: "⚔️🧠❤️‍🩹Corne de la Renaissance Ancestrale",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true, // Objet légendaire, pas de niveaux
     description:

@@ -5,12 +5,62 @@ import { RIVER } from "./items/river.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog } from "./ui.js";
 
+/* ===========================
+  effect/build icons for items
+  🌀🩸❄️☠️🪰🔥🌵 ⚔️❤️🛡️💨🧠🎯💥 🗡❤️‍🩹💦
+  ===========================*/
+
 export const ITEMS = {
+  /*===========================
+            TIER -1 Testing
+  ============================*/
+  stun_stick: {
+    name: "🌀 Bâtonnet d'Étourdissement",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'étourdir l'ennemi pendant 2 tour.",
+    onHitEffect: { id: "STUN", duration: 2, chance: 1 },
+  },
+  frost_stick: {
+    name: "❄️ Bâtonnet de Gel",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'infliger 4 Gelures.",
+    onHitEffect: { id: "FROSTBITE", duration: 4, chance: 1 },
+  },
+  bleed_stick: {
+    name: "🩸 Bâtonnet de Saignement",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'infliger 4 Saignements.",
+    onHitEffect: { id: "BLEED", duration: 4, chance: 1 },
+  },
+  burn_stick: {
+    name: "🔥 Bâtonnet de Brûlure",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'infliger 4 Brûlures.",
+    onHitEffect: { id: "BURN", duration: 4, chance: 1 },
+  },
+  thorns_stick: {
+    name: "🌵 Bâtonnet d'Épines",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'appliquer Épines pendant 2 tours.",
+    onHitEffect: { id: "THORNS", duration: 2, chance: 1 },
+  },
+  rot_stick: {
+    name: "🪰 Bâtonnet de Pourriture",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'infliger 4 Pourritures.",
+    onHitEffect: { id: "ROT", duration: 4, chance: 1 },
+  },
+  poison_stick: {
+    name: "☠️ Bâtonnet de Poison",
+    type: ITEM_TYPES.WEAPON,
+    description: "Attaque avec 100% de chance d'infliger 4 Poison.",
+    onHitEffect: { id: "POISON", duration: 4, chance: 1 },
+  },
   /*===========================
             TIER 0
   ============================*/
   fists: {
-    name: "poings",
+    name: "⚔️ poing",
     description: "+5 Force",
     type: ITEM_TYPES.WEAPON,
     applyFlat: (stats, itemLevel) => {
@@ -19,7 +69,7 @@ export const ITEMS = {
   },
 
   rune_fragment: {
-    name: "Fragment de Runes",
+    name: "🧠 Fragment de Runes",
     type: ITEM_TYPES.ACCESSORY,
     description: "C'es super joli mais pas très utile ...",
     isAlwaysMax: true,
@@ -31,7 +81,7 @@ export const ITEMS = {
             TIER 1
   ============================*/
   iron_sword: {
-    name: "Épée en Fer",
+    name: "⚔️ Épée en Fer",
     description: "+5 Force <em style='color: grey;'>(+ 0.5 / Niv)</em>",
     type: ITEM_TYPES.WEAPON,
     applyFlat: (stats, itemLevel) => {
@@ -39,7 +89,7 @@ export const ITEMS = {
     },
   },
   crimson_amber: {
-    name: "Médaillon d'Ambre",
+    name: "❤️ Médaillon d'Ambre",
     type: ITEM_TYPES.ACCESSORY,
     description: "Vigueur  +1 par Niv",
     applyFlat: (stats, itemLevel) => {
@@ -47,7 +97,7 @@ export const ITEMS = {
     },
   },
   leather_vest: {
-    name: "Veste en Cuir",
+    name: "🛡️ Veste en Cuir",
     type: ITEM_TYPES.ARMOR,
     description:
       "Augmente l'armure de 15. <em style='color: grey;'>(+1 par Niv)</em>",
@@ -58,7 +108,7 @@ export const ITEMS = {
   },
 
   keen_dagger: {
-    name: "Dague Affûtée",
+    name: "⚔️💨 Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
     description:
       "+4 de Force. Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
@@ -74,7 +124,7 @@ export const ITEMS = {
   },
 
   heavy_club: {
-    name: "Gourdin Lourd",
+    name: "⚔️❤️ Gourdin Lourd",
     description:
       "Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
     type: ITEM_TYPES.WEAPON,
@@ -88,7 +138,7 @@ export const ITEMS = {
     },
   },
   scholars_ring: {
-    name: "Anneau d'Érudit",
+    name: "🧠 Anneau d'Érudit",
     type: ITEM_TYPES.ACCESSORY,
     description: "+5 Intelligence <em style='color: grey;'>(+1 / Niv)</em>",
     applyFlat: (stats, itemLevel) => {
@@ -96,7 +146,7 @@ export const ITEMS = {
     },
   },
   leather_boots: {
-    name: "Bottes de Cuir",
+    name: "💨❤️ Bottes de Cuir",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "+1 Dextérité / Niv. Chaque point de dextérité de base vous procure également 1 de vigueur (max 15)",
@@ -109,7 +159,7 @@ export const ITEMS = {
     },
   },
   kama: {
-    name: "Faucille",
+    name: "🧠 Faucille",
     type: ITEM_TYPES.WEAPON,
     description:
       "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Inelligence",
@@ -127,7 +177,7 @@ export const ITEMS = {
             TIER 2
   ============================*/
   bloodhound_fang: {
-    name: "Croc de Limier",
+    name: "💨 Croc de Limier",
     type: ITEM_TYPES.WEAPON,
     description:
       "+5 Dextérité (+1 / Niv). Convertit 25% (+1% / Niveau) de la Dextérité en force bonus. 40% chance d'appliquer 3 saignements",
@@ -142,7 +192,7 @@ export const ITEMS = {
   },
 
   margit_shackle: {
-    name: "Entraves de Margit",
+    name: "🌀⚔️ Entraves de Margit",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
     description:
@@ -154,7 +204,7 @@ export const ITEMS = {
   },
 
   briar_armor: {
-    name: "Armure de Ronce",
+    name: "❤️🌵 Armure de Ronce",
     type: ITEM_TYPES.ARMOR,
     description:
       "+1 Vigueur /Niv, -25% de force. Votre armure vous donne épine constament.",
@@ -167,7 +217,7 @@ export const ITEMS = {
     passiveStatus: "THORNS",
   },
   astronomer_staff: {
-    name: "Bâton de l'Astronome",
+    name: "🧠💦 Bâton de l'Astronome",
     type: ITEM_TYPES.WEAPON,
     description:
       "Convertit 20% de l'Intelligence en Force et en Dégâts de zone bonus. <em style='color: grey;'>(+2% par Niv)</em>. +4 Intelligence <em style='color: grey;'>(+1 / Niv)</em>",
@@ -181,7 +231,7 @@ export const ITEMS = {
     },
   },
   styptic_boluses: {
-    name: "Boluses Styptiques",
+    name: "🛡️ 🩸🛡️ Boluses Styptiques",
     type: ITEM_TYPES.ARMOR,
     description:
       "+5 d'armure <em style='color: grey;'>(+1 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
@@ -207,7 +257,7 @@ export const ITEMS = {
   },
 
   troll_necklace: {
-    name: "Pendentif de Troll",
+    name: "🧠☠️🎯 Pendentif de Troll",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Intelligence +5 et 45% de chance d'appliquer 3 poison. Si vous avez 20 Intelligence de base, vous gagnez en précision : +1% Chance Crit par tranche de 10 Int de base. (+0.5% / Niv)",
@@ -224,7 +274,7 @@ export const ITEMS = {
     onHitEffect: { id: "POISON", duration: 3, chance: 0.45 },
   },
   knight_greatsword: {
-    name: "Grande Épée de Chevalier",
+    name: "⚔️ Grande Épée de Chevalier",
     type: ITEM_TYPES.WEAPON,
     description:
       "+5 Force, -10% Vigueur, +15% Force <em style='color: grey;'>(+1.5% Force/ Niv)</em>",
@@ -241,7 +291,7 @@ export const ITEMS = {
   ============================*/
   //margit
   margit_hammer: {
-    name: "Marteau de Margit",
+    name: "⚔️💨🌀💦 Marteau de Margit",
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 20 Dextérité de base pour être utilisé. Donne +20% de Force , Convertit +50% de la Dextérité de base en Dégats de zone. Converit 25% (+2% / Niveau) de la Dextérité en Force. <em style='color: grey;'>(+10% de chance d'étourdir l'ennemi pendant 2 tours.)</em>",
@@ -264,7 +314,7 @@ export const ITEMS = {
 
   //dragon lac nécrolimbe 50%
   burned_dragon_hearth: {
-    name: "Cœur de Dragon Brûlé",
+    name: "🔥❤️‍🩹 Cœur de Dragon Brûlé",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Le coeur de dragon pompe votre vigueur -0.8 / Niveau. Si vous touchez un ennemi brulé, vous vous soignez de 10PV / Niveau",
@@ -289,7 +339,7 @@ export const ITEMS = {
   },
   //dragon lac nécrolimbe 50%
   burn_sword: {
-    name: "Épée Brûlante",
+    name: "🔥⚔️🛡️ Épée Brûlante",
     type: ITEM_TYPES.WEAPON,
     description:
       "Attaques avec 30% de chance d'infliger 2 Brûlures. +3.5% Force et +2% d'Armure / Niv",
@@ -304,7 +354,7 @@ export const ITEMS = {
 
   //wipping_peninsule 33%
   zamor_curved_sword: {
-    name: "Épée Courbe de Zamor",
+    name: "❄️⚔️💨 Épée Courbe de Zamor",
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 15 de Force et 18 de Dextérité de base pour être utilisé. +1% de Force et +2% de Dextérité par Niveau. Convertit +4% de la dextérité en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
@@ -326,7 +376,7 @@ export const ITEMS = {
   },
   //half_human_queen 50%
   queen_staff: {
-    name: "Bâton de la Reine",
+    name: "🧠 Bâton de la Reine",
     type: ITEM_TYPES.WEAPON,
     description:
       "Vous convertissez 50% (+2% par Niveau) de votre intelligence par Niveau en force. +10% d'intelligence",
@@ -342,7 +392,7 @@ export const ITEMS = {
   },
   //wipping_peninsule 33%
   radagon_scarseal: {
-    name: "Sceau Meurtri de Radagon",
+    name: "⚔️❤️💨🧠 Sceau Meurtri de Radagon",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Vous gagnez un peu de points dans toutes les stats +5% (+1%/Niv) mais perdez 20 d'armure",
@@ -359,7 +409,7 @@ export const ITEMS = {
   },
   //nighth_cavalery 75%
   night_cavalry_armor: {
-    name: "Armure de Cavalier de la Nuit",
+    name: "🩸⚔️❤️🛡️ Armure de Cavalier de la Nuit",
     type: ITEM_TYPES.ARMOR,
     description:
       "Requiert 40 de vigueur de base pour être utilisé. +10% de Force (+1% par Niveau)  et réduit les dégâts subis en augmentant l'Armure de 15 (+2 / Niv). Et donne 15% de chance d'appliquer 2 saignements",
@@ -382,10 +432,10 @@ export const ITEMS = {
 
   // === MORNE CASTLE ===
   grafted_blade_greatsword: {
-    name: "Grande Épée Forgée",
+    name: "🩸⚔️💨 Grande Épée Forgée",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 30 de Force et 10 de Dextérité de base. +15% de Force (+2% / Niv). 15% de chance d'appliquer saignement (+1 stack / Niveau). Une vraie épée de guerrier sans servelle : perdez 5 d'intelligence et de vigueur",
+      "Requiert 30 de Force et 10 de Dextérité de base. +15% de Force (+2% / Niv). 15% de chance d'appliquer saignement (+1 stack / Niveau). Une vraie épée de guerrier sans cervelle : perdez 5 d'intelligence et de vigueur",
     applyFlat: (stats, itemLevel) => {
       const baseStr = gameState.stats.strength || 0;
       const baseDex = gameState.stats.dexterity || 0;
@@ -420,7 +470,7 @@ export const ITEMS = {
   },
 
   pumkin_helm: {
-    name: "Casque de Citrouille",
+    name: "🛡️ 🌀🛡️ Casque de Citrouille",
     type: ITEM_TYPES.ARMOR,
     description:
       "Réduit les dégâts subis en augmentant l'Armure de 15 (+5 / Niv). Cependant, votre vision est réduite : -15% de Chance de Critique. Vous empêche d'être étourdi pendant 1 tour",
@@ -450,7 +500,7 @@ export const ITEMS = {
 
   //=== enter_stormwind_castle ===
   forged_grip: {
-    name: "Manche Forgée",
+    name: "⚔️💨💦 Manche Forgée",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Vous convertissez -15% de Dex et de Force en dégats de zone. Chaque niveau du Manche forgé multiplie le gain de 20% ",
@@ -463,7 +513,7 @@ export const ITEMS = {
   },
 
   hunter_cap: {
-    name: "Cape du Chasseur",
+    name: "🛡️💨🎯 Cape du Chasseur",
     type: ITEM_TYPES.ARMOR,
     description:
       "Requiert 10 Dex. +5% Armure (+0.5% / Niv). Chaque tranche de 10 Dex de base offre +3% Chance Crit.",
@@ -484,7 +534,7 @@ export const ITEMS = {
   },
 
   alchimist_suit: {
-    name: "Veste de l'Alchimiste",
+    name: "❤️🧠💦 Veste de l'Alchimiste",
     type: ITEM_TYPES.ARMOR,
     description:
       "Requiert 20 Intelligence de base. Ajoute 15% (+2% / Niveau) de votre Int de base à votre Vigueur. Vos sorts se divisent : 30% de l'Int de base devient des Dégâts de zone.",
@@ -498,7 +548,7 @@ export const ITEMS = {
   },
 
   twin_blade: {
-    name: "Lames Jumelles",
+    name: "🩸💨🎯 Lames Jumelles",
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 20 de dextérité et 10% de chance de Crit de base pour être utilisé. Attaque 2 fois, 35% (+1% / Niveau) de chance d'appliquer 3 saignements. Vous gagnez 35% (+1% / Niv) de votre Dextérité en Force.",
@@ -537,7 +587,7 @@ export const ITEMS = {
   // === GODRICK DROPS ===
 
   godrick_knight_armor: {
-    name: "Armure de Chevalier de Godrick",
+    name: "⚔️❤️🛡️ 🔥🛡️ Armure de Chevalier de Godrick",
     type: ITEM_TYPES.ARMOR,
     description:
       "Requiert 25 de Vigueur de base. Augmente l'Armure de 20 (+3 / Niv) et la Force de 10% (+1% / Niv). Réduis de 1 les charges de Feu au début de votre tour",
@@ -571,7 +621,7 @@ export const ITEMS = {
   },
 
   godrick_great_rune: {
-    name: "Rune Majeure de Godrick",
+    name: "🌀🧠 Rune Majeure de Godrick",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
     description:
@@ -603,7 +653,7 @@ export const ITEMS = {
   },
 
   godrick_axe: {
-    name: "Hache de Godrick",
+    name: "⚔️💦 Hache de Godrick",
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 30 de Force de base. Inflige d'énormes dégâts de zone (50% de la Force). +20% Force (+2% / Niv).",
@@ -620,7 +670,7 @@ export const ITEMS = {
   //= = = = = =
 
   crystal_shell_mail: {
-    name: "Carapace Cristalline",
+    name: "🛡️🧠 Carapace Cristalline",
     type: ITEM_TYPES.ARMOR,
     description:
       "Intelligence +15%. Chaque tranche de 10 points d'Intelligence de BASE augmente votre Armure de 5%. (+1% / Niv)",
@@ -634,7 +684,7 @@ export const ITEMS = {
   },
 
   snail_slime_mantle: {
-    name: "Manteau de Cristal",
+    name: "💨🗡 Manteau de Cristal",
     type: ITEM_TYPES.ARMOR,
     set: "FROST_ASSASSIN",
     description:
@@ -647,7 +697,7 @@ export const ITEMS = {
   },
 
   rotten_greataxe: {
-    name: "Grande Hache Putréfiée",
+    name: "🪰⚔️❤️Grande Hache Putréfiée",
     type: ITEM_TYPES.WEAPON,
     description:
       "Requiert 30 de Vigueur.Force +15%. Ajoute 10% de votre Vigueur à votre Force. (+2% / Niveau). 20% de chance d'appliquer 2 putréfactions",
@@ -663,7 +713,7 @@ export const ITEMS = {
   },
 
   winged_sword_insignia: {
-    name: "Insigne de l'Épée Ailée",
+    name: "💨💥 Insigne de l'Épée Ailée",
     type: ITEM_TYPES.ACCESSORY,
     set: "MARIONETTE_MASTER",
     description:
@@ -679,7 +729,7 @@ export const ITEMS = {
   },
 
   marionette_scimitar: {
-    name: "Cimeterre de Marionnette",
+    name: "💨 Cimeterre de Marionnette",
     type: ITEM_TYPES.WEAPON,
     set: "MARIONETTE_MASTER",
     description:
@@ -701,7 +751,7 @@ export const ITEMS = {
   },
 
   marionette_mask: {
-    name: "Masque de Soldat Marionnette",
+    name: "💨 Masque de Soldat Marionnette",
     type: ITEM_TYPES.ARMOR,
     set: "MARIONETTE_MASTER",
     description:
@@ -713,7 +763,7 @@ export const ITEMS = {
   },
 
   sage_caelid_robe: {
-    name: "Robe du Sage de Caélid",
+    name: "🧠💦 Robe du Sage de Caélid",
     type: ITEM_TYPES.ARMOR,
     description:
       "Intelligence +20%. Réduit votre Vigueur de 15% mais convertit 50% de l'Int en Dégâts de zone.",
@@ -725,7 +775,7 @@ export const ITEMS = {
   },
 
   vermilion_seed: {
-    name: "Graine de Vermillon",
+    name: "❤️❤️‍🩹 Graine de Vermillon",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Requiert 42 de Vigueur. +10% Vigueur (+1% / Niv). Vous soigne de 1% de vos PV Max à chaque coup porté.",
@@ -756,7 +806,7 @@ export const ITEMS = {
   ============================*/
   // --- ITEM SPÉCIAL ANTI-GODRICK ---
   stormhawk_feather: {
-    name: "Plume de Faucon de Tempête",
+    name: "⚔️💨🧠 Plume de Faucon de Tempête",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Vents de tempête : +2% Str, Dex et Int par Niveau. +25% dégâts contre les 'Greffés'.",
@@ -775,7 +825,7 @@ export const ITEMS = {
   // -----
 
   carian_glintstone_staff: {
-    name: "Bâton de Pierre d'Éclat Carien",
+    name: "🧠❤️‍🩹 Bâton de Pierre d'Éclat Carien",
     set: "CARIAN_KNIGHT",
     type: ITEM_TYPES.WEAPON,
     description:
@@ -797,7 +847,7 @@ export const ITEMS = {
   },
 
   moon_of_nokstella: {
-    name: "Lune de Nokstella",
+    name: "🧠💦 Lune de Nokstella",
     type: ITEM_TYPES.ACCESSORY,
     set: "CARIAN_KNIGHT",
     description:
@@ -810,7 +860,7 @@ export const ITEMS = {
   },
 
   carian_knight_armor: {
-    name: "Armure de Chevalier Carien",
+    name: "❤️🛡️🧠 Armure de Chevalier Carien",
     set: "CARIAN_KNIGHT",
     type: ITEM_TYPES.ARMOR,
     description:
@@ -823,7 +873,7 @@ export const ITEMS = {
   },
 
   icerind_hatchet: {
-    name: "Hachette de Givre",
+    name: "💨❄️🗡  Hachette de Givre",
     type: ITEM_TYPES.WEAPON,
     set: "FROST_ASSASSIN",
     description:
@@ -836,7 +886,7 @@ export const ITEMS = {
   },
 
   black_knife_gauntlets: {
-    name: "Gantelets de Mailles Noires",
+    name: "💨💥 Gantelets de Mailles Noires",
     type: ITEM_TYPES.ACCESSORY,
     set: "FROST_ASSASSIN",
     description:
@@ -849,7 +899,7 @@ export const ITEMS = {
 
   // --- ITEM DE DRAGON (SAMARAG) ---
   glintstone_dragon_heart: {
-    name: "Cœur de Dragon d'Éclat",
+    name: "🧠 Cœur de Dragon d'Éclat",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
     description:
@@ -865,7 +915,7 @@ export const ITEMS = {
 
   // --- SET DE L'ACADÉMIE ---
   academy_glintstone_staff: {
-    name: "Bâton d'Éclat de l'Académie",
+    name: "🧠🗡 Bâton d'Éclat de l'Académie",
     type: ITEM_TYPES.WEAPON,
     set: "ACADEMY_PRIME",
     description:
@@ -880,7 +930,7 @@ export const ITEMS = {
   },
 
   raya_lucaria_robe: {
-    name: "Robe d'Érudit de Raya Lucaria",
+    name: "❤️🧠 ☠️🔥🛡️  Robe d'Érudit de Raya Lucaria",
     type: ITEM_TYPES.ARMOR,
     set: "ACADEMY_PRIME",
     description:
@@ -906,7 +956,7 @@ export const ITEMS = {
   },
 
   karolos_mask: {
-    name: "Masque de Pierre d'Éclat de Karolos",
+    name: "🔥🛡️🧠 Masque de Pierre d'Éclat de Karolos",
     type: ITEM_TYPES.ACCESSORY,
     set: "ACADEMY_PRIME",
     description:
@@ -920,7 +970,7 @@ export const ITEMS = {
 
   // --- ITEMS VIGUEUR rares liurnia E et W---
   marsh_great_hammer: {
-    name: "Grand Marteau des Marais",
+    name: "🌀⚔️❤️ Grand Marteau des Marais",
     type: ITEM_TYPES.WEAPON,
     set: "MARSH_WARDEN",
     description:
@@ -934,7 +984,7 @@ export const ITEMS = {
     },
   },
   lobster_shell_plate: {
-    name: "Plastron de Carapace de Homard",
+    name: "❤️ ☠️🛡️ Plastron de Carapace de Homard",
     type: ITEM_TYPES.ARMOR,
     set: "MARSH_WARDEN",
     description:
@@ -960,7 +1010,7 @@ export const ITEMS = {
 
   // --- ITEMS FORCE (Liurnia Est/Ouest) ---
   carian_crusher: {
-    name: "Broyeur Carien",
+    name: "⚔️🗡 Broyeur Carien",
     type: ITEM_TYPES.WEAPON,
     set: "CRYSTAL_BULWARK",
     description: "Force +15%. Ignore 20% de l'armure ennemie. (+1% / Niv)",
@@ -970,7 +1020,7 @@ export const ITEMS = {
     },
   },
   heavy_crystal_gauntlets: {
-    name: "Gantelets de Cristal Massif",
+    name: "🌵⚔️ Gantelets de Cristal Massif",
     type: ITEM_TYPES.ACCESSORY,
     set: "CRYSTAL_BULWARK",
     description:
@@ -991,7 +1041,7 @@ export const ITEMS = {
   },
 
   bog_amulet: {
-    name: "Amulette de la Tourbière",
+    name: "❤️🗡 Amulette de la Tourbière",
     type: ITEM_TYPES.ACCESSORY,
     set: "MARSH_WARDEN",
     description:
@@ -1007,7 +1057,7 @@ export const ITEMS = {
   },
 
   crystal_crust_armor: {
-    name: "Armure de Croûte Cristalline",
+    name: "⚔️🛡️ Armure de Croûte Cristalline",
     type: ITEM_TYPES.ARMOR,
     set: "CRYSTAL_BULWARK",
     description:
@@ -1021,7 +1071,7 @@ export const ITEMS = {
   },
 
   starscourge_greatsword: {
-    name: "Espadon du Fléau des Astres",
+    name: "⚔️🛡️ Espadon du Fléau des Astres",
     type: ITEM_TYPES.WEAPON,
     description:
       "Force +25%. La gravité renforce vos coups : ajoute 50% de votre Armure totale à votre Force. (+5% / Niv)",
@@ -1033,7 +1083,7 @@ export const ITEMS = {
   },
 
   radahn_lion_armor: {
-    name: "Armure du Lion de Radahn",
+    name: "⚔️ 🩸🪰🛡️ Armure du Lion de Radahn",
     type: ITEM_TYPES.ARMOR,
     isAlwaysMax: true,
     description:
@@ -1053,7 +1103,7 @@ export const ITEMS = {
   },
 
   rotten_dragon_heart: {
-    name: "Cœur de Dragon Putréfié",
+    name: "🪰 Cœur de Dragon Putréfié",
     type: ITEM_TYPES.ACCESSORY,
     isAlwaysMax: true,
     description:
@@ -1071,7 +1121,7 @@ export const ITEMS = {
   // --- EXECUTER ---
 
   executioner_greataxe: {
-    name: "Grande Hache de Bourreau",
+    name: "⚔️💥 Grande Hache de Bourreau",
     type: ITEM_TYPES.WEAPON,
     set: "EXECUTIONER",
     description:
@@ -1088,7 +1138,7 @@ export const ITEMS = {
   },
 
   executioner_hood: {
-    name: "Cagoule de Bourreau",
+    name: "🎯 Cagoule de Bourreau",
     type: ITEM_TYPES.ARMOR,
     set: "EXECUTIONER",
     description:
@@ -1100,7 +1150,7 @@ export const ITEMS = {
   },
 
   guillotine_pendant: {
-    name: "Pendentif de la Guillotine",
+    name: "⚔️🎯 Pendentif de la Guillotine",
     type: ITEM_TYPES.ACCESSORY,
     set: "EXECUTIONER",
     description:
@@ -1118,7 +1168,7 @@ export const ITEMS = {
 
   // ALTUR
   golden_tree_halberd: {
-    name: "Hallebarde de l'Arbre d'Or",
+    name: "🌵⚔️❤️ Hallebarde de l'Arbre d'Or",
     type: ITEM_TYPES.WEAPON,
     set: "TREE_SENTINEL",
     description:
@@ -1138,7 +1188,7 @@ export const ITEMS = {
   },
 
   golden_sentinel_armor: {
-    name: "Plastron de la Sentinelle",
+    name: "❤️🛡️ 🛡️🛡️ Plastron de la Sentinelle",
     type: ITEM_TYPES.ARMOR,
     set: "TREE_SENTINEL",
     description:
@@ -1160,7 +1210,7 @@ export const ITEMS = {
   },
 
   sentinel_greatshield_talisman: {
-    name: "Talisman du Grand Bouclier",
+    name: "🌵❤️❤️‍🩹 Talisman du Grand Bouclier",
     type: ITEM_TYPES.ACCESSORY,
     set: "TREE_SENTINEL",
     description:
@@ -1186,7 +1236,7 @@ export const ITEMS = {
   // CARIA MANSION
 
   loretta_glintstone_sickle: {
-    name: "Faucille d'Éclat de Loretta",
+    name: "❄️🧠🗡 Faucille d'Éclat de Loretta",
     type: ITEM_TYPES.WEAPON,
     isAlwaysMax: true,
     description:
@@ -1212,7 +1262,7 @@ export const ITEMS = {
   },
 
   carian_troll_gauntlet: {
-    name: "Gantelet du Troll de Caria",
+    name: "🌀⚔️💦 Gantelet du Troll de Caria",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Force +10% (+1% / Niv). Force de Frappe : Frapper un ennemi étourdi (STUN) propage 100% de vos dégâts à tous les autres ennemis du groupe.",
@@ -1229,7 +1279,7 @@ export const ITEMS = {
   },
 
   finger_stitcher_needle: {
-    name: "Aiguille à coudre des Doigts",
+    name: "🩸☠️💨 Aiguille à coudre des Doigts",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Dextérité +12% (+1% / Niv). Infection Croisée : Si vous frappez un ennemi qui saigne, vous lui appliquez du poison du même nombre que de saignement.",
@@ -1249,14 +1299,14 @@ export const ITEMS = {
   },
 
   lunar_resilience_talisman: {
-    name: "Talisman de Résilience Lunaire",
+    name: "❤️🛡️Talisman de Résilience Lunaire",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Vigueur +15% (+2% / Niv). Armure de Souffrance : Gagnez +20 d'Armure pour chaque effet de statut négatif DIFFERENTS qui vous affecte actuellement.",
     applyMult: (stats, itemLevel) => {
       stats.vigor = Math.floor(stats.vigor * (1.15 + 0.02 * itemLevel));
       const statusCount = gameState.playerEffects.filter((e) =>
-        ["POISON", "BLEED", "BURN", "SCARLET_ROT", "FROSTBITE"].includes(e.id),
+        ["POISON", "BLEED", "BURN", "SCARLET_ROT", "FROSTBITE", "STUN"].includes(e.id),
       ).length;
       stats.armor += statusCount * 20;
     },

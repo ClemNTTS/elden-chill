@@ -113,8 +113,64 @@ const processTurnEffects = (entity, effectsArray) => {
       }
     }
   }
-
+  updateHealthBars();
+  updateUI();
   return { logMessages, skipTurn };
+};
+
+const bleedLogic = (damage, targetEffects) => {
+  let bleedDamage = 0;
+  const bleedEffect = targetEffects.find((eff) => eff.id === "BLEED");
+  if (bleedEffect && bleedEffect.stacks > 0) {
+    const procChance = bleedEffect.stacks * 0.1;
+    if (Math.random() < procChance) {
+      bleedDamage = Math.floor(damage * (0.2 * bleedEffect.stacks));
+
+      ActionLog(
+        `HÉMORRAGIE ! Le saignement inflige ${formatNumber(bleedDamage)} dégâts supplémentaires !`,
+        "log-crit",
+      );
+
+      // Consume stacks
+      const bleedIndex = targetEffects.findIndex((eff) => eff.id === "BLEED");
+      if (bleedIndex > -1) {
+        targetEffects.splice(bleedIndex, 1);
+      }
+    }
+  }
+  return { bleedDamage, targetEffects };
+};
+
+const frostbiteLogic = (targetEffects, target, isPlayer) => {
+  let frostDamage = 0;
+  let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
+  if (frostEffect && frostEffect.stacks >= 10) {
+    frostDamage = Math.floor(target.maxHp * 0.1) + 30;
+    if (target.isBoss) {
+      frostDamage = Math.floor(frostDamage * 0.7);
+    }
+    if (!isPlayer) {
+      console.log("Applying frostbite armor debuff to monster");
+      if (typeof target.armor === "number") {
+        target.armor -= 20;
+      } else {
+        target.armor = 80;
+      }
+    } else {
+      console.log("Applying frostbite armor debuff to player");
+      runtimeState.playerArmorDebuff += 20;
+    }
+    ActionLog(
+      `❄️ GELURE ! ${target.name} subit ${frostDamage} dégâts, perd 20 d'armure et est brisé par le froid !`,
+      "log-dodge",
+    );
+    frostEffect.stacks -= 10;
+    if (frostEffect.stacks <= 0) {
+      const idx = targetEffects.findIndex((e) => e.id === "FROSTBITE");
+      if (idx > -1) targetEffects.splice(idx, 1);
+    }
+  }
+  return { frostDamage, targetEffects };
 };
 
 /* ================= GENERIC ATTACK ================= */
@@ -125,7 +181,6 @@ export function performAttack({
   targetGroup,
   stats,
   targetEffects,
-  logPrefix,
   isPlayer = false,
   ashEffect = null,
 }) {
@@ -133,66 +188,25 @@ export function performAttack({
     let damage = attacker.atk ?? stats?.strength ?? 0;
 
     /* ================= ENEMY DODGE (PLAYER ATTACK ONLY) ================= */
-    if (isPlayer && target) {
-      const isStunned = targetEffects?.some((e) => e.id === "STUN");
-      const dodgeChance = target.dodgeChance ?? 0;
+    
+    const isStunned = targetEffects?.some((e) => e.id === "STUN");
+    const dodgeChance = target.dodgeChance ?? 0;
 
-      if (!isStunned && dodgeChance > 0 && Math.random() < dodgeChance) {
-        ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
-        return; // cancel this hit completely
-      }
-    } else {
-      logPrefix = attacker.name;
+    if (!isStunned && dodgeChance > 0 && Math.random() < dodgeChance) {
+      ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
+      return; // cancel this hit completely
     }
-    // --- NEW BLEED LOGIC ---
-    const bleedEffect = targetEffects.find((eff) => eff.id === "BLEED");
-    if (bleedEffect && bleedEffect.stacks > 0) {
-      const procChance = bleedEffect.stacks * 0.1;
-      if (Math.random() < procChance) {
-        const bleedDamage = Math.floor(damage * (0.2 * bleedEffect.stacks));
-        damage += bleedDamage;
+    let logPrefix = attacker.name;
 
-        ActionLog(
-          `HÉMORRAGIE ! Le saignement inflige ${formatNumber(bleedDamage)} dégâts supplémentaires !`,
-          "log-crit",
-        );
+    let frostbiteResult = frostbiteLogic(targetEffects, target);
+    targetEffects = frostbiteResult.targetEffects;
+    damage += frostbiteResult.frostDamage;
 
-        // Consume stacks
-        const bleedIndex = targetEffects.findIndex((eff) => eff.id === "BLEED");
-        if (bleedIndex > -1) {
-          targetEffects.splice(bleedIndex, 1);
-        }
-      }
-    }
-    // --- END NEW BLEED LOGIC ---
-    // --- FROSTBITE LOGIC ---
+    let bleedResult;
+    bleedResult = bleedLogic(damage, targetEffects);
+    targetEffects = bleedResult.targetEffects;
+    damage += bleedResult.bleedDamage;
 
-    let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
-    if (frostEffect && frostEffect.stacks >= 10) {
-      let frostDamage = Math.floor(target.maxHp * 0.1) + 30;
-      if (target.isBoss) {
-        frostDamage = Math.floor(frostDamage * 0.7);
-      }
-      damage += frostDamage;
-      if (!isPlayer) {
-        runtimeState.playerArmorDebuff += 20;
-      } else {
-        if (typeof target.armor === "number") {
-          target.armor -= 20;
-        } else {
-          target.armor = 80;
-        }
-      }
-      ActionLog(
-        `❄️ GELURE ! ${target.name} subit ${frostDamage} dégâts, perd 20 d'armure et est brisé par le froid !`,
-        "log-dodge",
-      );
-      frostEffect.stacks -= 10;
-      if (frostEffect.stacks <= 0) {
-        const idx = targetEffects.findIndex((e) => e.id === "FROSTBITE");
-        if (idx > -1) targetEffects.splice(idx, 1);
-      }
-    }
     if (ashEffect?.damageMult) {
       damage *= ashEffect.damageMult;
     }
@@ -496,55 +510,8 @@ export const combatLoop = (sessionId) => {
 
       const continueCombat = () => {
         /* ================= KILL CHECK ================= */
-        let defeatedEnemies = [];
-
-        for (let i = runtimeState.currentEnemyGroup.length - 1; i >= 0; i--) {
-          const enemy = runtimeState.currentEnemyGroup[i];
-          if (enemy.hp <= 0) {
-            defeatedEnemies.push(enemy);
-            runtimeState.currentEnemyGroup.splice(i, 1);
-          }
-        }
-
-        if (defeatedEnemies.length > 0) {
-          const eff = getEffectiveStats();
-          const intBonus = 1 + eff.intelligence / 100;
-
-          defeatedEnemies.forEach((enemy) => {
-            runtimeState.defeatedEnemies.push(enemy);
-          });
-
-          // Show remaining enemies message only if there are enemies left
-          if (runtimeState.currentEnemyGroup.length > 0) {
-            const msg = generateRemainingEnemiesMessage(
-              runtimeState.currentEnemyGroup,
-            );
-            if (msg) ActionLog(msg);
-          }
-        }
-
-        /* ================= VICTORY CHECK ================= */
-          if (runtimeState.currentEnemyGroup.length === 0) {
-          runtimeState.lastDefeatedEnemy =
-            defeatedEnemies[defeatedEnemies.length - 1] || null;
-          delayedSetTimeout(() => handleVictory(sessionId), 500);
-          return;
-        }
-
-        /* ================= UI UPDATE ================= */
-        const front = runtimeState.currentEnemyGroup[0];
-        const groupSizeText =
-          runtimeState.currentEnemyGroup.length > 1
-            ? ` (x${runtimeState.currentEnemyGroup.length})`
-            : "";
-
-        document.getElementById("enemy-name").innerText =
-          runtimeState.currentLoopCount > 0
-            ? `${front.name}${groupSizeText} +${runtimeState.currentLoopCount}`
-            : `${front.name}${groupSizeText}`;
-
-        updateHealthBars();
-        updateUI();
+        let defeatedEnemies = killcheck();
+        if (victorycheck(sessionId, defeatedEnemies)) { return; }
 
         /* ================= ENEMY TURN ================= */
         delayedSetTimeout(() => {
@@ -559,11 +526,10 @@ export const combatLoop = (sessionId) => {
             gameState.ennemyEffects,
           );
 
-                if (runtimeState.currentEnemyGroup[0].hp <= 0) {
+          if (runtimeState.currentEnemyGroup[0].hp <= 0) {
             ActionLog(
-              `${runtimeState.currentEnemyGroup[0].name} succombe à ses blessures !`,
+              `${runtimeState.currentEnemyGroup[0].name} succombe de ses blessures !`,
             );
-            updateHealthBars();
             delayedSetTimeout(continueCombat, 500);
             return;
           }
@@ -576,17 +542,6 @@ export const combatLoop = (sessionId) => {
 
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
-            const dodgeChance = Math.min(0.5, gameState.stats.dexterity / 400);
-
-            const playerIsStunned = gameState.playerEffects.some(
-              (e) => e.id === "STUN",
-            );
-
-            if (Math.random() < dodgeChance && !playerIsStunned) {
-              ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
-              delayedSetTimeout(() => combatLoop(sessionId), 500);
-              return;
-            }
 
             const loop =
               runtimeState.currentEnemyGroup[0].specificStats &&
@@ -613,7 +568,7 @@ export const combatLoop = (sessionId) => {
               }
             }
 
-            // Enemy attacks the player
+            // Enemies attacks the player
             for (let i = 0; i < loop; i++) {
               playerObj.currentHp = runtimeState.playerCurrentHp; // sync before attack
               performAttack({
@@ -625,7 +580,6 @@ export const combatLoop = (sessionId) => {
                 stats: runtimeState.currentEnemyGroup[0].specificStats
                   ? runtimeState.currentEnemyGroup[0].specificStats
                   : null,
-                logPrefix: runtimeState.currentEnemyGroup[0].name,
                 isPlayer: false,
                 ashEffect: { damageMult: enemyDmgMult },
               });
@@ -696,14 +650,67 @@ const playerTurn = () => {
     if (!currentTarget) break;
 
     performAttack({
-      attackers: [{ atk: stats.strength }],
+      attackers: [{ name: "Vous", atk: stats.strength }],
       target: currentTarget,
       targetGroup: runtimeState.currentEnemyGroup,
       stats,
       targetEffects: gameState.ennemyEffects,
-      logPrefix: "Vous",
       isPlayer: true,
       ashEffect,
     });
   }
 }
+
+const killcheck = () => {
+  let defeatedEnemies = [];
+
+  for (let i = runtimeState.currentEnemyGroup.length - 1; i >= 0; i--) {
+    const enemy = runtimeState.currentEnemyGroup[i];
+      if (enemy.hp <= 0) {
+        defeatedEnemies.push(enemy);
+        runtimeState.currentEnemyGroup.splice(i, 1);
+      }
+    }
+
+    if (defeatedEnemies.length > 0) {
+      const eff = getEffectiveStats();
+      const intBonus = 1 + eff.intelligence / 100;
+
+      defeatedEnemies.forEach((enemy) => {
+        runtimeState.defeatedEnemies.push(enemy);
+      });
+
+      // Show remaining enemies message only if there are enemies left
+      if (runtimeState.currentEnemyGroup.length > 0) {
+        const msg = generateRemainingEnemiesMessage(
+          runtimeState.currentEnemyGroup,
+        );
+        if (msg) ActionLog(msg);
+      }
+    }
+  return defeatedEnemies;
+};
+
+const victorycheck = (sessionId,defeatedEnemies) => {
+  if (runtimeState.currentEnemyGroup.length === 0) {
+    runtimeState.lastDefeatedEnemy =
+      defeatedEnemies[defeatedEnemies.length - 1] || null;
+      delayedSetTimeout(() => handleVictory(sessionId), 500);
+      return true;
+  }
+  /* ================= UI UPDATE ================= */
+  const front = runtimeState.currentEnemyGroup[0];
+  const groupSizeText =
+    runtimeState.currentEnemyGroup.length > 1
+    ? ` (x${runtimeState.currentEnemyGroup.length})`
+    : "";
+
+    document.getElementById("enemy-name").innerText =
+      runtimeState.currentLoopCount > 0
+      ? `${front.name}${groupSizeText} +${runtimeState.currentLoopCount}`
+      : `${front.name}${groupSizeText}`;
+
+  updateHealthBars();
+  updateUI();
+  return false;
+};

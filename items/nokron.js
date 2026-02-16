@@ -5,7 +5,7 @@ import { ActionLog } from "../ui.js";
 
 export const NOKRON = {
   nokron_flame_dagger: {
-    name: "Dague Enflamée de Nokron",
+    name: "🩸🔥💨 Dague Enflamée de Nokron",
     type: ITEM_TYPES.WEAPON,
     description:
       "Tier 5. Dextérité +20%. Convertit 55% (+2% / Niv) de votre Dextérité en Force. Dague Enflamée : Chaque coup a 30% (+2% / Niv) de chance d'infliger 2 Brûlures et 1 Saignement.",
@@ -29,7 +29,7 @@ export const NOKRON = {
   },
 
   mercury_breastplate: {
-    name: "Plastron de Mercure",
+    name: "🛡️Plastron de Mercure",
     type: ITEM_TYPES.ARMOR,
     description:
       "Tier 5. +20 d'Armure (+1 / Niv). Une armure qui durcit au fur et à mesure que tu reçois des coups, augmentant ton Armure pendant le combat de 1 (+0.2 / Niv).",
@@ -48,7 +48,7 @@ export const NOKRON = {
   },
 
   silver_tear_mask: {
-    name: "Masque de Larme d'Argent",
+    name: "⚔️💨 Masque de Larme d'Argent",
     type: ITEM_TYPES.ARMOR,
     isAlwaysMax: true,
     description:
@@ -62,7 +62,7 @@ export const NOKRON = {
   },
 
   celestial_dew_talisman: {
-    name: "Rosée Céleste Bénie",
+    name: "⚔️❤️🛡️ Rosée Céleste Bénie",
     type: ITEM_TYPES.ACCESSORY,
     description:
       "Tier 5. Vigueur +20%. +2% de Force par niveau. Absolution : Une fois par combat, si vos PV tombent sous 30%, tous vos effets de statut négatifs sont purifiés et vous gagnez +50 d'Armure pour 3 tours.",
