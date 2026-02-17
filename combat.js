@@ -614,7 +614,7 @@ export const combatLoop = (sessionId) => {
   }, 800);
 };
 
-const ashUse = () => {
+const ashUse = (stats) => {
   let ashEffect = null;
   if (runtimeState.ashIsPrimed && runtimeState.ashUsesLeft > 0) {
     const ash = ASHES_OF_WAR[gameState.equippedAsh];
@@ -640,7 +640,7 @@ const nbrOfAttacksCalculation = (stats) => {
 
 const playerTurn = () => {
   const stats = getEffectiveStats();
-  let ashEffect = ashUse();
+  let ashEffect = ashUse(stats);
   let nbrOfAttacks = nbrOfAttacksCalculation(stats);
   for ( let i = 0; i < nbrOfAttacks; i++) {
     // Find first alive enemy
