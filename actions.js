@@ -127,7 +127,6 @@ export const refundRunes = () => {
     gameState.stats.splashDamage = 0;
     gameState.stats.armor = 100;
     gameState.equipped = { weapon: null, armor: null, accessory: null };
-    ((gameState.order = [null, null, null]), saveGame());
     updateUI();
   }
 };

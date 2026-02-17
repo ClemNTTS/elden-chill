@@ -63,14 +63,12 @@ export const loadGame = () => {
       decrypted.world = decrypted.world || { unlockedBiomes: ["necrolimbe"] };
       decrypted.runes = decrypted.runes || { banked: 0, carried: 0 };
       decrypted.inventory = decrypted.inventory || [];
-      decrypted.order = decrypted.order || [];
 
       if (decrypted.equipped && Array.isArray(decrypted.equipped)) {
         console.warn(
           "Ancienne structure détectée, réinitialisation de l'équipement.",
         );
         decrypted.equipped = { weapon: null, armor: null, accessory: null };
-        decrypted.order = [null, null, null];
       }
 
       decrypted.world.isExploring = false;
