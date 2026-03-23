@@ -6,7 +6,7 @@
 
 ##  Gameplay & Fonctionnalités
 
-Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez votre personnage, partez en expédition, et revenez plus fort.
+Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez votre personnage, partez en expédition, et revenez plus fort!
 
 *   **Progression Continue :** Votre personnage combat automatiquement, accumulant des runes même lorsque vous êtes inactif.
 *   **Gestion du Risque :** Les runes collectées lors d'une expédition ne sont pas sécurisées. Vous devez choisir le bon moment pour vous replier au camp, au risque de tout perdre en cas de défaite.
