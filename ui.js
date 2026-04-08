@@ -4,7 +4,7 @@ const wikiBtn = document.getElementById("btn-wiki");
 if (wikiBtn) {
   wikiBtn.addEventListener("click", () => {
     // Ouvre ton wiki dans un nouvel onglet pour ne pas couper la session de jeu
-    window.open("https://cnuttens.me/wiki-elden-chill/", "_blank");
+    window.open("https://clemntts.github.io/wiki-elden-chill/", "_blank");
   });
 }
 
@@ -78,6 +78,7 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
+import { MONSTERS } from "./monster.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
   gameState,
@@ -91,6 +92,12 @@ import { saveGame } from "./save.js";
 import { checkForUpdate } from "./game.js";
 import { ITEM_SETS } from "./constants.js";
 import { ITEMS } from "./item.js";
+import {
+  BIOME_GUIDE,
+  BIOME_ORDER,
+  getBiomeDangerClass,
+  getBiomePowerBand,
+} from "./world-map.js";
 
 export const formatNumber = (num) => {
   if (num >= 1000000) {
@@ -298,20 +305,365 @@ const updateEquipmentDisplay = () => {
   }
 };
 
-const updateBiomeDisplay = () => {
+let selectedBiomeId = null;
+
+const getKnownBiomeIds = () => {
+  const unlocked = new Set(gameState.world.unlockedBiomes || []);
+  const reachable = new Set();
+
+  unlocked.forEach((biomeId) => {
+    (BIOMES[biomeId]?.unlocks || []).forEach((nextId) => reachable.add(nextId));
+  });
+
+  return BIOME_ORDER.filter(
+    (biomeId) => unlocked.has(biomeId) || reachable.has(biomeId),
+  );
+};
+
+const getSuggestedBiomeId = () => {
+  const playerLevel = gameState.stats.level || 1;
+  const unlocked = BIOME_ORDER.filter((biomeId) =>
+    gameState.world.unlockedBiomes.includes(biomeId),
+  );
+
+  return (
+    unlocked.find((biomeId) => {
+      const band = BIOME_GUIDE[biomeId]?.recommendedLevel;
+      return band && playerLevel >= band[0] && playerLevel <= band[1];
+    }) ||
+    unlocked[unlocked.length - 1] ||
+    "limgrave_west"
+  );
+};
+
+const renderJourneyOverview = () => {
+  const container = document.getElementById("journey-overview");
+  if (!container) return;
+
+  const playerLevel = gameState.stats.level || 1;
+  const suggestedId = getSuggestedBiomeId();
+  const suggestedGuide = BIOME_GUIDE[suggestedId];
+  const eff = getEffectiveStats();
+  const unlockedCount = gameState.world.unlockedBiomes.length;
+
+  container.innerHTML = `
+    <div class="journey-stat">
+      <span class="journey-label">Niveau actuel</span>
+      <strong>${playerLevel}</strong>
+    </div>
+    <div class="journey-stat">
+      <span class="journey-label">Front conseillé</span>
+      <strong>${BIOMES[suggestedId]?.name || "Inconnu"}</strong>
+      <small>${suggestedGuide?.focus || ""}</small>
+    </div>
+    <div class="journey-stat">
+      <span class="journey-label">Signature du build</span>
+      <strong>${eff.strength} FOR / ${eff.vigor} VIG / ${eff.armor} ARM</strong>
+      <small>${unlockedCount} zones repérées</small>
+    </div>
+  `;
+};
+
+const renderBiomeShortcuts = (visibleIds) => {
   const list = document.getElementById("biome-list");
+  if (!list) return;
+
   list.innerHTML = "";
+  visibleIds
+    .filter((biomeId) => gameState.world.unlockedBiomes.includes(biomeId))
+    .forEach((biomeId) => {
+      const btn = document.createElement("button");
+      btn.innerText = BIOMES[biomeId].name;
+      btn.className = biomeId === selectedBiomeId ? "biome-shortcut active-shortcut" : "biome-shortcut";
+      btn.disabled = gameState.world.isExploring;
+      btn.onclick = () => {
+        selectedBiomeId = biomeId;
+        updateBiomeDisplay();
+      };
+      list.appendChild(btn);
+    });
+};
 
-  Object.keys(BIOMES).forEach((id) => {
-    if (!gameState.world.unlockedBiomes.includes(id)) return;
+const renderWorldMap = (visibleIds) => {
+  const map = document.getElementById("world-map");
+  const paths = document.getElementById("world-map-paths");
+  if (!map || !paths) return;
 
-    const btn = document.createElement("button");
-    btn.innerText = BIOMES[id].name;
-    btn.disabled =
-      !gameState.world.unlockedBiomes.includes(id) ||
-      gameState.world.isExploring;
-    btn.onclick = () => startExploration(id);
-    list.appendChild(btn);
+  const visibleSet = new Set(visibleIds);
+  map.innerHTML = "";
+
+  const pathMarkup = [];
+  visibleIds.forEach((biomeId) => {
+    const guide = BIOME_GUIDE[biomeId];
+    (BIOMES[biomeId]?.unlocks || []).forEach((nextId) => {
+      if (!visibleSet.has(nextId) || !BIOME_GUIDE[nextId]) return;
+      pathMarkup.push(
+        `<line x1="${guide.x}" y1="${guide.y}" x2="${BIOME_GUIDE[nextId].x}" y2="${BIOME_GUIDE[nextId].y}" class="atlas-path" />`,
+      );
+    });
+  });
+  paths.innerHTML = pathMarkup.join("");
+
+  visibleIds.forEach((biomeId) => {
+    const guide = BIOME_GUIDE[biomeId];
+    const button = document.createElement("button");
+    const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
+    const isReachable = !isUnlocked;
+
+    button.type = "button";
+    button.className = `world-node ${isUnlocked ? "unlocked" : "reachable"} ${
+      selectedBiomeId === biomeId ? "selected" : ""
+    }`;
+    button.style.left = `${guide.x}%`;
+    button.style.top = `${guide.y}%`;
+    button.title = `${BIOMES[biomeId]?.name || biomeId} - ${getBiomePowerBand(biomeId)}`;
+    button.onclick = () => {
+      selectedBiomeId = biomeId;
+      updateBiomeDisplay();
+    };
+    button.setAttribute("aria-label", `${BIOMES[biomeId]?.name || biomeId} ${getBiomePowerBand(biomeId)}`);
+    button.innerHTML = `<span class="world-node__dot"></span>`;
+    if (isReachable) {
+      button.disabled = false;
+    }
+    map.appendChild(button);
+  });
+};
+
+const renderBiomeDetail = (biomeId) => {
+  const card = document.getElementById("biome-detail-card");
+  if (!card || !biomeId) return;
+
+  const biome = BIOMES[biomeId];
+  const guide = BIOME_GUIDE[biomeId];
+  const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
+  const lootPreview = (LOOT_TABLES[biomeId] || [])
+    .map((loot) => ITEMS[loot.id]?.name)
+    .filter(Boolean)
+    .slice(0, 3);
+  const nextBiomes = (biome.unlocks || [])
+    .map((nextId) => BIOMES[nextId]?.name)
+    .filter(Boolean);
+  const monsters = (biome.monsters || [])
+    .map((monsterId) => MONSTERS[monsterId]?.name)
+    .filter(Boolean)
+    .slice(0, 3);
+  const rares = (biome.rareMonsters || [])
+    .map((monsterId) => MONSTERS[monsterId]?.name)
+    .filter(Boolean)
+    .slice(0, 2);
+  const bossName = MONSTERS[biome.boss]?.name || "Inconnu";
+
+  card.innerHTML = `
+    <div class="biome-detail-header">
+      <div>
+        <p class="detail-kicker">${guide?.chapter || "Zone"} · ${guide?.region || "Inconnu"}</p>
+        <h4>${biome.name}</h4>
+      </div>
+      <span class="danger-badge ${getBiomeDangerClass(biomeId)}">${guide?.danger || "Inconnu"}</span>
+    </div>
+    <p class="biome-focus">${guide?.focus || "Aucune recommandation disponible."}</p>
+    <div class="biome-detail-grid">
+      <div class="detail-block">
+        <span class="detail-label">Puissance attendue</span>
+        <strong>${getBiomePowerBand(biomeId)}</strong>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Boss</span>
+        <strong>${bossName}</strong>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Menaces</span>
+        <strong>${monsters.join(", ") || "???"}</strong>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Rares</span>
+        <strong>${rares.join(", ") || "Aucun repéré"}</strong>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Récompenses</span>
+        <strong>${lootPreview.join(", ") || "Butin spécial inconnu"}</strong>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Après la victoire</span>
+        <strong>${nextBiomes.join(", ") || "Cul-de-sac rentable"}</strong>
+      </div>
+    </div>
+    <div class="biome-detail-actions">
+      <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
+        ${isUnlocked ? "Explorer cette zone" : "Zone pas encore débloquée"}
+      </button>
+      <span class="detail-path-role">${guide?.pathRole || ""}</span>
+    </div>
+  `;
+
+  const startButton = document.getElementById("start-selected-biome");
+  if (startButton && isUnlocked) {
+    startButton.onclick = () => startExploration(biomeId);
+  }
+};
+
+const updateBiomeDisplay = () => {
+  const visibleIds = getKnownBiomeIds();
+  if (!selectedBiomeId || !visibleIds.includes(selectedBiomeId)) {
+    selectedBiomeId = getSuggestedBiomeId();
+  }
+
+  renderJourneyOverview();
+  renderWorldMap(visibleIds);
+  renderBiomeDetail(selectedBiomeId);
+  renderBiomeShortcuts(visibleIds);
+};
+
+const updateCombatPresentationLegacy = () => {
+  const playerCard = document.getElementById("player-combat-card");
+  const enemyCard = document.getElementById("enemy-combat-card");
+  const battleMeta = document.getElementById("battle-meta");
+  const battleHint = document.getElementById("battle-hint");
+  if (!playerCard || !enemyCard || !battleMeta || !battleHint) return;
+
+  const eff = getEffectiveStats();
+  const currentBiome = BIOMES[gameState.world.currentBiome];
+  const currentEnemy = runtimeState.currentEnemyGroup?.[0];
+
+  playerCard.querySelector(".combat-card__name").innerText = "Sans-eclat";
+  playerCard.querySelector(".combat-card__sub").innerText =
+    `FOR ${eff.strength} · VIG ${eff.vigor} · ARM ${eff.armor}`;
+
+  if (!currentEnemy) {
+    enemyCard.querySelector(".combat-card__name").innerText = "Aucune menace";
+    enemyCard.querySelector(".combat-card__sub").innerText =
+      "Le champ de bataille se calme.";
+    battleMeta.innerText = currentBiome?.name || "Camp";
+    battleHint.innerText =
+      "Le prochain affrontement commencera à la rencontre suivante.";
+    return;
+  }
+
+  const enemyCount = runtimeState.currentEnemyGroup.length;
+  const prefix = currentEnemy.isBoss
+    ? "Boss"
+    : currentEnemy.isRare
+      ? "Rare"
+      : enemyCount > 1
+        ? `Groupe x${enemyCount}`
+        : "Standard";
+
+  enemyCard.querySelector(".combat-card__name").innerText = currentEnemy.name;
+  enemyCard.querySelector(".combat-card__sub").innerText =
+    `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+  battleMeta.innerText =
+    `${currentBiome?.name || "Expedition"} · ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
+
+  if (currentEnemy.isBoss) {
+    battleHint.innerText =
+      "Boss en vue: cadence, mitigation et statuts doivent déjà être prêts.";
+  } else if (currentEnemy.isRare) {
+    battleHint.innerText =
+      "Elite repérée: gros rendement, mais pression nettement supérieure au pack standard.";
+  } else {
+    battleHint.innerText =
+      "Pack en cours: lisez les statuts et préparez le prochain palier avant le boss.";
+  }
+};
+
+const updateCombatPresentation = () => {
+  const playerCard = document.getElementById("player-combat-card");
+  const enemyCard = document.getElementById("enemy-combat-card");
+  const battleMeta = document.getElementById("battle-meta");
+  const battleHint = document.getElementById("battle-hint");
+  if (!playerCard || !enemyCard || !battleMeta || !battleHint) return;
+
+  const eff = getEffectiveStats();
+  const currentBiome = BIOMES[gameState.world.currentBiome];
+  const currentEnemy = runtimeState.currentEnemyGroup?.[0];
+
+  playerCard.querySelector(".combat-card__name").innerText = "Sans-eclat";
+  playerCard.querySelector(".combat-card__sub").innerText =
+    `FOR ${eff.strength} · VIG ${eff.vigor} · ARM ${eff.armor}`;
+
+  if (!currentEnemy) {
+    enemyCard.querySelector(".combat-card__name").innerText = "Aucune menace";
+    enemyCard.querySelector(".combat-card__sub").innerText =
+      "Le champ de bataille se calme.";
+    battleMeta.innerText = currentBiome?.name || "Camp";
+    battleHint.innerText =
+      "Le prochain affrontement commencera à la rencontre suivante.";
+    return;
+  }
+
+  const enemyCount = runtimeState.currentEnemyGroup.length;
+  const prefix = currentEnemy.isBoss
+    ? "Boss"
+    : currentEnemy.isRare
+      ? "Rare"
+      : enemyCount > 1
+        ? `Groupe x${enemyCount}`
+        : "Standard";
+
+  enemyCard.querySelector(".combat-card__name").innerText = currentEnemy.name;
+  enemyCard.querySelector(".combat-card__sub").innerText =
+    `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+  battleMeta.innerText =
+    `${currentBiome?.name || "Expedition"} · ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
+
+  if (currentEnemy.isBoss) {
+    battleHint.innerText =
+      "Boss en vue: cadence, mitigation et statuts doivent déjà être prêts.";
+  } else if (currentEnemy.isRare) {
+    battleHint.innerText =
+      "Elite repérée: gros rendement, mais pression nettement supérieure au pack standard.";
+  } else {
+    battleHint.innerText =
+      "Pack en cours: lisez les statuts et préparez le prochain palier avant le boss.";
+  }
+};
+
+const ensureBattleLogLayout = () => {
+  const root = document.getElementById("action-log");
+  if (!root) return null;
+  let enemyColumn = document.getElementById("action-log-enemy");
+  let playerColumn = document.getElementById("action-log-player");
+  if (enemyColumn && playerColumn) {
+    return { root, enemyColumn, playerColumn };
+  }
+
+  root.innerHTML = `
+    <div class="log-column enemy-column" id="action-log-enemy"></div>
+    <div class="log-column player-column" id="action-log-player"></div>
+  `;
+  enemyColumn = document.getElementById("action-log-enemy");
+  playerColumn = document.getElementById("action-log-player");
+  return { root, enemyColumn, playerColumn };
+};
+
+const getLogSide = (message, className = "") => {
+  const playerClasses = ["log-self", "log-heal", "log-runes", "log-ash-activation"];
+  if (playerClasses.includes(className)) return "player";
+
+  if (
+    message.startsWith("Vous") ||
+    message.startsWith("CENDRE") ||
+    message.startsWith("BOSS VAINCU") ||
+    message.startsWith("OBJET UNIQUE") ||
+    message.startsWith("Copie de") ||
+    message.startsWith("Site de grâce") ||
+    message.startsWith("De retour") ||
+    message.startsWith("ESQUIVE ! Vous")
+  ) {
+    return "player";
+  }
+
+  return "enemy";
+};
+
+const refreshConversationHighlights = (layout) => {
+  if (!layout) return;
+  [layout.enemyColumn, layout.playerColumn].forEach((column) => {
+    const entries = column.querySelectorAll(".log-entry");
+    entries.forEach((entry, index) => {
+      entry.classList.toggle("log-entry-latest", index === 0);
+    });
   });
 };
 
@@ -400,7 +752,7 @@ window.toggleInventoryCollapse = () => {
   const filters = document.getElementById("filter-buttons");
 
   if (grid.style.display === "none") {
-    grid.style.display = "grid";
+    grid.style.display = "block";
     filters.style.display = "flex";
     btn.innerText = "▼ Inventaire";
   } else {
@@ -542,6 +894,7 @@ export const updateUI = () => {
   updateStatDisplay();
   updateEquipmentDisplay();
   updateBiomeDisplay();
+  updateCombatPresentation();
   updateInventoryDisplay();
   updateCycleDisplay();
   updateStatusIcons();
@@ -565,8 +918,16 @@ export const toggleView = (view) => {
   } else {
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
-    document.getElementById("action-log").innerHTML =
-      "<p>De retour au repos...</p>";
+    const layout = ensureBattleLogLayout();
+    if (layout) {
+      layout.enemyColumn.innerHTML = "";
+      layout.playerColumn.innerHTML = "";
+      const entry = document.createElement("p");
+      entry.className = "log-entry player-side";
+      entry.innerText = "> De retour au repos...";
+      layout.playerColumn.prepend(entry);
+      refreshConversationHighlights(layout);
+    }
     camp.style.display = "block";
     biome.style.display = "none";
     gameState.world.isExploring = false;
@@ -579,13 +940,20 @@ export const toggleView = (view) => {
 };
 
 export const ActionLog = (message, className = "") => {
-  const log = document.getElementById("action-log");
+  const layout = ensureBattleLogLayout();
+  if (!layout) return;
   const entry = document.createElement("p");
   entry.innerText = `> ${message}`;
+  entry.classList.add("log-entry");
   if (className) {
     entry.className = className;
+    entry.classList.add("log-entry");
   }
-  log.prepend(entry);
+  const side = getLogSide(message, className);
+  entry.classList.add(side === "player" ? "player-side" : "enemy-side");
+  const targetColumn = side === "player" ? layout.playerColumn : layout.enemyColumn;
+  targetColumn.prepend(entry);
+  refreshConversationHighlights(layout);
 };
 
 export const updateHealthBars = () => {

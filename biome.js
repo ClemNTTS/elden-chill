@@ -122,6 +122,21 @@ export const LOOT_TABLES = {
     { id: "celestial_dew_talisman", chance: 0.5 },
     { id: "nokron_flame_dagger", chance: 0.5 },
   ],
+  ainsel_river: [
+    { id: "ainsel_shard_spear", chance: 0.34 },
+    { id: "ainsel_starmap", chance: 0.33 },
+    { id: "ainsel_silk_robe", chance: 0.33 },
+  ],
+  deeproot_depths: [
+    { id: "rootbound_maul", chance: 0.34 },
+    { id: "rootbound_plate", chance: 0.33 },
+    { id: "prince_bark_talisman", chance: 0.33 },
+  ],
+  rotlake: [
+    { id: "rotbloom_blade", chance: 0.34 },
+    { id: "rotbloom_mail", chance: 0.33 },
+    { id: "rotbloom_idol", chance: 0.33 },
+  ],
 };
 
 export const BIOMES = {
@@ -334,37 +349,36 @@ export const BIOMES = {
     maxRareSpawns: 2,
     boss: "mimic_tear_boss",
     length: 12,
-    unlocks: null,
-    // unlocks: ["deeproot_depths"],
+    unlocks: ["ainsel_river", "deeproot_depths"],
   },
   // ---
   ainsel_river: {
-    name: "WIP Rivière Ainsel",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: null,
-  },
-
-  deeproot_depths: {
-    name: "WIP Profondeurs de la Souche",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
+    name: "Rivière Ainsel",
+    rareMonsters: ["ainsel_oracle", "malformed_starling"],
+    maxRareSpawns: 3,
+    monsters: ["ainsel_ant", "ainsel_priest"],
+    boss: "dragonkin_ainsel",
     length: 12,
     unlocks: ["rotlake"],
   },
-  rotlake: {
-    name: "WIP Lac de la Putréfaction",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
+
+  deeproot_depths: {
+    name: "Profondeurs de la Souche",
+    rareMonsters: ["siluria_remnant", "deathblight_basilisk"],
+    maxRareSpawns: 3,
+    monsters: ["root_shambler", "root_guardian"],
+    boss: "fia_champion_echo",
     length: 12,
-    unlocks: ["altus_plateau"],
+    unlocks: null,
+  },
+  rotlake: {
+    name: "Lac de la Putréfaction",
+    rareMonsters: ["cleanrot_revenant", "ulcerated_rot_spirit"],
+    maxRareSpawns: 3,
+    monsters: ["rot_pest", "scarlet_monk"],
+    boss: "astel_bud",
+    length: 12,
+    unlocks: null,
   },
 
   mount_gelmir: {

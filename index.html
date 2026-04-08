@@ -212,7 +212,36 @@
       </div>
 
       <section id="camp-view">
-        <div id="equipment-section">
+        <div id="campaign-overview" class="camp-panel">
+          <div class="panel-topline">
+            <span class="panel-kicker">Campagne v2</span>
+            <span class="panel-note">Une carte, du guidage, et de nouvelles routes souterraines.</span>
+          </div>
+          <div id="journey-overview" class="journey-overview"></div>
+        </div>
+
+        <div id="biome-selection" class="camp-panel">
+          <div class="section-head">
+            <div>
+              <h3>Atlas des Terres Intermédiaires</h3>
+              <p>Choisissez votre prochain front avant de quitter le feu.</p>
+            </div>
+            <div class="atlas-legend">
+              <span class="legend-chip unlocked">Débloqué</span>
+              <span class="legend-chip reachable">Repéré</span>
+              <span class="legend-chip locked">Verrouillé</span>
+            </div>
+          </div>
+
+          <div id="world-map-shell">
+            <svg id="world-map-paths" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+            <div id="world-map"></div>
+          </div>
+
+          <div id="biome-detail-card" class="biome-detail-card"></div>
+        </div>
+
+        <div id="equipment-section" class="camp-panel">
           <h3>Équipement Actif</h3>
           <div class="slots-container">
             <div class="slot-wrapper">
@@ -234,14 +263,14 @@
           </div>
         </div>
 
-        <div id="biome-selection">
-          <h3>Choisir une destination</h3>
+        <div id="biome-shortcuts-panel" class="camp-panel">
+          <h3>Départs rapides</h3>
           <div id="biome-list"></div>
         </div>
 
         <hr />
 
-        <div class="inventory-toolbar">
+        <div class="inventory-toolbar camp-panel">
           <button onclick="toggleInventoryCollapse()" id="btn-collapse">
             ▼ Inventaire
           </button>
@@ -253,19 +282,19 @@
           </div>
         </div>
 
-        <div id="inventory-section">
+        <div id="inventory-section" class="camp-panel">
           <h3>Inventaire</h3>
           <div id="inventory-grid"></div>
         </div>
 
-        <div id="ashes-selection-section">
+        <div id="ashes-selection-section" class="camp-panel">
           <h3>Cendres de Guerre</h3>
           <div id="ashes-list" class="ashes-container">
             Aucune cendre de guerre possédée
           </div>
         </div>
 
-        <div class="options-zone" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <div class="options-zone camp-panel" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
           <button id="open-options-btn" onclick="toggleOptions(true)">
             Options & Infos
           </button>
@@ -334,6 +363,14 @@
       </section>
 
       <section id="biome-view" style="display: none">
+        <div id="battle-header-panel" class="battle-panel">
+          <div class="battle-heading">
+            <div>
+              <p id="battle-meta">Expedition</p>
+            </div>
+            <p id="battle-hint">Préparez vos ressources avant le mur suivant.</p>
+          </div>
+        </div>
         <h2 id="current-biome-header">
           <span id="current-biome-text">Nécrolimbe</span>
           <span id="cycle-count"></span>
@@ -347,7 +384,19 @@
             </div>
             <p id="stepper-text">Progression : 0 / 10</p>
           </div>
-        <div id="action-log"></div>
+        <div id="combat-hud">
+          <div id="player-combat-card" class="combat-card ally">
+            <p class="combat-card__eyebrow">Joueur</p>
+            <h3 class="combat-card__name">Sans-eclat</h3>
+            <p class="combat-card__sub">FOR 0 · VIG 0 · ARM 0</p>
+          </div>
+          <div id="enemy-combat-card" class="combat-card enemy">
+            <p class="combat-card__eyebrow">Menace</p>
+            <h3 class="combat-card__name">Ennemi</h3>
+            <p class="combat-card__sub">Analyse en cours</p>
+          </div>
+        </div>
+        <div id="action-log" class="battle-panel"></div>
         <div id="ash-container" style="margin-top: 10px; text-align: center">
           <button id="ash-button" onclick="primeAsh()">
             Utiliser Cendre : <span id="ash-name">---</span> (<span
@@ -356,7 +405,7 @@
             >)
           </button>
         </div>
-        <div id="combat-zone">
+        <div id="combat-zone" class="battle-panel">
           <div class="hp-container">
             <span>Joueur</span>
             <div class="hp-bar-bg">

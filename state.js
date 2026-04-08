@@ -41,7 +41,7 @@ export const DEFAULT_GAME_STATE = {
   ashesOfWarOwned: [],
   equippedAsh: null,
   save: {
-    version: "0.2.0",
+    version: "2.0.0",
     maxLevel: 100,
     offlineTimeBank: 0,
     useOfflineTime: false, 

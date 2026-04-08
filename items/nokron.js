@@ -11,7 +11,7 @@ export const NOKRON = {
       "Tier 5. Dextérité +20%. Convertit 55% (+2% / Niv) de votre Dextérité en Force. Dague Enflamée : Chaque coup a 30% (+2% / Niv) de chance d'infliger 2 Brûlures et 1 Saignement.",
     applyMult: (stats, itemLevel) => {
       stats.dexterity *= 1.2;
-      stats.force = Math.floor(
+      stats.strength += Math.floor(
         stats.dexterity * (0.55 + 0.02 * (itemLevel - 1)),
       );
     },

@@ -152,4 +152,62 @@ export const ITEM_SETS = {
       },
     },
   },
+
+  AINSEL_ASTRAL: {
+    name: "Parure Astrale d'Ainsel",
+    bonuses: {
+      2: {
+        desc: "Dextérité et Intelligence totales +10%.",
+        effect: (stats) => {
+          stats.dexterity *= 1.1;
+          stats.intelligence *= 1.1;
+        },
+      },
+      3: {
+        desc: "Vos dégâts de zone gagnent 35% de votre Intelligence totale.",
+        effect: (stats) => {
+          stats.splashDamage += Math.floor(stats.intelligence * 0.35);
+        },
+      },
+    },
+  },
+
+  ROOTBOUND: {
+    name: "Vestiges des Profondeurs-Racines",
+    bonuses: {
+      2: {
+        desc: "Vigueur totale +15% et Armure totale +10%.",
+        effect: (stats) => {
+          stats.vigor *= 1.15;
+          stats.armor *= 1.1;
+        },
+      },
+      3: {
+        desc: "Convertit 20% de votre Armure totale en Force.",
+        effect: (stats) => {
+          stats.strength += Math.floor(stats.armor * 0.2);
+        },
+      },
+    },
+  },
+
+  ROTBLOOM: {
+    name: "Fleur de Putréfaction",
+    bonuses: {
+      2: {
+        desc: "Vigueur totale +10% et les effets de statut durent plus longtemps.",
+        effect: (stats) => {
+          stats.vigor *= 1.1;
+          stats.critChance += 0.05;
+        },
+      },
+      3: {
+        desc: "Vos attaques ignorent 15% d'armure et gagnent 25 de pénétration fixe.",
+        effect: (stats) => {
+          stats.percentDamagePenetration += 0.15;
+          stats.flatDamagePenetration += 25;
+        },
+      },
+    },
+  },
 };

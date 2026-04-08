@@ -1044,4 +1044,223 @@ export const MONSTERS = {
       return {};
     },
   },
+
+  // --- RIVIERE AINSEL ---
+  ainsel_ant: {
+    name: "Fourmi d'Ainsel",
+    hp: 620,
+    atk: 62,
+    runes: 1600,
+    armor: 135,
+    groupCombinations: [
+      { size: 2, chance: 0.7 },
+      { size: 3, chance: 0.3 },
+    ],
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.25 },
+  },
+
+  ainsel_priest: {
+    name: "Prêtre d'Ainsel",
+    hp: 520,
+    atk: 78,
+    runes: 1750,
+    armor: 110,
+    groupCombinations: [
+      { size: 1, chance: 0.8 },
+      { size: 2, chance: 0.2 },
+    ],
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.2 },
+  },
+
+  ainsel_oracle: {
+    name: "Oracle d'Ainsel",
+    hp: 1650,
+    atk: 105,
+    runes: 7200,
+    armor: 150,
+    isRare: true,
+    specificStats: { attacksPerTurn: 2, critChance: 0.12 },
+    drops: [
+      { id: "ainsel_starmap", chance: 0.55 },
+      { id: "ainsel_silk_robe", chance: 0.55 },
+    ],
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.35 },
+  },
+
+  malformed_starling: {
+    name: "Astre Déchu Juvenile",
+    hp: 2100,
+    atk: 118,
+    runes: 8600,
+    armor: 165,
+    isRare: true,
+    specificStats: { attacksPerTurn: 1, splashDamage: 40 },
+    drops: [
+      { id: "ainsel_shard_spear", chance: 0.7 },
+      { id: "ainsel_starmap", chance: 0.45 },
+    ],
+    onTurnAction: (enemy) => {
+      if (!enemy.isCharging) {
+        enemy.isCharging = true;
+        return { msg: "L'astre attire les runes vers un point de rupture...", skipAttack: true };
+      }
+      enemy.isCharging = false;
+      return { msg: "Explosion gravitationnelle !", dmgMult: 2.2 };
+    },
+  },
+
+  dragonkin_ainsel: {
+    name: "Soldat Draconide d'Ainsel",
+    hp: 16500,
+    atk: 240,
+    runes: 68000,
+    isBoss: true,
+    armor: 240,
+    specificStats: { attacksPerTurn: 2, splashDamage: 80 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.45,
+    flavorTextPhase2: "Le soldat draconide arrache la glace du lit de la rivière.",
+    effectsPhase2: { id: "FROSTBITE", duration: 3, chance: 0.45 },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.25 },
+  },
+
+  // --- DEEPROOT DEPTHS ---
+  root_shambler: {
+    name: "Errant Racinaire",
+    hp: 880,
+    atk: 88,
+    runes: 1900,
+    armor: 170,
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.12 },
+  },
+
+  root_guardian: {
+    name: "Gardien Sépulcral",
+    hp: 1200,
+    atk: 98,
+    runes: 2150,
+    armor: 210,
+    groupCombinations: [
+      { size: 1, chance: 0.75 },
+      { size: 2, chance: 0.25 },
+    ],
+  },
+
+  siluria_remnant: {
+    name: "Vestige de Siluria",
+    hp: 2500,
+    atk: 140,
+    runes: 9200,
+    armor: 240,
+    isRare: true,
+    drops: [
+      { id: "rootbound_maul", chance: 0.55 },
+      { id: "prince_bark_talisman", chance: 0.55 },
+    ],
+    onHitEffect: { id: "STUN", duration: 2, chance: 0.2 },
+  },
+
+  deathblight_basilisk: {
+    name: "Basilic de Mort",
+    hp: 1800,
+    atk: 110,
+    runes: 8100,
+    armor: 120,
+    isRare: true,
+    specificStats: { attacksPerTurn: 3 },
+    drops: [
+      { id: "rootbound_plate", chance: 0.7 },
+      { id: "prince_bark_talisman", chance: 0.4 },
+    ],
+    onHitEffect: { id: "BURN", duration: 2, chance: 0.2 },
+  },
+
+  fia_champion_echo: {
+    name: "Reflet du Champion de Fia",
+    hp: 17500,
+    atk: 225,
+    runes: 72000,
+    isBoss: true,
+    armor: 260,
+    specificStats: { attacksPerTurn: 2, critChance: 0.12, critDamage: 1.8 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2: "Le champion se drape de racines et de souvenirs ensevelis.",
+    onTurnAction: (enemy) => {
+      if (enemy.hp < enemy.maxHp * 0.35 && !enemy.usedRootHeal) {
+        enemy.usedRootHeal = true;
+        return { msg: "Les racines s'abreuvent de la mort et le reforgent.", healAmount: 1400 };
+      }
+      return {};
+    },
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.25 },
+  },
+
+  // --- LAKE OF ROT ---
+  rot_pest: {
+    name: "Serviteur Pestiféré",
+    hp: 980,
+    atk: 105,
+    runes: 2200,
+    armor: 150,
+    groupCombinations: [
+      { size: 2, chance: 0.7 },
+      { size: 3, chance: 0.3 },
+    ],
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.3 },
+  },
+
+  scarlet_monk: {
+    name: "Moine Ecarlate",
+    hp: 1300,
+    atk: 118,
+    runes: 2500,
+    armor: 175,
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.35 },
+  },
+
+  cleanrot_revenant: {
+    name: "Revenant Putréchevalier",
+    hp: 2600,
+    atk: 148,
+    runes: 9800,
+    armor: 210,
+    isRare: true,
+    specificStats: { attacksPerTurn: 3 },
+    drops: [
+      { id: "rotbloom_blade", chance: 0.55 },
+      { id: "rotbloom_idol", chance: 0.55 },
+    ],
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.45 },
+  },
+
+  ulcerated_rot_spirit: {
+    name: "Esprit Putride Ulcéré",
+    hp: 3200,
+    atk: 165,
+    runes: 11000,
+    armor: 180,
+    isRare: true,
+    specificStats: { attacksPerTurn: 2, splashDamage: 60 },
+    drops: [
+      { id: "rotbloom_mail", chance: 0.7 },
+      { id: "rotbloom_blade", chance: 0.45 },
+    ],
+    onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.45 },
+  },
+
+  astel_bud: {
+    name: "Bourgeon d'Astel",
+    hp: 20500,
+    atk: 285,
+    runes: 86000,
+    isBoss: true,
+    armor: 230,
+    specificStats: { attacksPerTurn: 2, splashDamage: 120, critChance: 0.12 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.45,
+    flavorTextPhase2: "Le bourgeon cosmique éclot et inonde le lac de runes affamées.",
+    effectsPhase2: { id: "SCARLET_ROT", duration: 3, chance: 0.55 },
+    onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
+  },
 };

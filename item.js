@@ -1,5 +1,6 @@
 import { applyEffect } from "./combat.js";
 import { ITEM_TYPES } from "./constants.js";
+import { DEPTHS } from "./items/depths.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
@@ -1249,4 +1250,5 @@ export const ITEMS = {
 
   ...RIVER,
   ...NOKRON,
+  ...DEPTHS,
 };
