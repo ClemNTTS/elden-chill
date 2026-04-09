@@ -221,18 +221,18 @@ export const FORCE_VERSION_KEY = "app_version_code";
 export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
 
 const checkScheduledReset = () => {
-  const FINAL_WIPE_FLAG = "wipe_v200_world_rework";
+  const FINAL_WIPE_FLAG = "wipe_v240_save_hardening";
 
   if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
     console.warn(
-      "Maintenance majeure v2 : réinitialisation de la sauvegarde pour activer la nouvelle progression.",
+      "Maintenance majeure v2.4 : réinitialisation de la sauvegarde pour appliquer le durcissement du système de sauvegarde.",
     );
 
     localStorage.clear();
     localStorage.setItem(FINAL_WIPE_FLAG, "true");
 
     alert(
-      "MISE À JOUR MAJEURE : Elden Chill v2 redessine l'exploration, ouvre de nouvelles routes et revoit la courbe de progression. Pour appliquer proprement cette refonte, la sauvegarde est réinitialisée. Bonne redécouverte, Sans-éclat.",
+      "MISE À JOUR MAJEURE : Elden Chill v2.4 renforce le système de sauvegarde et retire l'échange manuel de saves du build public. Pour appliquer proprement cette mise à jour, la sauvegarde locale est réinitialisée. Bonne redécouverte, Sans-éclat.",
     );
 
     window.location.reload();

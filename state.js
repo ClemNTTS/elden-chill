@@ -68,7 +68,7 @@ export const DEFAULT_GAME_STATE = {
     eventsSeen: {},
   },
   save: {
-    version: "2.3.1",
+    version: "2.4.0",
     maxLevel: 150,
     offlineTimeBank: 0,
     useOfflineTime: false,
