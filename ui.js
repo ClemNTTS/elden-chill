@@ -936,6 +936,46 @@ const renderPreparationDisplay = () => {
   blessingsRoot.innerHTML = "";
   consumablesRoot.innerHTML = "";
 
+  const createEmptyPrepOption = ({
+    title,
+    description,
+    details,
+    active,
+    onClick,
+  }) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prep-option prep-option-empty";
+    btn.classList.toggle("is-active", active);
+    btn.innerHTML = `
+      <strong>${title}</strong>
+      <span>${description}</span>
+      <small>${details}</small>
+    `;
+    btn.onclick = onClick;
+    return btn;
+  };
+
+  blessingsRoot.appendChild(
+    createEmptyPrepOption({
+      title: "Aucune bénédiction",
+      description: "Partir sans grâce active et compter uniquement sur le build.",
+      details: "Aucun bonus temporaire n'est appliqué pour cette expédition.",
+      active: !gameState.preparation?.selectedBlessingId,
+      onClick: () => selectBlessing(null),
+    }),
+  );
+
+  consumablesRoot.appendChild(
+    createEmptyPrepOption({
+      title: "Aucun consommable",
+      description: "Conserver ses outils et partir sans effet consommable.",
+      details: "Aucun modificateur de run n'est appliqué au départ.",
+      active: !gameState.preparation?.selectedConsumableId,
+      onClick: () => selectPreparationConsumable(null),
+    }),
+  );
+
   const unlockedBlessings = new Set(
     gameState.preparation?.unlockedBlessings || [],
   );

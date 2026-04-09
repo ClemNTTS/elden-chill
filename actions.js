@@ -19,6 +19,12 @@ export const equipAsh = (ashId) => {
 };
 
 export const selectBlessing = (blessingId) => {
+  if (blessingId == null) {
+    gameState.preparation.selectedBlessingId = null;
+    saveGame();
+    updateUI();
+    return;
+  }
   if (!gameState.preparation.unlockedBlessings?.includes(blessingId)) return;
   gameState.preparation.selectedBlessingId = blessingId;
   saveGame();
@@ -26,6 +32,12 @@ export const selectBlessing = (blessingId) => {
 };
 
 export const selectPreparationConsumable = (consumableId) => {
+  if (consumableId == null) {
+    gameState.preparation.selectedConsumableId = null;
+    saveGame();
+    updateUI();
+    return;
+  }
   if (!gameState.preparation.unlockedConsumables?.includes(consumableId)) return;
   gameState.preparation.selectedConsumableId = consumableId;
   saveGame();
