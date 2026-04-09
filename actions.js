@@ -1,5 +1,5 @@
 import { gameState, runtimeState } from "./state.js";
-import { saveGame, SAVE_NAME } from "./save.js";
+import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
 
@@ -196,7 +196,7 @@ export const resetGame = () => {
       "Êtes-vous sûr de vouloir tout effacer ? Votre progression sera perdue à jamais.",
     )
   ) {
-    localStorage.removeItem(SAVE_NAME);
+    clearSaveStorage();
     location.reload();
   }
 };

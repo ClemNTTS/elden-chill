@@ -68,11 +68,13 @@ export const DEFAULT_GAME_STATE = {
     eventsSeen: {},
   },
   save: {
-    version: "2.3.0",
+    version: "2.3.1",
     maxLevel: 150,
     offlineTimeBank: 0,
-    useOfflineTime: false, 
+    useOfflineTime: false,
     lastSavedAt: 0,
+    profileId: null,
+    saveSequence: 0,
   },
 };
 

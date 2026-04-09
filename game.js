@@ -3,8 +3,6 @@ import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
 import {
-  exportSave,
-  importSave,
   loadGame,
   resetGameState,
   saveGame,
@@ -212,8 +210,6 @@ window.showStatTooltip = showStatTooltip;
 window.moveTooltip = moveTooltip;
 window.hideTooltip = hideTooltip;
 //window.dev = dev;
-window.exportSave = exportSave;
-window.importSave = importSave;
 window.equipAsh = equipAsh;
 window.toggleRealTimeStats = toggleRealTimeStats;
 window.joinDiscord = joinDiscord;
