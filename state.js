@@ -1,82 +1,12 @@
 import { ITEM_SETS } from "./constants.js";
 import { ITEMS } from "./item.js";
 import { applyPreparationStats } from "./systems.js";
+import { DEFAULT_PLAYER_PROFILE } from "./shared/player-profile.js";
 
 // Saved state
-export const DEFAULT_GAME_STATE = {
-  runes: {
-    banked: 0,
-    carried: 0,
-  },
-  stats: {
-    level: 0,
-    runesSpent: 0,
-    vigor: 0,
-    strength: 0,
-    dexterity: 0,
-    intelligence: 0,
-    critChance: 0.05,
-    critDamage: 1.5,
-    splashDamage: 0,
-    armor: 100,
-    flatDamagePenetration: 0,
-    percentDamagePenetration: 0,
-  },
-  equipped: {
-    weapon: "fists",
-    armor: null,
-    accessory: null,
-  },
-  inventory: [{ id: "fists", name: "poings", level: 10, count: 0 }],
-  world: {
-    currentBiome: "limgrave_west",
-    unlockedBiomes: ["limgrave_west"],
-    progress: 0,
-    isExploring: false,
-    checkpointReached: false,
-    rareSpawnsCount: 0,
-    activeBiomeHazards: [],
-    lastEventProgress: -1,
-  },
-  playerEffects: [],
-  ennemyEffects: [],
-  ashesOfWaruses: {},
-  ashesOfWarOwned: [],
-  equippedAsh: null,
-  ui: {
-    currentScreen: "hub",
-    theme: "light",
-    selectedBiomeId: "limgrave_west",
-  },
-  preparation: {
-    selectedBlessingId: "grace_of_runes",
-    selectedConsumableId: "rare_tracker",
-    activeRunBuffs: [],
-    unlockedBlessings: ["grace_of_runes"],
-    unlockedConsumables: ["rare_tracker"],
-  },
-  journal: {
-    filter: "all",
-    biomeFilter: "all",
-    entries: [],
-  },
-  codex: {
-    monstersSeen: {},
-    bossesSeen: {},
-    setsSeen: {},
-    biomesCleared: {},
-    eventsSeen: {},
-  },
-  save: {
-    version: "2.4.0",
-    maxLevel: 150,
-    offlineTimeBank: 0,
-    useOfflineTime: false,
-    lastSavedAt: 0,
-    profileId: null,
-    saveSequence: 0,
-  },
-};
+export const DEFAULT_GAME_STATE = JSON.parse(
+  JSON.stringify(DEFAULT_PLAYER_PROFILE),
+);
 
 export let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
 

@@ -2,11 +2,7 @@
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
-import {
-  loadGame,
-  resetGameState,
-  saveGame,
-} from "./save.js";
+import { loadGame, saveGame } from "./save.js";
 import {
   equipAsh,
   equipItem,
@@ -28,6 +24,17 @@ import {
   toggleRealTimeStats,
 } from "./ui.js";
 import { enqueueDevSpawn } from "./spawn.js";
+import {
+  applyServerOfflineProgress,
+  flushPendingProfileSync,
+  initAuth,
+  isCloudConfigured,
+  loadAuthoritativeProfile,
+  onAuthStateChange,
+  signInWithGoogle,
+  signInWithMagicLink,
+  signOut,
+} from "./backend.js";
 
 // Dev tools
 const dev = {
@@ -221,21 +228,9 @@ export const FORCE_VERSION_KEY = "app_version_code";
 export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
 
 const checkScheduledReset = () => {
-  const FINAL_WIPE_FLAG = "wipe_v240_save_hardening";
-
+  const FINAL_WIPE_FLAG = "wipe_v250_cloud_auth";
   if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
-    console.warn(
-      "Maintenance majeure v2.4 : réinitialisation de la sauvegarde pour appliquer le durcissement du système de sauvegarde.",
-    );
-
-    localStorage.clear();
     localStorage.setItem(FINAL_WIPE_FLAG, "true");
-
-    alert(
-      "MISE À JOUR MAJEURE : Elden Chill v2.4 renforce le système de sauvegarde et retire l'échange manuel de saves du build public. Pour appliquer proprement cette mise à jour, la sauvegarde locale est réinitialisée. Bonne redécouverte, Sans-éclat.",
-    );
-
-    window.location.reload();
   }
   return;
 };
@@ -256,6 +251,18 @@ export async function checkForUpdate() {
 }
 
 const handleAutoRefresh = () => {
+  const hash = window.location.hash || "";
+  const search = window.location.search || "";
+  const isAuthCallback =
+    hash.includes("access_token=") ||
+    hash.includes("refresh_token=") ||
+    search.includes("code=") ||
+    search.includes("token=");
+
+  if (isAuthCallback) {
+    return false;
+  }
+
   const now = Date.now();
   const lastRefresh = localStorage.getItem(CHECK_REFRESH_KEY);
   const lastVersion = localStorage.getItem(FORCE_VERSION_KEY);
@@ -283,20 +290,279 @@ const handleAutoRefresh = () => {
   }
   return false;
 };
+
+const authLog = (...args) => {
+  console.info("[auth-overlay]", ...args);
+};
+
+const setAuthOverlayState = ({
+  title,
+  copy,
+  busy = false,
+  showLogin = true,
+  status = "",
+}) => {
+  const overlay = document.getElementById("auth-overlay");
+  const titleEl = document.getElementById("auth-title");
+  const copyEl = document.getElementById("auth-copy");
+  const actionsEl = document.getElementById("auth-actions");
+  const statusEl = document.getElementById("auth-status-line");
+
+  if (!overlay || !titleEl || !copyEl || !actionsEl || !statusEl) return;
+
+  authLog("show", { title, busy, showLogin, status });
+  overlay.classList.remove("is-hidden");
+  overlay.style.display = "grid";
+  titleEl.innerText = title;
+  copyEl.innerText = copy;
+  actionsEl.style.display = showLogin ? "grid" : "none";
+  statusEl.innerText = status || (busy ? "Connexion en cours..." : "");
+};
+
+let profileLoadInFlight = null;
+let loadedUserId = null;
+let bootstrappedUserId = null;
+let authBootstrapInitialized = false;
+
+const hideAuthOverlay = () => {
+  const overlay = document.getElementById("auth-overlay");
+  if (!overlay) return;
+  authLog("hide");
+  overlay.classList.add("is-hidden");
+  overlay.style.display = "none";
+};
+
+const updateAccountPanel = (user) => {
+  const emailEl = document.getElementById("account-email");
+  const signOutBtn = document.getElementById("btn-signout");
+  if (emailEl) {
+    emailEl.innerText = user?.email || "Non connecte";
+  }
+  if (signOutBtn) {
+    signOutBtn.disabled = !user;
+  }
+};
+
+const bindAuthUi = () => {
+  const signInBtn = document.getElementById("btn-auth-signin");
+  const googleBtn = document.getElementById("btn-auth-google");
+  const signOutBtn = document.getElementById("btn-signout");
+  const emailInput = document.getElementById("auth-email");
+
+  if (signInBtn && emailInput) {
+    signInBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        alert("Entrez une adresse email pour recevoir le magic link.");
+        return;
+      }
+
+      setAuthOverlayState({
+        title: "Lien magique en route",
+        copy: "Verifiez votre boite mail puis revenez ici pour charger votre progression cloud.",
+        busy: true,
+      });
+
+      try {
+        await signInWithMagicLink(email);
+        setAuthOverlayState({
+          title: "Email envoye",
+          copy: "Cliquez sur le lien recu par email, puis revenez sur cette page.",
+          showLogin: true,
+        });
+      } catch (error) {
+        console.error("Impossible d'envoyer le lien magique :", error);
+        setAuthOverlayState({
+          title: "Connexion indisponible",
+          copy: "Le service d'authentification est indisponible pour le moment.",
+          showLogin: true,
+        });
+      }
+    });
+  }
+
+  if (googleBtn) {
+    googleBtn.addEventListener("click", async () => {
+      setAuthOverlayState({
+        title: "Connexion Google",
+        copy: "Redirection vers Google en cours...",
+        busy: true,
+      });
+
+      try {
+        await signInWithGoogle();
+      } catch (error) {
+        console.error("Impossible de lancer la connexion Google :", error);
+        setAuthOverlayState({
+          title: "Connexion indisponible",
+          copy: "Le provider Google n'est pas disponible pour le moment.",
+          showLogin: true,
+        });
+      }
+    });
+  }
+
+  if (signOutBtn) {
+    signOutBtn.addEventListener("click", async () => {
+      await signOut();
+      updateAccountPanel(null);
+      setAuthOverlayState({
+        title: "Connexion requise",
+        copy: "Connectez-vous pour charger votre profil autoritaire et vos sauvegardes cloud.",
+      });
+    });
+  }
+};
+
+const loadPlayerAfterAuth = async () => {
+  if (profileLoadInFlight) {
+    authLog("loadPlayerAfterAuth reuse in-flight promise");
+    return profileLoadInFlight;
+  }
+
+  profileLoadInFlight = (async () => {
+    try {
+      authLog("loadPlayerAfterAuth start");
+      setAuthOverlayState({
+        title: "Chargement du profil",
+        copy: "Connexion et hydratation du personnage en cours...",
+        showLogin: false,
+        busy: true,
+        status: "Lecture du profil cloud...",
+      });
+      await loadAuthoritativeProfile();
+      authLog("loadAuthoritativeProfile done");
+      setAuthOverlayState({
+        title: "Chargement du profil",
+        copy: "Connexion et hydratation du personnage en cours...",
+        showLogin: false,
+        busy: true,
+        status: "Application de la progression hors ligne...",
+      });
+      await applyServerOfflineProgress();
+      authLog("applyServerOfflineProgress done");
+      updateUI();
+      hideAuthOverlay();
+    } catch (error) {
+      authLog("loadPlayerAfterAuth failed", error);
+      console.error("Chargement cloud degrade :", error);
+      updateUI();
+      setAuthOverlayState({
+        title: "Profil indisponible",
+        copy: "Le profil cloud n'a pas pu etre charge.",
+        showLogin: true,
+        status: error?.message || String(error),
+      });
+      throw error;
+    }
+  })();
+
+  try {
+    await profileLoadInFlight;
+  } finally {
+    profileLoadInFlight = null;
+  }
+};
+
+const ensureAuthenticatedBootstrap = async (user, source) => {
+  authLog("ensureAuthenticatedBootstrap", source, user?.id || "no-user");
+
+  if (!user) {
+    loadedUserId = null;
+    bootstrappedUserId = null;
+    setAuthOverlayState({
+      title: "Connexion requise",
+      copy: "Connectez-vous pour charger votre profil autoritaire et vos sauvegardes cloud.",
+      showLogin: true,
+    });
+    return;
+  }
+
+  updateAccountPanel(user);
+  if (bootstrappedUserId === user.id && !profileLoadInFlight) {
+    authLog("bootstrap already complete", user.id);
+    hideAuthOverlay();
+    return;
+  }
+
+  await loadPlayerAfterAuth();
+  loadedUserId = user.id;
+  bootstrappedUserId = user.id;
+  authLog("bootstrap complete", source, user.id);
+};
+
 // Set the onload handler
-window.onload = () => {
+window.onload = async () => {
+  authLog("window.onload start");
   if (handleAutoRefresh()) return;
 
   checkScheduledReset();
-
   loadGame();
   createFireParticles();
+  bindAuthUi();
+
   const startAudioOnInteraction = () => {
     playCampMusic();
     window.removeEventListener("click", startAudioOnInteraction);
   };
   window.addEventListener("click", startAudioOnInteraction);
+
+  if (!isCloudConfigured()) {
+    setAuthOverlayState({
+      title: "Supabase non configure",
+      copy: "Ajoutez SUPABASE_URL et SUPABASE_ANON_KEY dans window.__ELDEN_CHILL_CONFIG__ pour activer le mode cloud autoritaire.",
+      showLogin: false,
+    });
+    updateUI();
+    return;
+  }
+
+  onAuthStateChange(async ({ user }) => {
+    authLog("onAuthStateChange handler", user?.id || "no-user");
+    if (!authBootstrapInitialized) {
+      authLog("onAuthStateChange ignored until initAuth completes");
+      return;
+    }
+
+    try {
+      await ensureAuthenticatedBootstrap(user, "auth-state-change");
+    } catch (error) {
+      console.error("Chargement du profil impossible :", error);
+      updateUI();
+      setAuthOverlayState({
+        title: "Profil indisponible",
+        copy: "Le profil serveur n'a pas pu etre charge. Rechargez la page dans un instant.",
+        showLogin: true,
+        status: error?.message || String(error),
+      });
+    }
+  });
+
+  const authState = await initAuth();
+  authBootstrapInitialized = true;
+  authLog("initAuth completed", authState.user?.id || "no-user");
+  updateAccountPanel(authState.user);
+
+  try {
+    await ensureAuthenticatedBootstrap(authState.user, "initAuth");
+  } catch (error) {
+    console.error("Bootstrap du profil impossible :", error);
+    updateUI();
+    setAuthOverlayState({
+      title: "Profil indisponible",
+      copy: "Le profil serveur n'a pas pu etre charge. Rechargez la page dans un instant.",
+      showLogin: true,
+      status: error?.message || String(error),
+    });
+  }
+
+  updateUI();
 };
 
-// Start the auto-save interval
-setInterval(saveGame, 30000);
+window.addEventListener("beforeunload", () => {
+  if (isCloudConfigured()) {
+    flushPendingProfileSync("beforeunload").catch(() => null);
+  }
+});
+
+setInterval(() => saveGame("interval"), 30000);

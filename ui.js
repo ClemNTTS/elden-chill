@@ -270,7 +270,7 @@ const updateStatDisplay = () => {
     levelCapBanner.innerText =
       remainingLevels === 0
         ? `Niveau maximum atteint (${currentLevel}/${maxLevel}). Les attributs sont capes pour cette version.`
-        : `Niveau ${currentLevel}/${maxLevel} Â· ${remainingLevels} amelioration(s) restante(s) avant le cap.`;
+        : `Niveau ${currentLevel}/${maxLevel} · ${remainingLevels} amelioration(s) restante(s) avant le cap.`;
   }
 
   const statsList = ["vigor", "strength", "dexterity", "intelligence"];
@@ -282,7 +282,9 @@ const updateStatDisplay = () => {
     const bonusEl = document.getElementById(`bonus-${s}`);
     if (bonus !== 0) {
       bonusEl.innerText =
-        bonus > 0 ? `Equip. +${bonus.toFixed(1)}` : `Equip. ${bonus.toFixed(1)}`;
+        bonus > 0
+          ? `Equip. +${bonus.toFixed(1)}`
+          : `Equip. ${bonus.toFixed(1)}`;
       bonusEl.classList.toggle("has-positive", bonus > 0);
       bonusEl.classList.toggle("has-negative", bonus < 0);
     } else {
@@ -292,35 +294,49 @@ const updateStatDisplay = () => {
 
     // Update +1 button
     const cost = getUpgradeCost(s);
-    document.getElementById(`cost-${s}`).innerText = currentLevel >= maxLevel ? "CAP" : formatNumber(cost);
+    document.getElementById(`cost-${s}`).innerText =
+      currentLevel >= maxLevel ? "CAP" : formatNumber(cost);
     const btn = document.getElementById(`btn-${s}-1`);
     if (btn) {
       btn.disabled = gameState.runes.banked < cost || currentLevel >= maxLevel;
       btn.innerText = currentLevel >= maxLevel ? "MAX" : "+";
       btn.classList.toggle("is-maxed", currentLevel >= maxLevel);
-      btn.title = currentLevel >= maxLevel ? "Niveau maximum atteint" : "Ameliorer cette statistique";
+      btn.title =
+        currentLevel >= maxLevel
+          ? "Niveau maximum atteint"
+          : "Ameliorer cette statistique";
     }
 
     // Update +5 button
     const cost5 = getMultiUpgradeCost(s, 5);
-    document.getElementById(`cost-${s}-5`).innerText = currentLevel >= maxLevel ? "CAP" : formatNumber(cost5);
+    document.getElementById(`cost-${s}-5`).innerText =
+      currentLevel >= maxLevel ? "CAP" : formatNumber(cost5);
     const btn5 = document.getElementById(`btn-${s}-5`);
     if (btn5) {
-      btn5.disabled = gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
+      btn5.disabled =
+        gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
       btn5.innerText = currentLevel >= maxLevel ? "MAX" : "+";
       btn5.classList.toggle("is-maxed", currentLevel >= maxLevel);
-      btn5.title = currentLevel >= maxLevel ? "Niveau maximum atteint" : "Ameliorer cette statistique";
+      btn5.title =
+        currentLevel >= maxLevel
+          ? "Niveau maximum atteint"
+          : "Ameliorer cette statistique";
     }
 
     // Update +10 button
     const cost10 = getMultiUpgradeCost(s, 10);
-    document.getElementById(`cost-${s}-10`).innerText = currentLevel >= maxLevel ? "CAP" : formatNumber(cost10);
+    document.getElementById(`cost-${s}-10`).innerText =
+      currentLevel >= maxLevel ? "CAP" : formatNumber(cost10);
     const btn10 = document.getElementById(`btn-${s}-10`);
     if (btn10) {
-      btn10.disabled = gameState.runes.banked < cost10 || currentLevel + 10 > maxLevel;
+      btn10.disabled =
+        gameState.runes.banked < cost10 || currentLevel + 10 > maxLevel;
       btn10.innerText = currentLevel >= maxLevel ? "MAX" : "+";
       btn10.classList.toggle("is-maxed", currentLevel >= maxLevel);
-      btn10.title = currentLevel >= maxLevel ? "Niveau maximum atteint" : "Ameliorer cette statistique";
+      btn10.title =
+        currentLevel >= maxLevel
+          ? "Niveau maximum atteint"
+          : "Ameliorer cette statistique";
     }
   });
 
@@ -338,54 +354,73 @@ const updateStatDisplay = () => {
       : val.toFixed(1) + "x";
 
     // Gestion de l'affichage du bonus (ex: +10.0%)
-      const bonusEl = document.getElementById(`bonus-${id}`);
-      if (bonusEl) {
-        if (bonus !== 0) {
-          bonusEl.innerText = isPercent
-            ? `Equip. +${(bonus * 100).toFixed(1)}%`
-            : `Equip. +${bonus.toFixed(1)}x`;
-          bonusEl.classList.toggle("has-positive", bonus > 0);
-          bonusEl.classList.toggle("has-negative", bonus < 0);
-        } else {
-          bonusEl.innerText = "";
-          bonusEl.classList.remove("has-positive", "has-negative");
-        }
+    const bonusEl = document.getElementById(`bonus-${id}`);
+    if (bonusEl) {
+      if (bonus !== 0) {
+        bonusEl.innerText = isPercent
+          ? `Equip. +${(bonus * 100).toFixed(1)}%`
+          : `Equip. +${bonus.toFixed(1)}x`;
+        bonusEl.classList.toggle("has-positive", bonus > 0);
+        bonusEl.classList.toggle("has-negative", bonus < 0);
+      } else {
+        bonusEl.innerText = "";
+        bonusEl.classList.remove("has-positive", "has-negative");
       }
+    }
 
-      const globalLevelMaxed = currentLevel >= maxLevel;
-      document.getElementById(`cost-${id}`).innerText = globalLevelMaxed ? "CAP" : formatNumber(cost);
+    const globalLevelMaxed = currentLevel >= maxLevel;
+    document.getElementById(`cost-${id}`).innerText = globalLevelMaxed
+      ? "CAP"
+      : formatNumber(cost);
 
-      if (btn) {
-        const isMax = statName === "critChance" && base.critChance >= 1.0;
-        btn.disabled = isMax || gameState.runes.banked < cost || globalLevelMaxed;
-        btn.innerText = (isMax || globalLevelMaxed) ? "MAX" : "+";
-        btn.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-        btn.title = (isMax || globalLevelMaxed) ? "Cap atteint pour cette statistique" : "Ameliorer cette statistique";
-      }
+    if (btn) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn.disabled = isMax || gameState.runes.banked < cost || globalLevelMaxed;
+      btn.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
+      btn.classList.toggle("is-maxed", isMax || globalLevelMaxed);
+      btn.title =
+        isMax || globalLevelMaxed
+          ? "Cap atteint pour cette statistique"
+          : "Ameliorer cette statistique";
+    }
 
-      // Update +5 button for crit stats
-      const cost5 = getMultiUpgradeCost(statName, 5);
-      document.getElementById(`cost-${id}-5`).innerText = globalLevelMaxed ? "CAP" : formatNumber(cost5);
-      const btn5 = document.getElementById(`btn-${id}-5`);
-      if (btn5) {
-        const isMax = statName === "critChance" && base.critChance >= 1.0;
-        btn5.disabled = isMax || gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
-        btn5.innerText = (isMax || globalLevelMaxed) ? "MAX" : "+";
-        btn5.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-        btn5.title = (isMax || globalLevelMaxed) ? "Cap atteint pour cette statistique" : "Ameliorer cette statistique";
-      }
+    // Update +5 button for crit stats
+    const cost5 = getMultiUpgradeCost(statName, 5);
+    document.getElementById(`cost-${id}-5`).innerText = globalLevelMaxed
+      ? "CAP"
+      : formatNumber(cost5);
+    const btn5 = document.getElementById(`btn-${id}-5`);
+    if (btn5) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn5.disabled =
+        isMax || gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
+      btn5.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
+      btn5.classList.toggle("is-maxed", isMax || globalLevelMaxed);
+      btn5.title =
+        isMax || globalLevelMaxed
+          ? "Cap atteint pour cette statistique"
+          : "Ameliorer cette statistique";
+    }
 
-      // Update +10 button for crit stats
-      const cost10 = getMultiUpgradeCost(statName, 10);
-      document.getElementById(`cost-${id}-10`).innerText = globalLevelMaxed ? "CAP" : formatNumber(cost10);
-      const btn10 = document.getElementById(`btn-${id}-10`);
-      if (btn10) {
-        const isMax = statName === "critChance" && base.critChance >= 1.0;
-        btn10.disabled = isMax || gameState.runes.banked < cost10 || currentLevel + 10 > maxLevel;
-        btn10.innerText = (isMax || globalLevelMaxed) ? "MAX" : "+";
-        btn10.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-        btn10.title = (isMax || globalLevelMaxed) ? "Cap atteint pour cette statistique" : "Ameliorer cette statistique";
-      }
+    // Update +10 button for crit stats
+    const cost10 = getMultiUpgradeCost(statName, 10);
+    document.getElementById(`cost-${id}-10`).innerText = globalLevelMaxed
+      ? "CAP"
+      : formatNumber(cost10);
+    const btn10 = document.getElementById(`btn-${id}-10`);
+    if (btn10) {
+      const isMax = statName === "critChance" && base.critChance >= 1.0;
+      btn10.disabled =
+        isMax ||
+        gameState.runes.banked < cost10 ||
+        currentLevel + 10 > maxLevel;
+      btn10.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
+      btn10.classList.toggle("is-maxed", isMax || globalLevelMaxed);
+      btn10.title =
+        isMax || globalLevelMaxed
+          ? "Cap atteint pour cette statistique"
+          : "Ameliorer cette statistique";
+    }
   };
 
   updateCrit("critChance", "critChance", true);
@@ -408,7 +443,11 @@ const updateEquipmentDisplay = () => {
     if (itemId) {
       const itemInInv = gameState.inventory.find((i) => i.id === itemId);
       if (itemInInv) {
-        renderSlotContent(slot, itemInInv.name, `Niveau ${itemInInv.level} Â· Equipe`);
+        renderSlotContent(
+          slot,
+          itemInInv.name,
+          `Niveau ${itemInInv.level} · Equipe`,
+        );
         slot.onmouseenter = (e) => showItemComparisonTooltip(e, itemInInv);
         slot.onmousemove = (e) => moveTooltip(e);
         slot.onmouseleave = () => hideTooltip();
@@ -434,7 +473,12 @@ const updateEquipmentDisplay = () => {
     ashSlot.onmousemove = (e) => moveTooltip(e);
     ashSlot.onmouseleave = () => hideTooltip();
   } else {
-    renderSlotContent(ashSlot, "Aucune cendre equipee", "Selectionnez une ouverture", true);
+    renderSlotContent(
+      ashSlot,
+      "Aucune cendre equipee",
+      "Selectionnez une ouverture",
+      true,
+    );
     ashSlot.onmouseenter = null;
     ashSlot.onmousemove = null;
     ashSlot.onmouseleave = null;
@@ -448,7 +492,11 @@ const updateInventoryEquippedDisplay = () => {
   const equippedEntries = [
     { key: "weapon", label: "Arme", emptyLabel: "Aucune arme equipee" },
     { key: "armor", label: "Armure", emptyLabel: "Aucune armure equipee" },
-    { key: "accessory", label: "Accessoire", emptyLabel: "Aucun accessoire equipe" },
+    {
+      key: "accessory",
+      label: "Accessoire",
+      emptyLabel: "Aucun accessoire equipe",
+    },
     { key: "ash", label: "Cendre", emptyLabel: "Aucune cendre equipee" },
   ];
 
@@ -488,7 +536,7 @@ const updateInventoryEquippedDisplay = () => {
         card.innerHTML = `
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${itemInInv.name}</strong>
-          <span class="inventory-equipped-meta">Niv.${itemInInv.level} Â· Equipe</span>
+          <span class="inventory-equipped-meta">Niv.${itemInInv.level} · Equipe</span>
         `;
         attachTooltipEvents(card, itemInInv);
       } else {
@@ -583,7 +631,7 @@ const renderHubFocus = () => {
   card.innerHTML = `
     <div class="panel-topline">
       <span class="panel-kicker">Biome recommande</span>
-      <span class="panel-note">${guide?.chapter || "Campagne"} Â· ${guide?.region || "Inconnu"}</span>
+      <span class="panel-note">${guide?.chapter || "Campagne"} · ${guide?.region || "Inconnu"}</span>
     </div>
     <div>
       <h3 class="hub-focus-card__title">${biome?.name || "Biome inconnu"}</h3>
@@ -637,10 +685,13 @@ const renderBiomeShortcuts = (visibleIds) => {
     .forEach((biomeId) => {
       const guide = BIOME_GUIDE[biomeId];
       const btn = document.createElement("button");
-      btn.className = biomeId === selectedBiomeId ? "biome-shortcut active-shortcut" : "biome-shortcut";
+      btn.className =
+        biomeId === selectedBiomeId
+          ? "biome-shortcut active-shortcut"
+          : "biome-shortcut";
       btn.innerHTML = `
         <span class="biome-shortcut__title">${BIOMES[biomeId].name}</span>
-        <span class="biome-shortcut__meta">${getBiomePowerBand(biomeId)} Â· ${guide?.pathRole || "Biome actif"}</span>
+        <span class="biome-shortcut__meta">${getBiomePowerBand(biomeId)} · ${guide?.pathRole || "Biome actif"}</span>
       `;
       btn.disabled = gameState.world.isExploring;
       btn.onclick = () => {
@@ -664,8 +715,10 @@ const renderWorldMap = (visibleIds) => {
   if (typeof window.cytoscape === "function") {
     const css = getComputedStyle(document.body);
     const textColor = css.getPropertyValue("--text").trim() || "#2f2418";
-    const surfaceStrong = css.getPropertyValue("--surface-strong").trim() || "#fffaf1";
-    const borderStrong = css.getPropertyValue("--border-strong").trim() || "#6f5d3d";
+    const surfaceStrong =
+      css.getPropertyValue("--surface-strong").trim() || "#fffaf1";
+    const borderStrong =
+      css.getPropertyValue("--border-strong").trim() || "#6f5d3d";
     const success = css.getPropertyValue("--success").trim() || "#607a45";
     const info = css.getPropertyValue("--info").trim() || "#5f7f9f";
     const accent = css.getPropertyValue("--accent").trim() || "#867142";
@@ -686,7 +739,8 @@ const renderWorldMap = (visibleIds) => {
       const depth = getBiomeGraphDepth(biomeId, depthMemo);
       const siblings = groupedByDepth.get(depth) || [biomeId];
       const siblingIndex = siblings.indexOf(biomeId);
-      const hasManualPosition = Number.isFinite(guide?.x) && Number.isFinite(guide?.y);
+      const hasManualPosition =
+        Number.isFinite(guide?.x) && Number.isFinite(guide?.y);
       const centeredOffset = siblingIndex - (siblings.length - 1) / 2;
       const autoX = depth * 240 + 140;
       const autoY = 420 + centeredOffset * 170;
@@ -720,9 +774,10 @@ const renderWorldMap = (visibleIds) => {
 
     if (worldMapGraph) {
       worldMapGraph.destroy();
+      worldMapGraph = null;
     }
 
-      worldMapGraph = window.cytoscape({
+    const currentGraph = window.cytoscape({
       container: map,
       elements,
       layout: {
@@ -803,35 +858,43 @@ const renderWorldMap = (visibleIds) => {
         },
       ],
     });
+    worldMapGraph = currentGraph;
 
-    worldMapGraph.off("tap");
-      worldMapGraph.on("tap", "node", (event) => {
-        const biomeId = event.target.id();
-        selectedBiomeId = biomeId;
-        ensureUiState().selectedBiomeId = biomeId;
-        saveGame();
-        updateBiomeDisplay();
-      });
+    currentGraph.off("tap");
+    currentGraph.on("tap", "node", (event) => {
+      const biomeId = event.target.id();
+      selectedBiomeId = biomeId;
+      ensureUiState().selectedBiomeId = biomeId;
+      saveGame();
+      updateBiomeDisplay();
+    });
 
-      const selectedNode = worldMapGraph.getElementById(selectedBiomeId);
-      if (selectedNode && selectedNode.length) {
-        requestAnimationFrame(() => {
-          if (!worldMapGraph || worldMapGraph.destroyed()) return;
-          worldMapGraph.resize();
-          worldMapGraph.center(selectedNode);
+    const selectedNode = currentGraph.getElementById(selectedBiomeId);
+    if (selectedNode && selectedNode.length) {
+      requestAnimationFrame(() => {
+        if (!currentGraph || currentGraph !== worldMapGraph) return;
+        if (currentGraph.destroyed()) return;
+        if (!currentGraph._private?.renderer) return;
+
+        try {
+          currentGraph.resize();
+          currentGraph.center(selectedNode);
           const nodeCount = visibleIds.length;
           const targetZoom = nodeCount > 12 ? 1.35 : nodeCount > 8 ? 1.2 : 1.05;
-          worldMapGraph.zoom({
+          currentGraph.zoom({
             level: targetZoom,
             renderedPosition: {
               x: map.clientWidth / 2,
               y: map.clientHeight / 2,
             },
           });
-        });
-      }
-      return;
+        } catch (error) {
+          console.warn("World map recenter skipped:", error);
+        }
+      });
     }
+    return;
+  }
 
   map.innerHTML = "";
 };
@@ -863,7 +926,7 @@ const renderBiomeDetail = (biomeId) => {
   card.innerHTML = `
     <div class="biome-detail-header">
       <div>
-        <p class="detail-kicker">${guide?.chapter || "Zone"} Â· ${guide?.region || "Inconnu"}</p>
+        <p class="detail-kicker">${guide?.chapter || "Zone"} · ${guide?.region || "Inconnu"}</p>
         <h4>${biome.name}</h4>
       </div>
       <span class="danger-badge ${getBiomeDangerClass(biomeId)}">${guide?.danger || "Inconnu"}</span>
@@ -959,7 +1022,8 @@ const renderPreparationDisplay = () => {
   blessingsRoot.appendChild(
     createEmptyPrepOption({
       title: "Aucune bénédiction",
-      description: "Partir sans grâce active et compter uniquement sur le build.",
+      description:
+        "Partir sans grâce active et compter uniquement sur le build.",
       details: "Aucun bonus temporaire n'est appliqué pour cette expédition.",
       active: !gameState.preparation?.selectedBlessingId,
       onClick: () => selectBlessing(null),
@@ -986,39 +1050,39 @@ const renderPreparationDisplay = () => {
   Object.values(BLESSINGS)
     .filter((blessing) => unlockedBlessings.has(blessing.id))
     .forEach((blessing) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "prep-option";
-    btn.classList.toggle(
-      "is-active",
-      gameState.preparation?.selectedBlessingId === blessing.id,
-    );
-    btn.innerHTML = `
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "prep-option";
+      btn.classList.toggle(
+        "is-active",
+        gameState.preparation?.selectedBlessingId === blessing.id,
+      );
+      btn.innerHTML = `
       <strong>${blessing.name}</strong>
       <span>${blessing.description}</span>
       <small>${blessing.detailedDescription || ""}</small>
     `;
-    btn.onclick = () => selectBlessing(blessing.id);
-    blessingsRoot.appendChild(btn);
+      btn.onclick = () => selectBlessing(blessing.id);
+      blessingsRoot.appendChild(btn);
     });
 
   Object.values(PREP_CONSUMABLES)
     .filter((consumable) => unlockedConsumables.has(consumable.id))
     .forEach((consumable) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "prep-option";
-    btn.classList.toggle(
-      "is-active",
-      gameState.preparation?.selectedConsumableId === consumable.id,
-    );
-    btn.innerHTML = `
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "prep-option";
+      btn.classList.toggle(
+        "is-active",
+        gameState.preparation?.selectedConsumableId === consumable.id,
+      );
+      btn.innerHTML = `
       <strong>${consumable.name}</strong>
       <span>${consumable.description}</span>
       <small>${consumable.detailedDescription || ""}</small>
     `;
-    btn.onclick = () => selectPreparationConsumable(consumable.id);
-    consumablesRoot.appendChild(btn);
+      btn.onclick = () => selectPreparationConsumable(consumable.id);
+      consumablesRoot.appendChild(btn);
     });
 };
 
@@ -1087,7 +1151,9 @@ const updateCodexDisplay = () => {
     bossRoot,
     Object.keys(gameState.codex?.bossesSeen || {}).map((monsterId) => ({
       title: MONSTERS[monsterId]?.name || monsterId,
-      meta: BIOMES[gameState.codex.bossesSeen[monsterId].biomeId]?.name || "Biome inconnu",
+      meta:
+        BIOMES[gameState.codex.bossesSeen[monsterId].biomeId]?.name ||
+        "Biome inconnu",
       copy: "Boss reference de votre route et mur de progression memorise.",
     })),
     "Aucun boss note pour le moment.",
@@ -1097,8 +1163,12 @@ const updateCodexDisplay = () => {
     monsterRoot,
     Object.keys(gameState.codex?.monstersSeen || {}).map((monsterId) => ({
       title: MONSTERS[monsterId]?.name || monsterId,
-      meta: BIOMES[gameState.codex.monstersSeen[monsterId].biomeId]?.name || "Biome inconnu",
-      copy: MONSTERS[monsterId]?.isRare ? "Elite rencontre" : "Menace repertoriee",
+      meta:
+        BIOMES[gameState.codex.monstersSeen[monsterId].biomeId]?.name ||
+        "Biome inconnu",
+      copy: MONSTERS[monsterId]?.isRare
+        ? "Elite rencontre"
+        : "Menace repertoriee",
     })),
     "Aucun monstre consigne pour le moment.",
   );
@@ -1123,7 +1193,9 @@ const updateCodexDisplay = () => {
       const info = getCodexBiomeInfo(biomeId);
       return {
         title: info.biome?.name || biomeId,
-        meta: info.guide ? `Niv. ${info.guide.recommendedLevel[0]}-${info.guide.recommendedLevel[1]}` : "",
+        meta: info.guide
+          ? `Niv. ${info.guide.recommendedLevel[0]}-${info.guide.recommendedLevel[1]}`
+          : "",
         copy: info.guide ? describeHazards(biomeId) : "Biome nettoye",
       };
     }),
@@ -1172,7 +1244,7 @@ const updateCombatPresentation = () => {
 
   playerCard.querySelector(".combat-card__name").innerText = "Sans-eclat";
   playerCard.querySelector(".combat-card__sub").innerText =
-    `FOR ${eff.strength} Â· VIG ${eff.vigor} Â· ARM ${eff.armor}`;
+    `FOR ${eff.strength} · VIG ${eff.vigor} · ARM ${eff.armor}`;
 
   if (!currentEnemy) {
     enemyCard.querySelector(".combat-card__name").innerText = "Aucune menace";
@@ -1211,9 +1283,8 @@ const updateCombatPresentation = () => {
 
   enemyCard.querySelector(".combat-card__name").innerText = currentEnemy.name;
   enemyCard.querySelector(".combat-card__sub").innerText =
-    `${prefix} Â· ATK ${currentEnemy.atk}${currentEnemy.armor ? ` Â· ARM ${currentEnemy.armor}` : ""}`;
-  battleMeta.innerText =
-    `${currentBiome?.name || "Expedition"} Â· ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
+    `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+  battleMeta.innerText = `${currentBiome?.name || "Expedition"} · ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
 
   if (currentEnemy.isBoss) {
     battleHint.innerText =
@@ -1234,11 +1305,11 @@ const updateCombatPresentation = () => {
       </div>
       <div class="battle-intel-chip">
         <span>Progression</span>
-        <strong>${progress} / ${total || "?"} Â· ${prefix}</strong>
+        <strong>${progress} / ${total || "?"} · ${prefix}</strong>
       </div>
       <div class="battle-intel-chip">
         <span>Cendre</span>
-        <strong>${gameState.equippedAsh ? `${ASHES_OF_WAR[gameState.equippedAsh].name} Â· ${runtimeState.ashUsesLeft} charge(s)` : "Aucune equipee"}</strong>
+        <strong>${gameState.equippedAsh ? `${ASHES_OF_WAR[gameState.equippedAsh].name} · ${runtimeState.ashUsesLeft} charge(s)` : "Aucune equipee"}</strong>
       </div>
     `;
   }
@@ -1268,7 +1339,10 @@ const updateEnemyIntentDisplay = () => {
 
   panel.classList.add(`intent-${intent.severity || "normal"}`);
   label.innerText = intent.label;
-  hint.innerText = [intent.targetHint, intent.hazard ? HAZARD_LABELS[intent.hazard] : null]
+  hint.innerText = [
+    intent.targetHint,
+    intent.hazard ? HAZARD_LABELS[intent.hazard] : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 };
@@ -1298,7 +1372,12 @@ const ensureBattleLogLayout = () => {
 };
 
 const getLogSide = (message, className = "") => {
-  const playerClasses = ["log-self", "log-heal", "log-runes", "log-ash-activation"];
+  const playerClasses = [
+    "log-self",
+    "log-heal",
+    "log-runes",
+    "log-ash-activation",
+  ];
   if (playerClasses.includes(className)) return "player";
 
   if (
@@ -1326,9 +1405,12 @@ const getLogKind = (message = "", className = "") => {
   if (className === "log-runes") return "runes";
   if (className === "log-heal") return "heal";
   if (className === "log-event") return "event";
-  if (className === "log-ash-activation" || message.startsWith("CENDRE")) return "ash";
-  if (className === "log-crit" || message.startsWith("BOSS VAINCU")) return "boss";
-  if (message.includes("esquive") || message.includes("ESQUIVE")) return "status";
+  if (className === "log-ash-activation" || message.startsWith("CENDRE"))
+    return "ash";
+  if (className === "log-crit" || message.startsWith("BOSS VAINCU"))
+    return "boss";
+  if (message.includes("esquive") || message.includes("ESQUIVE"))
+    return "status";
   if (message.includes("Objet") || message.includes("OBJET")) return "loot";
   return "system";
 };
@@ -1668,7 +1750,8 @@ export const ActionLog = (message, className = "") => {
   if (!layout) return;
   const side = getLogSide(message, className);
   const kind = getLogKind(message, className);
-  const targetColumn = side === "player" ? layout.playerColumn : layout.enemyColumn;
+  const targetColumn =
+    side === "player" ? layout.playerColumn : layout.enemyColumn;
   const latest = targetColumn.querySelector(".log-entry");
   if (latest && latest.dataset.rawMessage === message) {
     const nextCount = Number(latest.dataset.repeatCount || "1") + 1;
@@ -1735,19 +1818,27 @@ export const triggerShake = () => {
     let delay = ms;
     try {
       const save = gameState.save || {};
-      const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+      const use =
+        save.useOfflineTime &&
+        (save.offlineTimeBank || 0) > 0 &&
+        gameState.world.isExploring;
       const M = runtimeState.offlineSpeedMultiplier || 3;
       if (use && M > 1 && ms > 0) {
         const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
         const bankMs = (save.offlineTimeBank || 0) * 1000;
         if (bankMs >= fullSavedMs) {
           delay = Math.max(0, Math.floor(ms / M));
-          save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+          save.offlineTimeBank = Math.max(
+            0,
+            (save.offlineTimeBank || 0) - fullSavedMs / 1000,
+          );
         } else if (bankMs > 0) {
           delay = Math.max(0, Math.floor(ms - bankMs));
           save.offlineTimeBank = 0;
         }
-        try { updateUI(); } catch (e) {}
+        try {
+          updateUI();
+        } catch (e) {}
       }
     } catch (e) {}
     return setTimeout(fn, delay);
@@ -1883,8 +1974,11 @@ const getProjectedEffectiveStats = (item) => {
       const itemData = ITEMS[itemId];
 
       if (itemData && itemData[type]) {
-        const invItem = gameState.inventory.find((inventoryItem) => inventoryItem.id === itemId);
-        const level = itemId === item.id ? item.level : invItem ? invItem.level : 1;
+        const invItem = gameState.inventory.find(
+          (inventoryItem) => inventoryItem.id === itemId,
+        );
+        const level =
+          itemId === item.id ? item.level : invItem ? invItem.level : 1;
         itemData[type](effStats, level);
       }
     });
@@ -1918,11 +2012,20 @@ const getProjectedEffectiveStats = (item) => {
 
   applyItemBonus("applyMult");
 
-  ["strength", "vigor", "dexterity", "intelligence", "armor", "splashDamage"].forEach((key) => {
+  [
+    "strength",
+    "vigor",
+    "dexterity",
+    "intelligence",
+    "armor",
+    "splashDamage",
+  ].forEach((key) => {
     if (effStats[key] !== undefined) effStats[key] = Math.round(effStats[key]);
   });
 
-  if (gameState.playerEffects.some((effect) => effect.id === "DEW_PROTECTION")) {
+  if (
+    gameState.playerEffects.some((effect) => effect.id === "DEW_PROTECTION")
+  ) {
     effStats.armor += 50;
   }
 
@@ -1966,9 +2069,10 @@ const showItemComparisonTooltip = (e, item) => {
       const diff = nextValue - currentValue;
       if (Math.abs(diff) < 0.001) return "";
 
-      const diffText = diff > 0
-        ? `+${formatTooltipValue(statName, diff)}`
-        : formatTooltipValue(statName, diff);
+      const diffText =
+        diff > 0
+          ? `+${formatTooltipValue(statName, diff)}`
+          : formatTooltipValue(statName, diff);
 
       return `
         <div class="tooltip-compare-row compact">
@@ -2194,18 +2298,20 @@ export const setAudioListener = () => {
 const attachTooltipEvents = (element, itemOrId, isAsh = false) => {
   // 1. Pour PC : Le hover classique
   element.onmouseenter = (e) =>
-    isAsh ? showAshTooltip(e, itemOrId) : showItemComparisonTooltip(e, itemOrId);
+    isAsh
+      ? showAshTooltip(e, itemOrId)
+      : showItemComparisonTooltip(e, itemOrId);
   element.onmouseleave = () => hideTooltip();
   element.onmousemove = (e) => moveTooltip(e);
 
   // 2. Pour Mobile (et PC au clic) : Appuyer pour afficher, relÃ¢cher pour cacher
   element.onpointerdown = (e) => {
     // EmpÃªche le clic droit ou les menus contextuels mobiles de gÃªner
-    isAsh ? showAshTooltip(e, itemOrId) : showItemComparisonTooltip(e, itemOrId);
+    isAsh
+      ? showAshTooltip(e, itemOrId)
+      : showItemComparisonTooltip(e, itemOrId);
   };
 
   element.onpointerup = () => hideTooltip();
   element.onpointercancel = () => hideTooltip(); // Si le doigt glisse hors de l'Ã©cran
 };
-
-

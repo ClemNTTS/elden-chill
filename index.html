@@ -15,6 +15,22 @@
     <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   </head>
   <body class="theme-light">
+    <div id="auth-overlay" class="auth-overlay is-hidden">
+      <div class="auth-card">
+        <p class="auth-kicker">Cloud save autoritaire</p>
+        <h2 id="auth-title">Connexion requise</h2>
+        <p id="auth-copy">
+          Connectez-vous pour charger votre profil autoritaire et vos sauvegardes cloud.
+        </p>
+        <div id="auth-actions" class="auth-actions">
+          <input id="auth-email" type="email" placeholder="nom@example.com" autocomplete="email" />
+          <button id="btn-auth-signin" type="button">Recevoir un magic link</button>
+          <button id="btn-auth-google" type="button">Se connecter avec Google</button>
+        </div>
+        <p id="auth-status-line" class="auth-status-line"></p>
+      </div>
+    </div>
+
     <div id="fire-particles"></div>
     <div id="game-container">
       <header class="app-header">
@@ -489,10 +505,16 @@
                 </div>
 
                 <div class="camp-panel">
-                  <h3>Sauvegarde locale</h3>
+                  <h3>Compte cloud</h3>
                   <p class="panel-copy">
-                    Les sauvegardes externes ont ete retirees du build public. Votre progression est conservee localement sur ce navigateur en attendant la future migration serveur.
+                    Le profil joueur est maintenant charge depuis Supabase. Les preferences visuelles restent locales a ce navigateur.
                   </p>
+                  <div class="button-stack">
+                    <p class="account-line">Compte actif : <span id="account-email">Non connecte</span></p>
+                    <button id="btn-signout" class="menu-button" type="button" disabled>
+                      Se deconnecter
+                    </button>
+                  </div>
                 </div>
 
                 <div class="camp-panel danger-panel">
@@ -621,6 +643,7 @@
 
     <div id="tooltip" class="tooltip-hidden"></div>
     <div id="fade-overlay"></div>
+    <script src="config.js"></script>
     <script type="module" src="game.js"></script>
   </body>
 </html>

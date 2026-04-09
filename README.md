@@ -13,11 +13,24 @@ Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez
 *   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
 *   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
 *   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.
-*   **Sauvegarde Locale :** Votre progression est automatiquement sauvegardée dans votre navigateur via `localStorage`.
+*   **Profil Cloud Autoritaire :** Votre progression persistante est désormais chargee via Supabase avec authentification par magic link.
+
+## Configuration cloud
+
+Le front attend une configuration Supabase dans `config.js` :
+
+```js
+window.__ELDEN_CHILL_CONFIG__ = {
+  SUPABASE_URL: "https://<project-ref>.supabase.co",
+  SUPABASE_ANON_KEY: "<public-anon-key>",
+};
+```
+
+Le schema SQL est fourni dans `supabase/migrations/20260409_server_authoritative.sql` et les Edge Functions dans `supabase/functions/`.
 
 ## Comment Jouer ?
 
-Aucune installation n'est requise. Il suffit d'ouvrir le fichier `index.html` dans un navigateur web moderne (Chrome, Firefox, Edge, etc.).
+Servez le dossier sur un hebergement statique ou local, configurez Supabase, puis ouvrez `index.html` dans un navigateur web moderne (Chrome, Firefox, Edge, etc.).
 
 ## Technologies Utilisées
 

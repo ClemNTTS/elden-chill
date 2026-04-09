@@ -1091,6 +1091,59 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   border-color: var(--accent);
 }
 
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top, rgba(245, 195, 86, 0.16), transparent 35%),
+    rgba(10, 7, 4, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+.auth-overlay.is-hidden {
+  display: none;
+}
+
+.auth-card {
+  width: min(100%, 460px);
+  display: grid;
+  gap: 14px;
+  padding: 28px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface-strong) 92%, white);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 58%, transparent);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+}
+
+.auth-kicker,
+.auth-status-line,
+.account-line {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.auth-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-actions input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.auth-actions button {
+  width: 100%;
+}
+
 .options-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
