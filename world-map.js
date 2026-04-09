@@ -1,3 +1,5 @@
+import { BIOMES } from "./biome.js";
+
 export const BIOME_GUIDE = {
   limgrave_west: {
     chapter: "Chapitre I",
@@ -242,6 +244,22 @@ export const BIOME_GUIDE = {
 };
 
 export const BIOME_ORDER = Object.keys(BIOME_GUIDE);
+
+export function getBiomeGraphDepth(biomeId, seen = new Map()) {
+  if (seen.has(biomeId)) return seen.get(biomeId);
+  const biome = BIOMES[biomeId];
+  if (!biome) return 0;
+
+  let parents = 0;
+  Object.entries(BIOMES).forEach(([candidateId, candidate]) => {
+    if ((candidate.unlocks || []).includes(biomeId)) {
+      parents = Math.max(parents, getBiomeGraphDepth(candidateId, seen) + 1);
+    }
+  });
+
+  seen.set(biomeId, parents);
+  return parents;
+}
 
 export function getBiomePowerBand(biomeId) {
   const guide = BIOME_GUIDE[biomeId];

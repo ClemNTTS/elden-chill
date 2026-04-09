@@ -40,6 +40,11 @@ export const DEFAULT_GAME_STATE = {
   ashesOfWaruses: {},
   ashesOfWarOwned: [],
   equippedAsh: null,
+  ui: {
+    currentScreen: "hub",
+    theme: "light",
+    selectedBiomeId: "limgrave_west",
+  },
   save: {
     version: "2.0.0",
     maxLevel: 100,
@@ -85,6 +90,7 @@ export function setGameState(newState) {
   if (newState.ashesOfWarOwned)
     Object.assign(gameState.ashesOfWarOwned, newState.ashesOfWarOwned);
   if (newState.equippedAsh) gameState.equippedAsh = newState.equippedAsh;
+  if (newState.ui) Object.assign(gameState.ui, newState.ui);
 
   if (newState.save) Object.assign(gameState.save, newState.save);
 

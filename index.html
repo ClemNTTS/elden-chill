@@ -12,425 +12,500 @@
     />
     <link rel="stylesheet" href="style.css" />
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
   </head>
-  <body>
+  <body class="theme-light">
     <div id="fire-particles"></div>
     <div id="game-container">
-      <header>
-        <h1>ELDEN CHILL</h1>
-        <div id="currency-panel">
-          <p>Runes (Coffre) : <span id="banked-runes">0</span></p>
-          <p class="risk">
-            Runes (Portées) : <span id="carried-runes">0</span>
-          </p>
+      <header class="app-header">
+        <div class="brand-lockup">
+          <p class="brand-kicker">Fan game Elden Ring</p>
+          <h1>ELDEN CHILL</h1>
+        </div>
+
+        <nav id="primary-nav" class="primary-nav">
+          <button class="nav-btn" type="button" onclick="navigateTo('hub')">Hub</button>
+          <button class="nav-btn" type="button" onclick="navigateTo('map')">Carte</button>
+          <button class="nav-btn" type="button" onclick="navigateTo('build')">Build</button>
+          <button class="nav-btn" type="button" onclick="navigateTo('inventory')">Inventaire</button>
+          <button class="nav-btn" type="button" onclick="navigateTo('options')">Options</button>
+        </nav>
+
+        <div class="header-tools">
+          <div id="currency-panel" class="currency-panel">
+            <p>Runes coffrees <span id="banked-runes">0</span></p>
+            <p class="risk">Runes portees <span id="carried-runes">0</span></p>
+          </div>
+          <button id="theme-toggle" class="theme-toggle" type="button" onclick="toggleTheme()">
+            Mode sombre
+          </button>
         </div>
       </header>
 
-      <div id="real-time-stats-toggle">
-        <button onclick="toggleRealTimeStats()">
-          👁️ Voir Stats Effectives
-        </button>
-      </div>
-
-      <div id="real-time-stats-panel" class="hidden-panel">
-        <h4>Statistiques de Combat</h4>
-        <div id="real-time-content"></div>
-      </div>
-
-      <div id="character-sheet">
-        <div class="stat-line">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'vigor')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>❤️ Vigueur</span>
-            <span class="stat-values">
-              <b id="base-vigor">0</b>
-              <small id="bonus-vigor" class="bonus-val"></small>
-            </span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-vigor">0</span>
-            <button class="mini-upgrade" id="btn-vigor-1" onclick="upgradeStat('vigor')">
-              +
-            </button>
-            <span class="cost-label" id="cost-vigor-5">0</span>
-            <button class="mini-upgrade" id="btn-vigor-5" onclick="upgradeStatMultiple('vigor', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-vigor-10">0</span>
-            <button class="mini-upgrade" id="btn-vigor-10" onclick="upgradeStatMultiple('vigor', 10)">
-              +
-            </button>
-          </div>
-        </div>
-
-        <div class="stat-line">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'strength')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>⚔️ Force</span>
-            <span class="stat-values">
-              <b id="base-strength">0</b>
-              <small id="bonus-strength" class="bonus-val"></small>
-            </span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-strength">0</span>
-            <button class="mini-upgrade" id="btn-strength-1" onclick="upgradeStat('strength')">
-              +
-            </button>
-            <span class="cost-label" id="cost-strength-5">0</span>
-            <button class="mini-upgrade" id="btn-strength-5" onclick="upgradeStatMultiple('strength', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-strength-10">0</span>
-            <button class="mini-upgrade" id="btn-strength-10" onclick="upgradeStatMultiple('strength', 10)">
-              +
-            </button>
-          </div>
-        </div>
-
-        <div class="stat-line">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'dexterity')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>💨 Dextérité</span>
-            <span class="stat-values">
-              <b id="base-dexterity">0</b>
-              <small id="bonus-dexterity" class="bonus-val"></small>
-            </span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-dexterity">0</span>
-            <button class="mini-upgrade" id="btn-dexterity-1" onclick="upgradeStat('dexterity')">
-              +
-            </button>
-            <span class="cost-label" id="cost-dexterity-5">0</span>
-            <button class="mini-upgrade" id="btn-dexterity-5" onclick="upgradeStatMultiple('dexterity', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-dexterity-10">0</span>
-            <button class="mini-upgrade" id="btn-dexterity-10" onclick="upgradeStatMultiple('dexterity', 10)">
-              +
-            </button>
-          </div>
-        </div>
-
-        <div class="stat-line">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'intelligence')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>🧠 Intelligence</span>
-            <span class="stat-values">
-              <b id="base-intelligence">0</b>
-              <small id="bonus-intelligence" class="bonus-val"></small>
-            </span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-intelligence">0</span>
-            <button class="mini-upgrade" id="btn-intelligence-1" onclick="upgradeStat('intelligence')">
-              +
-            </button>
-            <span class="cost-label" id="cost-intelligence-5">0</span>
-            <button class="mini-upgrade" id="btn-intelligence-5" onclick="upgradeStatMultiple('intelligence', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-intelligence-10">0</span>
-            <button class="mini-upgrade" id="btn-intelligence-10" onclick="upgradeStatMultiple('intelligence', 10)">
-              +
-            </button>
-          </div>
-        </div>
-
-        <hr />
-
-        <div class="stat-line secondary">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'critChance')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>Crit %</span>
-            <b id="eff-critChance">0%</b>
-            <span id="bonus-critChance"></span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-critChance">0</span>
-            <button class="mini-upgrade" id="btn-critChance-1" onclick="upgradeStat('critChance')">
-              +
-            </button>
-            <span class="cost-label" id="cost-critChance-5">0</span>
-            <button class="mini-upgrade" id="btn-critChance-5" onclick="upgradeStatMultiple('critChance', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-critChance-10">0</span>
-            <button class="mini-upgrade" id="btn-critChance-10" onclick="upgradeStatMultiple('critChance', 10)">
-              +
-            </button>
-          </div>
-        </div>
-
-        <div class="stat-line secondary">
-          <div
-            class="stat-info"
-            onmouseenter="showStatTooltip(event, 'critDamage')"
-            onmousemove="moveTooltip(event)"
-            onmouseleave="hideTooltip()"
-          >
-            <span>Crit Dmg</span>
-            <b id="eff-critDamage">0x</b>
-            <span id="bonus-critDamage"></span>
-          </div>
-          <div class="upgrade-action">
-            <span class="cost-label" id="cost-critDamage">0</span>
-            <button class="mini-upgrade" id="btn-critDamage-1" onclick="upgradeStat('critDamage')">
-              +
-            </button>
-            <span class="cost-label" id="cost-critDamage-5">0</span>
-            <button class="mini-upgrade" id="btn-critDamage-5" onclick="upgradeStatMultiple('critDamage', 5)">
-              +
-            </button>
-            <span class="cost-label" id="cost-critDamage-10">0</span>
-            <button class="mini-upgrade" id="btn-critDamage-10" onclick="upgradeStatMultiple('critDamage', 10)">
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-
       <section id="camp-view">
-        <div id="campaign-overview" class="camp-panel">
-          <div class="panel-topline">
-            <span class="panel-kicker">Campagne v2</span>
-            <span class="panel-note">Une carte, du guidage, et de nouvelles routes souterraines.</span>
-          </div>
-          <div id="journey-overview" class="journey-overview"></div>
-        </div>
-
-        <div id="biome-selection" class="camp-panel">
-          <div class="section-head">
-            <div>
-              <h3>Atlas des Terres Intermédiaires</h3>
-              <p>Choisissez votre prochain front avant de quitter le feu.</p>
-            </div>
-            <div class="atlas-legend">
-              <span class="legend-chip unlocked">Débloqué</span>
-              <span class="legend-chip reachable">Repéré</span>
-              <span class="legend-chip locked">Verrouillé</span>
-            </div>
-          </div>
-
-          <div id="world-map-shell">
-            <svg id="world-map-paths" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
-            <div id="world-map"></div>
-          </div>
-
-          <div id="biome-detail-card" class="biome-detail-card"></div>
-        </div>
-
-        <div id="equipment-section" class="camp-panel">
-          <h3>Équipement Actif</h3>
-          <div class="slots-container">
-            <div class="slot-wrapper">
-              <span class="slot-label">Arme</span>
-              <div class="slot" id="slot-weapon">Vide</div>
-            </div>
-            <div class="slot-wrapper">
-              <span class="slot-label">Armure</span>
-              <div class="slot" id="slot-armor">Vide</div>
-            </div>
-            <div class="slot-wrapper">
-              <span class="slot-label">Accessoire</span>
-              <div class="slot" id="slot-accessory">Vide</div>
-            </div>
-            <div class="slot-wrapper">
-              <span class="slot-label">Cendre de Guerre</span>
-              <div class="slot" id="slot-ash">Vide</div>
-            </div>
-          </div>
-        </div>
-
-        <div id="biome-shortcuts-panel" class="camp-panel">
-          <h3>Départs rapides</h3>
-          <div id="biome-list"></div>
-        </div>
-
-        <hr />
-
-        <div class="inventory-toolbar camp-panel">
-          <button onclick="toggleInventoryCollapse()" id="btn-collapse">
-            ▼ Inventaire
-          </button>
-          <div id="filter-buttons">
-            <button onclick="setInventoryFilter('Tous')">Tous</button>
-            <button onclick="setInventoryFilter('Arme')">⚔️</button>
-            <button onclick="setInventoryFilter('Armure')">🛡️</button>
-            <button onclick="setInventoryFilter('Accessoire')">💍</button>
-          </div>
-        </div>
-
-        <div id="inventory-section" class="camp-panel">
-          <h3>Inventaire</h3>
-          <div id="inventory-grid"></div>
-        </div>
-
-        <div id="ashes-selection-section" class="camp-panel">
-          <h3>Cendres de Guerre</h3>
-          <div id="ashes-list" class="ashes-container">
-            Aucune cendre de guerre possédée
-          </div>
-        </div>
-
-        <div class="options-zone camp-panel" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-          <button id="open-options-btn" onclick="toggleOptions(true)">
-            Options & Infos
-          </button>
-          <div id="offline-controls" class="offline-controls">
-            <div class="bank-text">Temps Sauvegardé: <span id="offline-bank">0s</span></div>
-            <button id="btn-use-offline" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
-          </div>
-        </div>
-
-        <div id="options-modal" class="modal-hidden">
-          <div class="modal-content">
-            <span class="close-modal" onclick="toggleOptions(false)"
-              >&times;</span
-            >
-            <h2>Paramètres du Monde</h2>
-
-            <div id="game-menu">
-              <button id="btn-wiki" class="menu-button">
-                Consulter le Wiki
-              </button>
-              <button
-                id=""
-                discord-btn
-                class="menu-button"
-                onclick="joinDiscord()"
-              >
-                Rejoindre le Discord
-              </button>
-            </div>
-
-            <div class="options-container">
-              <h3>Audio</h3>
-              <div class="option-row">
-                <label for="music-volume">Volume Musique</label>
-                <input
-                  type="range"
-                  id="music-volume"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value="0.3"
-                />
+        <section id="screen-hub" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Camp de grace</p>
+                <h2>Hub du Sans-eclat</h2>
+                <p class="screen-copy">
+                  Une page d'accueil legere pour lire la progression, preparer le build et repartir sans se perdre.
+                </p>
               </div>
             </div>
 
-            <hr />
-            <h3>Zone de sans retour</h3>
-            <div class="options-container" id="danger-option-zone">
-              <button class="reset-btn" onclick="resetGame()">
-                Réinitialiser la Sauvegarde
-              </button>
-              <button class="reset-btn" onclick="refundRunes()">
-                Rembourse les runes investies
-              </button>
-            </div>
+            <div class="hub-grid">
+              <div id="campaign-overview" class="camp-panel hero-panel">
+                <div class="panel-topline">
+                  <span class="panel-kicker">Progression</span>
+                  <span class="panel-note">Votre campagne en un regard.</span>
+                </div>
+                <div id="journey-overview" class="journey-overview"></div>
+              </div>
 
-            <div class="options-container">
-              <h3>Gestion de Sauvegarde</h3>
-              <div class="save-buttons">
-                <button onclick="exportSave()">📤 Exporter (Copier)</button>
-                <button onclick="importSave()">📥 Importer</button>
+              <div id="hub-focus-card" class="camp-panel hub-focus-card"></div>
+
+              <div id="equipment-section" class="camp-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Equipement actif</h3>
+                    <p>Votre silhouette actuelle avant le prochain depart.</p>
+                  </div>
+                </div>
+                <div class="slots-container">
+                  <div class="slot-wrapper">
+                    <span class="slot-label">Arme</span>
+                    <div class="slot" id="slot-weapon">Vide</div>
+                  </div>
+                  <div class="slot-wrapper">
+                    <span class="slot-label">Armure</span>
+                    <div class="slot" id="slot-armor">Vide</div>
+                  </div>
+                  <div class="slot-wrapper">
+                    <span class="slot-label">Accessoire</span>
+                    <div class="slot" id="slot-accessory">Vide</div>
+                  </div>
+                  <div class="slot-wrapper">
+                    <span class="slot-label">Cendre</span>
+                    <div class="slot" id="slot-ash">Vide</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="camp-panel hub-actions-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Actions principales</h3>
+                    <p>Les raccourcis utiles sans bruit parasite.</p>
+                  </div>
+                </div>
+                <div class="hub-cta-grid">
+                  <button type="button" onclick="navigateTo('map')">Ouvrir la carte</button>
+                  <button type="button" onclick="navigateTo('inventory')">Voir l'inventaire</button>
+                  <button type="button" onclick="navigateTo('build')">Optimiser le build</button>
+                  <button type="button" onclick="navigateTo('options')">Options et sauvegarde</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
+
+        <section id="screen-map" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Exploration</p>
+                <h2>Carte des Terres Intermediaires</h2>
+                <p class="screen-copy">
+                  Une carte lisible, une fiche de zone fixe et un parcours plus clair sur mobile comme sur desktop.
+                </p>
+              </div>
+            </div>
+
+            <div id="biome-selection" class="camp-panel map-screen-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Atlas de campagne</h3>
+                    <p>Choisissez un biome, lisez ses menaces, puis deployez-vous.</p>
+                  </div>
+                <div class="atlas-legend">
+                  <span class="legend-chip unlocked">Debloque</span>
+                  <span class="legend-chip reachable">Repere</span>
+                  <span class="legend-chip locked">Verrouille</span>
+                </div>
+              </div>
+
+              <div class="map-screen-grid">
+                <div id="world-map-shell">
+                  <svg id="world-map-paths" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+                  <div id="world-map"></div>
+                </div>
+
+                <aside class="map-side-column">
+                  <div id="biome-detail-card" class="biome-detail-card"></div>
+                  <div id="biome-shortcuts-panel" class="camp-panel shortcut-panel">
+                    <h3>Departs rapides</h3>
+                    <div id="biome-list"></div>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-build" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Build</p>
+                <h2>Attributs et cendres</h2>
+                <p class="screen-copy">
+                  Toute la profondeur du theorycraft, sans polluer l'ecran principal.
+                </p>
+              </div>
+              <div id="real-time-stats-toggle">
+                <button type="button" onclick="toggleRealTimeStats()">Voir les stats effectives</button>
+              </div>
+            </div>
+
+            <div class="build-grid">
+                <div class="camp-panel">
+                  <h3>Feuille de personnage</h3>
+                  <div id="build-cap-status" class="build-cap-status"></div>
+                  <div id="character-sheet">
+                  <div class="stat-line">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'vigor')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Vigueur</span>
+                      <span class="stat-values">
+                        <b id="base-vigor">0</b>
+                        <small id="bonus-vigor" class="bonus-val"></small>
+                      </span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-vigor">0</span>
+                      <button class="mini-upgrade" id="btn-vigor-1" onclick="upgradeStat('vigor')">+</button>
+                      <span class="cost-label" id="cost-vigor-5">0</span>
+                      <button class="mini-upgrade" id="btn-vigor-5" onclick="upgradeStatMultiple('vigor', 5)">+</button>
+                      <span class="cost-label" id="cost-vigor-10">0</span>
+                      <button class="mini-upgrade" id="btn-vigor-10" onclick="upgradeStatMultiple('vigor', 10)">+</button>
+                    </div>
+                  </div>
+
+                  <div class="stat-line">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'strength')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Force</span>
+                      <span class="stat-values">
+                        <b id="base-strength">0</b>
+                        <small id="bonus-strength" class="bonus-val"></small>
+                      </span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-strength">0</span>
+                      <button class="mini-upgrade" id="btn-strength-1" onclick="upgradeStat('strength')">+</button>
+                      <span class="cost-label" id="cost-strength-5">0</span>
+                      <button class="mini-upgrade" id="btn-strength-5" onclick="upgradeStatMultiple('strength', 5)">+</button>
+                      <span class="cost-label" id="cost-strength-10">0</span>
+                      <button class="mini-upgrade" id="btn-strength-10" onclick="upgradeStatMultiple('strength', 10)">+</button>
+                    </div>
+                  </div>
+
+                  <div class="stat-line">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'dexterity')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Dexterite</span>
+                      <span class="stat-values">
+                        <b id="base-dexterity">0</b>
+                        <small id="bonus-dexterity" class="bonus-val"></small>
+                      </span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-dexterity">0</span>
+                      <button class="mini-upgrade" id="btn-dexterity-1" onclick="upgradeStat('dexterity')">+</button>
+                      <span class="cost-label" id="cost-dexterity-5">0</span>
+                      <button class="mini-upgrade" id="btn-dexterity-5" onclick="upgradeStatMultiple('dexterity', 5)">+</button>
+                      <span class="cost-label" id="cost-dexterity-10">0</span>
+                      <button class="mini-upgrade" id="btn-dexterity-10" onclick="upgradeStatMultiple('dexterity', 10)">+</button>
+                    </div>
+                  </div>
+
+                  <div class="stat-line">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'intelligence')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Intelligence</span>
+                      <span class="stat-values">
+                        <b id="base-intelligence">0</b>
+                        <small id="bonus-intelligence" class="bonus-val"></small>
+                      </span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-intelligence">0</span>
+                      <button class="mini-upgrade" id="btn-intelligence-1" onclick="upgradeStat('intelligence')">+</button>
+                      <span class="cost-label" id="cost-intelligence-5">0</span>
+                      <button class="mini-upgrade" id="btn-intelligence-5" onclick="upgradeStatMultiple('intelligence', 5)">+</button>
+                      <span class="cost-label" id="cost-intelligence-10">0</span>
+                      <button class="mini-upgrade" id="btn-intelligence-10" onclick="upgradeStatMultiple('intelligence', 10)">+</button>
+                    </div>
+                  </div>
+
+                  <hr />
+
+                  <div class="stat-line secondary">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'critChance')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Crit %</span>
+                      <b id="eff-critChance">0%</b>
+                      <span id="bonus-critChance"></span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-critChance">0</span>
+                      <button class="mini-upgrade" id="btn-critChance-1" onclick="upgradeStat('critChance')">+</button>
+                      <span class="cost-label" id="cost-critChance-5">0</span>
+                      <button class="mini-upgrade" id="btn-critChance-5" onclick="upgradeStatMultiple('critChance', 5)">+</button>
+                      <span class="cost-label" id="cost-critChance-10">0</span>
+                      <button class="mini-upgrade" id="btn-critChance-10" onclick="upgradeStatMultiple('critChance', 10)">+</button>
+                    </div>
+                  </div>
+
+                  <div class="stat-line secondary">
+                    <div
+                      class="stat-info"
+                      onmouseenter="showStatTooltip(event, 'critDamage')"
+                      onmousemove="moveTooltip(event)"
+                      onmouseleave="hideTooltip()"
+                    >
+                      <span>Crit Dmg</span>
+                      <b id="eff-critDamage">0x</b>
+                      <span id="bonus-critDamage"></span>
+                    </div>
+                    <div class="upgrade-action">
+                      <span class="cost-label" id="cost-critDamage">0</span>
+                      <button class="mini-upgrade" id="btn-critDamage-1" onclick="upgradeStat('critDamage')">+</button>
+                      <span class="cost-label" id="cost-critDamage-5">0</span>
+                      <button class="mini-upgrade" id="btn-critDamage-5" onclick="upgradeStatMultiple('critDamage', 5)">+</button>
+                      <span class="cost-label" id="cost-critDamage-10">0</span>
+                      <button class="mini-upgrade" id="btn-critDamage-10" onclick="upgradeStatMultiple('critDamage', 10)">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="build-side-stack">
+                <div id="real-time-stats-panel" class="camp-panel hidden-panel">
+                  <h4>Statistiques effectives</h4>
+                  <div id="real-time-content"></div>
+                </div>
+
+                <div id="ashes-selection-section" class="camp-panel">
+                  <h3>Cendres de guerre</h3>
+                  <div id="ashes-list" class="ashes-container">
+                    Aucune cendre de guerre possedee
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-inventory" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Butin</p>
+                <h2>Inventaire</h2>
+                <p class="screen-copy">
+                  Tous vos objets dans un ecran dedie, avec filtres et equipement en un clic.
+                </p>
+              </div>
+            </div>
+
+            <div class="inventory-toolbar camp-panel">
+              <button onclick="toggleInventoryCollapse()" id="btn-collapse">Reduire l'inventaire</button>
+              <div id="filter-buttons">
+                <button onclick="setInventoryFilter('Tous')">Tous</button>
+                <button onclick="setInventoryFilter('Arme')">Armes</button>
+                <button onclick="setInventoryFilter('Armure')">Armures</button>
+                <button onclick="setInventoryFilter('Accessoire')">Accessoires</button>
+              </div>
+            </div>
+
+            <div id="inventory-equipped-panel" class="camp-panel">
+              <div class="section-heading-row">
+                <div>
+                  <p class="screen-kicker">Equipe</p>
+                  <h3>Objets equipes</h3>
+                </div>
+              </div>
+              <div id="inventory-equipped-grid" class="inventory-equipped-grid"></div>
+            </div>
+
+            <div id="inventory-section" class="camp-panel">
+              <h3>Objets possedes</h3>
+              <div id="inventory-grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-options" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Monde</p>
+                <h2>Options et sauvegarde</h2>
+                <p class="screen-copy">
+                  Reglages, temps sauvegarde, export et operations de maintenance dans un seul endroit.
+                </p>
+              </div>
+            </div>
+
+            <div id="options-modal" class="options-page">
+              <div class="options-grid">
+                <div class="camp-panel">
+                  <h3>Liens utiles</h3>
+                  <div id="game-menu" class="button-stack">
+                    <button id="btn-wiki" class="menu-button">Consulter le Wiki</button>
+                    <button class="menu-button" onclick="joinDiscord()">Rejoindre le Discord</button>
+                  </div>
+                </div>
+
+                <div class="camp-panel">
+                  <h3>Audio</h3>
+                  <div class="option-row">
+                    <label for="music-volume">Volume musique</label>
+                    <input id="music-volume" type="range" min="0" max="1" step="0.05" value="0.3" />
+                  </div>
+                </div>
+
+                <div class="camp-panel">
+                  <h3>Temps sauvegarde</h3>
+                  <div id="offline-controls" class="offline-controls">
+                    <div class="bank-text">Banque disponible <span id="offline-bank">0s</span></div>
+                    <button id="btn-use-offline" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
+                  </div>
+                </div>
+
+                <div class="camp-panel">
+                  <h3>Gestion de sauvegarde</h3>
+                  <div class="save-buttons">
+                    <button onclick="exportSave()">Exporter</button>
+                    <button onclick="importSave()">Importer</button>
+                  </div>
+                </div>
+
+                <div class="camp-panel danger-panel">
+                  <h3>Zone de sans retour</h3>
+                  <div class="button-stack" id="danger-option-zone">
+                    <button class="reset-btn" onclick="resetGame()">Reinitialiser la sauvegarde</button>
+                    <button class="reset-btn" onclick="refundRunes()">Rembourser les runes investies</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
-      <section id="biome-view" style="display: none">
-        <div id="battle-header-panel" class="battle-panel">
-          <div class="battle-heading">
-            <div>
-              <p id="battle-meta">Expedition</p>
+      <section id="biome-view" class="combat-view" style="display: none">
+        <div class="screen-shell combat-shell">
+          <div id="battle-header-panel" class="battle-panel">
+            <div class="battle-heading">
+              <div>
+                <p id="battle-meta">Expedition</p>
+              </div>
+              <p id="battle-hint">Preparez vos ressources avant le mur suivant.</p>
             </div>
-            <p id="battle-hint">Préparez vos ressources avant le mur suivant.</p>
           </div>
-        </div>
-        <h2 id="current-biome-header">
-          <span id="current-biome-text">Nécrolimbe</span>
-          <span id="cycle-count"></span>
-        </h2>
-        <!-- Biome header (kept minimal) -->
-        
-        <div id="dungeon-stepper-container">
+
+          <h2 id="current-biome-header">
+            <span id="current-biome-text">Necrolimbe</span>
+            <span id="cycle-count"></span>
+          </h2>
+
+          <div id="dungeon-stepper-container">
             <div id="stepper-track">
               <div id="stepper-fill"></div>
               <div id="stepper-markers"></div>
             </div>
             <p id="stepper-text">Progression : 0 / 10</p>
           </div>
-        <div id="combat-hud">
-          <div id="player-combat-card" class="combat-card ally">
-            <p class="combat-card__eyebrow">Joueur</p>
-            <h3 class="combat-card__name">Sans-eclat</h3>
-            <p class="combat-card__sub">FOR 0 · VIG 0 · ARM 0</p>
-          </div>
-          <div id="enemy-combat-card" class="combat-card enemy">
-            <p class="combat-card__eyebrow">Menace</p>
-            <h3 class="combat-card__name">Ennemi</h3>
-            <p class="combat-card__sub">Analyse en cours</p>
-          </div>
-        </div>
-        <div id="action-log" class="battle-panel"></div>
-        <div id="ash-container" style="margin-top: 10px; text-align: center">
-          <button id="ash-button" onclick="primeAsh()">
-            Utiliser Cendre : <span id="ash-name">---</span> (<span
-              id="ash-uses"
-              >0</span
-            >)
-          </button>
-        </div>
-        <div id="combat-zone" class="battle-panel">
-          <div class="hp-container">
-            <span>Joueur</span>
-            <div class="hp-bar-bg">
-              <div id="player-hp-fill" class="hp-fill"></div>
-              <span id="player-hp-text" class="hp-text">0 / 0</span>
-            </div>
-          </div>
-          <div id="player-status-container" class="status-container"></div>
 
-          <div class="hp-container">
-            <span id="enemy-name">Ennemi</span>
-            <div class="hp-bar-bg">
-              <div id="enemy-hp-fill" class="hp-fill"></div>
-              <span id="enemy-hp-text" class="hp-text">0 / 0</span>
+          <div id="combat-hud">
+            <div id="player-combat-card" class="combat-card ally">
+              <p class="combat-card__eyebrow">Joueur</p>
+              <h3 class="combat-card__name">Sans-eclat</h3>
+              <p class="combat-card__sub">FOR 0 · VIG 0 · ARM 0</p>
+            </div>
+            <div id="enemy-combat-card" class="combat-card enemy">
+              <p class="combat-card__eyebrow">Menace</p>
+              <h3 class="combat-card__name">Ennemi</h3>
+              <p class="combat-card__sub">Analyse en cours</p>
             </div>
           </div>
-          <div id="enemy-status-container" class="status-container"></div>
-        </div>
-        <div class="biome-actions-bottom">
-          <div class="biome-bottom-left">
-            <button class="safe-btn" onclick="toggleView('camp')">Se replier au Camp</button>
+
+          <div class="battle-log-frame battle-panel">
+            <div id="action-log"></div>
           </div>
-          <div id="offline-controls-b" class="offline-controls-b">
-            <div class="bank-text">Temps Sauvegardé: <span id="offline-bank-b">0s</span></div>
-            <button id="btn-use-offline-b" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
+
+          <div id="ash-container" class="ash-container">
+            <button id="ash-button" onclick="primeAsh()">
+              Utiliser Cendre : <span id="ash-name">---</span> (<span id="ash-uses">0</span>)
+            </button>
+          </div>
+
+          <div id="combat-zone" class="battle-panel">
+            <div class="combat-lane">
+              <div class="hp-container">
+                <span>Joueur</span>
+                <div class="hp-bar-bg">
+                  <div id="player-hp-fill" class="hp-fill"></div>
+                  <span id="player-hp-text" class="hp-text">0 / 0</span>
+                </div>
+              </div>
+              <div id="player-status-container" class="status-container"></div>
+            </div>
+
+            <div class="combat-lane">
+              <div class="hp-container">
+                <span id="enemy-name">Ennemi</span>
+                <div class="hp-bar-bg">
+                  <div id="enemy-hp-fill" class="hp-fill"></div>
+                  <span id="enemy-hp-text" class="hp-text">0 / 0</span>
+                </div>
+              </div>
+              <div id="enemy-status-container" class="status-container"></div>
+            </div>
+          </div>
+
+          <div class="biome-actions-bottom">
+            <div class="biome-bottom-left">
+              <button class="safe-btn" onclick="toggleView('camp')">Se replier au camp</button>
+            </div>
+            <div id="offline-controls-b" class="offline-controls-b">
+              <div class="bank-text">Temps sauvegarde <span id="offline-bank-b">0s</span></div>
+              <button id="btn-use-offline-b" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
+            </div>
           </div>
         </div>
       </section>

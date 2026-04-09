@@ -77,6 +77,13 @@ export const loadGame = () => {
       decrypted.playerEffects = [];
       decrypted.ennemyEffects = [];
       decrypted.runes.carried = 0;
+      decrypted.ui = {
+        ...DEFAULT_GAME_STATE.ui,
+        ...(decrypted.ui || {}),
+      };
+      if (decrypted.ui.currentScreen === "combat") {
+        decrypted.ui.currentScreen = "hub";
+      }
       decrypted.save.maxLevel = DEFAULT_GAME_STATE.save.maxLevel;
 
       if (decrypted.inventory) {

@@ -28,7 +28,9 @@ export const STATUS_EFFECTS = {
 
       return {
         damage,
-        message: `${entity.name} subit ${damage} dégâts de poison !`,
+        message: isPlayer
+          ? `Vous subissez ${damage} dégâts de poison !`
+          : `${entity.name} subit ${damage} dégâts de poison !`,
       };
     },
   },
@@ -57,7 +59,7 @@ export const STATUS_EFFECTS = {
 
       return {
         damage: reflectDamage,
-        message: `${!isPlayerTarget ? "Vous vous blessez" : attacker.name + " se blesse"} sur les épines ! (-${reflectDamage} PV)`,
+        message: `${!isPlayerTarget ? "Vous vous blessez" : `${attacker.name} se blesse`} sur les épines ! (-${reflectDamage} PV)`,
       };
     },
   },
@@ -71,9 +73,12 @@ export const STATUS_EFFECTS = {
     name: "Étourdi",
     color: "#f1c40f",
     onTurnStart: (entity) => {
+      const isPlayer = "currentHp" in entity;
       return {
         skipTurn: true,
-        message: `${entity.name} est étourdi et ne peut pas agir !`,
+        message: isPlayer
+          ? "Vous êtes étourdi et ne pouvez pas agir !"
+          : `${entity.name} est étourdi et ne peut pas agir !`,
       };
     },
   },
@@ -83,14 +88,19 @@ export const STATUS_EFFECTS = {
     color: "#922b21",
     onTurnStart: (entity) => {
       const damage = Math.max(2, Math.floor((entity.maxHp || 100) * 0.05));
-      if (entity.hasOwnProperty("currentHp")) {
+      const isPlayer = entity.hasOwnProperty("currentHp");
+
+      if (isPlayer) {
         entity.currentHp -= damage;
       } else {
         entity.hp -= damage;
       }
+
       return {
         damage,
-        message: `${entity.name} est rongé par la putréfaction (-${damage} PV) !`,
+        message: isPlayer
+          ? `Vous êtes rongé par la putréfaction (-${damage} PV) !`
+          : `${entity.name} est rongé par la putréfaction (-${damage} PV) !`,
       };
     },
   },
@@ -101,7 +111,9 @@ export const STATUS_EFFECTS = {
     onTurnStart: (entity) => {
       const max = entity.maxHp || entity.hp || 100;
       let damage = 0;
-      if (entity.hasOwnProperty("currentHp")) {
+      const isPlayer = entity.hasOwnProperty("currentHp");
+
+      if (isPlayer) {
         const eff = getEffectiveStats();
         const maxHealth = getHealth(eff.vigor);
         damage = Math.min(
@@ -116,9 +128,12 @@ export const STATUS_EFFECTS = {
         );
         entity.hp -= damage;
       }
+
       return {
         damage,
-        message: `${entity.name} brûle ! (-${damage} PV)`,
+        message: isPlayer
+          ? `Vous brûlez ! (-${damage} PV)`
+          : `${entity.name} brûle ! (-${damage} PV)`,
       };
     },
   },
@@ -131,7 +146,7 @@ export const STATUS_EFFECTS = {
     id: "DEW_PROTECTION",
     name: "Protection de Rosée",
     color: "#85c1e9",
-    onTurnStart: (entity) => {
+    onTurnStart: () => {
       return { message: "La rosée céleste renforce votre défense." };
     },
   },
