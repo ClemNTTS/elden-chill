@@ -21,6 +21,7 @@ import {
   toggleView,
   updateUI,
   playCampMusic,
+  setAudioListener,
   toggleRealTimeStats,
 } from "./ui.js";
 import { enqueueDevSpawn } from "./spawn.js";
@@ -442,6 +443,7 @@ const loadPlayerAfterAuth = async () => {
       await applyServerOfflineProgress();
       authLog("applyServerOfflineProgress done");
       updateUI();
+      setAudioListener();
       hideAuthOverlay();
     } catch (error) {
       authLog("loadPlayerAfterAuth failed", error);
@@ -500,6 +502,7 @@ window.onload = async () => {
   loadGame();
   createFireParticles();
   bindAuthUi();
+  setAudioListener();
 
   const startAudioOnInteraction = () => {
     playCampMusic();

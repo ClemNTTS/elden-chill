@@ -2279,7 +2279,7 @@ export const setAudioListener = () => {
     campAudio.volume = currentVolume;
     dungeonAudio.volume = currentVolume;
 
-    volumeSlider.addEventListener("input", (e) => {
+    volumeSlider.oninput = (e) => {
       const volume = parseFloat(e.target.value);
 
       campAudio.volume = volume;
@@ -2289,7 +2289,7 @@ export const setAudioListener = () => {
       gameState.save.audioVolume = volume;
 
       saveGame();
-    });
+    };
   }
 };
 
