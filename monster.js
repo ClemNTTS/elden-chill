@@ -2,6 +2,8 @@
 hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur de 1 a 2 sure la vie et le drop de runes
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
+import { V21_MONSTERS } from "./monsters/v21.js";
+
 export const MONSTERS = {
   // === LIMGRAVE WEST===
   soldier1: {
@@ -838,7 +840,7 @@ export const MONSTERS = {
     name: "Soldat de Leyndell",
     hp: 220,
     atk: 58,
-    runes: 850,
+    runes: 1500,
     armor: 150,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
     groupCombinations: [
@@ -851,7 +853,7 @@ export const MONSTERS = {
     name: "Augure du Plateau",
     hp: 650,
     atk: 75,
-    runes: 1100,
+    runes: 2100,
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
   },
 
@@ -859,7 +861,7 @@ export const MONSTERS = {
     name: "Sentinelle de l'Arbre (Altus)",
     hp: 2800,
     atk: 110,
-    runes: 8500,
+    runes: 14500,
     isRare: true,
     armor: 220,
     specificStats: { critChance: 0.15 },
@@ -883,7 +885,7 @@ export const MONSTERS = {
     name: "Sentinelle Dracogarde de l'Arbre",
     hp: 8500,
     atk: 165,
-    runes: 35000,
+    runes: 52000,
     isBoss: true,
     armor: 250,
     hasSecondPhase: true,
@@ -1263,4 +1265,5 @@ export const MONSTERS = {
     effectsPhase2: { id: "SCARLET_ROT", duration: 3, chance: 0.55 },
     onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
   },
+  ...V21_MONSTERS,
 };

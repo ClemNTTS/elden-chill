@@ -81,6 +81,30 @@ export const loadGame = () => {
         ...DEFAULT_GAME_STATE.ui,
         ...(decrypted.ui || {}),
       };
+      decrypted.preparation = {
+        ...DEFAULT_GAME_STATE.preparation,
+        ...(decrypted.preparation || {}),
+      };
+      decrypted.preparation.unlockedBlessings =
+        decrypted.preparation.unlockedBlessings?.length
+          ? decrypted.preparation.unlockedBlessings
+          : [...DEFAULT_GAME_STATE.preparation.unlockedBlessings];
+      decrypted.preparation.unlockedConsumables =
+        decrypted.preparation.unlockedConsumables?.length
+          ? decrypted.preparation.unlockedConsumables
+          : [...DEFAULT_GAME_STATE.preparation.unlockedConsumables];
+      decrypted.journal = {
+        ...DEFAULT_GAME_STATE.journal,
+        ...(decrypted.journal || {}),
+      };
+      decrypted.codex = {
+        ...DEFAULT_GAME_STATE.codex,
+        ...(decrypted.codex || {}),
+      };
+      decrypted.world = {
+        ...DEFAULT_GAME_STATE.world,
+        ...(decrypted.world || {}),
+      };
       if (decrypted.ui.currentScreen === "combat") {
         decrypted.ui.currentScreen = "hub";
       }

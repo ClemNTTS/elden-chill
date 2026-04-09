@@ -15,6 +15,7 @@ import {
   updateHealthBars,
   updateUI,
 } from "./ui.js";
+import { adjustStatusApplication, buildEnemyIntent } from "./systems.js";
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -75,17 +76,18 @@ export const applyEffect = (targetEffects, effectId, value) => {
   }
   // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
+  const adjustedValue = adjustStatusApplication(effectId, value || 1, targetEffects);
   if (effectId === "BLEED" || effectId === "FROSTBITE") {
     if (existing) {
-      existing.stacks = (existing.stacks || 0) + (value || 1);
+      existing.stacks = (existing.stacks || 0) + adjustedValue;
     } else {
-      targetEffects.push({ id: effectId, stacks: value || 1 });
+      targetEffects.push({ id: effectId, stacks: adjustedValue });
     }
   } else {
     if (existing) {
-      existing.duration = Math.max(existing.duration, value);
+      existing.duration = Math.max(existing.duration, adjustedValue);
     } else {
-      targetEffects.push({ id: effectId, duration: value });
+      targetEffects.push({ id: effectId, duration: adjustedValue });
     }
   }
 };
@@ -247,6 +249,13 @@ export function performAttack({
     const damageMultiplier = 100 / armor;
 
     let finalDamage = Math.floor(damage * damageMultiplier);
+    if (!isPlayer && attacker?.isBoss) {
+      finalDamage = Math.floor(finalDamage * (1 - Math.min(0.45, eff.bossMitigation || 0)));
+    }
+    if (isPlayer && targetEffects.__executionBonus) {
+      finalDamage += targetEffects.__executionBonus;
+      delete targetEffects.__executionBonus;
+    }
     finalDamage = Math.max(0, finalDamage);
 
     /* ===== APPLY DAMAGE ===== */
@@ -434,6 +443,7 @@ const generateRemainingEnemiesMessage = (enemies) => {
 /* ================= COMBAT LOOP ================= */
 
 export const combatLoop = (sessionId) => {
+  buildEnemyIntent(runtimeState.currentEnemyGroup[0]);
   if (!gameState.world.isExploring || runtimeState.combatFrozen) return;
   if (sessionId !== runtimeState.currentCombatSession) return;
 

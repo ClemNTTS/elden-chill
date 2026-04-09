@@ -4,6 +4,12 @@ import { ActionLog, updateHealthBars, updateUI } from "./ui.js";
 import { MONSTERS } from "./monster.js";
 import { gameState } from "./state.js";
 import { ITEMS } from "./item.js";
+import {
+  buildEnemyIntent,
+  getBiomeHazards,
+  markCodexBossSeen,
+  markCodexMonsterSeen,
+} from "./systems.js";
 
 export const devSpawnQueue = [];
 
@@ -136,6 +142,28 @@ export const spawnMonster = (monsterId, sessionId) => {
   }
 
   runtimeState.currentEnemyGroup = [...primaryEnemies, ...companions];
+  const biomeHazards = getBiomeHazards(gameState.world.currentBiome);
+
+  runtimeState.currentEnemyGroup.forEach((enemy) => {
+    if (!enemy.onHitEffect && biomeHazards.length) {
+      const dominant = biomeHazards[0];
+      const hazardMap = {
+        poison: { id: "POISON", duration: 2, chance: 0.2 },
+        gel: { id: "FROSTBITE", duration: 3, chance: 0.2 },
+        folie: { id: "STUN", duration: 1, chance: 0.18 },
+        putrefaction: { id: "SCARLET_ROT", duration: 2, chance: 0.18 },
+      };
+      if (hazardMap[dominant]) {
+        enemy.onHitEffect = hazardMap[dominant];
+      }
+    }
+
+    if (enemy.isBoss) {
+      markCodexBossSeen(monsterId, gameState.world.currentBiome);
+    } else {
+      markCodexMonsterSeen(monsterId, gameState.world.currentBiome);
+    }
+  });
 
   const firstEnemy = runtimeState.currentEnemyGroup[0];
   const displayCount = runtimeState.currentEnemyGroup.length;
@@ -168,6 +196,7 @@ export const spawnMonster = (monsterId, sessionId) => {
   }
 
   updateUI();
+  buildEnemyIntent(firstEnemy);
 
   ActionLog(
     displayCount > 1

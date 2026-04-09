@@ -4,6 +4,7 @@ import {
   getHealth,
   runtimeState,
 } from "./state.js";
+import { getResistanceForEffect } from "./systems.js";
 
 export const STATUS_EFFECTS = {
   POISON: {
@@ -15,8 +16,15 @@ export const STATUS_EFFECTS = {
       let damage = 0;
 
       if (isPlayer) {
-        damage = Math.floor(gameState.stats.level * 0.7);
-        entity.currentHp -= Math.min(damage, 1);
+        damage = Math.max(
+          1,
+          Math.floor(
+            gameState.stats.level *
+              0.7 *
+              (1 - Math.min(0.6, getResistanceForEffect("POISON") * 0.08)),
+          ),
+        );
+        entity.currentHp -= damage;
       } else {
         const eff = getEffectiveStats();
         const baseDot = Math.floor((entity.maxHp || 100) * 0.01);
@@ -87,8 +95,18 @@ export const STATUS_EFFECTS = {
     name: "Putréfaction",
     color: "#922b21",
     onTurnStart: (entity) => {
-      const damage = Math.max(2, Math.floor((entity.maxHp || 100) * 0.05));
+      const baseDamage = Math.max(2, Math.floor((entity.maxHp || 100) * 0.05));
       const isPlayer = entity.hasOwnProperty("currentHp");
+      const damage = isPlayer
+        ? Math.max(
+            1,
+            Math.floor(
+              baseDamage *
+                (1 -
+                  Math.min(0.65, getResistanceForEffect("SCARLET_ROT") * 0.08)),
+            ),
+          )
+        : baseDamage;
 
       if (isPlayer) {
         entity.currentHp -= damage;
@@ -119,6 +137,12 @@ export const STATUS_EFFECTS = {
         damage = Math.min(
           Math.floor(maxHealth * 0.03),
           Math.floor((maxHealth - entity.currentHp) * 0.1),
+        );
+        damage = Math.max(
+          1,
+          Math.floor(
+            damage * (1 - Math.min(0.55, getResistanceForEffect("BURN") * 0.06)),
+          ),
         );
         entity.currentHp -= damage;
       } else {

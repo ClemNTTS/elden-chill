@@ -96,4 +96,80 @@ export const ASHES_OF_WAR = {
       };
     },
   },
+  executioners_step: {
+    name: "Pas de l'Executeur",
+    description:
+      "Convertit le prochain coup en execution precise : degats critiques accrus et saignement.",
+    maxUses: 3,
+    effect: () => ({
+      damageMult: 1.9,
+      status: { id: "BLEED", duration: 4 },
+      msg: "Votre pas se cale sur le rythme d'une execution nette.",
+    }),
+  },
+  dragonstorm_howl: {
+    name: "Hurlement de Tempete draconique",
+    description:
+      "Canalise Gelmir. Degats de zone renforces et brulure appliquee au prochain impact.",
+    maxUses: 3,
+    effect: () => ({
+      damageMult: 1.45,
+      status: { id: "BURN", duration: 2 },
+      msg: "Le hurlement draconique enrobe votre prochain coup d'eclairs brulants.",
+    }),
+  },
+  rotveil_litany: {
+    name: "Litanie du Voile putride",
+    description:
+      "Applique la putrefaction au prochain coup et renforce legerement votre penetration.",
+    maxUses: 3,
+    effect: () => {
+      runtimeState.nextAtkMultBonus = Math.max(runtimeState.nextAtkMultBonus, 1.25);
+      return {
+        status: { id: "SCARLET_ROT", duration: 2 },
+        msg: "Le voile putride murmure et rend votre arme corruptrice.",
+      };
+    },
+  },
+  colossus_roar: {
+    name: "Rugissement du Colosse",
+    description:
+      "Vous ancre dans le sol. Le prochain coup gagne puissance et votre armure augmente un instant.",
+    maxUses: 2,
+    effect: () => {
+      runtimeState.playerArmorDebuff -= 35;
+      return {
+        damageMult: 1.55,
+        msg: "Votre rugissement durcit l'air et braque le duel.",
+      };
+    },
+  },
+  astral_shatter: {
+    name: "Fracture Astrale",
+    description:
+      "Convertit l'intelligence en degats de zone et stun legerement l'ennemi principal.",
+    maxUses: 3,
+    effect: () => ({
+      damageMult: 1.25,
+      status: { id: "STUN", duration: 1 },
+      msg: "Une fracture astrale s'ouvre sous les pas de la menace.",
+    }),
+  },
+  rootward_vow: {
+    name: "Voeu du Garderacine",
+    description:
+      "Serment defensif. Releve votre armure et vous soigne legerement au passage.",
+    maxUses: 3,
+    effect: () => {
+      runtimeState.playerArmorDebuff -= 30;
+      const healAmount = Math.min(180, getHealth(getEffectiveStats().vigor) * 0.08);
+      runtimeState.playerCurrentHp = Math.min(
+        getHealth(getEffectiveStats().vigor),
+        runtimeState.playerCurrentHp + healAmount,
+      );
+      return {
+        msg: `Les racines referment vos plaies (+${Math.floor(healAmount)} PV).`,
+      };
+    },
+  },
 };

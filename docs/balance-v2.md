@@ -55,7 +55,14 @@ La refonte ajoute une carte de campagne, une nouvelle branche souterraine et un 
   - debloque les zones suivantes
   - garantit un drop de table de zone
 
-### 4. Philosophie des paliers
+### 4. Cap de niveau
+
+- Le cap versionnel est maintenant fixe a `150`.
+- Le niveau `100` reste la fin d'un build principal.
+- Les niveaux `101-150` servent a absorber le late-game terrestre, a specialiser les resistances et a soutenir les nouvelles preparations.
+- Le endgame ne doit pas supposer qu'un joueur soit `150`, mais il doit recompenser clairement ceux qui poussent jusque-la.
+
+### 5. Philosophie des paliers
 
 - Limgrave:
   - apprentissage, premiers archetypes
@@ -127,7 +134,10 @@ Detours rentables:
 | Riviere Ainsel | 68-80 | givre, gravite, cadence | nouvelle route v2 dex/int |
 | Profondeurs de la Souche | 70-82 | armure, stun, sustain | nouvelle route v2 tank |
 | Lac de la Putrefaction | 78-92 | statuts et endurance | endgame optionnel v2 |
-| Plateau d'Altus | 72-88 | armure lourde, boss brutal | frontiere late game terrestre |
+| Plateau d'Altus | 78-100 | armure lourde, boss brutal | entree du late game terrestre |
+| Mont Gelmir | 94-118 | poison, burst et elites a patterns | premier vrai mur de preparation |
+| Cimes des Geants | 110-134 | gel, posture, lourds telegraphes | fin de build et specialisation defensive |
+| Farum Azula en Ruines | 126-150 | tempete, folie, reliques noires | palier final terrestre |
 
 ## Lecture des monstres
 
@@ -178,6 +188,17 @@ Nouveaux archetypes v2:
 - Rotbloom:
   - build statuts et penetration pour l'endgame optionnel
 
+Archetypes late-game v2.3:
+
+- Gilded Executioner:
+  - execution, critique et penetration
+- Gelmir Dragon:
+  - foudre, zone, intelligence explosive
+- Colossus Arena:
+  - posture, armure et mitigation boss
+- Black Revenant:
+  - folie, putrefaction et scaling par resistances
+
 ## Garde-fous pour les prochaines mises a jour
 
 - Ne pas augmenter les PV moyens d'une zone principale de plus de `20-25%` par palier sans contrepartie de reward.
@@ -207,3 +228,7 @@ Nouveaux archetypes v2:
 - Le responsive mobile doit rester la contrainte prioritaire:
   - carte convertie en pile de cartes sur petit ecran
   - details de zone lisibles sans hover
+- Le late-game terrestre doit maintenant payer assez de runes pour rendre credible la route vers le niveau 150:
+  - Altus accelere la relance
+  - Gelmir ouvre le vrai rendement
+  - Cimes et Farum doivent financer la specialisation finale

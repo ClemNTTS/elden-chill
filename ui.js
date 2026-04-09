@@ -86,12 +86,33 @@ import {
   runtimeState,
   getHealth,
 } from "./state.js";
-import { getUpgradeCost, getMultiUpgradeCost, upgradeStat, equipItem } from "./actions.js";
+import {
+  getUpgradeCost,
+  getMultiUpgradeCost,
+  upgradeStat,
+  equipItem,
+  selectBlessing,
+  selectPreparationConsumable,
+} from "./actions.js";
 import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
 import { checkForUpdate } from "./game.js";
 import { ITEM_SETS } from "./constants.js";
 import { ITEMS } from "./item.js";
+import {
+  applyPreparationStats,
+  BLESSINGS,
+  PREP_CONSUMABLES,
+  EVENT_DEFS,
+  HAZARD_LABELS,
+  buildEnemyIntent,
+  clearRunBuffs,
+  describeHazards,
+  getCodexBiomeInfo,
+  getItemRarity,
+  getKnownCodexBiomes,
+  syncCodexFromInventory,
+} from "./systems.js";
 import {
   BIOME_GUIDE,
   BIOME_ORDER,
@@ -100,7 +121,7 @@ import {
   getBiomePowerBand,
 } from "./world-map.js";
 
-const CAMP_SCREENS = ["hub", "map", "build", "inventory", "options"];
+const CAMP_SCREENS = ["hub", "map", "build", "inventory", "codex", "options"];
 
 const ensureUiState = () => {
   if (!gameState.ui) {
@@ -870,6 +891,10 @@ const renderBiomeDetail = (biomeId) => {
         <strong>${lootPreview.join(", ") || "Butin spÃ©cial inconnu"}</strong>
       </div>
       <div class="detail-block">
+        <span class="detail-label">Afflictions</span>
+        <strong>${describeHazards(biomeId)}</strong>
+      </div>
+      <div class="detail-block">
         <span class="detail-label">AprÃ¨s la victoire</span>
         <strong>${nextBiomes.join(", ") || "Cul-de-sac rentable"}</strong>
       </div>
@@ -901,6 +926,180 @@ const updateBiomeDisplay = () => {
   renderBiomeDetail(selectedBiomeId);
   renderBiomeShortcuts(visibleIds);
   renderHubFocus();
+};
+
+const renderPreparationDisplay = () => {
+  const blessingsRoot = document.getElementById("blessings-list");
+  const consumablesRoot = document.getElementById("consumables-list");
+  if (!blessingsRoot || !consumablesRoot) return;
+
+  blessingsRoot.innerHTML = "";
+  consumablesRoot.innerHTML = "";
+
+  const unlockedBlessings = new Set(
+    gameState.preparation?.unlockedBlessings || [],
+  );
+  const unlockedConsumables = new Set(
+    gameState.preparation?.unlockedConsumables || [],
+  );
+
+  Object.values(BLESSINGS)
+    .filter((blessing) => unlockedBlessings.has(blessing.id))
+    .forEach((blessing) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prep-option";
+    btn.classList.toggle(
+      "is-active",
+      gameState.preparation?.selectedBlessingId === blessing.id,
+    );
+    btn.innerHTML = `
+      <strong>${blessing.name}</strong>
+      <span>${blessing.description}</span>
+      <small>${blessing.detailedDescription || ""}</small>
+    `;
+    btn.onclick = () => selectBlessing(blessing.id);
+    blessingsRoot.appendChild(btn);
+    });
+
+  Object.values(PREP_CONSUMABLES)
+    .filter((consumable) => unlockedConsumables.has(consumable.id))
+    .forEach((consumable) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "prep-option";
+    btn.classList.toggle(
+      "is-active",
+      gameState.preparation?.selectedConsumableId === consumable.id,
+    );
+    btn.innerHTML = `
+      <strong>${consumable.name}</strong>
+      <span>${consumable.description}</span>
+      <small>${consumable.detailedDescription || ""}</small>
+    `;
+    btn.onclick = () => selectPreparationConsumable(consumable.id);
+    consumablesRoot.appendChild(btn);
+    });
+};
+
+window.setJournalFilter = (value) => {
+  if (!gameState.journal) return;
+  gameState.journal.filter = value;
+  updateJournalDisplay();
+  saveGame();
+};
+
+const updateJournalDisplay = () => {
+  const root = document.getElementById("journal-entries");
+  const filterEl = document.getElementById("journal-filter-kind");
+  if (!root) return;
+  const filterValue = gameState.journal?.filter || "all";
+  if (filterEl) filterEl.value = filterValue;
+  const entries = (gameState.journal?.entries || [])
+    .filter((entry) => entry.runId === runtimeState.currentCombatSession)
+    .filter((entry) => filterValue === "all" || entry.kind === filterValue);
+
+  root.innerHTML = entries.length
+    ? entries
+        .map(
+          (entry) => `
+            <article class="journal-entry">
+              <div class="journal-entry-head">
+                <strong>${entry.title}</strong>
+                <span>${BIOMES[entry.biomeId]?.name || "Monde"}</span>
+              </div>
+              <p>${entry.text}</p>
+            </article>
+          `,
+        )
+        .join("")
+    : `<p class="journal-empty">Le journal s'ecrira au fil de la prochaine expedition.</p>`;
+};
+
+const updateCodexDisplay = () => {
+  syncCodexFromInventory();
+  const bossRoot = document.getElementById("codex-bosses");
+  const monsterRoot = document.getElementById("codex-monsters");
+  const setsRoot = document.getElementById("codex-sets");
+  const biomeRoot = document.getElementById("codex-biomes");
+  const eventsRoot = document.getElementById("codex-events");
+  if (!bossRoot || !monsterRoot || !setsRoot || !biomeRoot || !eventsRoot) {
+    return;
+  }
+
+  const renderList = (root, rows, emptyLabel) => {
+    root.innerHTML = rows.length
+      ? rows
+          .map(
+            (row) => `
+              <article class="codex-entry">
+                <strong>${row.title}</strong>
+                <span>${row.meta || ""}</span>
+                ${row.copy ? `<p>${row.copy}</p>` : ""}
+              </article>
+            `,
+          )
+          .join("")
+      : `<p class="codex-empty">${emptyLabel}</p>`;
+  };
+
+  renderList(
+    bossRoot,
+    Object.keys(gameState.codex?.bossesSeen || {}).map((monsterId) => ({
+      title: MONSTERS[monsterId]?.name || monsterId,
+      meta: BIOMES[gameState.codex.bossesSeen[monsterId].biomeId]?.name || "Biome inconnu",
+      copy: "Boss reference de votre route et mur de progression memorise.",
+    })),
+    "Aucun boss note pour le moment.",
+  );
+
+  renderList(
+    monsterRoot,
+    Object.keys(gameState.codex?.monstersSeen || {}).map((monsterId) => ({
+      title: MONSTERS[monsterId]?.name || monsterId,
+      meta: BIOMES[gameState.codex.monstersSeen[monsterId].biomeId]?.name || "Biome inconnu",
+      copy: MONSTERS[monsterId]?.isRare ? "Elite rencontre" : "Menace repertoriee",
+    })),
+    "Aucun monstre consigne pour le moment.",
+  );
+
+  renderList(
+    setsRoot,
+    Object.keys(gameState.codex?.setsSeen || {}).map((setId) => ({
+      title: ITEM_SETS[setId]?.name || setId,
+      meta: "Set decouvert",
+      copy: Object.values(ITEMS)
+        .filter((item) => item.set === setId)
+        .map((item) => item.name)
+        .slice(0, 3)
+        .join(" · "),
+    })),
+    "Aucun set identifie pour le moment.",
+  );
+
+  renderList(
+    biomeRoot,
+    getKnownCodexBiomes().map((biomeId) => {
+      const info = getCodexBiomeInfo(biomeId);
+      return {
+        title: info.biome?.name || biomeId,
+        meta: info.guide ? `Niv. ${info.guide.recommendedLevel[0]}-${info.guide.recommendedLevel[1]}` : "",
+        copy: info.guide ? describeHazards(biomeId) : "Biome nettoye",
+      };
+    }),
+    "Aucun biome entierement nettoye pour le moment.",
+  );
+
+  renderList(
+    eventsRoot,
+    Object.keys(gameState.codex?.eventsSeen || {}).map((eventId) => ({
+      title: EVENT_DEFS[eventId]?.title || eventId,
+      meta:
+        BIOMES[gameState.codex.eventsSeen[eventId].biomeId]?.name || "Campagne",
+      copy: EVENT_DEFS[eventId]?.kind || "Evenement",
+    })),
+    "Aucun evenement note pour le moment.",
+  );
 };
 
 const ensureBattleIntelStrip = () => {
@@ -1005,6 +1204,35 @@ const updateCombatPresentation = () => {
   }
 };
 
+const updateEnemyIntentDisplay = () => {
+  const label = document.getElementById("enemy-intent-label");
+  const hint = document.getElementById("enemy-intent-hint");
+  const panel = document.getElementById("battle-intent-panel");
+  if (!label || !hint || !panel) return;
+
+  const enemy = runtimeState.currentEnemyGroup[0];
+  const intent = runtimeState.enemyIntent || buildEnemyIntent(enemy);
+  panel.classList.remove(
+    "intent-boss",
+    "intent-elite",
+    "intent-heavy",
+    "intent-normal",
+  );
+
+  if (!intent) {
+    panel.classList.add("intent-normal");
+    label.innerText = "Analyse en cours";
+    hint.innerText = "Le biome se met en place.";
+    return;
+  }
+
+  panel.classList.add(`intent-${intent.severity || "normal"}`);
+  label.innerText = intent.label;
+  hint.innerText = [intent.targetHint, intent.hazard ? HAZARD_LABELS[intent.hazard] : null]
+    .filter(Boolean)
+    .join(" · ");
+};
+
 const ensureBattleLogLayout = () => {
   const root = document.getElementById("action-log");
   if (!root) return null;
@@ -1057,6 +1285,7 @@ const getLogSide = (message, className = "") => {
 const getLogKind = (message = "", className = "") => {
   if (className === "log-runes") return "runes";
   if (className === "log-heal") return "heal";
+  if (className === "log-event") return "event";
   if (className === "log-ash-activation" || message.startsWith("CENDRE")) return "ash";
   if (className === "log-crit" || message.startsWith("BOSS VAINCU")) return "boss";
   if (message.includes("esquive") || message.includes("ESQUIVE")) return "status";
@@ -1131,6 +1360,7 @@ const updateInventoryDisplay = () => {
     if (slotKey) {
       itemDiv.classList.add(`item-type-${slotKey}`);
     }
+    itemDiv.classList.add(`rarity-${getItemRarity(item.id)}`);
 
     const currentlyEquippedId = gameState.equipped[slotKey];
     if (currentlyEquippedId && currentlyEquippedId === item.id) {
@@ -1141,6 +1371,7 @@ const updateInventoryDisplay = () => {
       item.level >= 10 ? "MAX" : `(${item.count}/${item.level})`;
     itemDiv.innerHTML = `
       <span class="inventory-item-type">${itemData.type}</span>
+      <span class="inventory-item-rarity">${getItemRarity(item.id)}</span>
       <strong class="inventory-item-name">${item.name}</strong>
       <span class="inventory-item-meta">Niv.${item.level}</span>
       <span class="inventory-item-progress">${progressText}</span>
@@ -1297,6 +1528,7 @@ export const updateRealTimeStatsDisplay = () => {
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
   const maxHp = Math.floor(getHealth(eff.vigor));
+  const resistances = eff.resistances || {};
 
   container.innerHTML = `
     <div class="rt-stat"><span>Niveau:</span> <b>${eff.level || 0}</b></div>
@@ -1316,6 +1548,13 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
     <div class="rt-stat"><span>DÃ©gÃ¢ts Zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Deg. Min. Ã‰pines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
+    <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
+    <div class="rt-stat"><span>Gain de Runes:</span> <b>${((eff.runeGainMult || 0) * 100).toFixed(1)}%</b></div>
+    <hr>
+    <div class="rt-stat"><span>Res. Poison:</span> <b>${resistances.poison || 0}</b></div>
+    <div class="rt-stat"><span>Res. Gel:</span> <b>${resistances.gel || 0}</b></div>
+    <div class="rt-stat"><span>Res. Folie:</span> <b>${resistances.folie || 0}</b></div>
+    <div class="rt-stat"><span>Res. Putrefaction:</span> <b>${resistances.putrefaction || 0}</b></div>
   `;
 };
 
@@ -1328,8 +1567,12 @@ export const updateUI = () => {
   updateEquipmentDisplay();
   updateInventoryEquippedDisplay();
   updateBiomeDisplay();
+  renderPreparationDisplay();
   updateCombatPresentation();
+  updateEnemyIntentDisplay();
+  updateJournalDisplay();
   updateInventoryDisplay();
+  updateCodexDisplay();
   updateCycleDisplay();
   updateStatusIcons();
   updateAshButton();
@@ -1353,6 +1596,8 @@ export const toggleView = (view) => {
     if (particles) particles.classList.add("hidden");
     playDungeonMusic();
   } else {
+    clearRunBuffs();
+    runtimeState.enemyIntent = null;
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
     const layout = ensureBattleLogLayout();
@@ -1584,7 +1829,13 @@ const getProjectedEffectiveStats = (item) => {
     simulatedEquipped[slotKey] = item.id;
   }
 
-  let effStats = { ...gameState.stats, attacksPerTurn: 1 };
+  let effStats = {
+    ...gameState.stats,
+    attacksPerTurn: 1,
+    runeGainMult: 0,
+    bossMitigation: 0,
+    resistances: { poison: 0, gel: 0, folie: 0, putrefaction: 0 },
+  };
 
   const applyItemBonus = (type) => {
     Object.keys(simulatedEquipped).forEach((equippedSlot) => {
@@ -1635,11 +1886,15 @@ const getProjectedEffectiveStats = (item) => {
     effStats.armor += 50;
   }
 
+  applyPreparationStats(effStats);
+
   return effStats;
 };
 
 const formatTooltipValue = (statName, value) => {
   if (statName === "critChance") return `${(value * 100).toFixed(1)}%`;
+  if (statName === "bossMitigation") return `${(value * 100).toFixed(1)}%`;
+  if (statName === "runeGainMult") return `${(value * 100).toFixed(1)}%`;
   if (statName === "critDamage") return `${value.toFixed(1)}x`;
   return `${value}`;
 };
@@ -1660,6 +1915,8 @@ const showItemComparisonTooltip = (e, item) => {
     ["critChance", "Crit %"],
     ["critDamage", "Crit Dmg"],
     ["attacksPerTurn", "Attaques"],
+    ["bossMitigation", "Mitig. boss"],
+    ["runeGainMult", "Gain runes"],
   ];
 
   const comparisonRows = compareStats
@@ -1690,6 +1947,23 @@ const showItemComparisonTooltip = (e, item) => {
     simulatedEquipped[slotKey] = item.id;
   }
 
+  const resistanceRows = ["poison", "gel", "folie", "putrefaction"]
+    .map((hazard) => {
+      const currentValue = currentEff.resistances?.[hazard] ?? 0;
+      const nextValue = projectedEff.resistances?.[hazard] ?? currentValue;
+      const diff = nextValue - currentValue;
+      if (!diff) return "";
+      return `
+        <div class="tooltip-compare-row compact">
+          <span class="tooltip-compare-stat">${HAZARD_LABELS[hazard] || hazard}</span>
+          <span class="tooltip-compare-next">${nextValue}</span>
+          <span class="tooltip-compare-diff ${diff > 0 ? "is-positive" : "is-negative"}">${diff > 0 ? `+${diff}` : diff}</span>
+        </div>
+      `;
+    })
+    .filter(Boolean)
+    .join("");
+
   let setInfo = "";
   if (itemData.set) {
     const setDef = ITEM_SETS[itemData.set];
@@ -1716,10 +1990,12 @@ const showItemComparisonTooltip = (e, item) => {
 
   tooltip.innerHTML = `
     <strong class="tooltip-title">${itemData.name} (Niv.${item.level})</strong>
+    <small class="tooltip-subtitle">${itemData.type} · ${getItemRarity(item.id)}</small>
     <small class="tooltip-subtitle">${itemData.description}</small>
     <hr class="tooltip-rule">
     <strong class="tooltip-section-title">Changements a l'equipement</strong>
     ${comparisonRows ? `<div class="tooltip-compare-grid compact">${comparisonRows}</div>` : `<span class="tooltip-empty">Aucun changement visible sur vos stats effectives.</span>`}
+    ${resistanceRows ? `<strong class="tooltip-section-title">Resistances</strong><div class="tooltip-compare-grid compact">${resistanceRows}</div>` : ""}
     ${setInfo}
   `;
 

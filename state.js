@@ -1,5 +1,6 @@
 import { ITEM_SETS } from "./constants.js";
 import { ITEMS } from "./item.js";
+import { applyPreparationStats } from "./systems.js";
 
 // Saved state
 export const DEFAULT_GAME_STATE = {
@@ -34,6 +35,8 @@ export const DEFAULT_GAME_STATE = {
     isExploring: false,
     checkpointReached: false,
     rareSpawnsCount: 0,
+    activeBiomeHazards: [],
+    lastEventProgress: -1,
   },
   playerEffects: [],
   ennemyEffects: [],
@@ -45,9 +48,28 @@ export const DEFAULT_GAME_STATE = {
     theme: "light",
     selectedBiomeId: "limgrave_west",
   },
+  preparation: {
+    selectedBlessingId: "grace_of_runes",
+    selectedConsumableId: "rare_tracker",
+    activeRunBuffs: [],
+    unlockedBlessings: ["grace_of_runes"],
+    unlockedConsumables: ["rare_tracker"],
+  },
+  journal: {
+    filter: "all",
+    biomeFilter: "all",
+    entries: [],
+  },
+  codex: {
+    monstersSeen: {},
+    bossesSeen: {},
+    setsSeen: {},
+    biomesCleared: {},
+    eventsSeen: {},
+  },
   save: {
-    version: "2.0.0",
-    maxLevel: 100,
+    version: "2.3.0",
+    maxLevel: 150,
     offlineTimeBank: 0,
     useOfflineTime: false, 
     lastSavedAt: 0,
@@ -66,6 +88,7 @@ export const runtimeState = {
   currentLoopCount: 0,
   ashUsesLeft: 0,
   ashIsPrimed: false,
+  enemyIntent: null,
   combatFrozen: false,
   playerArmorDebuff: 0,
   nextAtkMultBonus: 1,
@@ -91,6 +114,10 @@ export function setGameState(newState) {
     Object.assign(gameState.ashesOfWarOwned, newState.ashesOfWarOwned);
   if (newState.equippedAsh) gameState.equippedAsh = newState.equippedAsh;
   if (newState.ui) Object.assign(gameState.ui, newState.ui);
+  if (newState.preparation)
+    Object.assign(gameState.preparation, newState.preparation);
+  if (newState.journal) Object.assign(gameState.journal, newState.journal);
+  if (newState.codex) Object.assign(gameState.codex, newState.codex);
 
   if (newState.save) Object.assign(gameState.save, newState.save);
 
@@ -108,7 +135,18 @@ export function setGameState(newState) {
 }
 
 export function getEffectiveStats() {
-  let effStats = { ...gameState.stats, attacksPerTurn: 1 };
+  let effStats = {
+    ...gameState.stats,
+    attacksPerTurn: 1,
+    runeGainMult: 0,
+    bossMitigation: 0,
+    resistances: {
+      poison: 0,
+      gel: 0,
+      folie: 0,
+      putrefaction: 0,
+    },
+  };
 
   const applyItemBonus = (type) => {
     Object.keys(gameState.equipped).forEach((slotType) => {
@@ -173,6 +211,8 @@ export function getEffectiveStats() {
   if (gameState.playerEffects.some((e) => e.id === "DEW_PROTECTION")) {
     effStats.armor += 50;
   }
+
+  applyPreparationStats(effStats);
 
   return effStats;
 }

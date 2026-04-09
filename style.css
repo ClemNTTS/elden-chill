@@ -87,7 +87,8 @@ body.theme-dark {
 
 button,
 input,
-label {
+label,
+select {
   font-family: inherit;
 }
 
@@ -1651,6 +1652,222 @@ body.theme-dark #tooltip strong {
   animation: screenShake 0.35s linear;
 }
 
+.prep-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.prep-label {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.prep-option-list {
+  display: grid;
+  gap: 10px;
+}
+
+.prep-option {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+}
+
+.prep-option strong,
+.prep-option span {
+  display: block;
+}
+
+.prep-option span {
+  margin-top: 6px;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+}
+
+.prep-option small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-soft);
+  line-height: 1.45;
+  font-size: 0.82rem;
+}
+
+.prep-option.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--surface-subtle) 82%, var(--accent) 18%);
+}
+
+.inventory-item-rarity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-soft);
+}
+
+.rarity-commun {
+  background: color-mix(in srgb, var(--surface-subtle) 88%, transparent);
+}
+
+.rarity-rare {
+  background: color-mix(in srgb, #7d8fd7 16%, var(--surface-subtle));
+}
+
+.rarity-legendaire {
+  background: color-mix(in srgb, #ba8d38 18%, var(--surface-subtle));
+}
+
+.rarity-relique {
+  background: color-mix(in srgb, #7a4336 22%, var(--surface-subtle));
+}
+
+.battle-intent-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.battle-intent-copy h3,
+.battle-intent-copy p {
+  margin: 0;
+}
+
+.battle-intent-copy p {
+  color: var(--text-soft);
+}
+
+.intent-normal {
+  border-color: var(--border);
+}
+
+.intent-heavy {
+  border-color: #b87c39;
+}
+
+.intent-elite {
+  border-color: #7d8fd7;
+}
+
+.intent-boss {
+  border-color: #8e4d3c;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #8e4d3c 45%, transparent);
+}
+
+.journal-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.section-head-tight {
+  margin-bottom: 0;
+}
+
+.journal-filters select {
+  min-width: 160px;
+  appearance: none;
+  border: 1px solid var(--border-strong);
+  background:
+    linear-gradient(180deg, var(--surface-strong), var(--surface-muted));
+  color: var(--text);
+  padding: 0.75rem 2.4rem 0.75rem 0.9rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 20px rgba(58, 43, 20, 0.08);
+  background-image:
+    linear-gradient(180deg, var(--surface-strong), var(--surface-muted)),
+    linear-gradient(45deg, transparent 50%, var(--text-soft) 50%),
+    linear-gradient(135deg, var(--text-soft) 50%, transparent 50%);
+  background-position:
+    0 0,
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size:
+    100% 100%,
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+}
+
+.journal-filters select:hover,
+.journal-filters select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.journal-entries {
+  display: grid;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.journal-entry,
+.codex-entry {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-subtle);
+}
+
+.journal-entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.journal-entry p,
+.codex-entry p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.journal-empty,
+.codex-empty {
+  color: var(--text-soft);
+  margin: 0;
+}
+
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.codex-span {
+  grid-column: 1 / -1;
+}
+
+.codex-list {
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.codex-entry strong,
+.codex-entry span {
+  display: block;
+}
+
+.codex-entry span {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+
 @keyframes screenShake {
   0%,
   100% {
@@ -1675,6 +1892,7 @@ body.theme-dark #tooltip strong {
   .hub-grid,
   .map-screen-grid,
   .build-grid,
+  .codex-grid,
   .options-grid,
   #combat-hud,
   #combat-zone,
@@ -1723,6 +1941,7 @@ body.theme-dark #tooltip strong {
   .hub-cta-grid,
   .slots-container,
   .inventory-equipped-grid,
+  .prep-columns,
   .save-buttons,
   .biome-detail-grid,
   .battle-intel-strip,

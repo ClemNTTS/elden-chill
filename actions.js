@@ -18,6 +18,20 @@ export const equipAsh = (ashId) => {
   updateUI();
 };
 
+export const selectBlessing = (blessingId) => {
+  if (!gameState.preparation.unlockedBlessings?.includes(blessingId)) return;
+  gameState.preparation.selectedBlessingId = blessingId;
+  saveGame();
+  updateUI();
+};
+
+export const selectPreparationConsumable = (consumableId) => {
+  if (!gameState.preparation.unlockedConsumables?.includes(consumableId)) return;
+  gameState.preparation.selectedConsumableId = consumableId;
+  saveGame();
+  updateUI();
+};
+
 export const getUpgradeCost = (statName) => {
   const baseCost = upgradeCosts[statName] || 10;
   let count = gameState.stats.level;

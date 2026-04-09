@@ -210,4 +210,85 @@ export const ITEM_SETS = {
       },
     },
   },
+  GILDED_EXECUTIONER: {
+    name: "Verdict de l'Executeur dore",
+    bonuses: {
+      2: {
+        desc: "Chance de critique +8% et penetration fixe +20.",
+        effect: (stats) => {
+          stats.critChance += 0.08;
+          stats.flatDamagePenetration += 20;
+        },
+      },
+      3: {
+        desc: "Les executions gagnent 0.35x degats critiques et 10% de penetration.",
+        effect: (stats) => {
+          stats.critDamage += 0.35;
+          stats.percentDamagePenetration += 0.1;
+        },
+      },
+    },
+  },
+
+  GELMIR_DRAGON: {
+    name: "Vestiges draconiques de Gelmir",
+    bonuses: {
+      2: {
+        desc: "Intelligence +12% et degats de zone +20.",
+        effect: (stats) => {
+          stats.intelligence *= 1.12;
+          stats.splashDamage += 20;
+        },
+      },
+      3: {
+        desc: "La tempete draconique ajoute critique et gain de runes.",
+        effect: (stats) => {
+          stats.critChance += 0.08;
+          stats.runeGainMult += 0.1;
+        },
+      },
+    },
+  },
+
+  BLACK_REVENANT: {
+    name: "Liturgie du revenant noir",
+    bonuses: {
+      2: {
+        desc: "Resistances a la folie et a la putrefaction +3.",
+        effect: (stats) => {
+          stats.resistances.folie += 3;
+          stats.resistances.putrefaction += 3;
+        },
+      },
+      3: {
+        desc: "Penetration +10% et intelligence liee aux resistances sombres.",
+        effect: (stats) => {
+          stats.percentDamagePenetration += 0.1;
+          const totalRes =
+            stats.resistances.folie + stats.resistances.putrefaction;
+          stats.intelligence += totalRes * 2;
+        },
+      },
+    },
+  },
+
+  COLOSSUS_ARENA: {
+    name: "Panoplie du colosse des arenes",
+    bonuses: {
+      2: {
+        desc: "Armure +15% et vigueur +10%.",
+        effect: (stats) => {
+          stats.armor *= 1.15;
+          stats.vigor *= 1.1;
+        },
+      },
+      3: {
+        desc: "Convertit 30% de l'armure en force et reduit les degats de boss.",
+        effect: (stats) => {
+          stats.strength += Math.floor(stats.armor * 0.3);
+          stats.bossMitigation += 0.08;
+        },
+      },
+    },
+  },
 };

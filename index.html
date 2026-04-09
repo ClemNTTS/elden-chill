@@ -28,6 +28,7 @@
           <button class="nav-btn" type="button" onclick="navigateTo('map')">Carte</button>
           <button class="nav-btn" type="button" onclick="navigateTo('build')">Build</button>
           <button class="nav-btn" type="button" onclick="navigateTo('inventory')">Inventaire</button>
+          <button class="nav-btn" type="button" onclick="navigateTo('codex')">Codex</button>
           <button class="nav-btn" type="button" onclick="navigateTo('options')">Options</button>
         </nav>
 
@@ -313,6 +314,21 @@
               </div>
 
               <div class="build-side-stack">
+                <div id="preparation-section" class="camp-panel">
+                  <h3>Preparation d'expedition</h3>
+                  <p class="panel-copy">Choisissez une benediction persistante et un consommable pour la prochaine sortie.</p>
+                  <div class="prep-columns">
+                    <div>
+                      <p class="prep-label">Benediction</p>
+                      <div id="blessings-list" class="prep-option-list"></div>
+                    </div>
+                    <div>
+                      <p class="prep-label">Consommable</p>
+                      <div id="consumables-list" class="prep-option-list"></div>
+                    </div>
+                  </div>
+                </div>
+
                 <div id="real-time-stats-panel" class="camp-panel hidden-panel">
                   <h4>Statistiques effectives</h4>
                   <div id="real-time-content"></div>
@@ -364,6 +380,72 @@
             <div id="inventory-section" class="camp-panel">
               <h3>Objets possedes</h3>
               <div id="inventory-grid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-codex" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Memoire</p>
+                <h2>Codex des decouvertes</h2>
+                <p class="screen-copy">
+                  Tout ce que le Sans-eclat a rencontre, nettoye ou assemble au fil des expeditions.
+                </p>
+              </div>
+            </div>
+
+            <div class="codex-grid">
+              <section class="camp-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Boss rencontres</h3>
+                    <p>Les grands murs deja croises dans votre route.</p>
+                  </div>
+                </div>
+                <div id="codex-bosses" class="codex-list"></div>
+              </section>
+
+              <section class="camp-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Monstres observes</h3>
+                    <p>Escarmouches, elites et signatures biome par biome.</p>
+                  </div>
+                </div>
+                <div id="codex-monsters" class="codex-list"></div>
+              </section>
+
+              <section class="camp-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Sets decouverts</h3>
+                    <p>Panoplies deja identifiees par votre inventaire.</p>
+                  </div>
+                </div>
+                <div id="codex-sets" class="codex-list"></div>
+              </section>
+
+              <section class="camp-panel">
+                <div class="section-head">
+                  <div>
+                    <h3>Biomes nettoyes</h3>
+                    <p>Les routes deja stabilisees pour la campagne.</p>
+                  </div>
+                </div>
+                <div id="codex-biomes" class="codex-list"></div>
+              </section>
+
+              <section class="camp-panel codex-span">
+                <div class="section-head">
+                  <div>
+                    <h3>Evenements rencontres</h3>
+                    <p>Autels, caravanes, pieges et bifurcations deja notes.</p>
+                  </div>
+                </div>
+                <div id="codex-events" class="codex-list"></div>
+              </section>
             </div>
           </div>
         </section>
@@ -464,8 +546,35 @@
             </div>
           </div>
 
+          <div id="battle-intent-panel" class="battle-panel battle-intent-panel">
+            <div class="battle-intent-copy">
+              <p class="combat-card__eyebrow">Intention ennemie</p>
+              <h3 id="enemy-intent-label">Analyse en cours</h3>
+              <p id="enemy-intent-hint">La menace se met en place.</p>
+            </div>
+          </div>
+
           <div class="battle-log-frame battle-panel">
             <div id="action-log"></div>
+          </div>
+
+          <div id="journal-panel" class="battle-panel journal-panel">
+            <div class="section-head section-head-tight">
+              <div>
+                <h3>Journal d'exploration</h3>
+                <p>Evenements, choix de route et grands marqueurs de run.</p>
+              </div>
+              <div class="journal-filters">
+                <select id="journal-filter-kind" onchange="setJournalFilter(this.value)">
+                  <option value="all">Tout</option>
+                  <option value="event">Evenements</option>
+                  <option value="route">Routes</option>
+                  <option value="loot">Butin</option>
+                  <option value="checkpoint">Checkpoints</option>
+                </select>
+              </div>
+            </div>
+            <div id="journal-entries" class="journal-entries"></div>
           </div>
 
           <div id="ash-container" class="ash-container">

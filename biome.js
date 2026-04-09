@@ -105,6 +105,33 @@ export const LOOT_TABLES = {
     { id: "golden_tree_halberd", chance: 0.3 },
     { id: "golden_sentinel_armor", chance: 0.3 },
     { id: "sentinel_greatshield_talisman", chance: 0.4 },
+    { id: "altus_exec_blade", chance: 0.18 },
+    { id: "altus_exec_cloak", chance: 0.22 },
+    { id: "altus_exec_sigil", chance: 0.14 },
+  ],
+
+  mount_gelmir: [
+    { id: "gelmir_dragon_fang", chance: 0.22 },
+    { id: "gelmir_dragon_hide", chance: 0.26 },
+    { id: "gelmir_dragon_eye", chance: 0.12 },
+    { id: "talisman_storm_dragon", chance: 0.2 },
+    { id: "rune_fragment", chance: 0.2 },
+  ],
+
+  mountaintops: [
+    { id: "giant_breaker_maul", chance: 0.2 },
+    { id: "arena_colossus_plate", chance: 0.24 },
+    { id: "arena_colossus_token", chance: 0.18 },
+    { id: "talisman_posture", chance: 0.18 },
+    { id: "rune_fragment", chance: 0.2 },
+  ],
+
+  crumbling_farum_azula: [
+    { id: "azula_black_censer", chance: 0.18 },
+    { id: "azula_black_veil", chance: 0.24 },
+    { id: "azula_black_idol", chance: 0.16 },
+    { id: "talisman_blackrot", chance: 0.18 },
+    { id: "talisman_wayfarer", chance: 0.24 },
   ],
 
   caria_mansion: [
@@ -284,13 +311,13 @@ export const BIOMES = {
 
   altus_plateau: {
     name: "Plateau d'Altus",
-    monsters: ["leyndell_soldier", "altus_omen"],
-    rareMonsters: ["tree_sentinel_altus", "wormface_altus"],
+    monsters: ["leyndell_soldier", "altus_omen", "altus_praetor_guard"],
+    rareMonsters: ["tree_sentinel_altus", "wormface_altus", "altus_chariot_knight"],
     maxRareSpawns: 3,
     boss: "draconic_tree_sentinel",
     length: 15,
-    unlocks: null,
-    // unlocks: ["leyndell_royal"],
+    unlocks: ["mount_gelmir"],
+    hazards: ["folie"],
   },
 
   caria_mansion: {
@@ -382,13 +409,14 @@ export const BIOMES = {
   },
 
   mount_gelmir: {
-    name: "WIP Mont Gelmir",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: null,
+    name: "Mont Gelmir",
+    rareMonsters: ["serpent_inquisitor"],
+    maxRareSpawns: 2,
+    monsters: ["gelmir_hexmage", "altus_omen"],
+    boss: "praetor_fragment",
+    length: 14,
+    unlocks: ["mountaintops"],
+    hazards: ["poison", "putrefaction"],
   },
   leyndell_royal: {
     name: "WIP Leyndell, Cité Royale",
@@ -409,13 +437,14 @@ export const BIOMES = {
     unlocks: ["mountaintops"],
   },
   mountaintops: {
-    name: "WIP Sommets des Géants",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: ["consecrated_snowfield"],
+    name: "Cimes des Geants",
+    rareMonsters: ["icy_colossus"],
+    maxRareSpawns: 2,
+    monsters: ["giant_fire_disciple", "mountaintops_bird"],
+    boss: "fire_giant_shard",
+    length: 16,
+    unlocks: ["crumbling_farum_azula"],
+    hazards: ["gel", "folie"],
   },
   consecrated_snowfield: {
     name: "WIP Plaine Enneigée Consacrée",
@@ -445,13 +474,14 @@ export const BIOMES = {
     unlocks: ["crumbling_farum_azula"],
   },
   crumbling_farum_azula: {
-    name: "WIP Farum Azula en Ruines",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
+    name: "Farum Azula en Ruines",
+    rareMonsters: ["azula_black_priest"],
+    maxRareSpawns: 3,
+    monsters: ["azula_beast_lord", "beastman1"],
+    boss: "azula_tempest_avatar",
+    length: 17,
     unlocks: ["Leyndell_ash"],
+    hazards: ["folie", "putrefaction"],
   },
   Leyndell_ash: {
     name: "WIP Leyndell, Capitale des Cendres",
@@ -472,3 +502,4 @@ export const BIOMES = {
     unlocks: null,
   },
 };
+

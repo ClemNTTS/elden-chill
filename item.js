@@ -3,6 +3,7 @@ import { ITEM_TYPES } from "./constants.js";
 import { DEPTHS } from "./items/depths.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
+import { V21_ITEMS } from "./items/v21.js";
 import { gameState, getHealth, runtimeState } from "./state.js";
 import { ActionLog } from "./ui.js";
 
@@ -1251,4 +1252,5 @@ export const ITEMS = {
   ...RIVER,
   ...NOKRON,
   ...DEPTHS,
+  ...V21_ITEMS,
 };

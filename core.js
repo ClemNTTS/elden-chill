@@ -20,6 +20,21 @@ import {
   updateUI,
 } from "./ui.js";
 import { MONSTERS } from "./monster.js";
+import {
+  addJournalEntry,
+  applyPreparationLoadout,
+  clearRunBuffs,
+  describeHazards,
+  getItemRarity,
+  getItemRarityWeight,
+  getRunModifier,
+  getWeightedBiomeEvent,
+  grantPreparationRewardForBiome,
+  markCodexBiomeCleared,
+  markCodexSetSeen,
+  resolveBiomeEvent,
+  syncCodexFromInventory,
+} from "./systems.js";
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -56,6 +71,7 @@ function delayedSetTimeout(fn, ms) {
 
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
+  if (!itemTemplate) return;
   let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
 
   if (!inventoryItem) {
@@ -65,6 +81,12 @@ const dropItem = (itemId) => {
       level: itemTemplate?.isAlwaysMax ? 10 : 1,
       count: 0,
     });
+    addJournalEntry(
+      "loot",
+      "Butin notable",
+      `${itemTemplate.name} rejoint votre arsenal (${getItemRarity(itemId)}).`,
+      gameState.world.currentBiome,
+    );
     ActionLog(`Vous avez trouvé : ${itemTemplate.name} !`);
   } else {
     if (inventoryItem.level >= 10) {
@@ -93,22 +115,40 @@ const dropItem = (itemId) => {
     }
   }
 
+  if (itemTemplate.set) {
+    markCodexSetSeen(itemTemplate.set);
+  }
+  syncCodexFromInventory();
   updateUI();
 };
 
 const getWeightedDrop = (lootTable) => {
-  const totalWeight = lootTable.reduce((sum, item) => sum + item.chance, 0);
+  const rarityBoost = getRunModifier("lootRarityBoost", 0);
+  const weightedLoot = lootTable.map((item) => {
+    const rarityWeight = getItemRarityWeight(getItemRarity(item.id || ""));
+    return {
+      ...item,
+      chance: item.chance * (1 + rarityBoost * Math.max(0, rarityWeight - 1)),
+    };
+  });
+  const totalWeight = weightedLoot.reduce((sum, item) => sum + item.chance, 0);
   let random = Math.random() * totalWeight;
 
-  for (const item of lootTable) {
+  for (const item of weightedLoot) {
     if (random < item.chance) return item;
     random -= item.chance;
   }
-  return lootTable[0];
+  return weightedLoot[0];
 };
 
 export const handleDeath = () => {
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
+  addJournalEntry(
+    "checkpoint",
+    "Expedition interrompue",
+    "Votre tentative s'effondre ici. Les runes portees sont perdues.",
+    gameState.world.currentBiome,
+  );
   const biomeAtDeath = gameState.world.currentBiome;
   gameState.runes.carried = 0;
   gameState.world.isExploring = false;
@@ -116,6 +156,8 @@ export const handleDeath = () => {
   gameState.ennemyEffects = [];
   gameState.ashesOfWaruses = {};
   runtimeState.playerArmorDebuff = 0;
+  runtimeState.enemyIntent = null;
+  clearRunBuffs();
   saveGame();
 
   // If offline-time use is enabled and we still have banked time, automatically
@@ -135,7 +177,8 @@ export const handleDeath = () => {
 
 export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
-  const intBonus = 1 + Math.min(0.5, eff.intelligence / 100);
+  const intBonus =
+    1 + Math.min(0.5, eff.intelligence / 100) + (eff.runeGainMult || 0);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
     ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
@@ -183,6 +226,7 @@ export const handleVictory = (sessionId) => {
   updateStepper();
 
   if (runtimeState.areaCleared) {
+    markCodexBiomeCleared(gameState.world.currentBiome);
     runtimeState.areaCleared = false;
     runtimeState.usedRenaissance = false;
     runtimeState.usedAbsolution = false;
@@ -196,6 +240,19 @@ export const handleVictory = (sessionId) => {
       : 0;
 
     ActionLog("BOSS VAINCU !");
+    addJournalEntry(
+      "checkpoint",
+      "Biome nettoye",
+      `${currentBiome.name} cede enfin. Les routes changent autour de vous.`,
+      gameState.world.currentBiome,
+    );
+    const prepUnlocks = grantPreparationRewardForBiome(gameState.world.currentBiome);
+    if (prepUnlocks.length) {
+      ActionLog(
+        `Nouvelle preparation disponible : ${prepUnlocks.join(", ")}.`,
+        "log-crit",
+      );
+    }
 
     if (currentBiome.unlocks) {
       let newlyUnlockedCount = 0;
@@ -207,6 +264,12 @@ export const handleVictory = (sessionId) => {
           !gameState.world.unlockedBiomes.includes(biomeId)
         ) {
           gameState.world.unlockedBiomes.push(biomeId);
+          addJournalEntry(
+            "unlock",
+            "Nouveau biome",
+            `${BIOMES[biomeId].name} rejoint votre atlas de campagne.`,
+            biomeId,
+          );
           ActionLog(`Nouvelle zone découverte : ${BIOMES[biomeId].name} !`);
           newlyUnlockedCount++;
         }
@@ -275,6 +338,12 @@ const handleCampfireEvent = (sessionId) => {
   delayedSetTimeout(() => {
     container.classList.remove("blink-effect");
     ActionLog("Site de grâce touché. Runes sécurisées.");
+    addJournalEntry(
+      "checkpoint",
+      "Site de grace",
+      "Vous sécurisez vos runes et reformez votre souffle avant la seconde moitié du biome.",
+      gameState.world.currentBiome,
+    );
     nextEncounter(sessionId);
   }, 1200);
 };
@@ -303,11 +372,52 @@ export function nextEncounter(sessionId) {
     return;
   }
 
+  const canTriggerEvent =
+    gameState.world.progress > 0 &&
+    gameState.world.progress !== gameState.world.lastEventProgress &&
+    Math.random() < 0.22;
+
+  if (canTriggerEvent) {
+    const eventDef = getWeightedBiomeEvent(gameState.world.currentBiome);
+    const eventResult = resolveBiomeEvent(eventDef, gameState.world.currentBiome);
+    gameState.world.lastEventProgress = gameState.world.progress;
+
+    if (eventResult?.log) {
+      ActionLog(eventResult.log, "log-event");
+    }
+
+    if (eventResult?.applyHazard) {
+      const hazardMap = {
+        poison: "POISON",
+        gel: "FROSTBITE",
+        folie: "STUN",
+        putrefaction: "SCARLET_ROT",
+      };
+      if (hazardMap[eventResult.applyHazard]) {
+        gameState.playerEffects.push({
+          id: hazardMap[eventResult.applyHazard],
+          duration: eventResult.hazardValue || 1,
+        });
+      }
+      updateHealthBars();
+      updateUI();
+    }
+
+    if (eventResult?.forceRare && biome.rareMonsters?.length) {
+      const rareId =
+        biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
+      gameState.world.rareSpawnsCount++;
+      spawnMonster(rareId, sessionId);
+      return;
+    }
+  }
+
   const canSpawnRare =
     biome.rareMonsters &&
     gameState.world.rareSpawnsCount < (biome.maxRareSpawns || 0);
 
-  if (canSpawnRare && Math.random() < 0.15) {
+  const rareSpawnChance = 0.15 * getRunModifier("rareChanceMult", 1);
+  if (canSpawnRare && Math.random() < rareSpawnChance) {
     const rareId =
       biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
     if (!MONSTERS[rareId]) {
@@ -338,18 +448,23 @@ export const startExploration = (biomeId) => {
   runtimeState.usedRenaissance = false;
   const sessionAtStart = runtimeState.currentCombatSession;
   const biome = BIOMES[biomeId];
+  clearRunBuffs();
   gameState.world.isExploring = true;
   gameState.world.currentBiome = biomeId;
   gameState.world.progress = 0;
   gameState.world.checkpointReached = false;
+  gameState.world.activeBiomeHazards = biome.hazards || [];
+  gameState.world.lastEventProgress = -1;
   runtimeState.defeatedEnemies = [];
   gameState.playerEffects = [];
   gameState.ennemyEffects = [];
   gameState.world.rareSpawnsCount = 0;
+  runtimeState.enemyIntent = null;
   const selectedAsh = ASHES_OF_WAR[gameState.equippedAsh];
   runtimeState.ashUsesLeft = selectedAsh ? selectedAsh.maxUses : 0;
   runtimeState.ashIsPrimed = false;
   runtimeState.nextNbAtkBonus = 0;
+  applyPreparationLoadout();
 
   runtimeState.playerCurrentHp = getHealth(getEffectiveStats().vigor);
 
@@ -358,6 +473,12 @@ export const startExploration = (biomeId) => {
   toggleView("biome");
 
   document.getElementById("current-biome-text").innerText = biome.name;
+  addJournalEntry(
+    "departure",
+    "Depart de biome",
+    `Vous entrez dans ${biome.name}. Dangers dominants : ${describeHazards(biomeId)}.`,
+    biomeId,
+  );
 
   updateHealthBars();
   updateStepper();
