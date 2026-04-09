@@ -227,6 +227,9 @@ window.joinDiscord = joinDiscord;
 const CHECK_REFRESH_KEY = "last_hard_refresh_timestamp";
 export const FORCE_VERSION_KEY = "app_version_code";
 export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
+const IS_LOCAL_HOST =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
 
 const checkScheduledReset = () => {
   const FINAL_WIPE_FLAG = "wipe_v250_cloud_auth";
@@ -237,6 +240,10 @@ const checkScheduledReset = () => {
 };
 
 export async function checkForUpdate() {
+  if (IS_LOCAL_HOST) {
+    return;
+  }
+
   try {
     const response = await fetch(`./version.json?t=${Date.now()}`);
     const data = await response.json();
@@ -252,6 +259,10 @@ export async function checkForUpdate() {
 }
 
 const handleAutoRefresh = () => {
+  if (IS_LOCAL_HOST) {
+    return false;
+  }
+
   const hash = window.location.hash || "";
   const search = window.location.search || "";
   const isAuthCallback =
