@@ -269,7 +269,7 @@ const updateStatDisplay = () => {
     levelCapBanner.classList.toggle("is-maxed", remainingLevels === 0);
     levelCapBanner.innerText =
       remainingLevels === 0
-        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}). Les attributs sont capes pour cette version.`
+        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}). Les attributs sont bloques pour cette version.`
         : `Niveau ${currentLevel}/${maxLevel} · ${remainingLevels} amelioration(s) restante(s) avant le cap.`;
   }
 
@@ -608,7 +608,7 @@ const renderJourneyOverview = () => {
     <div class="journey-stat">
       <span class="journey-label">Signature du build</span>
       <strong>${eff.strength} FOR / ${eff.vigor} VIG / ${eff.armor} ARM</strong>
-      <small>${unlockedCount} zones repÃ©rÃ©es</small>
+      <small>${unlockedCount} zones reperees</small>
     </div>
   `;
 };
@@ -947,24 +947,24 @@ const renderBiomeDetail = (biomeId) => {
       </div>
       <div class="detail-block">
         <span class="detail-label">Rares</span>
-        <strong>${rares.join(", ") || "Aucun repÃ©rÃ©"}</strong>
+        <strong>${rares.join(", ") || "Aucun repere"}</strong>
       </div>
       <div class="detail-block">
-        <span class="detail-label">RÃ©compenses</span>
-        <strong>${lootPreview.join(", ") || "Butin spÃ©cial inconnu"}</strong>
+        <span class="detail-label">Recompenses</span>
+        <strong>${lootPreview.join(", ") || "Butin special inconnu"}</strong>
       </div>
       <div class="detail-block">
         <span class="detail-label">Afflictions</span>
         <strong>${describeHazards(biomeId)}</strong>
       </div>
       <div class="detail-block">
-        <span class="detail-label">AprÃ¨s la victoire</span>
+        <span class="detail-label">Apres la victoire</span>
         <strong>${nextBiomes.join(", ") || "Cul-de-sac rentable"}</strong>
       </div>
     </div>
     <div class="biome-detail-actions">
       <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
-        ${isUnlocked ? "Explorer cette zone" : "Zone pas encore dÃ©bloquÃ©e"}
+        ${isUnlocked ? "Explorer cette zone" : "Zone pas encore debloquee"}
       </button>
       <span class="detail-path-role">${guide?.pathRole || ""}</span>
     </div>

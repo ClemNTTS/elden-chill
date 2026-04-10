@@ -9,10 +9,15 @@ import {
 } from "./save.js";
 import {
   applyOfflineTimeProgress,
+  applyRuneRefund,
+  applyStatUpgrade,
   createEmptyProfileRecord,
   buildProfileRecordFromState,
   inflateProfileRecord,
   normalizePlayerProfile,
+  toggleEquipment,
+  toggleEquippedAsh,
+  updatePreparationSelection,
 } from "./shared/player-profile.js";
 
 const runtimeConfig = (() => {
@@ -238,6 +243,102 @@ const applyRecord = (record) => {
   return inflated;
 };
 
+const fetchCurrentProfileRecord = async () => {
+  const session = await requireSession();
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from("player_profiles")
+    .select("*")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (data) {
+    return { session, record: data };
+  }
+
+  const seed = {
+    user_id: session.user.id,
+    ...createEmptyProfileRecord(),
+  };
+
+  const { data: created, error: insertError } = await supabase
+    .from("player_profiles")
+    .upsert(seed)
+    .select("*")
+    .single();
+
+  if (insertError) {
+    throw insertError;
+  }
+
+  return { session, record: created };
+};
+
+const persistProfileMutation = async (session, current, nextProfile) => {
+  const supabase = getSupabase();
+  const nextRecord = buildProfileRecordFromState(nextProfile, current.save_meta || {});
+  nextRecord.save_meta.importedFromLocal = !!current.save_meta?.importedFromLocal;
+
+  const { data, error } = await supabase
+    .from("player_profiles")
+    .upsert({
+      user_id: session.user.id,
+      ...nextRecord,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return applyRecord(data);
+};
+
+const performDirectMutation = async (name, payload = {}) => {
+  const { session, record } = await fetchCurrentProfileRecord();
+  const profile = inflateProfileRecord(record);
+
+  switch (name) {
+    case "equip_item":
+      return persistProfileMutation(
+        session,
+        record,
+        toggleEquipment(profile, payload.slotKey, payload.itemId),
+      );
+    case "equip_ash":
+      return persistProfileMutation(
+        session,
+        record,
+        toggleEquippedAsh(profile, payload.ashId),
+      );
+    case "update_preparation":
+      return persistProfileMutation(
+        session,
+        record,
+        updatePreparationSelection(profile, {
+          blessingId: payload.blessingId,
+          consumableId: payload.consumableId,
+        }),
+      );
+    case "upgrade_stat":
+      return persistProfileMutation(
+        session,
+        record,
+        applyStatUpgrade(profile, payload.statName, payload.count),
+      );
+    case "refund_runes":
+      return persistProfileMutation(session, record, applyRuneRefund(profile));
+    default:
+      throw new Error(`UNSUPPORTED_DIRECT_MUTATION:${name}`);
+  }
+};
+
 export const bootstrapPlayerProfile = async () => {
   const session = await requireSession();
   const supabase = getSupabase();
@@ -355,6 +456,15 @@ export const loadAuthoritativeProfile = async () => {
 };
 
 export const performMutation = async (name, payload = {}) => {
+  try {
+    return await performDirectMutation(name, payload);
+  } catch (error) {
+    authLog("performDirectMutation failed", name, error?.message || error);
+    if (!String(error?.message || "").startsWith("UNSUPPORTED_DIRECT_MUTATION:")) {
+      throw error;
+    }
+  }
+
   await requireSession();
   const response = await invoke(name, payload);
   return applyRecord(response.profile);
