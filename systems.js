@@ -233,7 +233,7 @@ export const unlockConsumable = (
   if (!didUnlock) return false;
   addJournalEntry(
     "unlock",
-    "Nouveau consommable",
+    "Nouvel atout",
     `${PREP_CONSUMABLES[consumableId].name} rejoint votre préparation d'expédition.`,
     sourceBiomeId,
   );

@@ -342,8 +342,8 @@ const updateStatDisplay = () => {
 
   const updateCrit = (id, statName, isPercent) => {
     const val = eff[statName]; // Valeur effective totale (ex: 0.15 pour 15%)
-    const baseVal = base[statName]; // Valeur de base sans Ã©quipement (ex: 0.05)
-    const bonus = val - baseVal; // DiffÃ©rence apportÃ©e par les items/sets (ex: 0.10)
+    const baseVal = base[statName]; // Valeur de base sans equipement (ex: 0.05)
+    const bonus = val - baseVal; // Difference apportee par les items/sets (ex: 0.10)
 
     const cost = getUpgradeCost(statName);
     const btn = document.getElementById(`btn-${id}-1`);
@@ -1032,9 +1032,9 @@ const renderPreparationDisplay = () => {
 
   consumablesRoot.appendChild(
     createEmptyPrepOption({
-      title: "Aucun consommable",
-      description: "Conserver ses outils et partir sans effet consommable.",
-      details: "Aucun modificateur de run n'est appliqué au départ.",
+      title: "Aucun atout",
+      description: "Conserver ses outils et partir sans atout d'expedition.",
+      details: "Aucun modificateur de run n'est applique au depart.",
       active: !gameState.preparation?.selectedConsumableId,
       onClick: () => selectPreparationConsumable(null),
     }),
@@ -1252,7 +1252,7 @@ const updateCombatPresentation = () => {
       "Le champ de bataille se calme.";
     battleMeta.innerText = currentBiome?.name || "Camp";
     battleHint.innerText =
-      "Le prochain affrontement commencera Ã  la rencontre suivante.";
+      "Le prochain affrontement commencera a la rencontre suivante.";
     if (intelStrip) {
       intelStrip.innerHTML = `
         <div class="battle-intel-chip">
@@ -1288,13 +1288,13 @@ const updateCombatPresentation = () => {
 
   if (currentEnemy.isBoss) {
     battleHint.innerText =
-      "Boss en vue: cadence, mitigation et statuts doivent dÃ©jÃ  Ãªtre prÃªts.";
+      "Boss en vue: cadence, mitigation et statuts doivent deja etre prets.";
   } else if (currentEnemy.isRare) {
     battleHint.innerText =
-      "Elite repÃ©rÃ©e: gros rendement, mais pression nettement supÃ©rieure au pack standard.";
+      "Elite reperee: gros rendement, mais pression nettement superieure au pack standard.";
   } else {
     battleHint.innerText =
-      "Pack en cours: lisez les statuts et prÃ©parez le prochain palier avant le boss.";
+      "Pack en cours: lisez les statuts et preparez le prochain palier avant le boss.";
   }
 
   if (intelStrip) {
@@ -1382,16 +1382,16 @@ const getLogSide = (message, className = "") => {
 
   if (
     message.startsWith("Vous") ||
-    message.startsWith("Votre hÃ©ros") ||
-    message.startsWith("Vous Ãªtes") ||
+    message.startsWith("Votre heros") ||
+    message.startsWith("Vous etes") ||
     message.startsWith("Vous subissez") ||
-    message.startsWith("Vous brÃ»lez") ||
+    message.startsWith("Vous brulez") ||
     message.startsWith("Vous vous blessez") ||
     message.startsWith("CENDRE") ||
     message.startsWith("BOSS VAINCU") ||
     message.startsWith("OBJET UNIQUE") ||
     message.startsWith("Copie de") ||
-    message.startsWith("Site de grÃ¢ce") ||
+    message.startsWith("Site de grace") ||
     message.startsWith("De retour") ||
     message.startsWith("ESQUIVE ! Vous")
   ) {
@@ -1519,11 +1519,11 @@ window.toggleInventoryCollapse = () => {
   if (grid.style.display === "none") {
     grid.style.display = "block";
     filters.style.display = "flex";
-    btn.innerText = "â–¼ Inventaire";
+    btn.innerText = "▼ Inventaire";
   } else {
     grid.style.display = "none";
     filters.style.display = "none";
-    btn.innerText = "â–² Inventaire (RepliÃ©)";
+    btn.innerText = "▲ Inventaire (replie)";
   }
 };
 
@@ -1654,22 +1654,22 @@ export const updateRealTimeStatsDisplay = () => {
 
   container.innerHTML = `
     <div class="rt-stat"><span>Niveau:</span> <b>${eff.level || 0}</b></div>
-    <div class="rt-stat"><span>Runes DÃ©pensÃ©es:</span> <b>${gameState.stats.runesSpent || 0}</b></div>
+    <div class="rt-stat"><span>Runes depensees:</span> <b>${gameState.stats.runesSpent || 0}</b></div>
     <hr>
     <div class="rt-stat"><span>Force Totale:</span> <b>${eff.strength.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Vigueur Totale:</span> <b>${eff.vigor.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Points de Vie Max:</span> <b>${maxHp}</b></div> <hr>
-    <div class="rt-stat"><span>DextÃ©ritÃ© Totale:</span> <b>${eff.dexterity.toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Dexterite totale:</span> <b>${eff.dexterity.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Int Totale:</span> <b>${eff.intelligence.toFixed(1)}</b></div>
     <hr>
     <div class="rt-stat"><span>Taux d'Esquive:</span> <b>${dodgeChance.toFixed(1)}%</b></div>
-    <div class="rt-stat"><span>PÃ©nÃ©tration (Fixe):</span> <b>${flatPen.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>PÃ©nÃ©tration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
+    <div class="rt-stat"><span>Penetration (fixe):</span> <b>${flatPen.toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Penetration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
     <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
     <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
-    <div class="rt-stat"><span>DÃ©gÃ¢ts Zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Deg. Min. Ã‰pines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
+    <div class="rt-stat"><span>Degats de zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
+    <div class="rt-stat"><span>Deg. min. Epines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
     <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
     <div class="rt-stat"><span>Gain de Runes:</span> <b>${((eff.runeGainMult || 0) * 100).toFixed(1)}%</b></div>
     <hr>
@@ -2121,7 +2121,7 @@ const showItemComparisonTooltip = (e, item) => {
     setInfo = `<hr class="tooltip-rule">`;
     setInfo += `<strong class="tooltip-set-title">PANOPLIE : ${setDef.name} (${projectedCount}/3)</strong>`;
     if (projectedCount !== currentCount) {
-      setInfo += `<br><span class="tooltip-set-bonus is-active">Apres equipement: ${currentCount} â†’ ${projectedCount} piece(s)</span>`;
+      setInfo += `<br><span class="tooltip-set-bonus is-active">Apres equipement: ${currentCount} -> ${projectedCount} piece(s)</span>`;
     }
 
     Object.keys(setDef.bonuses).forEach((tier) => {
@@ -2156,23 +2156,23 @@ export const showStatTooltip = (e, statType) => {
     },
     strength: {
       title: "Force",
-      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 dÃ©gÃ¢t de base.</strong>",
+      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 degat de base.</strong>",
     },
     dexterity: {
-      title: "DextÃ©ritÃ©",
-      text: "AmÃ©liore votre agilitÃ© au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +0.5 d'Armure. 4 points en dextÃ©ritÃ© = 1 force. <small>(Les bonus sont attribuÃ©s par rapport aux stats de BASE) </small>",
+      title: "Dexterite",
+      text: "Ameliore votre agilite au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +0.5 d'Armure. 4 points en dexterite = 1 force. <small>(Les bonus sont attribues par rapport aux stats de BASE)</small>",
     },
     intelligence: {
       title: "Intelligence",
-      text: "Augmente votre capacitÃ© Ã  absorber l'Ã©nergie des runes.<br><strong>1 point = +1% de Runes.</strong> (max +50%). 4 points en Intelligence = 1 force.",
+      text: "Augmente votre capacite a absorber l'energie des runes.<br><strong>1 point = +1% de Runes.</strong> (max +50%). 4 points en Intelligence = 1 force.",
     },
     critChance: {
       title: "Chance de Critique",
-      text: "ProbabilitÃ© d'infliger un coup critique lors d'une attaque.",
+      text: "Probabilite d'infliger un coup critique lors d'une attaque.",
     },
     critDamage: {
-      title: "DÃ©gÃ¢ts Critiques",
-      text: "Multiplicateur de dÃ©gÃ¢ts appliquÃ© lors d'un coup critique.",
+      title: "Degats Critiques",
+      text: "Multiplicateur de degats applique lors d'un coup critique.",
     },
   };
   const data = descriptions[statType];
@@ -2238,7 +2238,7 @@ export const updateStepper = () => {
     const graceMarker = document.createElement("div");
     graceMarker.className = "marker marker-grace";
     graceMarker.style.left = `${(midPoint / total) * 100}%`;
-    graceMarker.title = "Site de GrÃ¢ce";
+    graceMarker.title = "Site de Grace";
     markersContainer.appendChild(graceMarker);
     const bossMarker = document.createElement("div");
     bossMarker.className = "marker marker-boss";

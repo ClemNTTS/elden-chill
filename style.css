@@ -1252,6 +1252,12 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+  position: sticky;
+  bottom: 10px;
+  z-index: 3;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  box-shadow: 0 18px 34px rgba(15, 10, 6, 0.22);
 }
 
 .combat-card {
@@ -1444,22 +1450,25 @@ body.theme-dark .log-entry-latest {
 .hp-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .hp-container > span {
   font-family: var(--header-font);
   letter-spacing: 0.03em;
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .hp-bar-bg {
   position: relative;
   width: 100%;
-  height: 16px;
+  height: 22px;
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-muted);
+  border: 1px solid color-mix(in srgb, var(--border-strong) 78%, transparent);
+  background: linear-gradient(180deg, var(--surface-muted), color-mix(in srgb, var(--surface-strong) 88%, black));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .hp-fill {
@@ -1475,10 +1484,11 @@ body.theme-dark .log-entry-latest {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.02em;
 }
 
 .status-container {
@@ -1820,6 +1830,11 @@ body.theme-dark #tooltip strong {
 .journal-panel {
   display: grid;
   gap: 14px;
+  opacity: 0.92;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
+    color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  border-color: color-mix(in srgb, var(--border) 88%, transparent);
 }
 
 .section-head-tight {
@@ -1860,7 +1875,7 @@ body.theme-dark #tooltip strong {
 .journal-entries {
   display: grid;
   gap: 10px;
-  max-height: 260px;
+  max-height: 210px;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -1952,6 +1967,11 @@ body.theme-dark #tooltip strong {
   .journey-overview,
   .hub-focus-card__stats {
     grid-template-columns: 1fr;
+  }
+
+  #combat-zone {
+    position: static;
+    bottom: auto;
   }
 
   .app-header {
