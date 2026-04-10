@@ -579,25 +579,6 @@
             <div id="action-log"></div>
           </div>
 
-          <div id="journal-panel" class="battle-panel journal-panel">
-            <div class="section-head section-head-tight">
-              <div>
-                <h3>Journal d'exploration</h3>
-                <p>Evenements, choix de route et grands marqueurs de run.</p>
-              </div>
-              <div class="journal-filters">
-                <select id="journal-filter-kind" onchange="setJournalFilter(this.value)">
-                  <option value="all">Tout</option>
-                  <option value="event">Evenements</option>
-                  <option value="route">Routes</option>
-                  <option value="loot">Butin</option>
-                  <option value="checkpoint">Checkpoints</option>
-                </select>
-              </div>
-            </div>
-            <div id="journal-entries" class="journal-entries"></div>
-          </div>
-
           <div id="ash-container" class="ash-container">
             <button id="ash-button" onclick="primeAsh()">
               Utiliser Cendre : <span id="ash-name">---</span> (<span id="ash-uses">0</span>)
@@ -636,6 +617,25 @@
               <div class="bank-text">Temps sauvegarde <span id="offline-bank-b">0s</span></div>
               <button id="btn-use-offline-b" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>
             </div>
+          </div>
+
+          <div id="journal-panel" class="battle-panel journal-panel">
+            <div class="section-head section-head-tight">
+              <div>
+                <h3>Journal d'exploration</h3>
+                <p>Evenements, choix de route et grands marqueurs de run.</p>
+              </div>
+              <div class="journal-filters">
+                <select id="journal-filter-kind" onchange="setJournalFilter(this.value)">
+                  <option value="all">Tout</option>
+                  <option value="event">Evenements</option>
+                  <option value="route">Routes</option>
+                  <option value="loot">Butin</option>
+                  <option value="checkpoint">Checkpoints</option>
+                </select>
+              </div>
+            </div>
+            <div id="journal-entries" class="journal-entries"></div>
           </div>
         </div>
       </section>

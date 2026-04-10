@@ -1588,9 +1588,13 @@ window.primeAsh = () => {
 };
 
 export const updateAshButton = () => {
+  const container = document.getElementById("ash-container");
   const ashBtn = document.getElementById("ash-button");
   const ash = ASHES_OF_WAR[gameState.equippedAsh];
+  if (!container || !ashBtn) return;
+
   if (ash && gameState.world.isExploring) {
+    container.classList.remove("is-hidden");
     document.getElementById("ash-name").innerText = ash.name;
     document.getElementById("ash-uses").innerText = runtimeState.ashUsesLeft;
     ashBtn.disabled = runtimeState.ashUsesLeft <= 0 || runtimeState.ashIsPrimed;
@@ -1600,7 +1604,11 @@ export const updateAshButton = () => {
     } else {
       ashBtn.classList.remove("ash-primed");
     }
+    return;
   }
+
+  container.classList.add("is-hidden");
+  ashBtn.classList.remove("ash-primed");
 };
 
 const updateAshesDisplay = () => {
