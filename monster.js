@@ -391,7 +391,7 @@ export const MONSTERS = {
     atk: 35,
     runes: 600,
     isRare: true,
-    armor: 50,
+    armor: 150,
     drops: [
       { id: "hunter_cap", chance: 0.85 },
       { id: "alchimist_suit", chance: 0.75 },
@@ -1104,7 +1104,10 @@ export const MONSTERS = {
     onTurnAction: (enemy) => {
       if (!enemy.isCharging) {
         enemy.isCharging = true;
-        return { msg: "L'astre attire les runes vers un point de rupture...", skipAttack: true };
+        return {
+          msg: "L'astre attire les runes vers un point de rupture...",
+          skipAttack: true,
+        };
       }
       enemy.isCharging = false;
       return { msg: "Explosion gravitationnelle !", dmgMult: 2.2 };
@@ -1121,7 +1124,8 @@ export const MONSTERS = {
     specificStats: { attacksPerTurn: 2, splashDamage: 80 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
-    flavorTextPhase2: "Le soldat draconide arrache la glace du lit de la rivière.",
+    flavorTextPhase2:
+      "Le soldat draconide arrache la glace du lit de la rivière.",
     effectsPhase2: { id: "FROSTBITE", duration: 3, chance: 0.45 },
     onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.25 },
   },
@@ -1187,11 +1191,15 @@ export const MONSTERS = {
     specificStats: { attacksPerTurn: 2, critChance: 0.12, critDamage: 1.8 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Le champion se drape de racines et de souvenirs ensevelis.",
+    flavorTextPhase2:
+      "Le champion se drape de racines et de souvenirs ensevelis.",
     onTurnAction: (enemy) => {
       if (enemy.hp < enemy.maxHp * 0.35 && !enemy.usedRootHeal) {
         enemy.usedRootHeal = true;
-        return { msg: "Les racines s'abreuvent de la mort et le reforgent.", healAmount: 1400 };
+        return {
+          msg: "Les racines s'abreuvent de la mort et le reforgent.",
+          healAmount: 1400,
+        };
       }
       return {};
     },
@@ -1261,7 +1269,8 @@ export const MONSTERS = {
     specificStats: { attacksPerTurn: 2, splashDamage: 120, critChance: 0.12 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
-    flavorTextPhase2: "Le bourgeon cosmique éclot et inonde le lac de runes affamées.",
+    flavorTextPhase2:
+      "Le bourgeon cosmique éclot et inonde le lac de runes affamées.",
     effectsPhase2: { id: "SCARLET_ROT", duration: 3, chance: 0.55 },
     onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
   },
