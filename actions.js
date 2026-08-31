@@ -2,7 +2,6 @@ import { gameState, runtimeState } from "./state.js";
 import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
-import { isCloudConfigured, performMutation } from "./backend.js";
 
 const upgradeCosts = {
   vigor: 1,
@@ -13,59 +12,13 @@ const upgradeCosts = {
   critDamage: 2.5,
 };
 
-const handleMutationError = (error, fallbackMessage) => {
-  const code = error?.message || "";
-
-  if (code.includes("LEVEL_CAP_REACHED")) {
-    alert(
-      `Niveau maximum atteint (${gameState.save.maxLevel}). Attendez la prochaine mise a jour pour progresser davantage!`,
-    );
-    return;
-  }
-
-  if (code.includes("CRIT_CHANCE_MAXED")) {
-    alert("Votre Chance de Critique est deja au maximum (100%) !");
-    return;
-  }
-
-  if (code.includes("NOT_ENOUGH_RUNES")) {
-    alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
-    return;
-  }
-
-  console.error(fallbackMessage, error);
-  alert(fallbackMessage);
-};
-
-export const equipAsh = async (ashId) => {
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("equip_ash", { ashId });
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible de changer de cendre pour le moment.");
-      return;
-    }
-  }
-
+export const equipAsh = (ashId) => {
   gameState.equippedAsh = gameState.equippedAsh === ashId ? null : ashId;
   saveGame("equip_ash");
   updateUI();
 };
 
-export const selectBlessing = async (blessingId) => {
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("update_preparation", { blessingId });
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible de mettre a jour la preparation.");
-      return;
-    }
-  }
-
+export const selectBlessing = (blessingId) => {
   if (blessingId == null) {
     gameState.preparation.selectedBlessingId = null;
     saveGame("select_blessing");
@@ -78,18 +31,7 @@ export const selectBlessing = async (blessingId) => {
   updateUI();
 };
 
-export const selectPreparationConsumable = async (consumableId) => {
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("update_preparation", { consumableId });
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible de mettre a jour la preparation.");
-      return;
-    }
-  }
-
+export const selectPreparationConsumable = (consumableId) => {
   if (consumableId == null) {
     gameState.preparation.selectedConsumableId = null;
     saveGame("select_consumable");
@@ -120,18 +62,7 @@ export const getMultiUpgradeCost = (statName, count) => {
   return totalCost;
 };
 
-export const upgradeStat = async (statName) => {
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("upgrade_stat", { statName, count: 1 });
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible d'appliquer cette amelioration pour le moment.");
-      return;
-    }
-  }
-
+export const upgradeStat = (statName) => {
   let cost = getUpgradeCost(statName);
 
   if (gameState.stats.level >= gameState.save.maxLevel) {
@@ -165,18 +96,7 @@ export const upgradeStat = async (statName) => {
   }
 };
 
-export const upgradeStatMultiple = async (statName, count) => {
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("upgrade_stat", { statName, count });
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible d'appliquer cette amelioration pour le moment.");
-      return;
-    }
-  }
-
+export const upgradeStatMultiple = (statName, count) => {
   let totalCost = getMultiUpgradeCost(statName, count);
 
   if (gameState.stats.level + count > gameState.save.maxLevel) {
@@ -215,24 +135,13 @@ export const upgradeStatMultiple = async (statName, count) => {
   }
 };
 
-export const refundRunes = async () => {
+export const refundRunes = () => {
   if (
     !confirm(
       "Etes-vous sur de vouloir recuperer vos runes ? Vous en perdrez 20%.",
     )
   ) {
     return;
-  }
-
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("refund_runes");
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible de rembourser les runes pour le moment.");
-      return;
-    }
   }
 
   gameState.runes.banked = Math.floor(
@@ -254,7 +163,7 @@ export const refundRunes = async () => {
   updateUI();
 };
 
-export const equipItem = async (itemId) => {
+export const equipItem = (itemId) => {
   const itemData = ITEMS[itemId];
   if (!itemData) return;
 
@@ -270,18 +179,6 @@ export const equipItem = async (itemId) => {
   };
 
   const slotKey = typeSlot[itemData.type];
-
-  if (isCloudConfigured()) {
-    try {
-      await performMutation("equip_item", { itemId, slotKey });
-      runtimeState.filterChanged = true;
-      updateUI();
-      return;
-    } catch (error) {
-      handleMutationError(error, "Impossible de modifier cet equipement pour le moment.");
-      return;
-    }
-  }
 
   const currentlyEquipped = gameState.equipped[slotKey];
 

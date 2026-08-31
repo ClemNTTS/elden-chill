@@ -32,26 +32,41 @@ export const runtimeState = {
 };
 
 export function setGameState(newState) {
-  if (newState.runes) Object.assign(gameState.runes, newState.runes);
-  if (newState.stats) Object.assign(gameState.stats, newState.stats);
-  if (newState.equipped) Object.assign(gameState.equipped, newState.equipped);
-  if (newState.playerEffects)
-    Object.assign(gameState.playerEffects, newState.playerEffects);
-  if (newState.ennemyEffects)
-    Object.assign(gameState.ennemyEffects, newState.ennemyEffects);
+  // Deux pieges evites ici, tous deux visibles a la remise a zero :
+  //
+  // 1. Tester la verite de la valeur (`if (newState.equippedAsh)`) empeche
+  //    toute remise a null. Une cendre restait equipee apres un reset. On
+  //    teste donc la PRESENCE de la cle, pas sa valeur.
+  // 2. Object.assign sur un tableau recopie les indices mais ne raccourcit
+  //    jamais la cible : charger un profil avec moins d'elements laissait des
+  //    entrees perimees a la fin. Les tableaux sont remplaces, pas fusionnes.
+  const mergeObject = (key) => {
+    if (key in newState && newState[key] && typeof newState[key] === "object") {
+      Object.assign(gameState[key], newState[key]);
+    }
+  };
 
-  if (newState.ashesOfWaruses)
-    Object.assign(gameState.ashesOfWaruses, newState.ashesOfWaruses);
-  if (newState.ashesOfWarOwned)
-    Object.assign(gameState.ashesOfWarOwned, newState.ashesOfWarOwned);
-  if (newState.equippedAsh) gameState.equippedAsh = newState.equippedAsh;
-  if (newState.ui) Object.assign(gameState.ui, newState.ui);
-  if (newState.preparation)
-    Object.assign(gameState.preparation, newState.preparation);
-  if (newState.journal) Object.assign(gameState.journal, newState.journal);
-  if (newState.codex) Object.assign(gameState.codex, newState.codex);
+  const replaceArray = (key, fallback = []) => {
+    if (key in newState) {
+      gameState[key] = Array.isArray(newState[key])
+        ? [...newState[key]]
+        : fallback;
+    }
+  };
 
-  if (newState.save) Object.assign(gameState.save, newState.save);
+  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save"]
+    .forEach(mergeObject);
+
+  mergeObject("ashesOfWaruses");
+
+  replaceArray("playerEffects");
+  replaceArray("ennemyEffects");
+  replaceArray("ashesOfWarOwned");
+  replaceArray("order");
+
+  if ("equippedAsh" in newState) {
+    gameState.equippedAsh = newState.equippedAsh ?? null;
+  }
 
   if (newState.world) {
     Object.assign(gameState.world, newState.world);
@@ -63,7 +78,9 @@ export function setGameState(newState) {
     }
   }
 
-  gameState.inventory = newState.inventory || [];
+  gameState.inventory = Array.isArray(newState.inventory)
+    ? [...newState.inventory]
+    : [];
 }
 
 export function getEffectiveStats() {

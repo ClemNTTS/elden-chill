@@ -4,62 +4,103 @@
   --radius-sm: 12px;
   --radius-md: 18px;
   --radius-lg: 26px;
-  --shadow-soft: 0 18px 40px rgba(44, 36, 20, 0.08);
-  --shadow-card: 0 20px 40px rgba(44, 36, 20, 0.12);
-}
 
-body.theme-light {
-  --bg: #f3ebd9;
-  --bg-accent: #ede3cf;
-  --surface: rgba(255, 251, 243, 0.88);
-  --surface-strong: #fffaf1;
-  --surface-muted: #efe5d3;
-  --text: #2f2418;
-  --text-soft: #6e6251;
-  --text-faint: #938673;
-  --border: rgba(111, 93, 61, 0.18);
-  --border-strong: rgba(111, 93, 61, 0.32);
-  --accent: #867142;
-  --accent-soft: #e3d1a6;
-  --accent-strong: #5f6c40;
-  --danger: #b75b3b;
-  --success: #607a45;
-  --info: #5f7f9f;
-  --active-btn: #ebe0bf;
-  --hover-btn: #d6c289;
-  --pressed-btn: #bc774d;
-  --disabled-btn: #c5b9a4;
-  --card-bg: #fff8ec;
-}
-
-body.theme-dark {
-  --bg: #12100d;
-  --bg-accent: #1a1713;
-  --surface: rgba(22, 19, 15, 0.92);
-  --surface-strong: #1c1814;
-  --surface-muted: #26211b;
-  --text: #eadfc8;
-  --text-soft: #c6b89d;
-  --text-faint: #95876f;
-  --border: rgba(209, 191, 156, 0.12);
-  --border-strong: rgba(209, 191, 156, 0.2);
-  --accent: #c5ad73;
-  --accent-soft: rgba(197, 173, 115, 0.14);
-  --accent-strong: #9ea86f;
-  --danger: #c76c51;
+  /* Palette unique. Le theme clair a ete retire : il empechait d'avoir un
+     decor coherent et doublait la surface a verifier a chaque ecran.
+     Fond souille, tres desature, pour que l'or ressorte sans crier. */
+  --bg: #0c0b09;
+  --bg-accent: #14120e;
+  --surface: rgba(24, 21, 16, 0.94);
+  --surface-strong: #1b1712;
+  --surface-muted: #211c15;
+  --text: #e8dcc0;
+  --text-soft: #b8a888;
+  --text-faint: #7f7259;
+  --border: rgba(198, 172, 116, 0.14);
+  --border-strong: rgba(198, 172, 116, 0.3);
+  /* Or terni : le seul accent chaud, reserve a ce qui compte. */
+  --accent: #c6ac74;
+  --accent-soft: rgba(198, 172, 116, 0.12);
+  --accent-strong: #8f9a5c;
+  --danger: #b8543a;
   --success: #7f9b61;
-  --info: #7697be;
-  --active-btn: #262119;
-  --hover-btn: #3a3126;
-  --pressed-btn: #473827;
-  --disabled-btn: #4f463b;
-  --card-bg: #1e1914;
-  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.28);
-  --shadow-card: 0 20px 48px rgba(0, 0, 0, 0.38);
+  --info: #6d90b4;
+  --active-btn: #2a2318;
+  --hover-btn: #3a3122;
+  --pressed-btn: #4a3c26;
+  --disabled-btn: #423a2f;
+  --card-bg: #1a1611;
+  --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 22px 54px rgba(0, 0, 0, 0.55);
+  --glow-accent: 0 0 24px rgba(198, 172, 116, 0.18);
+  /* Fonds translucides : le decor du camp doit teinter les panneaux sans
+     jamais passer devant le texte. */
+  --panel-veil: rgba(24, 20, 15, 0.78);
+  --shell-veil: rgba(12, 11, 8, 0.28);
+  /* Voile et flou volontairement tres faibles : un voile blanc a 32% lavait
+     completement le decor du camp derriere la coque, et un flou de 12px le
+     reduisait en bouillie. */
+  --shell-blur: blur(1px);
+  --shell-sheen: linear-gradient(180deg, rgba(198, 172, 116, 0.05), transparent);
+  --panel-sheen: linear-gradient(180deg, rgba(198, 172, 116, 0.06), transparent);
+  /* Etait utilise 7 fois dans la feuille sans avoir jamais ete defini :
+     toutes ces declarations etaient invalides et silencieusement ignorees,
+     ce qui expliquait des fonds de rarete inexistants. */
+  --surface-subtle: #191510;
+
+  /* Rarete des objets. Une couleur par palier, assez distincte pour se lire
+     au coup d'oeil dans une grille. */
+  --rarity-commun: #6e6656;
+  --rarity-rare: #6d90b4;
+  --rarity-legendaire: #c6ac74;
+  --rarity-relique: #b8543a;
+}
+
+/* Couleurs d'attribut : elles doivent rester identifiables d'un coup d'oeil
+   et ne pas se confondre avec l'accent. */
+:root {
+  --stat-vigor: #48a352;
+  --stat-strength: #b8683c;
+  --stat-dexterity: #dcb420;
+  --stat-intelligence: #4b93d6;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Barres de defilement. Sans ca le navigateur les rend en blanc et gris sur
+   Windows, ce qui trouait la palette des que le contenu debordait. Firefox
+   utilise scrollbar-color, les moteurs WebKit les pseudo-elements : les deux
+   sont necessaires. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border-strong) 80%, transparent);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 html,
@@ -70,19 +111,12 @@ body {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.55), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(165, 144, 91, 0.12), transparent 32%),
-    linear-gradient(180deg, var(--bg), var(--bg-accent));
-  color: var(--text);
-  font-family: var(--body-font);
-  overflow-x: hidden;
-}
-
-body.theme-dark {
-  background:
     radial-gradient(circle at top left, rgba(197, 173, 115, 0.08), transparent 32%),
     radial-gradient(circle at bottom right, rgba(118, 151, 190, 0.08), transparent 28%),
     linear-gradient(180deg, #0f0d0b, #171410);
+  color: var(--text);
+  font-family: var(--body-font);
+  overflow-x: hidden;
 }
 
 button,
@@ -151,28 +185,43 @@ button:disabled {
   opacity: 0;
 }
 
+/* Braises. Carrees et non rondes : un degrade radial jure a cote du pixel art.
+   Chaque braise porte sa propre derive horizontale et sa propre teinte, tirees
+   au sort a la creation — sans ca les 50 montent en colonnes paralleles. */
 .particle {
   position: absolute;
   bottom: -30px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(236, 152, 76, 0.9), rgba(236, 152, 76, 0));
+  background-color: var(--ember-color, #ec984c);
+  box-shadow: 0 0 6px var(--ember-color, #ec984c);
   animation: driftUp linear infinite;
-  opacity: 0.5;
+  opacity: 0;
+  image-rendering: pixelated;
 }
 
 @keyframes driftUp {
   from {
-    transform: translateY(0) translateX(0);
+    transform: translate3d(0, 0, 0);
     opacity: 0;
   }
-  15% {
-    opacity: 0.55;
+  12% {
+    opacity: var(--ember-peak, 0.5);
+  }
+  70% {
+    opacity: var(--ember-peak, 0.5);
   }
   to {
-    transform: translateY(-105vh) translateX(16px);
+    transform: translate3d(var(--drift-x, 16px), -105vh, 0);
     opacity: 0;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+    opacity: 0.25;
+  }
+}
+
 
 #game-container {
   position: relative;
@@ -183,18 +232,19 @@ button:disabled {
   padding: 20px;
   border-radius: 28px;
   border: 1px solid var(--border-strong);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.06)),
-    var(--surface);
-  backdrop-filter: blur(12px);
+  background: var(--shell-sheen), var(--shell-veil);
+  backdrop-filter: var(--shell-blur);
   box-shadow: var(--shadow-card);
 }
 
-body.theme-dark #game-container {
+/* Cette surcharge est plus specifique que la regle #game-container : elle doit
+   utiliser les memes jetons, sinon le decor du camp reste cache derriere un
+   fond a 94% d'opacite. */
+#game-container {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.16)),
-    var(--surface);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.14)),
+    var(--shell-sheen),
+    var(--shell-veil);
 }
 
 .app-header {
@@ -213,7 +263,6 @@ body.theme-dark #game-container {
 .slot-label,
 .combat-card__eyebrow,
 .log-column-title,
-.journey-label,
 .detail-label,
 .battle-intel-chip span,
 #battle-meta {
@@ -267,11 +316,6 @@ body.theme-dark #game-container {
   color: var(--danger);
 }
 
-.theme-toggle {
-  white-space: nowrap;
-  border-radius: 8px;
-}
-
 .menu-button,
 .safe-btn {
   width: 100%;
@@ -280,6 +324,103 @@ body.theme-dark #game-container {
 #camp-view,
 .combat-view {
   display: block;
+}
+
+/* ------------------------------------------------------------------ */
+/* Decor du camp                                                      */
+/* ------------------------------------------------------------------ */
+
+#camp-view {
+  position: relative;
+}
+
+/* Fond fixe a l'echelle du viewport, et non absolu a la hauteur du camp :
+   #camp-view peut faire 1700px de haut, et un background-size: cover sur une
+   image de 480x270 y produisait un agrandissement absurde ou l'on ne voyait
+   plus qu'un morceau de l'Arbre-Monde. En fixe, l'echelle reste raisonnable et
+   le decor se comporte comme un veritable arriere-plan quand on defile. */
+#camp-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Le decor s'efface vers le bas : les panneaux n'ont pas a se battre contre
+     un sol charge. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 96%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 96%);
+  transition: opacity 400ms ease;
+}
+
+#camp-scene.hidden {
+  opacity: 0;
+}
+
+.camp-scene__layer {
+  position: absolute;
+  inset: 0;
+  /* Decale au defilement par ui.js, a un rythme different par calque. */
+  transform: translate3d(0, var(--parallax, 0px), 0);
+  will-change: transform;
+  background-repeat: no-repeat;
+  background-position: center top;
+  /* La largeur pilote l'echelle, la hauteur suit. background-size: cover sur
+     une image 16:9 dans un viewport presque carre recadrait a l'extreme : on ne
+     voyait plus qu'une bande de ciel, l'Arbre-Monde etait hors cadre. */
+  background-size: 100% auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Les trois calques sont cales sur la meme image de 480x270 : ils doivent
+   partager exactement le meme cadrage, sinon l'horizon se dedouble. */
+.camp-scene__sky {
+  background-image: url("assets/sprites/scene/camp-sky.png");
+}
+
+.camp-scene__mid {
+  background-image: url("assets/sprites/scene/camp-mid.png");
+}
+
+.camp-scene__near {
+  background-image: url("assets/sprites/scene/camp-near.png");
+}
+
+/* Halo de grace qui respire, cale sur l'Arbre-Monde de l'image (a 73% de la
+   largeur, 26% de la hauteur). C'est ce qui empeche la scene de paraitre morte
+   sans imposer d'animation lourde. */
+.camp-scene__grace {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 73% 26%,
+    rgba(232, 192, 106, 0.2),
+    transparent 26%
+  );
+  animation: grace-breathe 7s ease-in-out infinite;
+}
+
+@keyframes grace-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camp-scene__grace {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* Les ecrans passent devant le decor. */
+#camp-view > .app-screen {
+  position: relative;
+  z-index: 1;
 }
 
 .app-screen {
@@ -321,13 +462,12 @@ body.theme-dark #game-container {
 .camp-panel,
 .battle-panel,
 .options-page {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
-    var(--surface-strong);
+  background: var(--panel-sheen), var(--panel-veil);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
   box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(3px);
 }
 
 .battle-panel {
@@ -344,13 +484,18 @@ body.theme-dark #game-container {
   opacity: 0.55;
 }
 
-body.theme-dark .camp-panel,
-body.theme-dark .battle-panel,
-body.theme-dark .options-page,
-body.theme-dark .combat-card {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
-    var(--surface-strong);
+.camp-panel,
+.battle-panel,
+.options-page,
+.combat-card {
+  background: var(--panel-sheen), var(--panel-veil);
+}
+
+/* Les panneaux de combat n'ont pas de decor derriere eux : ils restent opaques,
+   pour ne pas perdre en lisibilite pendant l'action. */
+.battle-panel,
+.combat-card {
+  background: var(--panel-sheen), var(--surface-strong);
 }
 
 .section-head,
@@ -372,32 +517,155 @@ body.theme-dark .combat-card {
 }
 
 .hero-panel {
-  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
-.journey-overview {
+.hero-panel__figure {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Le portrait est pose sur un socle rond avec une lueur : le sprite fait
+   32x32, il a besoin d'un cadre pour ne pas flotter dans le vide. */
+.hero-portrait {
+  position: relative;
+  flex: 0 0 auto;
+  width: 160px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 78%, var(--accent-soft), transparent 62%),
+    var(--surface-muted);
+  border: 1px solid var(--border-strong);
+  box-shadow: inset 0 -18px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.hero-portrait::after {
+  /* Ombre portee sous les pieds du sprite. */
+  content: "";
+  position: absolute;
+  bottom: 26px;
+  width: 66px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  filter: blur(3px);
+}
+
+.hero-portrait__canvas {
+  position: relative;
+  z-index: 1;
+  /* Le canvas a une taille en pixels fixe (32 x l'echelle). Sans ces deux
+     regles il debordait du cadre rond aux petites largeurs et le sprite se
+     faisait rogner par l'overflow: hidden. */
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.hero-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hero-identity h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.15;
+  color: var(--accent);
+}
+
+.hero-identity__note {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hero-stats__head {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
 }
 
-.journey-stat {
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 14px;
+.hero-stats__head > div {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.journey-stat strong {
-  font-size: 1.1rem;
+.hero-stats__head strong {
+  font-family: var(--header-font);
+  font-size: 1.2rem;
 }
 
-.journey-stat small {
+.hero-stat {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr) 62px;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-stat__label {
+  font-size: 0.86rem;
   color: var(--text-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hero-stat__track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.hero-stat__fill {
+  height: 100%;
+  min-width: 2px;
+  border-radius: 999px;
+  transition: width 260ms ease;
+}
+
+.hero-stat__value {
+  font-family: var(--header-font);
+  font-size: 1rem;
+  text-align: right;
+}
+
+.hero-stat__value small {
+  color: var(--success);
+  font-family: var(--body-font);
+  font-size: 0.78rem;
+  margin-left: 3px;
+}
+
+/* La stat dominante est celle qui decide de l'apparence : on le montre. */
+.hero-stat.is-dominant .hero-stat__label {
+  color: var(--accent);
+}
+
+.hero-stat.is-dominant .hero-stat__value {
+  color: var(--accent);
 }
 
 .hub-focus-card {
@@ -473,14 +741,26 @@ body.theme-dark .combat-card {
   min-height: 118px;
   padding: 14px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-muted);
   color: var(--text);
   text-align: left;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.slot:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-strong);
+}
+
+.slot-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
 .slot-item-name {
@@ -499,6 +779,30 @@ body.theme-dark .combat-card {
   color: var(--text-faint);
 }
 
+/* ------------------------------------------------------------------ */
+/* Icones pixel                                                       */
+/* ------------------------------------------------------------------ */
+
+/* Toutes les icones sont des decoupes d'atlas 16x16 agrandies : sans
+   image-rendering explicite le navigateur les lisse et le pixel art devient
+   une bouillie. Les deux valeurs sont volontaires, les moteurs ne supportent
+   pas le meme mot-cle. */
+/* Cet element ne porte QUE le decoupage de l'atlas : pas de padding, pas de
+   bordure, pas de raccourci `background`. Toute decoration va sur le cadre
+   (.item-icon / .slot-icon), sinon les cellules voisines de l'atlas
+   reapparaissent — un padding fait peindre le fond sur toute la boite, et le
+   raccourci `background` reinitialise background-clip. */
+.pixel-icon {
+  display: block;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Emplacement vide, ou icone pas encore mappee : un cadre en pointilles
+   plutot qu'un trou, pour que la grille reste lisible. */
 .map-screen-panel {
   display: flex;
   flex-direction: column;
@@ -535,6 +839,19 @@ body.theme-dark .combat-card {
   color: var(--text-faint);
 }
 
+.legend-chip.current {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.legend-chip.selected {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+/* Carte et navigateur de chapitres cote a cote des qu'il y a la place. En une
+   seule colonne, la carte et la liste s'empilaient et il fallait faire
+   l'aller-retour en defilant pour comparer deux zones. */
 .map-screen-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -542,10 +859,17 @@ body.theme-dark .combat-card {
   align-items: start;
 }
 
+@media (min-width: 1000px) {
+  .map-screen-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+    align-items: start;
+  }
+}
+
 #world-map-shell {
   position: relative;
-  min-height: 340px;
-  height: clamp(340px, 48vh, 520px);
+  min-height: 380px;
+  height: clamp(380px, 58vh, 640px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background:
@@ -553,6 +877,26 @@ body.theme-dark .combat-card {
     radial-gradient(circle at 77% 74%, rgba(95, 127, 159, 0.16), transparent 22%),
     linear-gradient(180deg, #f6efdf, #eaddc6);
   overflow: hidden;
+}
+
+/* La carte reste en vue pendant qu'on parcourt la fiche et les chapitres.
+   Sans ca, la colonne de droite fait 1300px, la carte 520px, et on defile sur
+   800px de vide a gauche.
+
+   Ce bloc doit rester APRES la regle #world-map-shell ci-dessus : une media
+   query n'ajoute pas de specificite, et `position: relative` reprendrait le
+   dessus par simple ordre de source. */
+@media (min-width: 1000px) {
+  #world-map-shell {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    /* Elle occupe presque toute la hauteur de la fenetre : epinglee, une carte
+       courte laissait un vide sous elle pendant tout le defilement. Le -140px
+       garde la marge haute et empeche la carte de depasser la fenetre, ce qui
+       annulerait l'epinglage. */
+    height: min(760px, calc(100vh - 140px));
+  }
 }
 
 #world-map {
@@ -583,7 +927,7 @@ body.theme-dark .combat-card {
   opacity: 0.8;
 }
 
-body.theme-dark #world-map-shell {
+#world-map-shell {
   background:
     radial-gradient(circle at 25% 18%, rgba(160, 136, 89, 0.22), transparent 24%),
     radial-gradient(circle at 77% 74%, rgba(95, 127, 159, 0.18), transparent 22%),
@@ -614,7 +958,7 @@ body.theme-dark #world-map-shell {
   stroke-dasharray: 2 1;
 }
 
-body.theme-dark .atlas-path {
+.atlas-path {
   stroke: rgba(219, 200, 137, 0.28);
 }
 
@@ -633,7 +977,7 @@ body.theme-dark .atlas-path {
   box-shadow: 0 14px 26px rgba(82, 68, 39, 0.14);
 }
 
-body.theme-dark .world-node {
+.world-node {
   background: rgba(26, 21, 16, 0.92);
 }
 
@@ -659,12 +1003,151 @@ body.theme-dark .world-node {
     0 18px 30px rgba(82, 68, 39, 0.18);
 }
 
+/* Empilee par defaut. Cette colonne etait une grille a deux colonnes, ce qui
+   convenait quand elle occupait toute la largeur sous la carte ; depuis
+   qu'elle est la colonne de droite, ses deux enfants s'y ecrasaient. Elle ne
+   reprend deux colonnes que dans la fenetre ou elle repasse en pleine
+   largeur. */
 .map-side-column {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-height: 0;
   align-items: start;
+}
+
+@media (min-width: 720px) and (max-width: 999px) {
+  .map-side-column {
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Commandes de la carte                                              */
+/* ------------------------------------------------------------------ */
+
+.map-controls {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(4px);
+}
+
+.map-controls button {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.map-controls button:first-child,
+.map-controls button:nth-child(2) {
+  /* Les deux boutons de zoom sont des carres : un "+" seul dans un bouton
+     large flotterait au milieu de rien. */
+  min-width: 34px;
+  padding: 0.4rem 0;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Navigateur par chapitres                                           */
+/* ------------------------------------------------------------------ */
+
+#biome-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: clamp(320px, 52vh, 560px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.chapter-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-subtle);
+  overflow: hidden;
+}
+
+.chapter-group__head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 0.8rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+.chapter-group__head:hover {
+  background-color: var(--hover-btn);
+  transform: none;
+}
+
+.chapter-group__name {
+  font-family: var(--header-font);
+  font-size: 0.92rem;
+}
+
+.chapter-group__count {
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter-group__chevron {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--text-soft);
+  transition: transform 160ms ease;
+}
+
+.chapter-group.is-collapsed .chapter-group__chevron {
+  transform: rotate(-90deg);
+}
+
+.chapter-group__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.chapter-group.is-collapsed .chapter-group__body {
+  display: none;
+}
+
+/* Une zone verrouillee reste cliquable : on peut lire sa fiche pour preparer
+   la suite. Elle est seulement mise en retrait. */
+.biome-shortcut.is-locked {
+  opacity: 0.5;
+}
+
+.biome-shortcut.is-current {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.biome-shortcut.is-wip .biome-shortcut__title::after {
+  content: " · chantier";
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
 }
 
 .biome-detail-card {
@@ -672,13 +1155,12 @@ body.theme-dark .world-node {
   flex-direction: column;
   gap: 14px;
   min-height: 100%;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.08)),
-    var(--surface-strong);
+  background: var(--panel-sheen), var(--panel-veil);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px;
   box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(3px);
 }
 
 .biome-detail-card h4 {
@@ -829,11 +1311,11 @@ body.theme-dark .world-node {
   color: var(--text);
 }
 
-body.theme-dark .build-cap-status {
+.build-cap-status {
   background: linear-gradient(180deg, rgba(37, 31, 24, 0.96), rgba(28, 23, 18, 0.95));
 }
 
-body.theme-dark .build-cap-status.is-maxed {
+.build-cap-status.is-maxed {
   background: linear-gradient(180deg, rgba(53, 40, 24, 0.96), rgba(40, 29, 18, 0.95));
 }
 
@@ -852,10 +1334,31 @@ body.theme-dark .build-cap-status.is-maxed {
   background: color-mix(in srgb, var(--surface-muted) 70%, var(--accent-soft));
 }
 
+/* Grille a deux colonnes : l'icone tient la premiere sur les deux lignes, le
+   nom et la valeur s'empilent dans la seconde. En colonne flex, l'icone
+   prependue par decorateStatLines se retrouvait au-dessus du libelle.
+   Les lignes sont declarees explicitement et le placement est force :
+   sans grid-template-rows, `grid-row: 1 / -1` ne couvrait qu'une seule ligne
+   et les valeurs retombaient dans la colonne de l'icone, dont la largeur
+   variait alors selon la presence d'un bonus — les libelles ne s'alignaient
+   plus d'une ligne a l'autre. */
 .stat-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 4px;
+}
+
+.stat-info > .stat-line-icon {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin: 0;
+}
+
+.stat-info > :not(.stat-line-icon) {
+  grid-column: 2;
 }
 
 .stat-values {
@@ -958,11 +1461,18 @@ body.theme-dark .build-cap-status.is-maxed {
   padding: 14px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 4px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* L'icone occupe les trois lignes de la carte, le texte s'empile a droite. */
+.inventory-equipped-card .item-icon {
+  grid-row: 1 / -1;
 }
 
 .inventory-equipped-label,
@@ -990,6 +1500,40 @@ body.theme-dark .build-cap-status.is-maxed {
   opacity: 0.82;
 }
 
+/* ------------------------------------------------------------------ */
+/* Socle d'icone, commun aux cartes d'inventaire                      */
+/* ------------------------------------------------------------------ */
+
+.item-icon,
+.slot-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle at 50% 42%, var(--item-glow, transparent), transparent 68%),
+    var(--surface-subtle);
+  border: 1px solid var(--border);
+}
+
+/* Cadre sans icone : hachures en pointilles, pour que la grille garde son
+   rythme au lieu de laisser un trou. */
+.item-icon.is-empty,
+.slot-icon.is-empty {
+  border-style: dashed;
+}
+
+.pixel-icon--missing {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    var(--border) 4px,
+    var(--border) 5px
+  );
+}
+
 #filter-buttons {
   display: flex;
   gap: 8px;
@@ -1004,23 +1548,91 @@ body.theme-dark .build-cap-status.is-maxed {
 }
 
 .inventory-item {
-  min-height: 150px;
+  min-height: 176px;
   padding: 14px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(255, 249, 238, 0.92), rgba(240, 231, 214, 0.9));
+  background: var(--panel-sheen), var(--surface-strong);
   border: 1px solid var(--border);
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  justify-items: center;
   gap: 8px;
-  justify-content: space-between;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  text-align: center;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .inventory-item:hover {
   transform: translateY(-2px);
   border-color: var(--accent);
-  box-shadow: 0 16px 28px rgba(82, 68, 39, 0.1);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+}
+
+.inventory-item-name {
+  align-self: start;
+}
+
+.inventory-item-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
+/* Rarete                                                             */
+/* ------------------------------------------------------------------ */
+
+/* Chaque palier pose sa couleur dans --rarity-color, que la bordure, la puce
+   et la lueur derriere l'icone consomment ensuite. Un seul point a changer
+   pour ajouter un palier. */
+.rarity-commun {
+  --rarity-color: var(--rarity-commun);
+}
+
+.rarity-rare {
+  --rarity-color: var(--rarity-rare);
+}
+
+.rarity-legendaire {
+  --rarity-color: var(--rarity-legendaire);
+}
+
+.rarity-relique {
+  --rarity-color: var(--rarity-relique);
+}
+
+.inventory-item[class*="rarity-"] {
+  border-color: color-mix(in srgb, var(--rarity-color) 38%, var(--border));
+}
+
+.inventory-item[class*="rarity-"] .item-icon {
+  --item-glow: color-mix(in srgb, var(--rarity-color) 26%, transparent);
+  border-color: color-mix(in srgb, var(--rarity-color) 32%, var(--border));
+}
+
+.inventory-item-rarity {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: color-mix(in srgb, var(--rarity-color) 72%, var(--text));
+  background: color-mix(in srgb, var(--rarity-color) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rarity-color) 28%, transparent);
+}
+
+/* Le palier commun ne merite pas d'etre souligne : on l'efface presque. */
+.rarity-commun .inventory-item-rarity {
+  color: var(--text-faint);
+  background: transparent;
+  border-color: var(--border);
 }
 
 .equipped-highlight {
@@ -1030,46 +1642,23 @@ body.theme-dark .build-cap-status.is-maxed {
 
 .inventory-item.item-type-weapon,
 .inventory-equipped-card.item-type-weapon {
-  background: linear-gradient(180deg, rgba(249, 235, 227, 0.96), rgba(238, 220, 210, 0.94));
-  border-color: rgba(163, 92, 67, 0.34);
-}
-
-.inventory-item.item-type-armor,
-.inventory-equipped-card.item-type-armor {
-  background: linear-gradient(180deg, rgba(231, 237, 244, 0.96), rgba(214, 222, 236, 0.94));
-  border-color: rgba(87, 107, 145, 0.34);
-}
-
-.inventory-item.item-type-accessory,
-.inventory-equipped-card.item-type-accessory {
-  background: linear-gradient(180deg, rgba(238, 242, 224, 0.96), rgba(225, 231, 201, 0.94));
-  border-color: rgba(117, 135, 66, 0.34);
-}
-
-.inventory-equipped-card.item-type-ash {
-  background: linear-gradient(180deg, rgba(243, 233, 220, 0.96), rgba(229, 215, 194, 0.94));
-  border-color: rgba(154, 117, 63, 0.34);
-}
-
-body.theme-dark .inventory-item.item-type-weapon,
-body.theme-dark .inventory-equipped-card.item-type-weapon {
   background: linear-gradient(180deg, rgba(60, 38, 31, 0.96), rgba(44, 28, 23, 0.94));
   border-color: rgba(181, 109, 83, 0.35);
 }
 
-body.theme-dark .inventory-item.item-type-armor,
-body.theme-dark .inventory-equipped-card.item-type-armor {
+.inventory-item.item-type-armor,
+.inventory-equipped-card.item-type-armor {
   background: linear-gradient(180deg, rgba(31, 40, 55, 0.96), rgba(22, 29, 41, 0.94));
   border-color: rgba(120, 140, 185, 0.34);
 }
 
-body.theme-dark .inventory-item.item-type-accessory,
-body.theme-dark .inventory-equipped-card.item-type-accessory {
+.inventory-item.item-type-accessory,
+.inventory-equipped-card.item-type-accessory {
   background: linear-gradient(180deg, rgba(39, 46, 28, 0.96), rgba(29, 34, 21, 0.94));
   border-color: rgba(132, 155, 82, 0.34);
 }
 
-body.theme-dark .inventory-equipped-card.item-type-ash {
+.inventory-equipped-card.item-type-ash {
   background: linear-gradient(180deg, rgba(53, 40, 24, 0.96), rgba(40, 29, 18, 0.94));
   border-color: rgba(184, 141, 76, 0.34);
 }
@@ -1091,57 +1680,49 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   border-color: var(--accent);
 }
 
-.auth-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background:
-    radial-gradient(circle at top, rgba(245, 195, 86, 0.16), transparent 35%),
-    rgba(10, 7, 4, 0.82);
-  backdrop-filter: blur(12px);
-}
-
-.auth-overlay.is-hidden {
-  display: none;
-}
-
-.auth-card {
-  width: min(100%, 460px);
-  display: grid;
-  gap: 14px;
-  padding: 28px;
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--surface-strong) 92%, white);
-  border: 1px solid color-mix(in srgb, var(--border-strong) 58%, transparent);
-  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
-}
-
-.auth-kicker,
-.auth-status-line,
-.account-line {
+.boot-notice {
+  position: relative;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
   margin: 0;
-  color: var(--text-soft);
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-strong);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-family: var(--body-font);
+  line-height: 1.45;
 }
 
-.auth-actions {
-  display: grid;
-  gap: 10px;
+.boot-notice p {
+  margin: 0;
+  flex: 1 1 340px;
 }
 
-.auth-actions input {
-  width: 100%;
-  padding: 12px 14px;
+.boot-notice--warn {
+  border-left: 4px solid var(--info);
+}
+
+.boot-notice--danger {
+  border-left: 4px solid var(--danger);
+}
+
+.boot-notice__close {
+  flex: 0 0 auto;
+  padding: 8px 16px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--text);
+  font-family: var(--body-font);
+  cursor: pointer;
 }
 
-.auth-actions button {
-  width: 100%;
+.boot-notice__close:hover {
+  background: var(--hover-btn);
 }
 
 .options-grid {
@@ -1168,8 +1749,63 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   margin-top: 12px;
 }
 
+/* Le curseur natif ressortait en magenta vif sur toute la palette : couleur
+   d'accent imposee par le navigateur, sans rapport avec le jeu. On le redessine
+   entierement. Les prefixes -webkit et -moz sont necessaires, aucun moteur
+   n'accepte encore une syntaxe commune pour la piste et la poignee. */
 .option-row input[type="range"] {
   width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.option-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+.option-row input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+.option-row input[type="range"]::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.option-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1px solid var(--bg);
+  box-shadow: var(--glow-accent);
+}
+
+.option-row input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 1px solid var(--bg);
+  box-shadow: var(--glow-accent);
+}
+
+.option-row input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .offline-controls,
@@ -1338,24 +1974,27 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   height: 0;
 }
 
-.player-column .log-column-title {
+/* Le joueur occupe la colonne de gauche, l'ennemi celle de droite : c'est la
+   convention des jeux de combat, et l'ordre du DOM a ete inverse en
+   consequence dans ui.js. Les alignements suivent. */
+.enemy-column .log-column-title {
   text-align: right;
 }
 
-.player-column .log-column-body {
+.enemy-column .log-column-body {
   align-items: flex-end;
 }
 
-.enemy-column .log-column-body {
+.player-column .log-column-body {
   align-items: flex-start;
 }
 
-.enemy-column {
+.player-column {
   padding-right: 10px;
   border-right: 1px solid var(--border);
 }
 
-.player-column {
+.enemy-column {
   padding-left: 10px;
 }
 
@@ -1371,20 +2010,20 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   box-shadow: 0 8px 18px rgba(82, 68, 39, 0.06);
 }
 
-.enemy-side {
+.player-side {
   border-top-left-radius: 4px;
 }
 
-.player-side {
+.enemy-side {
   border-top-right-radius: 4px;
 }
 
-.enemy-side.log-system {
-  border-left: 3px solid var(--info);
+.player-side.log-system {
+  border-left: 3px solid var(--accent);
 }
 
-.player-side.log-system {
-  border-right: 3px solid var(--accent);
+.enemy-side.log-system {
+  border-right: 3px solid var(--info);
 }
 
 .log-crit {
@@ -1397,17 +2036,11 @@ body.theme-dark .inventory-equipped-card.item-type-ash {
   border-color: color-mix(in srgb, var(--success) 44%, var(--border-strong));
 }
 
-.log-entry-latest {
-  box-shadow:
-    0 0 0 2px rgba(134, 113, 66, 0.14),
-    0 18px 30px rgba(82, 68, 39, 0.1);
-}
-
-body.theme-dark .log-entry {
+.log-entry {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--surface-muted);
 }
 
-body.theme-dark .log-entry-latest {
+.log-entry-latest {
   box-shadow:
     0 0 0 2px rgba(197, 173, 115, 0.16),
     0 18px 30px rgba(0, 0, 0, 0.22);
@@ -1439,7 +2072,10 @@ body.theme-dark .log-entry-latest {
 
 .ash-container {
   position: sticky;
-  bottom: 118px;
+  /* Cale au-dessus de la zone de combat, dont la hauteur est mesuree par
+     ui.js. C'etait 118px en dur : l'ajout des sprites a rendu la zone plus
+     haute et le bouton retombait par-dessus les combattants. */
+  bottom: calc(var(--combat-zone-height, 118px) + 12px);
   z-index: 4;
   display: flex;
   justify-content: flex-end;
@@ -1515,12 +2151,143 @@ body.theme-dark .log-entry-latest {
   gap: 8px;
 }
 
+/* ------------------------------------------------------------------ */
+/* Combattants animes                                                 */
+/* ------------------------------------------------------------------ */
+
+/* Socle de chaque combattant. La hauteur est fixe pour que la ligne de sol
+   reste la meme quelle que soit la taille du sprite : les boss sont 45% plus
+   grands et debordent vers le haut, pas vers le bas. */
+.fighter-stage {
+  position: relative;
+  /* 140px rendaient la zone de combat, qui est collante en bas d'ecran,
+     assez haute pour recouvrir les panneaux au-dessus. */
+  height: 104px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.fighter-stage::after {
+  /* Ombre au sol, commune aux deux camps : c'est elle qui pose les
+     combattants sur un plan plutot que de les laisser flotter. */
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  width: 76px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  filter: blur(4px);
+}
+
+.fighter-sprite {
+  position: relative;
+  z-index: 1;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Les sprites sont tous dessines tournes vers la droite. L'ennemi occupe la
+   lane de droite : on le retourne pour qu'il fasse face au joueur. Seul le
+   canvas est retourne, pas la scene : l'embleme resterait sinon en miroir. */
+.fighter-stage--enemy .fighter-sprite {
+  transform: scaleX(-1);
+}
+
+/* Marque de faction, posee en haut a droite du monstre. Elle ne distingue
+   qu'une minorite de monstres : la plupart n'en ont pas, et l'emplacement
+   reste alors vide. */
+.fighter-emblem {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border);
+  opacity: 0.92;
+}
+
+.fighter-emblem:empty {
+  display: none;
+}
+
+/* Effet de cendre de guerre : superpose au centre de la zone de combat, sans
+   intercepter les clics, et invisible tant qu'aucune animation ne tourne. */
+#ash-effect-canvas {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transition: opacity 120ms ease;
+}
+
+#ash-effect-canvas.is-active {
+  opacity: 1;
+}
+
+/* Pastille de statut : icone 32px + compteur. Le nom de l'effet n'est plus
+   ecrit, il vit dans le title et l'aria-label — huit noms cote a cote
+   saturaient la ligne de combat. */
 .status-icon {
-  padding: 0.35rem 0.6rem;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 0.75rem;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  padding: 5px;
+  border-radius: 10px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+}
+
+.status-icon__count {
+  position: absolute;
+  right: -3px;
+  bottom: -4px;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 0.64rem;
   font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Icones de stat posees dans un libelle : elles doivent suivre la ligne de
+   base du texte, pas flotter au-dessus. */
+.stat-line-icon,
+.hero-stat__icon,
+.rune-icon {
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+
+.stat-line-icon {
+  /* Deja rendue en 2x (32px) par decorateStatLines : pas de transform, une
+     mise a l'echelle non entiere floute le pixel art. */
+  margin: 0 6px 0 2px;
+}
+
+.hero-stat__label {
+  display: flex;
+  align-items: center;
+}
+
+.rune-icon {
+  margin-right: 4px;
 }
 
 .biome-actions-bottom {
@@ -1553,7 +2320,7 @@ body.theme-dark .log-entry-latest {
   backdrop-filter: blur(12px);
 }
 
-body.theme-dark #tooltip {
+#tooltip {
   border-color: rgba(205, 179, 115, 0.24);
   background:
     linear-gradient(180deg, rgba(30, 25, 20, 0.98), rgba(21, 18, 15, 0.97)),
@@ -1592,10 +2359,10 @@ body.theme-dark #tooltip {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-body.theme-dark #tooltip span,
-body.theme-dark #tooltip b,
-body.theme-dark #tooltip small,
-body.theme-dark #tooltip strong {
+#tooltip span,
+#tooltip b,
+#tooltip small,
+#tooltip strong {
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.34);
 }
 
@@ -1785,33 +2552,6 @@ body.theme-dark #tooltip strong {
   background: color-mix(in srgb, var(--surface-subtle) 82%, var(--accent) 18%);
 }
 
-.inventory-item-rarity {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 6px;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-soft);
-}
-
-.rarity-commun {
-  background: color-mix(in srgb, var(--surface-subtle) 88%, transparent);
-}
-
-.rarity-rare {
-  background: color-mix(in srgb, #7d8fd7 16%, var(--surface-subtle));
-}
-
-.rarity-legendaire {
-  background: color-mix(in srgb, #ba8d38 18%, var(--surface-subtle));
-}
-
-.rarity-relique {
-  background: color-mix(in srgb, #7a4336 22%, var(--surface-subtle));
-}
-
 .battle-intent-panel {
   display: flex;
   align-items: center;
@@ -1983,13 +2723,15 @@ body.theme-dark #tooltip strong {
   .options-grid,
   #combat-hud,
   #combat-zone,
-  .journey-overview,
+  .hero-stats__head,
   .hub-focus-card__stats {
     grid-template-columns: 1fr;
   }
 
   #combat-zone {
-    position: static;
+    /* relative et non static : on desactive l'epinglage tout en gardant un
+       bloc conteneur pour l'overlay d'effet de cendre. */
+    position: relative;
     bottom: auto;
   }
 
@@ -2017,6 +2759,64 @@ body.theme-dark #tooltip strong {
 }
 
 @media (max-width: 760px) {
+  /* En etroit, minmax(160px) ne laissait passer qu'une colonne apres les
+     paddings du panneau : on descend le plancher pour en tenir deux. */
+  #inventory-grid {
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 10px;
+  }
+
+  .inventory-item {
+    min-height: 158px;
+    padding: 10px;
+  }
+
+  /* Les cartes d'objets equipes passent en pleine largeur, icone a gauche. */
+  .inventory-equipped-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* En etroit, une echelle pilotee par la largeur reduit le decor a une bande
+     de 210px : on pilote par la hauteur et on recadre sur l'Arbre-Monde. */
+  /* Hauteur 280px -> image large de 498px pour un viewport de 375 : cale a
+     droite, l'Arbre-Monde (a 73% de la largeur de l'image) tombe pile aux deux
+     tiers de l'ecran au lieu d'etre coupe par le bord. */
+  .camp-scene__layer {
+    background-size: auto 280px;
+    background-position: right top;
+  }
+
+  .camp-scene__grace {
+    background: radial-gradient(
+      circle at 65% 13%,
+      rgba(232, 192, 106, 0.22),
+      transparent 30%
+    );
+  }
+
+  /* En dessous de 760px, portrait et texte cote a cote sont a l'etroit :
+     le titre d'archetype se cassait sur trois lignes. On empile. */
+  .hero-panel__figure {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero-portrait {
+    width: 132px;
+    height: 132px;
+  }
+
+  .hero-stat {
+    grid-template-columns: minmax(0, 1fr) 58px;
+    row-gap: 6px;
+  }
+
+  .hero-stat__track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
   #game-container {
     width: 100vw;
     margin: 0;

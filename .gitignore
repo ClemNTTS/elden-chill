@@ -1,2 +1,15 @@
-supabase/.env
-supabase/.temp/
+# Fichiers de travail des packs graphiques (sources, pas des assets livres)
+*.psd
+*.xcf
+*.aseprite
+
+# Outils
+.DS_Store
+Thumbs.db
+
+# Apercu de relecture du generateur de decor, pas un asset du jeu
+assets/sprites/scene/camp-preview.png
+
+# Caches Python des outils
+tools/__pycache__/
+__pycache__/

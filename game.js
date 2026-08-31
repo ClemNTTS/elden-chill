@@ -14,6 +14,7 @@ import {
 import { startExploration } from "./core.js";
 import {
   createFireParticles,
+  initCampParallax,
   hideTooltip,
   moveTooltip,
   showStatTooltip,
@@ -25,17 +26,6 @@ import {
   toggleRealTimeStats,
 } from "./ui.js";
 import { enqueueDevSpawn } from "./spawn.js";
-import {
-  applyServerOfflineProgress,
-  flushPendingProfileSync,
-  initAuth,
-  isCloudConfigured,
-  loadAuthoritativeProfile,
-  onAuthStateChange,
-  signInWithGoogle,
-  signInWithMagicLink,
-  signOut,
-} from "./backend.js";
 
 // Dev tools
 const dev = {
@@ -231,14 +221,6 @@ const IS_LOCAL_HOST =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
-const checkScheduledReset = () => {
-  const FINAL_WIPE_FLAG = "wipe_v250_cloud_auth";
-  if (!localStorage.getItem(FINAL_WIPE_FLAG)) {
-    localStorage.setItem(FINAL_WIPE_FLAG, "true");
-  }
-  return;
-};
-
 export async function checkForUpdate() {
   if (IS_LOCAL_HOST) {
     return;
@@ -260,18 +242,6 @@ export async function checkForUpdate() {
 
 const handleAutoRefresh = () => {
   if (IS_LOCAL_HOST) {
-    return false;
-  }
-
-  const hash = window.location.hash || "";
-  const search = window.location.search || "";
-  const isAuthCallback =
-    hash.includes("access_token=") ||
-    hash.includes("refresh_token=") ||
-    search.includes("code=") ||
-    search.includes("token=");
-
-  if (isAuthCallback) {
     return false;
   }
 
@@ -303,280 +273,88 @@ const handleAutoRefresh = () => {
   return false;
 };
 
-const authLog = (...args) => {
-  console.info("[auth-overlay]", ...args);
+/* ------------------------------------------------------------------ */
+/* Demarrage                                                          */
+/* ------------------------------------------------------------------ */
+
+const SAVE_WARNING_MESSAGES = {
+  TAMPERED:
+    "Votre sauvegarde a ete refusee : son sceau ne correspond pas. Elle a ete mise de cote.",
+  MALFORMED: "Votre sauvegarde etait illisible et a ete mise de cote.",
+  CORRUPT_PAYLOAD: "Votre sauvegarde etait corrompue et a ete mise de cote.",
+  INCOMPATIBLE_VERSION:
+    "Votre sauvegarde provient d'une version incompatible du jeu.",
+  UNSUPPORTED_VERSION:
+    "Votre sauvegarde provient d'une version incompatible du jeu.",
 };
 
-const setAuthOverlayState = ({
-  title,
-  copy,
-  busy = false,
-  showLogin = true,
-  status = "",
-}) => {
-  const overlay = document.getElementById("auth-overlay");
-  const titleEl = document.getElementById("auth-title");
-  const copyEl = document.getElementById("auth-copy");
-  const actionsEl = document.getElementById("auth-actions");
-  const statusEl = document.getElementById("auth-status-line");
+/**
+ * Banniere de demarrage. On n'utilise pas ActionLog ici : le journal de combat
+ * n'existe pas encore au chargement, le message serait perdu.
+ */
+const showBootNotice = (text, tone = "warn") => {
+  const banner = document.createElement("div");
+  banner.className = `boot-notice boot-notice--${tone}`;
 
-  if (!overlay || !titleEl || !copyEl || !actionsEl || !statusEl) return;
+  const message = document.createElement("p");
+  message.innerText = text;
 
-  authLog("show", { title, busy, showLogin, status });
-  overlay.classList.remove("is-hidden");
-  overlay.style.display = "grid";
-  titleEl.innerText = title;
-  copyEl.innerText = copy;
-  actionsEl.style.display = showLogin ? "grid" : "none";
-  statusEl.innerText = status || (busy ? "Connexion en cours..." : "");
+  const dismiss = document.createElement("button");
+  dismiss.type = "button";
+  dismiss.className = "boot-notice__close";
+  dismiss.setAttribute("aria-label", "Fermer l'avertissement");
+  dismiss.innerText = "Compris";
+  dismiss.addEventListener("click", () => banner.remove());
+
+  banner.append(message, dismiss);
+  document.body.prepend(banner);
 };
 
-let profileLoadInFlight = null;
-let loadedUserId = null;
-let bootstrappedUserId = null;
-let authBootstrapInitialized = false;
+const reportSaveLoad = (report) => {
+  if (report.status === "loaded" || report.status === "fresh") return;
 
-const hideAuthOverlay = () => {
-  const overlay = document.getElementById("auth-overlay");
-  if (!overlay) return;
-  authLog("hide");
-  overlay.classList.add("is-hidden");
-  overlay.style.display = "none";
-};
-
-const updateAccountPanel = (user) => {
-  const emailEl = document.getElementById("account-email");
-  const signOutBtn = document.getElementById("btn-signout");
-  if (emailEl) {
-    emailEl.innerText = user?.email || "Non connecte";
-  }
-  if (signOutBtn) {
-    signOutBtn.disabled = !user;
-  }
-};
-
-const bindAuthUi = () => {
-  const signInBtn = document.getElementById("btn-auth-signin");
-  const googleBtn = document.getElementById("btn-auth-google");
-  const signOutBtn = document.getElementById("btn-signout");
-  const emailInput = document.getElementById("auth-email");
-
-  if (signInBtn && emailInput) {
-    signInBtn.addEventListener("click", async () => {
-      const email = emailInput.value.trim();
-      if (!email) {
-        alert("Entrez une adresse email pour recevoir le magic link.");
-        return;
-      }
-
-      setAuthOverlayState({
-        title: "Lien magique en route",
-        copy: "Verifiez votre boite mail puis revenez ici pour charger votre progression cloud.",
-        busy: true,
-      });
-
-      try {
-        await signInWithMagicLink(email);
-        setAuthOverlayState({
-          title: "Email envoye",
-          copy: "Cliquez sur le lien recu par email, puis revenez sur cette page.",
-          showLogin: true,
-        });
-      } catch (error) {
-        console.error("Impossible d'envoyer le lien magique :", error);
-        setAuthOverlayState({
-          title: "Connexion indisponible",
-          copy: "Le service d'authentification est indisponible pour le moment.",
-          showLogin: true,
-        });
-      }
-    });
-  }
-
-  if (googleBtn) {
-    googleBtn.addEventListener("click", async () => {
-      setAuthOverlayState({
-        title: "Connexion Google",
-        copy: "Redirection vers Google en cours...",
-        busy: true,
-      });
-
-      try {
-        await signInWithGoogle();
-      } catch (error) {
-        console.error("Impossible de lancer la connexion Google :", error);
-        setAuthOverlayState({
-          title: "Connexion indisponible",
-          copy: "Le provider Google n'est pas disponible pour le moment.",
-          showLogin: true,
-        });
-      }
-    });
-  }
-
-  if (signOutBtn) {
-    signOutBtn.addEventListener("click", async () => {
-      await signOut();
-      updateAccountPanel(null);
-      setAuthOverlayState({
-        title: "Connexion requise",
-        copy: "Connectez-vous pour charger votre profil autoritaire et vos sauvegardes cloud.",
-      });
-    });
-  }
-};
-
-const loadPlayerAfterAuth = async () => {
-  if (profileLoadInFlight) {
-    authLog("loadPlayerAfterAuth reuse in-flight promise");
-    return profileLoadInFlight;
-  }
-
-  profileLoadInFlight = (async () => {
-    try {
-      authLog("loadPlayerAfterAuth start");
-      setAuthOverlayState({
-        title: "Chargement du profil",
-        copy: "Connexion et hydratation du personnage en cours...",
-        showLogin: false,
-        busy: true,
-        status: "Lecture du profil cloud...",
-      });
-      await loadAuthoritativeProfile();
-      authLog("loadAuthoritativeProfile done");
-      setAuthOverlayState({
-        title: "Chargement du profil",
-        copy: "Connexion et hydratation du personnage en cours...",
-        showLogin: false,
-        busy: true,
-        status: "Application de la progression hors ligne...",
-      });
-      await applyServerOfflineProgress();
-      authLog("applyServerOfflineProgress done");
-      updateUI();
-      setAudioListener();
-      hideAuthOverlay();
-    } catch (error) {
-      authLog("loadPlayerAfterAuth failed", error);
-      console.error("Chargement cloud degrade :", error);
-      updateUI();
-      setAuthOverlayState({
-        title: "Profil indisponible",
-        copy: "Le profil cloud n'a pas pu etre charge.",
-        showLogin: true,
-        status: error?.message || String(error),
-      });
-      throw error;
-    }
-  })();
-
-  try {
-    await profileLoadInFlight;
-  } finally {
-    profileLoadInFlight = null;
-  }
-};
-
-const ensureAuthenticatedBootstrap = async (user, source) => {
-  authLog("ensureAuthenticatedBootstrap", source, user?.id || "no-user");
-
-  if (!user) {
-    loadedUserId = null;
-    bootstrappedUserId = null;
-    setAuthOverlayState({
-      title: "Connexion requise",
-      copy: "Connectez-vous pour charger votre profil autoritaire et vos sauvegardes cloud.",
-      showLogin: true,
-    });
+  if (report.status === "migrated-legacy") {
+    console.info("[save] ancienne sauvegarde reprise et rescellee.");
     return;
   }
 
-  updateAccountPanel(user);
-  if (bootstrappedUserId === user.id && !profileLoadInFlight) {
-    authLog("bootstrap already complete", user.id);
-    hideAuthOverlay();
+  const detail = SAVE_WARNING_MESSAGES[report.reason] || "";
+
+  if (report.status === "restored-backup") {
+    showBootNotice(
+      `Sauvegarde principale illisible. Votre progression a ete restauree depuis la copie de secours. ${detail}`,
+    );
     return;
   }
 
-  await loadPlayerAfterAuth();
-  loadedUserId = user.id;
-  bootstrappedUserId = user.id;
-  authLog("bootstrap complete", source, user.id);
+  if (report.status === "rejected") {
+    showBootNotice(
+      `${detail} Une nouvelle partie a ete demarree. L'ancienne sauvegarde reste inspectable dans le stockage local sous la cle "eldenChillSaveRejected".`,
+      "danger",
+    );
+  }
 };
 
-// Set the onload handler
-window.onload = async () => {
-  authLog("window.onload start");
+window.onload = () => {
   if (handleAutoRefresh()) return;
 
-  checkScheduledReset();
-  loadGame();
+  const report = loadGame();
+
   createFireParticles();
-  bindAuthUi();
+  initCampParallax();
   setAudioListener();
+  updateUI();
+  reportSaveLoad(report);
 
   const startAudioOnInteraction = () => {
     playCampMusic();
     window.removeEventListener("click", startAudioOnInteraction);
   };
   window.addEventListener("click", startAudioOnInteraction);
-
-  if (!isCloudConfigured()) {
-    setAuthOverlayState({
-      title: "Supabase non configure",
-      copy: "Ajoutez SUPABASE_URL et SUPABASE_ANON_KEY dans window.__ELDEN_CHILL_CONFIG__ pour activer le mode cloud autoritaire.",
-      showLogin: false,
-    });
-    updateUI();
-    return;
-  }
-
-  onAuthStateChange(async ({ user }) => {
-    authLog("onAuthStateChange handler", user?.id || "no-user");
-    if (!authBootstrapInitialized) {
-      authLog("onAuthStateChange ignored until initAuth completes");
-      return;
-    }
-
-    try {
-      await ensureAuthenticatedBootstrap(user, "auth-state-change");
-    } catch (error) {
-      console.error("Chargement du profil impossible :", error);
-      updateUI();
-      setAuthOverlayState({
-        title: "Profil indisponible",
-        copy: "Le profil serveur n'a pas pu etre charge. Rechargez la page dans un instant.",
-        showLogin: true,
-        status: error?.message || String(error),
-      });
-    }
-  });
-
-  const authState = await initAuth();
-  authBootstrapInitialized = true;
-  authLog("initAuth completed", authState.user?.id || "no-user");
-  updateAccountPanel(authState.user);
-
-  try {
-    await ensureAuthenticatedBootstrap(authState.user, "initAuth");
-  } catch (error) {
-    console.error("Bootstrap du profil impossible :", error);
-    updateUI();
-    setAuthOverlayState({
-      title: "Profil indisponible",
-      copy: "Le profil serveur n'a pas pu etre charge. Rechargez la page dans un instant.",
-      showLogin: true,
-      status: error?.message || String(error),
-    });
-  }
-
-  updateUI();
 };
 
 window.addEventListener("beforeunload", () => {
-  if (isCloudConfigured()) {
-    flushPendingProfileSync("beforeunload").catch(() => null);
-  }
+  saveGame("beforeunload");
 });
 
 setInterval(() => saveGame("interval"), 30000);

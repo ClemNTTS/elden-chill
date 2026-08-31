@@ -1,7 +1,17 @@
 export const PLAYER_PROFILE_VERSION = "2.5.0";
-export const PLAYER_SCHEMA_VERSION = 1;
 export const MAX_LEVEL = 150;
 export const MAX_OFFLINE_TIME_BANK = 3600;
+
+/** Ecrans du camp, dans l'ordre de la navigation. Source unique : la
+ *  sauvegarde doit pouvoir valider ui.currentScreen sans dependre de ui.js. */
+export const CAMP_SCREEN_IDS = [
+  "hub",
+  "map",
+  "build",
+  "inventory",
+  "codex",
+  "options",
+];
 
 export const DEFAULT_PLAYER_PROFILE = {
   runes: {
@@ -45,7 +55,6 @@ export const DEFAULT_PLAYER_PROFILE = {
   equippedAsh: null,
   ui: {
     currentScreen: "hub",
-    theme: "light",
     selectedBiomeId: "limgrave_west",
   },
   preparation: {
@@ -79,28 +88,7 @@ export const DEFAULT_PLAYER_PROFILE = {
   order: [],
 };
 
-export const CLOUD_PROFILE_KEYS = [
-  "runes",
-  "stats",
-  "equipped",
-  "inventory",
-  "world",
-  "playerEffects",
-  "ennemyEffects",
-  "ashesOfWaruses",
-  "ashesOfWarOwned",
-  "equippedAsh",
-  "ui",
-  "preparation",
-  "journal",
-  "codex",
-  "save",
-  "order",
-];
-
 export const LOCAL_PREFS_KEY = "eldenChillClientPrefs";
-export const LOCAL_IMPORT_CONSUMED_KEY = "eldenChillLegacyImportConsumed";
-
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const toObject = (value, fallback = {}) =>
@@ -199,224 +187,6 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   ensureSaveIdentity(base, options.fallbackProfileId || null);
 
   return base;
-};
-
-export const sanitizeCloudPayload = (source = {}) => {
-  const normalized = normalizePlayerProfile(source);
-  const payload = {};
-  CLOUD_PROFILE_KEYS.forEach((key) => {
-    payload[key] = clone(normalized[key]);
-  });
-  return payload;
-};
-
-export const createSaveMeta = (save = {}, extras = {}) => ({
-  profileId: save.profileId || createProfileId(),
-  saveSequence: Math.max(0, Math.floor(Number(save.saveSequence) || 0)),
-  lastSavedAt: Math.max(0, Number(save.lastSavedAt) || 0),
-  lastServerSyncAt: Math.max(0, Number(extras.lastServerSyncAt) || 0),
-  importedFromLocal: !!extras.importedFromLocal,
-  schemaVersion: PLAYER_SCHEMA_VERSION,
-});
-
-export const createEmptyProfileRecord = () => {
-  const payload = sanitizeCloudPayload(DEFAULT_PLAYER_PROFILE);
-  return {
-    version: PLAYER_PROFILE_VERSION,
-    stats: payload.stats,
-    runes: payload.runes,
-    inventory: payload.inventory,
-    equipped: payload.equipped,
-    world: payload.world,
-    preparation: payload.preparation,
-    journal: payload.journal,
-    codex: payload.codex,
-    save_meta: createSaveMeta(payload.save),
-    extra_state: {
-      playerEffects: payload.playerEffects,
-      ennemyEffects: payload.ennemyEffects,
-      ashesOfWaruses: payload.ashesOfWaruses,
-      ashesOfWarOwned: payload.ashesOfWarOwned,
-      equippedAsh: payload.equippedAsh,
-      ui: payload.ui,
-      order: payload.order,
-    },
-  };
-};
-
-export const inflateProfileRecord = (record = {}) =>
-  normalizePlayerProfile({
-    runes: record.runes,
-    stats: record.stats,
-    inventory: record.inventory,
-    equipped: record.equipped,
-    world: record.world,
-    preparation: record.preparation,
-    journal: record.journal,
-    codex: record.codex,
-    save: {
-      ...(record.save_meta || {}),
-      version: record.version || PLAYER_PROFILE_VERSION,
-      maxLevel: MAX_LEVEL,
-      useOfflineTime: record.save_meta?.useOfflineTime ?? false,
-      offlineTimeBank: record.save_meta?.offlineTimeBank ?? 0,
-    },
-    ...(record.extra_state || {}),
-  });
-
-export const buildProfileRecordFromState = (source, currentSaveMeta = {}) => {
-  const payload = sanitizeCloudPayload(source);
-  return {
-    version: PLAYER_PROFILE_VERSION,
-    stats: payload.stats,
-    runes: payload.runes,
-    inventory: payload.inventory,
-    equipped: payload.equipped,
-    world: payload.world,
-    preparation: payload.preparation,
-    journal: payload.journal,
-    codex: payload.codex,
-    save_meta: {
-      ...createSaveMeta(payload.save),
-      importedFromLocal: !!currentSaveMeta.importedFromLocal,
-      lastServerSyncAt: Date.now(),
-      offlineTimeBank: payload.save.offlineTimeBank,
-      useOfflineTime: !!payload.save.useOfflineTime,
-    },
-    extra_state: {
-      playerEffects: payload.playerEffects,
-      ennemyEffects: payload.ennemyEffects,
-      ashesOfWaruses: payload.ashesOfWaruses,
-      ashesOfWarOwned: payload.ashesOfWarOwned,
-      equippedAsh: payload.equippedAsh,
-      ui: payload.ui,
-      order: payload.order,
-    },
-  };
-};
-
-const upgradeCosts = {
-  vigor: 1,
-  strength: 1,
-  dexterity: 1,
-  intelligence: 1,
-  critChance: 2,
-  critDamage: 2.5,
-};
-
-export const getUpgradeCost = (stats, statName) => {
-  const baseCost = upgradeCosts[statName] || 10;
-  const level = Math.max(0, Math.floor(Number(stats?.level) || 0));
-  const x = Math.max((level - 11) * 0.02, 0);
-  return Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
-};
-
-export const getMultiUpgradeCost = (stats, statName, count) => {
-  const totalCount = Math.max(0, Math.floor(Number(count) || 0));
-  let totalCost = 0;
-
-  for (let i = 0; i < totalCount; i += 1) {
-    const baseCost = upgradeCosts[statName] || 10;
-    const level = Math.max(0, Math.floor(Number(stats?.level) || 0)) + i;
-    const x = Math.max((level - 11) * 0.02, 0);
-    totalCost += Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
-  }
-
-  return totalCost;
-};
-
-export const applyStatUpgrade = (source, statName, count = 1) => {
-  const profile = normalizePlayerProfile(source);
-  const totalCount = Math.max(1, Math.floor(Number(count) || 1));
-  const totalCost = getMultiUpgradeCost(profile.stats, statName, totalCount);
-
-  if (profile.stats.level + totalCount > MAX_LEVEL) {
-    throw new Error("LEVEL_CAP_REACHED");
-  }
-
-  if (statName === "critChance" && profile.stats.critChance >= 1) {
-    throw new Error("CRIT_CHANCE_MAXED");
-  }
-
-  if (profile.runes.banked < totalCost) {
-    throw new Error("NOT_ENOUGH_RUNES");
-  }
-
-  profile.runes.banked -= totalCost;
-
-  for (let i = 0; i < totalCount; i += 1) {
-    if (statName === "critChance") {
-      profile.stats.critChance = Math.min(1, profile.stats.critChance + 0.01);
-    } else if (statName === "critDamage") {
-      profile.stats.critDamage += 0.1;
-    } else {
-      profile.stats[statName] = Number(profile.stats[statName] || 0) + 1;
-    }
-    profile.stats.level += 1;
-  }
-
-  profile.stats.runesSpent = Math.floor(profile.stats.runesSpent + totalCost);
-  profile.save.saveSequence += 1;
-  profile.save.lastSavedAt = Date.now();
-
-  return profile;
-};
-
-export const applyRuneRefund = (source) => {
-  const profile = normalizePlayerProfile(source);
-  profile.runes.banked = Math.floor(
-    profile.runes.banked + profile.stats.runesSpent * 0.8,
-  );
-  profile.stats.runesSpent = 0;
-  profile.stats.level = 0;
-  profile.stats.vigor = 0;
-  profile.stats.strength = 0;
-  profile.stats.dexterity = 0;
-  profile.stats.intelligence = 0;
-  profile.stats.critChance = 0.05;
-  profile.stats.critDamage = 1.5;
-  profile.stats.splashDamage = 0;
-  profile.stats.armor = 100;
-  profile.equipped = { weapon: null, armor: null, accessory: null };
-  profile.order = [null, null, null];
-  profile.save.saveSequence += 1;
-  profile.save.lastSavedAt = Date.now();
-  return profile;
-};
-
-export const toggleEquipment = (source, slotKey, itemId) => {
-  const profile = normalizePlayerProfile(source);
-  profile.equipped[slotKey] = profile.equipped[slotKey] === itemId ? null : itemId;
-  profile.save.saveSequence += 1;
-  profile.save.lastSavedAt = Date.now();
-  return profile;
-};
-
-export const toggleEquippedAsh = (source, ashId) => {
-  const profile = normalizePlayerProfile(source);
-  profile.equippedAsh = profile.equippedAsh === ashId ? null : ashId;
-  profile.save.saveSequence += 1;
-  profile.save.lastSavedAt = Date.now();
-  return profile;
-};
-
-export const updatePreparationSelection = (
-  source,
-  { blessingId, consumableId } = {},
-) => {
-  const profile = normalizePlayerProfile(source);
-
-  if (blessingId !== undefined) {
-    profile.preparation.selectedBlessingId = blessingId;
-  }
-
-  if (consumableId !== undefined) {
-    profile.preparation.selectedConsumableId = consumableId;
-  }
-
-  profile.save.saveSequence += 1;
-  profile.save.lastSavedAt = Date.now();
-  return profile;
 };
 
 export const applyOfflineTimeProgress = (source, now = Date.now()) => {
