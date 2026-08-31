@@ -13,24 +13,51 @@ Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez
 *   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
 *   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
 *   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.
-*   **Profil Cloud Autoritaire :** Votre progression persistante est désormais chargee via Supabase avec authentification par magic link.
+*   **Sauvegarde Locale Scellee :** Votre progression vit dans le navigateur, dans une enveloppe signee qui detecte toute modification manuelle.
 
-## Configuration cloud
+## Sauvegarde
 
-Le front attend une configuration Supabase dans `config.js` :
+La progression est stockee dans le `localStorage` du navigateur. Il n'y a ni
+compte, ni serveur, ni connexion : le jeu est jouable hors ligne.
+
+Chaque sauvegarde est scellee par [`save-crypto.js`](save-crypto.js) :
+
+*   le contenu est masque par un keystream derive d'une clef reconstruite a l'execution ;
+*   un HMAC-SHA256 tronque accompagne l'enveloppe, ce qui permet de detecter toute retouche ;
+*   une copie de secours est conservee en permanence, et une sauvegarde refusee est
+    mise en quarantaine (cle `eldenChillSaveRejected`) plutot que supprimee.
+
+Cles utilisees dans le `localStorage` :
+
+| Cle | Contenu |
+| --- | --- |
+| `eldenChillSave` | enveloppe scellee courante |
+| `eldenChillSaveBackup` | enveloppe precedente |
+| `eldenChillSaveMeta` | metadonnees en clair (date, sequence, version) |
+| `eldenChillSaveRejected` | sauvegarde refusee, conservee pour inspection |
+| `eldenChillClientPrefs` | preferences visuelles, propres au navigateur |
+
+**A ne pas confondre avec de la securite.** La clef est livree au navigateur avec
+le reste du bundle : quelqu'un de motive la retrouvera. Le scellement sert a
+empecher l'edition triviale d'une sauvegarde, pas a proteger un secret.
+
+Un auto-test est disponible depuis la console :
 
 ```js
-window.__ELDEN_CHILL_CONFIG__ = {
-  SUPABASE_URL: "https://<project-ref>.supabase.co",
-  SUPABASE_ANON_KEY: "<public-anon-key>",
-};
+const { selfTest } = await import("./save-crypto.js");
+selfTest(); // { shaOk: true, roundTripOk: true, tamperOk: true }
 ```
-
-Le schema SQL est fourni dans `supabase/migrations/20260409_server_authoritative.sql` et les Edge Functions dans `supabase/functions/`.
 
 ## Comment Jouer ?
 
-Servez le dossier sur un hebergement statique ou local, configurez Supabase, puis ouvrez `index.html` dans un navigateur web moderne (Chrome, Firefox, Edge, etc.).
+Le jeu utilise des modules ES : il doit etre servi en HTTP, pas ouvert
+directement depuis le disque.
+
+```bash
+python -m http.server 8123
+```
+
+Puis ouvrez `http://localhost:8123` dans un navigateur moderne.
 
 ## Technologies Utilisées
 

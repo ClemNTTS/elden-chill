@@ -98,7 +98,30 @@ import { startExploration } from "./core.js";
 import { saveGame } from "./save.js";
 import { checkForUpdate } from "./game.js";
 import { ITEM_SETS } from "./constants.js";
+import { CAMP_SCREEN_IDS } from "./shared/player-profile.js";
 import { ITEMS } from "./item.js";
+import {
+  getAshIcon,
+  getItemIcon,
+  getEmblemIcon,
+  getMiscIcon,
+  getStatIcon,
+  getStatusIcon,
+  iconMarkup,
+} from "./icons.js";
+import {
+  ARCHETYPES,
+  HERO_SHEETS,
+  SpriteAnimator,
+  STAT_META,
+  getAshElement,
+  getDominantStat,
+  getHeroIdForStats,
+  mountMonster,
+  playEffectOnce,
+  playMonsterAnimation,
+} from "./sprites.js";
+import { TINTS, getMonsterVisual } from "./monster-visuals.js";
 import {
   applyPreparationStats,
   BLESSINGS,
@@ -121,27 +144,48 @@ import {
   getBiomePowerBand,
 } from "./world-map.js";
 
-const CAMP_SCREENS = ["hub", "map", "build", "inventory", "codex", "options"];
+const CAMP_SCREENS = CAMP_SCREEN_IDS;
 
 const ensureUiState = () => {
   if (!gameState.ui) {
     gameState.ui = {
       currentScreen: "hub",
-      theme: "light",
       selectedBiomeId: "limgrave_west",
     };
   }
   return gameState.ui;
 };
 
-const applyTheme = () => {
-  const ui = ensureUiState();
-  const body = document.body;
-  body.classList.remove("theme-light", "theme-dark");
-  body.classList.add(ui.theme === "dark" ? "theme-dark" : "theme-light");
-  const toggle = document.getElementById("theme-toggle");
-  if (toggle) {
-    toggle.innerText = ui.theme === "dark" ? "Mode clair" : "Mode sombre";
+/**
+ * Pose l'icone de chaque ligne de stat de l'ecran Build, une fois pour toutes.
+ *
+ * Le HTML porte data-stat, le JS fournit les coordonnees d'atlas : les deux
+ * n'ont pas a connaitre les memes choses. Les stats sans icone (crit) sont
+ * ignorees plutot que de recevoir un cadre vide.
+ */
+const decorateStatLines = () => {
+  document.querySelectorAll("[data-stat]").forEach((el) => {
+    if (el.dataset.iconDone) return;
+    const icon = getStatIcon(el.dataset.stat);
+    if (!icon) {
+      el.dataset.iconDone = "skipped";
+      return;
+    }
+    el.insertAdjacentHTML(
+      "afterbegin",
+      iconMarkup(icon, { scale: 2, className: "stat-line-icon" }),
+    );
+    el.dataset.iconDone = "true";
+  });
+
+  const runeSlot = document.getElementById("rune-icon-slot");
+  if (runeSlot && !runeSlot.dataset.iconDone) {
+    runeSlot.innerHTML = iconMarkup(getMiscIcon("rune"), {
+      scale: 1,
+      className: "rune-icon",
+      label: "Runes",
+    });
+    runeSlot.dataset.iconDone = "true";
   }
 };
 
@@ -180,13 +224,6 @@ export const navigateTo = (screenId) => {
 };
 
 window.navigateTo = navigateTo;
-window.toggleTheme = () => {
-  const ui = ensureUiState();
-  ui.theme = ui.theme === "dark" ? "light" : "dark";
-  applyTheme();
-  saveGame();
-};
-
 export const formatNumber = (num) => {
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
@@ -428,10 +465,13 @@ const updateStatDisplay = () => {
 };
 
 const updateEquipmentDisplay = () => {
-  const renderSlotContent = (slot, title, meta = "", empty = false) => {
+  const renderSlotContent = (slot, title, meta = "", empty = false, icon = null) => {
     slot.innerHTML = `
-      <strong class="slot-item-name">${title}</strong>
-      <span class="slot-item-meta">${meta}</span>
+      ${iconMarkup(icon, { scale: 3, frame: "slot-icon", label: empty ? "" : title })}
+      <span class="slot-text">
+        <strong class="slot-item-name">${title}</strong>
+        <span class="slot-item-meta">${meta}</span>
+      </span>
     `;
     slot.classList.toggle("slot-empty", empty);
   };
@@ -447,6 +487,8 @@ const updateEquipmentDisplay = () => {
           slot,
           itemInInv.name,
           `Niveau ${itemInInv.level} · Equipe`,
+          false,
+          getItemIcon(itemId, itemInInv.level),
         );
         slot.onmouseenter = (e) => showItemComparisonTooltip(e, itemInInv);
         slot.onmousemove = (e) => moveTooltip(e);
@@ -468,6 +510,8 @@ const updateEquipmentDisplay = () => {
       ashSlot,
       ashData.name,
       `${runtimeState.ashUsesLeft}/${ashData.maxUses} charges disponibles`,
+      false,
+      getAshIcon(equippedAshId),
     );
     ashSlot.onmouseenter = (e) => showAshTooltip(e, equippedAshId);
     ashSlot.onmousemove = (e) => moveTooltip(e);
@@ -511,6 +555,7 @@ const updateInventoryEquippedDisplay = () => {
       if (equippedAshId) {
         const ashData = ASHES_OF_WAR[equippedAshId];
         card.innerHTML = `
+          ${iconMarkup(getAshIcon(equippedAshId), { scale: 3, frame: "item-icon", label: ashData.name })}
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${ashData.name}</strong>
           <span class="inventory-equipped-meta">${runtimeState.ashUsesLeft}/${ashData.maxUses} charges</span>
@@ -521,6 +566,7 @@ const updateInventoryEquippedDisplay = () => {
       } else {
         card.classList.add("inventory-equipped-empty");
         card.innerHTML = `
+          ${iconMarkup(null, { scale: 3, frame: "item-icon" })}
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${emptyLabel}</strong>
           <span class="inventory-equipped-meta">A selectionner dans Build</span>
@@ -534,6 +580,7 @@ const updateInventoryEquippedDisplay = () => {
 
       if (itemInInv) {
         card.innerHTML = `
+          ${iconMarkup(getItemIcon(itemId, itemInInv.level), { scale: 3, frame: "item-icon", label: itemInInv.name })}
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${itemInInv.name}</strong>
           <span class="inventory-equipped-meta">Niv.${itemInInv.level} · Equipe</span>
@@ -542,6 +589,7 @@ const updateInventoryEquippedDisplay = () => {
       } else {
         card.classList.add("inventory-equipped-empty");
         card.innerHTML = `
+          ${iconMarkup(null, { scale: 3, frame: "item-icon" })}
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${emptyLabel}</strong>
           <span class="inventory-equipped-meta">A equiper depuis l'inventaire</span>
@@ -585,31 +633,283 @@ const getSuggestedBiomeId = () => {
   );
 };
 
-const renderJourneyOverview = () => {
-  const container = document.getElementById("journey-overview");
-  if (!container) return;
+/**
+ * Portrait du heros. On garde l'animateur d'un rendu a l'autre : le recreer a
+ * chaque updateUI relancerait la boucle d'animation et ferait clignoter le
+ * sprite. On ne recharge la planche que si l'apparence change vraiment.
+ */
+let heroAnimator = null;
+let heroAnimatorId = null;
 
-  const playerLevel = gameState.stats.level || 1;
-  const suggestedId = getSuggestedBiomeId();
-  const suggestedGuide = BIOME_GUIDE[suggestedId];
+const renderHeroPortrait = () => {
+  const canvas = document.getElementById("hero-canvas");
+  if (!canvas) return null;
+
+  const heroId = getHeroIdForStats(gameState.stats);
+  const sheet = HERO_SHEETS[heroId];
+
+  if (heroAnimatorId !== heroId) {
+    if (!heroAnimator) {
+      heroAnimator = new SpriteAnimator(canvas, { scale: 5, fps: sheet.fps });
+    }
+    heroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps });
+    heroAnimatorId = heroId;
+  }
+
+  return heroId;
+};
+
+/* ------------------------------------------------------------------ */
+/* Combattants animes                                                 */
+/* ------------------------------------------------------------------ */
+
+let combatHeroAnimator = null;
+let combatHeroId = null;
+let enemyAnimator = null;
+let enemyVisualKey = null;
+let enemyMountToken = 0;
+
+/** Le heros de la lane de gauche, en attente. */
+const mountCombatHero = () => {
+  const canvas = document.getElementById("player-sprite");
+  if (!canvas) return;
+
+  const heroId = getHeroIdForStats(gameState.stats);
+  if (combatHeroId === heroId && combatHeroAnimator) return;
+
+  const sheet = HERO_SHEETS[heroId];
+  if (!combatHeroAnimator) {
+    // Echelle 4 contre 1.6 pour les monstres : les heros n'occupent qu'environ
+    // 20 des 32px de leur cellule, les monstres 56 des 64. A echelle egale, le
+    // monstre ecrasait le heros.
+    combatHeroAnimator = new SpriteAnimator(canvas, { scale: 4, fps: sheet.fps });
+  }
+  combatHeroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps });
+  combatHeroId = heroId;
+};
+
+/**
+ * Monte le monstre courant dans la lane de droite.
+ *
+ * Le montage est asynchrone (chargement puis teinture de la planche) : un
+ * jeton d'appel evite qu'un montage lent ecrase un montage plus recent quand
+ * les ennemis s'enchainent vite.
+ */
+const mountCombatEnemy = async () => {
+  const canvas = document.getElementById("enemy-sprite");
+  if (!canvas) return;
+
+  const enemy = runtimeState.currentEnemyGroup?.find((e) => e.hp > 0)
+    || runtimeState.currentEnemyGroup?.[0];
+  if (!enemy?.id) return;
+
+  const visual = getMonsterVisual(enemy.id);
+  const key = `${enemy.id}:${visual.archetype}:${visual.tint}:${visual.scale}`;
+
+  // La cle est posee AVANT l'attente, pas apres. updateHealthBars() est
+  // appelee plusieurs fois par seconde pendant un combat : si on ne marquait
+  // le montage qu'une fois termine, chaque appel relançait un montage et
+  // invalidait le precedent par le jeton — aucun n'aboutissait jamais et le
+  // sprite restait bloque sur l'ennemi precedent.
+  if (key === enemyVisualKey) return;
+  enemyVisualKey = key;
+
+  const token = ++enemyMountToken;
+  let animator = null;
+  try {
+    // L'echelle vient desormais du gabarit de la planche, pas de l'appelant :
+    // les boss ont des planches de 96px, les archetypes communs de 64px.
+    animator = await mountMonster(canvas, visual, TINTS[visual.tint]);
+  } catch (error) {
+    console.warn("[combat] montage du monstre impossible :", error);
+  }
+
+  // Un montage plus recent a pris la main pendant l'attente.
+  if (token !== enemyMountToken) return;
+
+  if (!animator) {
+    // On libere la cle pour que le prochain rafraichissement retente.
+    enemyVisualKey = null;
+    return;
+  }
+
+  if (enemyAnimator && enemyAnimator !== animator) enemyAnimator.destroy();
+  enemyAnimator = animator;
+  renderEnemyEmblem(visual.emblem);
+};
+
+/**
+ * Marque de faction a cote du monstre. Elle vit dans son propre element, hors
+ * du canvas : la lane ennemie est retournee horizontalement pour que le
+ * monstre fasse face au joueur, et un embleme dessine dans le canvas serait
+ * retourne avec lui.
+ */
+const renderEnemyEmblem = (emblem) => {
+  const host = document.getElementById("enemy-emblem");
+  if (!host) return;
+  host.innerHTML = emblem
+    ? iconMarkup(getEmblemIcon(emblem), { scale: 2, label: "" })
+    : "";
+};
+
+/**
+ * Publie la hauteur reelle de la zone de combat dans une variable CSS.
+ * Le bouton de cendre s'y cale : sa position etait une valeur en dur, que
+ * l'ajout des sprites a rendue fausse.
+ */
+let combatZoneObserver = null;
+
+const watchCombatZoneHeight = () => {
+  const zone = document.getElementById("combat-zone");
+  if (!zone || combatZoneObserver) return;
+
+  const publish = () => {
+    document.documentElement.style.setProperty(
+      "--combat-zone-height",
+      `${Math.round(zone.getBoundingClientRect().height)}px`,
+    );
+  };
+
+  if (typeof ResizeObserver === "function") {
+    combatZoneObserver = new ResizeObserver(publish);
+    combatZoneObserver.observe(zone);
+  }
+  publish();
+};
+
+/** Appele a chaque rafraichissement des barres de vie. */
+export const syncCombatSprites = () => {
+  watchCombatZoneHeight();
+  mountCombatHero();
+  mountCombatEnemy();
+};
+
+/** L'ennemi encaisse un coup. */
+export const playEnemyHurt = () => playMonsterAnimation(enemyAnimator, "hurt");
+
+/** L'ennemi frappe. */
+export const playEnemyAttack = () => playMonsterAnimation(enemyAnimator, "attack");
+
+/** L'ennemi meurt : il reste au sol, on ne revient pas a l'attente. */
+export const playEnemyDeath = () => playMonsterAnimation(enemyAnimator, "death");
+
+/** Le heros frappe, dans la lane de combat. */
+export const playHeroCombatAttack = () => {
+  if (!combatHeroAnimator || !combatHeroId) return;
+  const sheet = HERO_SHEETS[combatHeroId];
+  combatHeroAnimator.play(sheet.file, sheet.rows.attack1, {
+    fps: sheet.fps * 1.6,
+    loop: false,
+    onEnd: () =>
+      combatHeroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
+  });
+};
+
+/** Le heros encaisse. */
+export const playHeroCombatHurt = () => {
+  if (!combatHeroAnimator || !combatHeroId) return;
+  const sheet = HERO_SHEETS[combatHeroId];
+  combatHeroAnimator.play(sheet.file, sheet.rows.hurt, {
+    fps: sheet.fps,
+    loop: false,
+    onEnd: () =>
+      combatHeroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
+  });
+};
+
+/**
+ * Joue l'effet elementaire d'une cendre de guerre par-dessus la zone de combat,
+ * et l'attaque correspondante sur le portrait du heros.
+ *
+ * Appele depuis combat.js au moment ou la cendre part. Purement cosmetique :
+ * on n'attend pas la fin de l'animation pour resoudre le tour, sinon le rythme
+ * du combat dependrait du nombre de frames de la planche.
+ */
+export const playAshEffect = (ashId) => {
+  const canvas = document.getElementById("ash-effect-canvas");
+  if (canvas) {
+    canvas.classList.add("is-active");
+    playEffectOnce(canvas, getAshElement(ashId), { scale: 3 }).finally(() => {
+      canvas.classList.remove("is-active");
+    });
+  }
+  playHeroAnimation("attack2");
+};
+
+/** Joue une animation ponctuelle puis revient a l'attente. */
+export const playHeroAnimation = (name) => {
+  if (!heroAnimator || !heroAnimatorId) return;
+  const sheet = HERO_SHEETS[heroAnimatorId];
+  const row = sheet.rows[name];
+  if (!row) return;
+
+  heroAnimator.play(sheet.file, row, {
+    fps: sheet.fps,
+    loop: false,
+    onEnd: () => heroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
+  });
+};
+
+const renderHeroPanel = () => {
+  const heroId = renderHeroPortrait();
+  if (!heroId) return;
+
+  const archetype = ARCHETYPES[heroId] || ARCHETYPES.water;
+  const titleEl = document.getElementById("hero-archetype");
+  const noteEl = document.getElementById("hero-archetype-note");
+  if (titleEl) titleEl.innerText = archetype.title;
+  if (noteEl) noteEl.innerText = archetype.note;
+
+  const statsRoot = document.getElementById("hero-stats");
+  if (!statsRoot) return;
+
   const eff = getEffectiveStats();
-  const unlockedCount = gameState.world.unlockedBiomes.length;
+  const keys = Object.keys(STAT_META);
+  const invested = keys.map((key) => Number(gameState.stats[key]) || 0);
+  const highest = Math.max(1, ...invested);
+  const dominant = getDominantStat(gameState.stats);
 
-  container.innerHTML = `
-    <div class="journey-stat">
-      <span class="journey-label">Niveau actuel</span>
-      <strong>${playerLevel}</strong>
+  const rows = keys
+    .map((key, index) => {
+      const meta = STAT_META[key];
+      const base = invested[index];
+      const total = Math.round(Number(eff[key]) || 0);
+      const bonus = total - base;
+      const isDominant = key === dominant;
+
+      return `
+        <div class="hero-stat${isDominant ? " is-dominant" : ""}">
+          <span class="hero-stat__label">
+            ${iconMarkup(getStatIcon(key), { scale: 1, className: "hero-stat__icon" })}
+            ${meta.label}
+          </span>
+          <div class="hero-stat__track">
+            <div class="hero-stat__fill" style="width:${Math.round((base / highest) * 100)}%;background:${meta.accent}"></div>
+          </div>
+          <span class="hero-stat__value">
+            ${total}${bonus > 0 ? `<small>+${bonus}</small>` : ""}
+          </span>
+        </div>
+      `;
+    })
+    .join("");
+
+  statsRoot.innerHTML = `
+    <div class="hero-stats__head">
+      <div>
+        <span class="detail-label">Niveau</span>
+        <strong>${gameState.stats.level || 0}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Armure</span>
+        <strong>${Math.round(eff.armor)}</strong>
+      </div>
+      <div>
+        <span class="detail-label">Zones reperees</span>
+        <strong>${gameState.world.unlockedBiomes.length}</strong>
+      </div>
     </div>
-    <div class="journey-stat">
-      <span class="journey-label">Biome conseille</span>
-      <strong>${BIOMES[suggestedId]?.name || "Inconnu"}</strong>
-      <small>${suggestedGuide?.focus || ""}</small>
-    </div>
-    <div class="journey-stat">
-      <span class="journey-label">Signature du build</span>
-      <strong>${eff.strength} FOR / ${eff.vigor} VIG / ${eff.armor} ARM</strong>
-      <small>${unlockedCount} zones reperees</small>
-    </div>
+    ${rows}
   `;
 };
 
@@ -675,39 +975,235 @@ const renderHubFocus = () => {
   }
 };
 
+/**
+ * Cable les boutons de la carte, une seule fois.
+ *
+ * Ils agissent sur worldMapGraph, qui est recree a chaque rendu : on lit donc
+ * la reference au moment du clic, jamais au moment du cablage.
+ */
+let mapControlsBound = false;
+
+const bindMapControls = () => {
+  if (mapControlsBound) return;
+
+  const withGraph = (fn) => () => {
+    const graph = worldMapGraph;
+    if (!graph || graph.destroyed?.() || !graph._private?.renderer) return;
+    try {
+      fn(graph);
+    } catch (error) {
+      console.warn("Commande de carte ignoree :", error);
+    }
+  };
+
+  const wire = (id, handler) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", handler);
+  };
+
+  wire("map-zoom-in", withGraph((g) => g.zoom({ level: g.zoom() * 1.3, renderedPosition: centerOfMap() })));
+  wire("map-zoom-out", withGraph((g) => g.zoom({ level: g.zoom() / 1.3, renderedPosition: centerOfMap() })));
+  wire("map-fit", withGraph(frameMap));
+  wire(
+    "map-locate",
+    withGraph((g) => {
+      const node = g.getElementById(selectedBiomeId);
+      if (!node || !node.length) return;
+      g.animate({ center: { eles: node }, zoom: 1.6 }, { duration: 260 });
+    }),
+  );
+
+  mapControlsBound = true;
+};
+
+/**
+ * Cadre le graphe sur son conteneur.
+ *
+ * `fit` seul ne suffit pas : dans une colonne etroite, faire tenir 34 noeuds
+ * donne un zoom de 0.11 ou plus rien n'est cliquable. En dessous d'un plancher,
+ * on renonce a la vue d'ensemble et on centre sur la zone selectionnee — le
+ * navigateur par chapitres prend alors le relais pour se deplacer.
+ */
+const MIN_OVERVIEW_ZOOM = 0.28;
+
+const frameMap = (graph) => {
+  if (!graph || graph.destroyed?.() || !graph._private?.renderer) return;
+  try {
+    graph.resize();
+    graph.fit(undefined, 48);
+    if (graph.zoom() >= MIN_OVERVIEW_ZOOM) return;
+
+    graph.zoom(MIN_OVERVIEW_ZOOM);
+    const focus =
+      graph.getElementById(selectedBiomeId) ||
+      graph.getElementById(gameState.world.currentBiome);
+    if (focus && focus.length) graph.center(focus);
+  } catch (error) {
+    console.warn("Cadrage de la carte ignore :", error);
+  }
+};
+
+/**
+ * Recadre la carte des que son conteneur change de taille.
+ *
+ * L'ecran de la carte passe de display:none a block a la navigation : au
+ * premier rendu, Cytoscape s'initialise sur un conteneur encore sans
+ * dimensions et dessine dans le vide. Un simple requestAnimationFrame ne
+ * suffit pas, la taille peut arriver plus tard. L'observateur couvre aussi le
+ * redimensionnement de la fenetre et les changements de mise en page.
+ */
+let mapResizeObserver = null;
+
+const watchMapSize = () => {
+  const map = document.getElementById("world-map");
+  if (!map || mapResizeObserver || typeof ResizeObserver !== "function") return;
+
+  let lastWidth = 0;
+  let lastHeight = 0;
+
+  mapResizeObserver = new ResizeObserver(() => {
+    const graph = worldMapGraph;
+    if (!graph || graph.destroyed?.() || !graph._private?.renderer) return;
+
+    const { clientWidth: w, clientHeight: h } = map;
+    if (!w || !h) return;
+    if (w === lastWidth && h === lastHeight) return;
+    lastWidth = w;
+    lastHeight = h;
+
+    frameMap(graph);
+  });
+
+  mapResizeObserver.observe(map);
+};
+
+const centerOfMap = () => {
+  const map = document.getElementById("world-map");
+  return {
+    x: (map?.clientWidth || 0) / 2,
+    y: (map?.clientHeight || 0) / 2,
+  };
+};
+
+/**
+ * Navigateur par chapitres.
+ *
+ * Remplace la liste plate de "departs rapides", qui melangeait 34 biomes sans
+ * hierarchie. Les chapitres existaient deja dans les donnees mais n'etaient
+ * qu'un libelle decoratif : ils servent maintenant de structure.
+ *
+ * Un chapitre est replie par defaut sauf s'il contient la zone selectionnee ou
+ * la zone courante — on ouvre sur ce qui concerne le joueur, pas sur tout.
+ */
+// Etat explicite : ne contient QUE les chapitres que le joueur a lui-meme
+// ouverts ou replies. Un clic doit toujours gagner contre l'heuristique
+// d'ouverture automatique, sinon le chapitre contenant la zone selectionnee
+// devient impossible a replier.
+const chapterState = new Map();
+
 const renderBiomeShortcuts = (visibleIds) => {
   const list = document.getElementById("biome-list");
   if (!list) return;
 
+  const visible = new Set(visibleIds);
+
+  // On suit l'ordre de BIOME_ORDER : c'est celui de la progression.
+  const chapters = [];
+  const byChapter = new Map();
+  BIOME_ORDER.forEach((biomeId) => {
+    if (!visible.has(biomeId)) return;
+    const chapter = BIOME_GUIDE[biomeId]?.chapter || "Hors chapitre";
+    if (!byChapter.has(chapter)) {
+      byChapter.set(chapter, []);
+      chapters.push(chapter);
+    }
+    byChapter.get(chapter).push(biomeId);
+  });
+
   list.innerHTML = "";
-  visibleIds
-    .filter((biomeId) => gameState.world.unlockedBiomes.includes(biomeId))
-    .forEach((biomeId) => {
+
+  chapters.forEach((chapter) => {
+    const biomes = byChapter.get(chapter);
+    const unlockedCount = biomes.filter((id) =>
+      gameState.world.unlockedBiomes.includes(id),
+    ).length;
+    const holdsFocus = biomes.some(
+      (id) => id === selectedBiomeId || id === gameState.world.currentBiome,
+    );
+    // Par defaut on n'ouvre que le chapitre concerne : avec dix chapitres et
+    // 34 zones, tout deplier oblige a defiler pour rien.
+    const collapsed = chapterState.has(chapter)
+      ? chapterState.get(chapter)
+      : !holdsFocus;
+
+    const section = document.createElement("section");
+    section.className = `chapter-group${collapsed ? " is-collapsed" : ""}`;
+
+    const head = document.createElement("button");
+    head.type = "button";
+    head.className = "chapter-group__head";
+    head.setAttribute("aria-expanded", String(!collapsed));
+    head.innerHTML = `
+      <span class="chapter-group__name">${chapter}</span>
+      <span class="chapter-group__count">${unlockedCount}/${biomes.length}</span>
+      <span class="chapter-group__chevron" aria-hidden="true"></span>
+    `;
+    head.onclick = () => {
+      chapterState.set(chapter, !collapsed);
+      renderBiomeShortcuts(visibleIds);
+    };
+    section.appendChild(head);
+
+    const body = document.createElement("div");
+    body.className = "chapter-group__body";
+
+    biomes.forEach((biomeId) => {
       const guide = BIOME_GUIDE[biomeId];
+      const unlocked = gameState.world.unlockedBiomes.includes(biomeId);
+
       const btn = document.createElement("button");
-      btn.className =
-        biomeId === selectedBiomeId
-          ? "biome-shortcut active-shortcut"
-          : "biome-shortcut";
+      btn.type = "button";
+      btn.className = [
+        "biome-shortcut",
+        biomeId === selectedBiomeId ? "active-shortcut" : "",
+        unlocked ? "" : "is-locked",
+        biomeId === gameState.world.currentBiome ? "is-current" : "",
+        guide?.wip ? "is-wip" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
       btn.innerHTML = `
-        <span class="biome-shortcut__title">${BIOMES[biomeId].name}</span>
-        <span class="biome-shortcut__meta">${getBiomePowerBand(biomeId)} · ${guide?.pathRole || "Biome actif"}</span>
+        <span class="biome-shortcut__title">${BIOMES[biomeId]?.name || biomeId}</span>
+        <span class="biome-shortcut__meta">
+          ${getBiomePowerBand(biomeId)} · ${guide?.danger || "?"}
+        </span>
       `;
-      btn.disabled = gameState.world.isExploring;
+
+      // Les zones verrouillees restent cliquables : on peut lire leur fiche
+      // pour preparer la suite, on ne peut simplement pas s'y deployer.
       btn.onclick = () => {
         selectedBiomeId = biomeId;
         ensureUiState().selectedBiomeId = biomeId;
         saveGame();
         updateBiomeDisplay();
       };
-      list.appendChild(btn);
+
+      body.appendChild(btn);
     });
+
+    section.appendChild(body);
+    list.appendChild(section);
+  });
 };
 
 const renderWorldMap = (visibleIds) => {
   const map = document.getElementById("world-map");
   const paths = document.getElementById("world-map-paths");
   if (!map || !paths) return;
+
+  bindMapControls();
+  watchMapSize();
 
   const visibleSet = new Set(visibleIds);
   paths.innerHTML = "";
@@ -723,6 +1219,7 @@ const renderWorldMap = (visibleIds) => {
     const info = css.getPropertyValue("--info").trim() || "#5f7f9f";
     const accent = css.getPropertyValue("--accent").trim() || "#867142";
     const danger = css.getPropertyValue("--danger").trim() || "#b75b3b";
+    const bg = css.getPropertyValue("--surface-subtle").trim() || "#191510";
     const elements = [];
     const depthMemo = new Map();
     const groupedByDepth = new Map();
@@ -755,9 +1252,14 @@ const renderWorldMap = (visibleIds) => {
           x: hasManualPosition ? guide.x * 18 : autoX,
           y: hasManualPosition ? guide.y * 18 : autoY,
         },
-        classes: `${isUnlocked ? "unlocked-node" : "reachable-node"} ${
-          biomeId === selectedBiomeId ? "selected-node" : ""
-        }`,
+        classes: [
+          isUnlocked ? "unlocked-node" : "reachable-node",
+          biomeId === selectedBiomeId ? "selected-node" : "",
+          biomeId === gameState.world.currentBiome ? "current-node" : "",
+          guide?.wip ? "wip-node" : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
       });
 
       (BIOMES[biomeId]?.unlocks || []).forEach((nextId) => {
@@ -795,21 +1297,57 @@ const renderWorldMap = (visibleIds) => {
         {
           selector: "node",
           style: {
-            width: 28,
-            height: 28,
+            width: 22,
+            height: 22,
             label: "data(label)",
-            "font-family": "Cinzel Decorative",
-            "font-size": 9,
+            "font-family": "Spectral",
+            "font-size": 10,
             color: textColor,
             "text-wrap": "wrap",
-            "text-max-width": 88,
+            "text-max-width": 110,
             "text-valign": "bottom",
-            "text-margin-y": 10,
+            "text-margin-y": 8,
             "background-color": surfaceStrong,
             "border-width": 2,
             "border-color": borderStrong,
             "overlay-opacity": 0,
-            "text-background-color": "rgba(255,255,255,0.0)",
+            // Fond derriere le texte : sur une carte dense les libelles
+            // passaient par-dessus les aretes et devenaient illisibles.
+            "text-background-color": bg,
+            "text-background-opacity": 0.78,
+            "text-background-padding": 3,
+            "text-background-shape": "roundrectangle",
+            // En vue d'ensemble, 34 libelles se chevauchent et rendent la
+            // carte illisible. Cytoscape les masque en dessous de cette taille
+            // rendue : ils reapparaissent au zoom, ou l'on a la place.
+            "min-zoomed-font-size": 11,
+          },
+        },
+        {
+          // Contenu en chantier : present mais visiblement en retrait.
+          selector: ".wip-node",
+          style: {
+            opacity: 0.4,
+            "border-style": "dashed",
+          },
+        },
+        {
+          // La zone courante et la zone selectionnee gardent leur libelle en
+          // vue d'ensemble : leur police est assez grande pour passer le seuil.
+          selector: ".current-node",
+          style: {
+            "border-color": accent,
+            "border-width": 4,
+            // Zone courante : anneau d'accent, nettement plus grosse. En vue
+            // d'ensemble le texte est illisible quel que soit le seuil (a 0.36
+            // de zoom, une police de 12 rend 4px) : ce sont la taille et la
+            // couleur qui portent l'information, pas le libelle.
+            width: 30,
+            height: 30,
+            "border-color": accent,
+            "border-width": 5,
+            "font-size": 12,
+            color: accent,
           },
         },
         {
@@ -841,8 +1379,8 @@ const renderWorldMap = (visibleIds) => {
         {
           selector: ".selected-node",
           style: {
-            width: 42,
-            height: 42,
+            width: 34,
+            height: 34,
             "border-color": danger,
             "border-width": 4,
             "background-color": surfaceStrong,
@@ -852,13 +1390,16 @@ const renderWorldMap = (visibleIds) => {
         {
           selector: ".selected-node[label]",
           style: {
-            "font-size": 11,
+            "font-size": 13,
             color: danger,
           },
         },
       ],
     });
     worldMapGraph = currentGraph;
+    // Poignee de debogage : sans elle, impossible d'inspecter les styles
+    // appliques depuis la console.
+    window.__eldenChillMap = currentGraph;
 
     currentGraph.off("tap");
     currentGraph.on("tap", "node", (event) => {
@@ -869,30 +1410,14 @@ const renderWorldMap = (visibleIds) => {
       updateBiomeDisplay();
     });
 
-    const selectedNode = currentGraph.getElementById(selectedBiomeId);
-    if (selectedNode && selectedNode.length) {
-      requestAnimationFrame(() => {
-        if (!currentGraph || currentGraph !== worldMapGraph) return;
-        if (currentGraph.destroyed()) return;
-        if (!currentGraph._private?.renderer) return;
+    // Vue d'ensemble par defaut. L'ancienne version centrait sur la zone
+    // selectionnee avec un zoom fixe : sur 34 biomes, on ne voyait que deux ou
+    // trois noeuds et la carte paraissait vide.
+    requestAnimationFrame(() => {
+      if (!currentGraph || currentGraph !== worldMapGraph) return;
+      frameMap(currentGraph);
+    });
 
-        try {
-          currentGraph.resize();
-          currentGraph.center(selectedNode);
-          const nodeCount = visibleIds.length;
-          const targetZoom = nodeCount > 12 ? 1.35 : nodeCount > 8 ? 1.2 : 1.05;
-          currentGraph.zoom({
-            level: targetZoom,
-            renderedPosition: {
-              x: map.clientWidth / 2,
-              y: map.clientHeight / 2,
-            },
-          });
-        } catch (error) {
-          console.warn("World map recenter skipped:", error);
-        }
-      });
-    }
     return;
   }
 
@@ -984,7 +1509,7 @@ const updateBiomeDisplay = () => {
     ensureUiState().selectedBiomeId = selectedBiomeId;
   }
 
-  renderJourneyOverview();
+  renderHeroPanel();
   renderWorldMap(visibleIds);
   renderBiomeDetail(selectedBiomeId);
   renderBiomeShortcuts(visibleIds);
@@ -1357,13 +1882,13 @@ const ensureBattleLogLayout = () => {
   }
 
   root.innerHTML = `
-    <div class="log-column enemy-column">
-      <div class="log-column-title">Pression ennemie</div>
-      <div class="log-column-body" id="action-log-enemy"></div>
-    </div>
     <div class="log-column player-column">
       <div class="log-column-title">Actions du Sans-eclat</div>
       <div class="log-column-body" id="action-log-player"></div>
+    </div>
+    <div class="log-column enemy-column">
+      <div class="log-column-title">Pression ennemie</div>
+      <div class="log-column-body" id="action-log-enemy"></div>
     </div>
   `;
   enemyColumn = document.getElementById("action-log-enemy");
@@ -1492,11 +2017,13 @@ const updateInventoryDisplay = () => {
     const progressText =
       item.level >= 10 ? "MAX" : `(${item.count}/${item.level})`;
     itemDiv.innerHTML = `
-      <span class="inventory-item-type">${itemData.type}</span>
+      ${iconMarkup(getItemIcon(item.id, item.level), { scale: 4, frame: "item-icon", label: item.name })}
       <span class="inventory-item-rarity">${getItemRarity(item.id)}</span>
       <strong class="inventory-item-name">${item.name}</strong>
-      <span class="inventory-item-meta">Niv.${item.level}</span>
-      <span class="inventory-item-progress">${progressText}</span>
+      <div class="inventory-item-footer">
+        <span class="inventory-item-meta">Niv.${item.level}</span>
+        <span class="inventory-item-progress">${progressText}</span>
+      </div>
     `;
     attachTooltipEvents(itemDiv, item);
 
@@ -1509,22 +2036,6 @@ window.setInventoryFilter = (type) => {
   currentInventoryFilter = type;
   runtimeState.filterChanged = true;
   updateInventoryDisplay();
-};
-
-window.toggleInventoryCollapse = () => {
-  const grid = document.getElementById("inventory-section");
-  const btn = document.getElementById("btn-collapse");
-  const filters = document.getElementById("filter-buttons");
-
-  if (grid.style.display === "none") {
-    grid.style.display = "block";
-    filters.style.display = "flex";
-    btn.innerText = "▼ Inventaire";
-  } else {
-    grid.style.display = "none";
-    filters.style.display = "none";
-    btn.innerText = "▲ Inventaire (replie)";
-  }
 };
 
 window.toggleInventoryCollapse = () => {
@@ -1565,8 +2076,13 @@ export const updateStatusIcons = () => {
       text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
     }
 
-    return `<div class="status-icon" style="background-color: ${data.color}" title="${data.name}">
-              ${data.name}${text}
+    // Icone + compteur, plutot que le nom de l'effet en pastille coloree :
+    // en combat la place est comptee et huit noms ecrits saturaient la ligne.
+    // Le nom reste accessible en title et en aria-label.
+    const label = `${data.name}${text}`;
+    return `<div class="status-icon status-icon--${eff.id.toLowerCase()}" title="${label}">
+              ${iconMarkup(getStatusIcon(eff.id), { scale: 2, label: data.name })}
+              ${text ? `<span class="status-icon__count">${text.trim().replace(/[()]/g, "")}</span>` : ""}
             </div>`;
   };
 
@@ -1689,7 +2205,7 @@ export const updateRealTimeStatsDisplay = () => {
 };
 
 export const updateUI = () => {
-  applyTheme();
+  decorateStatLines();
   updateScreenState();
   updateNavState();
   updateRuneDisplay();
@@ -1715,6 +2231,7 @@ export const toggleView = (view) => {
   const camp = document.getElementById("camp-view");
   const biome = document.getElementById("biome-view");
   const particles = document.getElementById("fire-particles");
+  const scene = document.getElementById("camp-scene");
   const nav = document.getElementById("primary-nav");
 
   if (view === "biome") {
@@ -1724,6 +2241,7 @@ export const toggleView = (view) => {
     ensureUiState().currentScreen = "combat";
     if (nav) nav.style.display = "none";
     if (particles) particles.classList.add("hidden");
+    if (scene) scene.classList.add("hidden");
     playDungeonMusic();
   } else {
     clearRunBuffs();
@@ -1746,6 +2264,7 @@ export const toggleView = (view) => {
     if (nav) nav.style.display = "flex";
     navigateTo("hub");
     if (particles) particles.classList.remove("hidden");
+    if (scene) scene.classList.remove("hidden");
     playCampMusic();
     checkForUpdate();
     saveGame();
@@ -1789,6 +2308,7 @@ export const ActionLog = (message, className = "") => {
 };
 
 export const updateHealthBars = () => {
+  syncCombatSprites();
   const stats = getEffectiveStats();
   const playerMaxHp = getHealth(stats.vigor);
   const playerPercent = (runtimeState.playerCurrentHp / playerMaxHp) * 100;
@@ -2260,21 +2780,101 @@ export const toggleOptions = (show) => {
   navigateTo(show ? "options" : "hub");
 };
 
+/**
+ * Braises qui montent au-dessus du camp.
+ *
+ * Chaque braise recoit sa taille, sa derive horizontale, sa teinte et son
+ * opacite de pointe : sans ce tirage elles montaient toutes a la verticale, de
+ * la meme couleur, et l'ensemble lisait comme une pluie reguliere plutot que
+ * comme des cendres.
+ */
+const EMBER_COLORS = ["#ec984c", "#c6ac74", "#e8c06a", "#b8683c"];
+
 export const createFireParticles = () => {
   const container = document.getElementById("fire-particles");
   if (!container) return;
-  const particleCount = 50;
-  for (let i = 0; i < particleCount; i++) {
+  if (container.childElementCount) return;   // deja peuplé
+
+  const count = 46;
+  for (let i = 0; i < count; i += 1) {
     const particle = document.createElement("div");
     particle.className = "particle";
-    const size = Math.random() * 7 + 3;
+
+    // Tailles entieres : une braise de 3.7px se retrouve anti-aliasee et
+    // perd le rendu pixel.
+    const size = 2 + Math.floor(Math.random() * 4);
     particle.style.width = `${size}px`;
     particle.style.height = `${size}px`;
     particle.style.left = `${Math.random() * 100}%`;
-    particle.style.animationDelay = `${Math.random() * 10}s`;
-    particle.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    particle.style.animationDelay = `${Math.random() * 12}s`;
+    particle.style.animationDuration = `${8 + Math.random() * 9}s`;
+    particle.style.setProperty(
+      "--drift-x",
+      `${Math.round((Math.random() - 0.35) * 90)}px`,
+    );
+    particle.style.setProperty(
+      "--ember-color",
+      EMBER_COLORS[Math.floor(Math.random() * EMBER_COLORS.length)],
+    );
+    particle.style.setProperty(
+      "--ember-peak",
+      (0.25 + Math.random() * 0.45).toFixed(2),
+    );
+
     container.appendChild(particle);
   }
+};
+
+/**
+ * Parallaxe du decor du camp : les trois calques se decalent au defilement a
+ * des rythmes differents, ce qui donne de la profondeur a une image plate.
+ *
+ * Le ciel bouge le moins, le premier plan le plus. Les valeurs sont volontairement
+ * faibles : au-dela, l'horizon se decolle visiblement des montagnes.
+ */
+const PARALLAX_FACTORS = [
+  [".camp-scene__sky", 0.02],
+  [".camp-scene__mid", 0.055],
+  [".camp-scene__near", 0.1],
+];
+
+export const initCampParallax = () => {
+  const scene = document.getElementById("camp-scene");
+  if (!scene) return;
+
+  const reduced =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+
+  const layers = PARALLAX_FACTORS.map(([selector, factor]) => [
+    scene.querySelector(selector),
+    factor,
+  ]).filter(([el]) => el);
+
+  let pending = false;
+  const apply = () => {
+    pending = false;
+    const y = window.scrollY;
+    layers.forEach(([el, factor]) => {
+      el.style.setProperty("--parallax", `${Math.round(y * factor)}px`);
+    });
+  };
+
+  // On passe par requestAnimationFrame : l'evenement de defilement peut se
+  // declencher bien plus souvent qu'une image, et ecrire un style a chaque
+  // fois provoquerait des recalculs inutiles.
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(apply);
+    },
+    { passive: true },
+  );
+
+  apply();
 };
 
 export const setAudioListener = () => {

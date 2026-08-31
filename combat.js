@@ -11,6 +11,12 @@ import {
 import {
   ActionLog,
   formatNumber,
+  playAshEffect,
+  playEnemyAttack,
+  playEnemyDeath,
+  playEnemyHurt,
+  playHeroCombatAttack,
+  playHeroCombatHurt,
   triggerShake,
   updateHealthBars,
   updateUI,
@@ -260,6 +266,18 @@ export function performAttack({
 
     /* ===== APPLY DAMAGE ===== */
     setEntityHp(target, getEntityHp(target) - finalDamage);
+
+    // Animations : l'attaquant frappe, la cible encaisse. Si le coup est
+    // mortel, la cible joue sa mort plutot que son encaissement.
+    if (isPlayer) {
+      playHeroCombatAttack();
+      if (getEntityHp(target) <= 0) playEnemyDeath();
+      else playEnemyHurt();
+    } else {
+      playEnemyAttack();
+      playHeroCombatHurt();
+    }
+
     updateHealthBars();
 
     ActionLog(
@@ -529,6 +547,7 @@ export const combatLoop = (sessionId) => {
           ashEffect = ash.effect(stats, runtimeState.currentEnemyGroup[0]);
           runtimeState.ashUsesLeft--;
           runtimeState.ashIsPrimed = false;
+          playAshEffect(gameState.equippedAsh);
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }

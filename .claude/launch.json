@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "elden-chill",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/devserver.py", "8124"],
+      "port": 8124
+    }
+  ]
+}

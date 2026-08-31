@@ -1,29 +1,38 @@
+import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 import {
-  DEFAULT_GAME_STATE,
-  gameState,
-  setGameState,
-} from "./state.js";
-import {
-  LOCAL_IMPORT_CONSUMED_KEY,
+  CAMP_SCREEN_IDS,
   LOCAL_PREFS_KEY,
+  applyOfflineTimeProgress,
+  ensureSaveIdentity,
   isCompatibleSaveVersion,
   normalizePlayerProfile,
-  sanitizeCloudPayload,
-  ensureSaveIdentity,
 } from "./shared/player-profile.js";
+import { decodeLegacySave, openSave, sealSave } from "./save-crypto.js";
 
 export const SAVE_NAME = "eldenChillSave";
 export const SAVE_BACKUP_NAME = "eldenChillSaveBackup";
 export const SAVE_META_NAME = "eldenChillSaveMeta";
+export const SAVE_QUARANTINE_NAME = "eldenChillSaveRejected";
 
-const CLIENT_PREF_KEYS = [
-  "ui",
-  "save.audioVolume",
-  "save.useOfflineTime",
-];
+// Preferences qui restent propres au navigateur et ne voyagent pas avec le
+// profil : elles sont stockees en clair, elles n'ont aucun impact sur le jeu.
+const CLIENT_PREF_KEYS = ["ui", "save.audioVolume", "save.useOfflineTime"];
+
+/**
+ * Resultat du dernier loadGame(), pour que l'UI puisse prevenir le joueur
+ * quand une sauvegarde a ete refusee ou restauree depuis la copie de secours.
+ * status : "fresh" | "loaded" | "restored-backup" | "migrated-legacy" | "rejected"
+ */
+export const lastLoadReport = {
+  status: "fresh",
+  reason: null,
+  usedBackup: false,
+};
 
 const getByPath = (source, path) =>
-  path.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), source);
+  path
+    .split(".")
+    .reduce((acc, key) => (acc == null ? undefined : acc[key]), source);
 
 const setByPath = (target, path, value) => {
   const parts = path.split(".");
@@ -40,23 +49,6 @@ const setByPath = (target, path, value) => {
   cursor[parts[parts.length - 1]] = value;
 };
 
-export const encodeSave = (data) => {
-  const jsonString = JSON.stringify(data);
-  const base64 = btoa(unescape(encodeURIComponent(jsonString)));
-  return base64.split("").reverse().join("");
-};
-
-export const decodeSave = (encodedData) => {
-  try {
-    const reversed = encodedData.split("").reverse().join("");
-    const jsonString = decodeURIComponent(escape(atob(reversed)));
-    return JSON.parse(jsonString);
-  } catch (err) {
-    console.error("Erreur de decodage de la sauvegarde :", err);
-    return null;
-  }
-};
-
 const readJson = (key) => {
   try {
     const raw = localStorage.getItem(key);
@@ -68,11 +60,19 @@ const readJson = (key) => {
 };
 
 const writeJson = (key, value) => {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`Impossible d'ecrire ${key} :`, err);
+  }
 };
 
 export const getSaveMeta = () => readJson(SAVE_META_NAME);
 export const setSaveMeta = (meta) => writeJson(SAVE_META_NAME, meta);
+
+/* ------------------------------------------------------------------ */
+/* Preferences locales                                                */
+/* ------------------------------------------------------------------ */
 
 export const getLocalPreferences = () => readJson(LOCAL_PREFS_KEY) || {};
 
@@ -89,6 +89,7 @@ export const saveLocalPreferences = () => {
 
 const applyLocalPreferences = () => {
   const prefs = getLocalPreferences();
+
   if (prefs.ui) {
     gameState.ui = {
       ...DEFAULT_GAME_STATE.ui,
@@ -97,28 +98,172 @@ const applyLocalPreferences = () => {
     };
   }
 
+  if (!gameState.save) gameState.save = {};
+
   if (prefs.save?.audioVolume != null) {
-    if (!gameState.save) gameState.save = {};
     gameState.save.audioVolume = prefs.save.audioVolume;
   }
 
   if (prefs.save?.useOfflineTime != null) {
-    if (!gameState.save) gameState.save = {};
     gameState.save.useOfflineTime = !!prefs.save.useOfflineTime;
   }
 };
 
+/* ------------------------------------------------------------------ */
+/* Lecture                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Tente de lire une enveloppe scellee a une cle donnee.
+ * @returns {{ profile: object } | { error: string } | null}
+ */
+const readSealedSlot = (key) => {
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+
+  const opened = openSave(raw);
+  if (!opened.ok) return { error: opened.reason };
+
+  if (!isCompatibleSaveVersion(opened.data?.save?.version)) {
+    return { error: "INCOMPATIBLE_VERSION" };
+  }
+
+  return { profile: normalizePlayerProfile(opened.data) };
+};
+
+/** Ancienne sauvegarde en base64 inverse, d'avant l'enveloppe scellee. */
+const readLegacySlot = () => {
+  const raw = localStorage.getItem(SAVE_NAME);
+  if (!raw) return null;
+
+  const decoded = decodeLegacySave(raw);
+  if (!decoded) return null;
+  if (!isCompatibleSaveVersion(decoded?.save?.version)) return null;
+
+  return { profile: normalizePlayerProfile(decoded) };
+};
+
+/**
+ * Charge la sauvegarde locale dans gameState.
+ * Ordre d'essai : enveloppe principale, copie de secours, format legacy,
+ * puis etat neuf. Une sauvegarde refusee est mise de cote plutot qu'ecrasee,
+ * pour qu'une progression ne disparaisse jamais silencieusement.
+ */
 export const loadGame = () => {
-  applyLocalPreferences();
+  lastLoadReport.status = "fresh";
+  lastLoadReport.reason = null;
+  lastLoadReport.usedBackup = false;
+
+  const primary = readSealedSlot(SAVE_NAME);
+
+  if (primary?.profile) {
+    hydrate(primary.profile);
+    lastLoadReport.status = "loaded";
+    return lastLoadReport;
+  }
+
+  // L'enveloppe principale est illisible : on regarde la copie de secours
+  // avant de conclure quoi que ce soit.
+  const backup = readSealedSlot(SAVE_BACKUP_NAME);
+
+  if (backup?.profile) {
+    quarantine(primary?.error || "MISSING");
+    hydrate(backup.profile);
+    // On rescelle immediatement, sinon la mauvaise enveloppe resterait en
+    // place et on repasserait par la restauration a chaque chargement.
+    saveGame("restauration-backup");
+    lastLoadReport.status = "restored-backup";
+    lastLoadReport.reason = primary?.error || null;
+    lastLoadReport.usedBackup = true;
+    console.warn(
+      "[save] enveloppe principale refusee, restauration depuis la copie de secours",
+      primary?.error,
+    );
+    return lastLoadReport;
+  }
+
+  // Ni l'une ni l'autre : peut-etre une sauvegarde de l'ancien format.
+  const legacy = readLegacySlot();
+
+  if (legacy?.profile) {
+    hydrate(legacy.profile);
+    saveGame("migration-legacy");
+    lastLoadReport.status = "migrated-legacy";
+    console.info("[save] sauvegarde legacy migree vers l'enveloppe scellee");
+    return lastLoadReport;
+  }
+
+  if (primary?.error) {
+    quarantine(primary.error);
+    lastLoadReport.status = "rejected";
+    lastLoadReport.reason = primary.error;
+    console.warn("[save] sauvegarde refusee et mise de cote :", primary.error);
+  }
+
+  // Etat neuf.
+  hydrate(normalizePlayerProfile({}));
+  return lastLoadReport;
 };
 
-export const hydrateProfileState = (profile) => {
-  const normalized = normalizePlayerProfile(profile);
-  setGameState(normalized);
+const hydrate = (profile) => {
+  const withOfflineTime = applyOfflineTimeProgress(profile);
+  ensureSaveIdentity(withOfflineTime);
+
+  // Une sauvegarde prise en pleine expedition restaure isExploring a true,
+  // mais la boucle de combat n'est pas relancee au chargement : le joueur
+  // arrivait sur un ecran de combat vide et bloque. On le ramene au camp.
+  //
+  // Les runes portees ne sont ni encaissees ni perdues : les encaisser ferait
+  // du rechargement un moyen de securiser un butin, les perdre punirait un
+  // simple plantage. Elles restent portees, donc toujours en jeu.
+  if (withOfflineTime.world?.isExploring) {
+    withOfflineTime.world.isExploring = false;
+    withOfflineTime.playerEffects = [];
+    withOfflineTime.ennemyEffects = [];
+    withOfflineTime.ashesOfWaruses = {};
+    console.info("[save] expedition interrompue par un rechargement, retour au camp");
+  }
+
+  setGameState(withOfflineTime);
   applyLocalPreferences();
+
+  // Meme probleme cote interface : ui.currentScreen peut valoir "combat", qui
+  // n'a pas de section au camp, et l'ecran restaure restait vide.
+  //
+  // La verification vient apres applyLocalPreferences, pas avant : les
+  // preferences locales reecrivent gameState.ui en entier et remettraient la
+  // valeur invalide en place.
+  if (!CAMP_SCREEN_IDS.includes(gameState.ui?.currentScreen)) {
+    if (!gameState.ui) gameState.ui = {};
+    gameState.ui.currentScreen = "hub";
+  }
 };
 
-export const buildCloudProfilePayload = () => sanitizeCloudPayload(gameState);
+/**
+ * Deplace une sauvegarde refusee vers une cle de quarantaine, brute, pour
+ * qu'elle reste inspectable au lieu d'etre perdue.
+ */
+const quarantine = (reason) => {
+  const raw = localStorage.getItem(SAVE_NAME);
+  if (!raw) return;
+
+  try {
+    localStorage.setItem(
+      SAVE_QUARANTINE_NAME,
+      JSON.stringify({ reason, at: Date.now(), payload: raw }),
+    );
+  } catch (err) {
+    console.warn("Impossible de mettre la sauvegarde en quarantaine :", err);
+  }
+};
+
+export const getQuarantinedSave = () => readJson(SAVE_QUARANTINE_NAME);
+export const clearQuarantinedSave = () =>
+  localStorage.removeItem(SAVE_QUARANTINE_NAME);
+
+/* ------------------------------------------------------------------ */
+/* Ecriture                                                           */
+/* ------------------------------------------------------------------ */
 
 export const saveGame = (reason = "autosave") => {
   try {
@@ -126,50 +271,70 @@ export const saveGame = (reason = "autosave") => {
     ensureSaveIdentity(gameState);
     gameState.save.saveSequence = Number(gameState.save.saveSequence || 0) + 1;
     gameState.save.lastSavedAt = Date.now();
-    saveLocalPreferences();
 
-    if (typeof window !== "undefined" && typeof window.__eldenChillScheduleSync === "function") {
-      window.__eldenChillScheduleSync(reason);
-    }
+    const sealed = sealSave(gameState);
+
+    // Rotation : l'enveloppe courante devient la copie de secours seulement
+    // apres qu'on a produit la nouvelle, jamais avant.
+    const previous = localStorage.getItem(SAVE_NAME);
+    localStorage.setItem(SAVE_NAME, sealed);
+    if (previous) localStorage.setItem(SAVE_BACKUP_NAME, previous);
+
+    setSaveMeta({
+      reason,
+      at: gameState.save.lastSavedAt,
+      sequence: gameState.save.saveSequence,
+      version: gameState.save.version,
+      profileId: gameState.save.profileId,
+    });
+
+    saveLocalPreferences();
+    return true;
   } catch (err) {
-    console.error("Impossible d'enregistrer l'etat local :", err);
+    console.error("Impossible d'enregistrer la sauvegarde locale :", err);
+    return false;
   }
 };
 
+/* ------------------------------------------------------------------ */
+/* Import / export manuel                                            */
+/* ------------------------------------------------------------------ */
+
+/** Chaine scellee que le joueur peut copier ailleurs (backup manuel). */
+export const exportSaveString = () => sealSave(gameState);
+
+/**
+ * Reinjecte une chaine scellee produite par exportSaveString().
+ * @returns {{ ok: true } | { ok: false, reason: string }}
+ */
+export const importSaveString = (encoded) => {
+  const opened = openSave(String(encoded || "").trim());
+  if (!opened.ok) return { ok: false, reason: opened.reason };
+
+  if (!isCompatibleSaveVersion(opened.data?.save?.version)) {
+    return { ok: false, reason: "INCOMPATIBLE_VERSION" };
+  }
+
+  hydrate(normalizePlayerProfile(opened.data));
+  saveGame("import");
+  return { ok: true };
+};
+
+/* ------------------------------------------------------------------ */
+/* Remise a zero                                                      */
+/* ------------------------------------------------------------------ */
+
 export const resetGameState = () => {
-  setGameState(DEFAULT_GAME_STATE);
+  setGameState(normalizePlayerProfile({}));
   saveLocalPreferences();
 };
 
 export const clearSaveStorage = () => {
-  localStorage.removeItem(LOCAL_PREFS_KEY);
-  localStorage.removeItem(SAVE_NAME);
-  localStorage.removeItem(SAVE_BACKUP_NAME);
-  localStorage.removeItem(SAVE_META_NAME);
-  localStorage.removeItem(LOCAL_IMPORT_CONSUMED_KEY);
-};
-
-export const getLegacyEncodedSave = () => localStorage.getItem(SAVE_NAME);
-
-export const getLegacySaveCandidate = () => {
-  const encoded = getLegacyEncodedSave();
-  if (!encoded) return null;
-
-  const decoded = decodeSave(encoded);
-  if (!decoded || !isCompatibleSaveVersion(decoded.save?.version)) {
-    return null;
-  }
-
-  const normalized = normalizePlayerProfile(decoded);
-  return {
-    encoded,
-    decoded: normalized,
-  };
-};
-
-export const hasLegacyImportBeenConsumed = () =>
-  localStorage.getItem(LOCAL_IMPORT_CONSUMED_KEY) === "true";
-
-export const markLegacyImportConsumed = () => {
-  localStorage.setItem(LOCAL_IMPORT_CONSUMED_KEY, "true");
+  [
+    SAVE_NAME,
+    SAVE_BACKUP_NAME,
+    SAVE_META_NAME,
+    SAVE_QUARANTINE_NAME,
+    LOCAL_PREFS_KEY,
+  ].forEach((key) => localStorage.removeItem(key));
 };

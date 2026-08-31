@@ -1276,3 +1276,12 @@ export const MONSTERS = {
   },
   ...V21_MONSTERS,
 };
+
+// Chaque monstre porte desormais sa propre cle. Les instances de combat sont
+// des copies du template (spread) : sans ce marquage elles perdaient leur
+// identifiant, et le retrouver par le nom est impossible — plusieurs monstres
+// partagent le meme (deux "Loup Affame", deux "Troll des Collines", deux
+// "Chimere Leonine").
+Object.entries(MONSTERS).forEach(([id, monster]) => {
+  monster.id = id;
+});
