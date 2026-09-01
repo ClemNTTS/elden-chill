@@ -837,13 +837,30 @@ hooks — `funcOnHit`, `funcOnBeingHit`, `passiveStatusReduction` — or a stat 
 engine already reads. Anything else is flavour text pretending to be a
 mechanic.
 
-## First reward should not be a downgrade
+## Judging a weapon: the rule, and three ways I got it wrong
 
-`fists`, the starting weapon, grants +5 strength. `keen_dagger`, the first rare
-drop of the first biome, granted +4. At 0 dexterity its conversion adds
-nothing, so the game's first reward was strictly worse than what the player
-already held — which reads as "loot is pointless" at the exact moment they pick
-up their first piece. Raised to 5, so it is never a step backwards.
+**A weapon is judged on the build it serves, at damage per turn, with its own
+conditions satisfied.** Anything less produces false alarms. I produced three
+in a row on the same question, so the failure modes are worth recording.
+
+1.  **Measured at 0 stats.** 24 weapons showed "0 strength, therefore 0 damage".
+    But a converting or multiplying weapon is *supposed* to give nothing until
+    you invest in its stat. Checked on the matching build at 40 points, every
+    one beats fists: Cimeterre 37 vs 22 at dex 40, Baton de la Reine 35 vs 15
+    at int 40.
+2.  **Measured raw strength.** Twin Blades looked 5 strength behind fists — it
+    grants a whole extra attack. Comparing one dimension of a multiplicative
+    system proves nothing.
+3.  **Ignored the items' own conditions.** Seven weapons still looked weak
+    because they require e.g. 20 base dexterity *and* 10% base crit, and the
+    test build had no crit points.
+
+On the strength of the first false alarm I added a flat damage floor to four
+weapons, which erased their identity as scaling weapons. All four were
+restored. `git diff` on the mechanics is empty; only the descriptions changed.
+
+The lesson is not about weapons. It is that a single-dimension measurement in
+this engine is almost always wrong, because everything here multiplies.
 
 ## Known content oddities, not yet addressed
 

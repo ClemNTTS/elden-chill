@@ -66,13 +66,9 @@ export const ITEMS = {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+5 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
+      "+4 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
-      // 5 et non 4 : les poings de depart en donnent 5, et cette dague est la
-      // premiere recompense du jeu. A 0 de dexterite elle etait un recul, ce
-      // qui donne le sentiment que le butin ne sert a rien juste au moment ou
-      // le joueur en ramasse son premier.
-      stats.strength += 5;
+      stats.strength += 4;
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
@@ -123,7 +119,7 @@ export const ITEMS = {
     name: "Faucille",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Inelligence",
+      "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Intelligence",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 5;
     },
