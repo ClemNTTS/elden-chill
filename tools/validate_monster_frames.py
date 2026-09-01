@@ -1,7 +1,7 @@
 """Verifie qu'un jeu de frames de monstre est utilisable par le jeu.
 
 Controle exactement ce dont dependent build_monster_sheets.py et le rendu en
-combat — ni plus, ni moins. Tout ce qui est signale ici casserait l'animation.
+combat , ni plus, ni moins. Tout ce qui est signale ici casserait l'animation.
 
     python tools/validate_monster_frames.py <archetype>
     python tools/validate_monster_frames.py <archetype> --dir chemin/vers/frames
@@ -37,6 +37,11 @@ ANIMATIONS = {"idle": 4, "attack": 6, "hurt": 2, "death": 6}
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# Au-dela de ce nombre de pixels alignes sur un bord, ce n'est plus une pointe
+# qui depasse mais un corps tronque.
+EDGE_LIMIT = 4
+
+
 def analyse(path):
     image = Image.open(path).convert("RGBA")
     px = image.load()
@@ -53,12 +58,21 @@ def analyse(path):
             else:
                 colors.add((r, g, b))
 
+    # Pixels colles aux bords. Une silhouette dessinee trop large pour sa
+    # cellule est coupee net : le contrle d'ancrage ne le voit pas, et a la
+    # vignette ca passe inapercu. Une pointe de queue touche le bord sur un ou
+    # deux pixels ; un corps rogne en aligne une dizaine.
+    edge_left = sum(1 for y in range(image.height) if px[0, y][3] > 8)
+    edge_right = sum(1 for y in range(image.height) if px[image.width - 1, y][3] > 8)
+    edge_top = sum(1 for x in range(image.width) if px[x, 0][3] > 8)
+
     return {
         "size": image.size,
         "bbox": image.getbbox(),
         "colors": colors,
         "semi": semi,
         "opaque_corner": px[0, 0][3] > 0,
+        "edge": max(edge_left, edge_right, edge_top),
     }
 
 
@@ -146,6 +160,11 @@ def main():
             bbox = info["bbox"]
             if not bbox:
                 problems.append(f"{name} : frame entierement vide")
+            elif info["edge"] >= EDGE_LIMIT:
+                problems.append(
+                    f"{name} : silhouette coupee ({info['edge']} pixels colles a un bord "
+                    f", la creature est trop large pour sa cellule)"
+                )
             else:
                 bottom = bbox[3] - 1
                 if bottom != baseline:

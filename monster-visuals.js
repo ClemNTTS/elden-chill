@@ -120,7 +120,7 @@ const VISUALS = {
   radahn_soldier: ["humanoide", "crimson"],
   giant_crow: ["volant", "ash"],
   rotten_marionetist: ["construct", "rot"],
-  winged_paladin: ["volant", "gold"],
+  winged_paladin: ["humanoide_aile_dansant", "gold"],
   radahn: ["radahn", "crimson"],
   ekzykes: ["ekzykes", "rot"],
   // --- Altus / Leyndell -------------------------------------------
@@ -152,7 +152,7 @@ const VISUALS = {
   root_shambler: ["amas", "verdant"],
   root_guardian: ["construct", "verdant"],
   siluria_remnant: ["volant", "verdant"],
-  deathblight_basilisk: ["bete", "ash"],
+  deathblight_basilisk: ["bete_quadrupede_rampante", "ash"],
   fia_champion_echo: ["fia_champion_echo", "silver"],
   // --- Putrefaction -----------------------------------------------
   rot_pest: ["mortvivant", "rot"],
@@ -177,29 +177,29 @@ const VISUALS = {
   // rien ne devient indistinguable.
   mountaintops_bird: ["volant", "frost"],
 
-  leyndell_gilded_knight: ["chevalier", "gold"],
+  leyndell_gilded_knight: ["chevalier_lourd_hallebarde", "gold"],
   leyndell_omen_killer: ["humanoide", "crimson"],
   leyndell_tree_watcher: ["geant", "gold"],
   leyndell_erdtree_avatar: ["grafted_scion", "gold"],
 
-  forbidden_black_knife: ["humanoide", "ash"],
+  forbidden_black_knife: ["humanoide_aile_dansant", "ash"],
   forbidden_grave_bird: ["volant", "ash"],
   forbidden_deathbird: ["volant", "silver"],
   forbidden_gravekeeper: ["hero_of_zamor", "ash"],
 
   snowfield_albinauric_rider: ["chevalier", "frost"],
-  snowfield_frost_hound: ["bete", "frost"],
-  snowfield_night_cavalry: ["chevalier", "silver"],
+  snowfield_frost_hound: ["bete_quadrupede_rampante", "frost"],
+  snowfield_night_cavalry: ["chevalier_lourd_hallebarde", "silver"],
   snowfield_rime_dragon: ["ekzykes", "frost"],
 
   mohgwyn_blood_noble: ["humanoide", "crimson"],
   mohgwyn_albinauric_wretch: ["amas", "crimson"],
-  mohgwyn_blood_hound: ["bete", "crimson"],
+  mohgwyn_blood_hound: ["bete_quadrupede_rampante", "crimson"],
   mohgwyn_blood_lord_echo: ["bloodhound_knight_darriwil", "ember"],
 
   haligtree_misbegotten_crusader: ["demon", "verdant"],
   haligtree_putrid_avatar: ["geant", "rot"],
-  haligtree_oracle_envoy: ["construct", "gold"],
+  haligtree_oracle_envoy: ["humanoide_aile_dansant", "gold"],
   haligtree_rot_knight: ["royal_knight_loretta", "rot"],
 
   // --- Epreuves ----------------------------------------------------
@@ -211,75 +211,75 @@ const VISUALS = {
   // Les boss reutilisent une planche de boss existante avec une teinte et un
   // embleme distincts. Ceux qui meriteraient une planche dediee sont listes
   // dans GEMINI.md.
-  dominula_celebrant: ["humanoide", "bloom"],
-  dominula_drummer: ["humanoide", "ember"],
-  dominula_maypole_dancer: ["mage", "bloom"],
-  godskin_apostle: ["hero_of_zamor", "bone"] ,
+  dominula_celebrant: ["humanoide_aile_dansant", "bloom"],
+  dominula_drummer: ["humanoide_aile_dansant", "ember"],
+  dominula_maypole_dancer: ["humanoide_aile_dansant", "bloom"],
+  godskin_apostle: ["godskin_apostle", "bone"] ,
 
-  shaded_sentry: ["chevalier", "verdant"],
-  shaded_poison_hound: ["bete", "verdant"],
+  shaded_sentry: ["chevalier_lourd_hallebarde", "verdant"],
+  shaded_poison_hound: ["bete_quadrupede_rampante", "verdant"],
   shaded_briar_scion: ["amas", "verdant"],
-  elemer_briar: ["carian_knight_bols", "verdant"],
+  elemer_briar: ["elemer_briar", "verdant"],
 
   volcano_manservant: ["humanoide", "ember"],
   volcano_abductor: ["construct", "silver"],
   volcano_iron_virgin: ["construct", "crimson"],
-  godskin_noble: ["misbegotten_leonine", "bone"],
+  godskin_noble: ["godskin_noble", "bone"],
 
   rykard_serpent_spawn: ["dragon", "crimson"],
   rykard_devoured: ["mortvivant", "ember"],
   rykard_blasphemous_priest: ["mage", "crimson"],
-  rykard_lord_blasphemy: ["limgrave_dragon", "ember"],
+  rykard_lord_blasphemy: ["rykard_lord_blasphemy", "ember"],
 
   divine_tower_watch: ["chevalier", "glint"],
   divine_tower_oracle: ["mage", "glint"],
   divine_tower_gargoyle: ["volant", "silver"],
-  divine_tower_keeper: ["godrick", "glint"],
+  divine_tower_keeper: ["divine_tower_keeper", "glint"],
 
-  sol_banished_knight: ["chevalier", "frost"],
+  sol_banished_knight: ["chevalier_lourd_hallebarde", "frost"],
   sol_night_stalker: ["humanoide", "void"],
   sol_eochaid_wraith: ["mortvivant", "void"],
-  commander_niall: ["red_wolf_radagon", "frost"],
+  commander_niall: ["commander_niall", "frost"],
 
   catacomb_ember_shade: ["mortvivant", "ember"],
   catacomb_grave_giant: ["geant", "ash"],
   catacomb_ancient_hero: ["geant", "frost"],
-  catacomb_burnt_spirit: ["ancestral_spirit", "ember"],
+  catacomb_burnt_spirit: ["catacomb_burnt_spirit", "ember"],
 
   elphael_cleanrot_knight: ["chevalier", "rot"],
   elphael_rot_swarm: ["insecte", "rot"],
-  elphael_rot_dog: ["bete", "rot"],
-  malenia_blade: ["royal_knight_loretta", "bloom"],
+  elphael_rot_dog: ["bete_quadrupede_rampante", "rot"],
+  malenia_blade: ["malenia_blade", "bloom"],
 
-  azula_dragon_warrior: ["chevalier", "void"],
+  azula_dragon_warrior: ["chevalier_lourd_hallebarde", "void"],
   azula_storm_hawk: ["volant", "glint"],
-  azula_maliketh: ["bloodhound_knight_darriwil", "void"],
-  placidusax: ["draconic_tree_sentinel", "void"],
+  azula_maliketh: ["azula_maliketh", "void"],
+  placidusax: ["placidusax", "void"],
 
   ash_gilded_guard: ["chevalier", "ash"],
   ash_putrid_avatar: ["geant", "ash"],
   ash_gideon_ozz: ["mage", "radiant"],
-  hoarah_loux: ["radahn", "ash"],
+  hoarah_loux: ["hoarah_loux", "ash"],
 
   throne_golden_shade: ["humanoide", "radiant"],
   throne_order_fragment: ["construct", "radiant"],
-  throne_radagon: ["margit", "radiant"],
-  elden_beast: ["astel_bud", "radiant"],
+  throne_radagon: ["throne_radagon", "radiant"],
+  elden_beast: ["elden_beast", "radiant"],
 
   bestial_cleric: ["humanoide", "bone"],
   bestial_vulture: ["volant", "bone"],
-  bestial_black_blade: ["bete", "void"],
-  gurranq_beast_clergyman: ["misbegotten_leonine", "void"],
+  bestial_black_blade: ["bete_quadrupede_rampante", "void"],
+  gurranq_beast_clergyman: ["gurranq_beast_clergyman", "void"],
 
   jarburg_living_jar: ["amas", "gold"],
   jarburg_jar_bairn: ["amas", "bone"],
   jarburg_alexander_shard: ["amas", "ember"],
-  jarburg_great_jar: ["troll1_boss", "gold"],
+  jarburg_great_jar: ["jarburg_great_jar", "gold"],
 
-  evergaol_fortissax: ["ekzykes", "void"],
-  evergaol_astel: ["astel_bud", "void"],
+  evergaol_fortissax: ["evergaol_fortissax", "void"],
+  evergaol_astel: ["evergaol_astel", "void"],
   evergaol_ancient_dragon: ["dragon", "radiant"],
-  evergaol_nameless_champion: ["commander_oneil_strong", "silver"],
+  evergaol_nameless_champion: ["evergaol_nameless_champion", "silver"],
 };
 
 /* ------------------------------------------------------------------ */

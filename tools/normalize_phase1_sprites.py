@@ -6,6 +6,8 @@ import sys
 NAMES = [
     "humanoide", "chevalier", "bete", "mortvivant", "demon", "insecte",
     "geant", "mage", "volant", "amas", "dragon", "construct",
+    "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+    "bete_quadrupede_rampante",
 ]
 
 
@@ -76,7 +78,8 @@ def normalize(src: Path, dst: Path) -> None:
 def main() -> None:
     src_dir, dst_dir = map(Path, sys.argv[1:3])
     dst_dir.mkdir(parents=True, exist_ok=True)
-    for name in NAMES:
+    names = sys.argv[3:] or NAMES
+    for name in names:
         normalize(src_dir / f"{name}.png", dst_dir / f"{name}_idle_01.png")
 
 

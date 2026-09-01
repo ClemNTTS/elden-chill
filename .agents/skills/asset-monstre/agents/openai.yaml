@@ -1,0 +1,4 @@
+interface:
+  display_name: "Asset monstre"
+  short_description: "Crée et intègre les sprites de monstres d'Elden Chill"
+  default_prompt: "Crée ou intègre un visuel de monstre dans Elden Chill en respectant le pipeline du projet."

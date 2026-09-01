@@ -203,12 +203,20 @@ export const BOSS_ARCHETYPES = [
   "liurnia_dragon_smarag", "royal_knight_loretta", "radahn", "ekzykes",
   "draconic_tree_sentinel", "ancestral_spirit", "mimic_tear_boss",
   "dragonkin_ainsel", "fia_champion_echo", "astel_bud",
+  "malenia_blade", "elden_beast", "hoarah_loux", "placidusax",
+  "rykard_lord_blasphemy", "throne_radagon", "azula_maliketh",
+  "godskin_apostle", "godskin_noble", "commander_niall", "elemer_briar",
+  "evergaol_astel", "evergaol_fortissax", "evergaol_nameless_champion",
+  "divine_tower_keeper", "catacomb_burnt_spirit",
+  "gurranq_beast_clergyman", "jarburg_great_jar",
 ];
 
 export const MONSTER_ARCHETYPES = [
   "humanoide", "chevalier", "bete", "mortvivant",
   "demon", "insecte", "geant", "mage",
   "volant", "amas", "dragon", "construct",
+  "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+  "bete_quadrupede_rampante",
   ...BOSS_ARCHETYPES,
 ];
 
