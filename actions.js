@@ -2,6 +2,16 @@ import { gameState, runtimeState } from "./state.js";
 import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import { startExploration } from "./core.js";
+import {
+  REBIRTH_LEVEL_BONUS,
+  REBIRTH_RUNE_BONUS,
+  TRIALS,
+  canRebirth,
+  getMaxLevel,
+  getRebirthCount,
+  performRebirth,
+} from "./rebirth.js";
 import {
   getCritPointsAvailable,
   resetCritRanks,
@@ -33,11 +43,17 @@ export const investCritPoint = (track, count = 1) => {
 
 /** Rend tous les points critiques. Gratuit : ils viennent du niveau. */
 export const respecCritPoints = () => {
-  if (
-    !confirm(
-      "Reinitialiser la repartition de vos points critiques ? Ils vous seront tous rendus.",
-    )
-  ) {
+  const resume = [
+    `Renaitre pour la ${next}e fois ?`,
+    "",
+    "Vous perdez : niveau, statistiques, points critiques, runes, inventaire,",
+    "equipement et biomes debloques.",
+    "Vous gardez : codex, cendres de guerre, benedictions et atouts.",
+    "",
+    `Gain permanent : +${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes`,
+    `et +${REBIRTH_LEVEL_BONUS} au niveau maximum.`,
+  ].join(String.fromCharCode(10));
+  if (!confirm(resume)) {
     return;
   }
   resetCritRanks();
@@ -46,6 +62,53 @@ export const respecCritPoints = () => {
 };
 
 export { getCritPointsAvailable };
+
+/* ------------------------------------------------------------------ */
+/* Fin de partie                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Lance une epreuve. Ce sont des biomes hors graphe, jamais debloques. */
+export const startTrial = (trialId) => {
+  const trial = TRIALS.find((t) => t.id === trialId);
+  if (!trial || !canRebirth()) return;
+  if (gameState.world.isExploring) {
+    alert("Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.");
+    return;
+  }
+  startExploration(trial.biomeId);
+};
+
+/**
+ * Renaissance. Double confirmation : c'est la seule action du jeu qui detruit
+ * volontairement une partie entiere, et elle n'est pas annulable.
+ */
+export const requestRebirth = () => {
+  if (!canRebirth()) return;
+  if (gameState.world.isExploring) {
+    alert("Terminez ou quittez votre expedition en cours avant de renaitre.");
+    return;
+  }
+  const next = getRebirthCount() + 1;
+  const resume = [
+    `Renaitre pour la ${next}e fois ?`,
+    "",
+    "Vous perdez : niveau, statistiques, points critiques, runes,",
+    "inventaire, equipement et biomes debloques.",
+    "Vous gardez : codex, cendres de guerre, benedictions et atouts.",
+    "",
+    `Gain permanent : +${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes`,
+    `et +${REBIRTH_LEVEL_BONUS} au niveau maximum.`,
+  ].join(String.fromCharCode(10));
+  if (!confirm(resume)) {
+    return;
+  }
+  const count = performRebirth();
+  gameState.save.maxLevel = getMaxLevel();
+  syncCritStats();
+  saveGame("rebirth");
+  updateUI();
+  alert(`Renaissance ${count}. Les Terres Intermediaires vous ont oublie.`);
+};
 
 export const equipAsh = (ashId) => {
   gameState.equippedAsh = gameState.equippedAsh === ashId ? null : ashId;

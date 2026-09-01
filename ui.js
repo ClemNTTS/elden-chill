@@ -78,6 +78,17 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import {
+  REBIRTH_LEVEL_BONUS,
+  REBIRTH_RUNE_BONUS,
+  TRIALS,
+  canRebirth,
+  getMaxLevel,
+  getRebirthCount,
+  getRebirthRuneBonus,
+  isTrialCleared,
+} from "./rebirth.js";
+
+import {
   CRIT_PER_RANK,
   LEVELS_PER_CRIT_POINT,
   SUPER_CRIT_MULTIPLIER,
@@ -728,6 +739,21 @@ const mountCombatEnemy = async () => {
   if (key === enemyVisualKey) return;
   enemyVisualKey = key;
 
+  /*
+   * Le cadre s'adapte au gabarit de la creature.
+   *
+   * Il etait fige a 104px alors qu'un rare en fait 118 et un boss jusqu'a 148
+   * — un boss sur trois reutilise une planche commune de 64px, ou l'echelle
+   * cumulee monte a 2.32. Trois quarts du bestiaire debordaient par le haut.
+   * La classe est posee sur la zone de combat et non sur une seule lane : les
+   * deux camps doivent garder la meme ligne de sol.
+   */
+  const zone = document.getElementById("combat-zone");
+  if (zone) {
+    zone.classList.toggle("is-tier-boss", !!enemy.isBoss);
+    zone.classList.toggle("is-tier-rare", !enemy.isBoss && !!enemy.isRare);
+  }
+
   // On arrete l'ancien AVANT de monter le nouveau. Les deux animateurs
   // partagent le meme canvas : tant que l'ancien tournait pendant le
   // chargement du nouveau, chacun y dessinait sa frame a tour de role et les
@@ -890,6 +916,93 @@ export const playHeroAnimation = (name) => {
     loop: false,
     onEnd: () => heroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
   });
+};
+
+/* ------------------------------------------------------------------ */
+/* Panneau de fin de partie : renaissance et epreuves                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Reste masque tant que le boss final n'est pas tombe au moins une fois.
+ * Une fois visible, il ne disparait plus : le compteur de renaissances et les
+ * epreuves accomplies restent consultables entre deux cycles.
+ */
+const renderEndgamePanel = () => {
+  const root = document.getElementById("endgame-panel");
+  if (!root) return;
+
+  const count = getRebirthCount();
+  const ready = canRebirth();
+  if (!ready && count === 0) {
+    root.classList.add("is-hidden");
+    root.innerHTML = "";
+    return;
+  }
+  root.classList.remove("is-hidden");
+
+  const trials = TRIALS.map((trial) => {
+    const done = isTrialCleared(trial.id);
+    const locked = !ready;
+    return `
+      <div class="trial-card${done ? " is-cleared" : ""}">
+        <div class="trial-card__head">
+          <strong>${trial.name}</strong>
+          <span class="trial-card__badge">${
+            done ? "Accompli" : `Renaissance ${trial.suggestedRebirth}+`
+          }</span>
+        </div>
+        <p class="trial-card__lore">${trial.lore}</p>
+        <button
+          type="button"
+          onclick="startTrial('${trial.id}')"
+          ${locked ? "disabled" : ""}
+          title="${locked ? "Terminez le biome final de ce cycle pour y acceder" : "Aucun butin, aucune rune : l'exploit seul"}"
+        >${done ? "Recommencer" : "Affronter"}</button>
+      </div>
+    `;
+  }).join("");
+
+  const cleared = TRIALS.filter((t) => isTrialCleared(t.id)).length;
+
+  root.innerHTML = `
+    <div class="section-head">
+      <div>
+        <h3>Fin de partie</h3>
+        <p>Renaitre pour recommencer plus vite, ou rester pour les epreuves.</p>
+      </div>
+    </div>
+
+    <div class="endgame-stats">
+      <div><span>Renaissances</span><b>${count}</b></div>
+      <div><span>Gain de runes</span><b>+${Math.round(getRebirthRuneBonus() * 100)}%</b></div>
+      <div><span>Niveau maximum</span><b>${getMaxLevel()}</b></div>
+      <div><span>Epreuves</span><b>${cleared} / ${TRIALS.length}</b></div>
+    </div>
+
+    <div class="endgame-rebirth">
+      <p class="panel-copy">
+        ${
+          ready
+            ? `Renaitre remet le niveau, les statistiques, l'inventaire et les biomes a zero. Vous conservez le codex, les cendres de guerre et les deblocages de preparation. En echange : <strong>+${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes</strong> et <strong>+${REBIRTH_LEVEL_BONUS} au niveau maximum</strong>, de facon permanente.`
+            : "Terminez le dernier biome de ce cycle pour rouvrir la Renaissance."
+        }
+      </p>
+      <button
+        type="button"
+        class="endgame-rebirth__btn"
+        onclick="requestRebirth()"
+        ${ready ? "" : "disabled"}
+      >Renaitre${ready ? ` (${count + 1})` : ""}</button>
+    </div>
+
+    <div class="section-head section-head-tight">
+      <div>
+        <h4>Epreuves</h4>
+        <p>Des boss hors progression. Aucun butin, aucune rune : seulement l'exploit.</p>
+      </div>
+    </div>
+    <div class="trial-grid">${trials}</div>
+  `;
 };
 
 const renderHeroPanel = () => {
@@ -1560,6 +1673,7 @@ const updateBiomeDisplay = () => {
   renderBiomeDetail(selectedBiomeId);
   renderBiomeShortcuts(visibleIds);
   renderHubFocus();
+  renderEndgamePanel();
 };
 
 const renderPreparationDisplay = () => {

@@ -430,6 +430,50 @@ const sp = await import("./sprites.js");
 mv.auditMonsterVisuals(sp.MONSTER_ARCHETYPES);
 ```
 
+## Rebirth and trials (`rebirth.js`)
+
+The game stopped dead once the level cap and the 32 biomes were done. Rebirth
+makes that content replayable at a growing yield.
+
+**Rebirth** unlocks when the boss of `FINAL_BIOME_ID` falls. That constant is
+`crumbling_farum_azula` today, which is **not** the intended ending — the map
+still announces Leyndell Ash and the Erdtree in chapter X, neither of which
+exists in `biome.js` yet. Move the constant when they do; nothing else needs
+touching.
+
+Each rebirth grants **+25% rune gain** and **+10 max level**, permanently. It
+resets level, stats, crit ranks, runes, inventory, equipment and unlocked
+biomes. It keeps the codex, ashes of war and preparation unlocks — the rule is
+*keep what was discovered, return what was accumulated*. Without that, every
+cycle would restart an empty game and rebirth would read as a punishment.
+
+`normalisePlayerProfile` must **not** force `maxLevel` back to `MAX_LEVEL`; it
+derives it as `MAX_LEVEL + 10 * rebirth.count`. Forcing it wiped the bonus on
+every load.
+
+**Trials** are four out-of-progression bosses (180k to 4.5M hp) with no loot and
+no runes — the reward is the achievement alone. They are biomes deliberately
+outside the unlock graph (`isTrial: true`, `length: 1`), entered only from the
+endgame panel. They are available *before* rebirthing, so a player can delay
+the reset to attempt them. The only power a rebirth grants is +10 levels, so
+the last trial stays out of reach for many cycles by design.
+
+## Combat frame sizing
+
+`.fighter-stage` height comes from `--fighter-stage-height`, set by the
+`is-tier-boss` / `is-tier-rare` classes that `mountCombatEnemy` puts on
+`#combat-zone`. Measured render heights across the bestiary: standard 102px,
+rare 118px, boss 136px, and **148px** for bosses that reuse a 64px common sheet
+(base scale 1.6 x boss scale 1.45 = 2.32). A fixed 104px frame clipped 75 of
+128 monsters.
+
+The class goes on the combat zone, not on one lane, so both sides grow together
+and the ground shadow stays aligned. The sticky stack re-adapts on its own —
+the `ResizeObserver` republishes `--combat-zone-height`.
+
+Note for later: those scales (2.32, 1.42) are fractional, and
+`image-rendering: pixelated` at a non-integer scale gives uneven pixels.
+
 ## Known content oddities, not yet addressed
 
 *   `crumbling_farum_azula` lists `beastman1` (84 hp) among its standard

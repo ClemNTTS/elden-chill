@@ -513,6 +513,52 @@ export const BIOMES = {
     unlocks: ["crumbling_farum_azula"],
     hazards: ["putrefaction", "folie"],
   },
+  /*
+   * Epreuves. Volontairement hors du graphe de progression : aucun biome ne
+   * les debloque et elles n'en debloquent aucun. On y entre depuis le panneau
+   * de fin de partie, jamais par la carte. length: 1 — un seul palier, le boss.
+   */
+  trial_watcher: {
+    name: "Epreuve : Le Veilleur sans Nom",
+    monsters: ["trial_watcher_boss"],
+    rareMonsters: [],
+    maxRareSpawns: 0,
+    boss: "trial_watcher_boss",
+    length: 1,
+    unlocks: [],
+    isTrial: true,
+  },
+  trial_twin: {
+    name: "Epreuve : Les Jumeaux d'Ombre",
+    monsters: ["trial_twin_boss"],
+    rareMonsters: [],
+    maxRareSpawns: 0,
+    boss: "trial_twin_boss",
+    length: 1,
+    unlocks: [],
+    isTrial: true,
+  },
+  trial_hollow: {
+    name: "Epreuve : La Couronne Creuse",
+    monsters: ["trial_hollow_boss"],
+    rareMonsters: [],
+    maxRareSpawns: 0,
+    boss: "trial_hollow_boss",
+    length: 1,
+    unlocks: [],
+    isTrial: true,
+  },
+  trial_first: {
+    name: "Epreuve : Le Premier Sans-Eclat",
+    monsters: ["trial_first_boss"],
+    rareMonsters: [],
+    maxRareSpawns: 0,
+    boss: "trial_first_boss",
+    length: 1,
+    unlocks: [],
+    isTrial: true,
+  },
+
   crumbling_farum_azula: {
     name: "Farum Azula en Ruines",
     rareMonsters: ["azula_black_priest"],

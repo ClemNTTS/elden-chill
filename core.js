@@ -1,4 +1,9 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import {
+  getTrialByBiome,
+  markFinalBiomeCleared,
+  markTrialCleared,
+} from "./rebirth.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { devSpawnQueue, spawnMonster } from "./spawn.js";
@@ -250,6 +255,27 @@ export const handleVictory = (sessionId) => {
       `${currentBiome.name} cede enfin. Les routes changent autour de vous.`,
       gameState.world.currentBiome,
     );
+    const biomeId = gameState.world.currentBiome;
+    const trial = getTrialByBiome(biomeId);
+    if (trial) {
+      if (markTrialCleared(trial.id)) {
+        ActionLog(`EPREUVE ACCOMPLIE : ${trial.name} !`, "log-crit");
+        addJournalEntry(
+          "checkpoint",
+          "Epreuve accomplie",
+          `${trial.name} tombe. Rien a ramasser : c'etait le but.`,
+          biomeId,
+        );
+      } else {
+        ActionLog(`${trial.name} tombe a nouveau.`, "log-crit");
+      }
+    } else if (markFinalBiomeCleared(biomeId)) {
+      ActionLog(
+        "La route est achevee. La Renaissance vous attend au camp.",
+        "log-crit",
+      );
+    }
+
     const prepUnlocks = grantPreparationRewardForBiome(gameState.world.currentBiome);
     if (prepUnlocks.length) {
       ActionLog(

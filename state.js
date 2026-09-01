@@ -1,4 +1,5 @@
 import { ITEM_SETS } from "./constants.js";
+import { getRebirthRuneBonus } from "./rebirth.js";
 import { ITEMS } from "./item.js";
 import { applyPreparationStats } from "./systems.js";
 import { DEFAULT_PLAYER_PROFILE } from "./shared/player-profile.js";
@@ -54,7 +55,7 @@ export function setGameState(newState) {
     }
   };
 
-  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save"]
+  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save", "rebirth"]
     .forEach(mergeObject);
 
   mergeObject("ashesOfWaruses");
@@ -104,7 +105,8 @@ export function getEffectiveStats() {
     ...gameState.stats,
     attacksPerTurn: 1,
     extraAttackChance: 0,
-    runeGainMult: 0,
+    // Gain permanent des renaissances, avant tout bonus d'objet.
+    runeGainMult: getRebirthRuneBonus(),
     bossMitigation: 0,
     resistances: {
       poison: 0,

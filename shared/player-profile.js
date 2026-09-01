@@ -71,6 +71,12 @@ export const DEFAULT_PLAYER_PROFILE = {
     biomeFilter: "all",
     entries: [],
   },
+  // Progression au-dessus de la partie : survit a chaque renaissance.
+  rebirth: {
+    count: 0,
+    finalCleared: false,
+    trialsCleared: {},
+  },
   codex: {
     monstersSeen: {},
     bossesSeen: {},
@@ -177,7 +183,13 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.floor(Number(base.stats.runesSpent) || 0),
   );
-  base.save.maxLevel = MAX_LEVEL;
+  // Le plafond de niveau monte de 10 par renaissance : on ne peut donc pas le
+  // forcer a MAX_LEVEL ici, ce qui annulerait le gain a chaque chargement.
+  base.rebirth = { ...DEFAULT_PLAYER_PROFILE.rebirth, ...toObject(data.rebirth) };
+  base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
+  base.rebirth.finalCleared = !!base.rebirth.finalCleared;
+  base.rebirth.trialsCleared = toObject(base.rebirth.trialsCleared);
+  base.save.maxLevel = MAX_LEVEL + 10 * base.rebirth.count;
   base.save.version = PLAYER_PROFILE_VERSION;
   base.save.offlineTimeBank = Math.max(
     0,

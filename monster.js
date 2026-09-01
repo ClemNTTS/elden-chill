@@ -3,7 +3,7 @@ hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur d
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
 import { V21_MONSTERS } from "./monsters/v21.js";
-import { ENDGAME_MONSTERS } from "./monsters/endgame.js";
+import { ENDGAME_MONSTERS, TRIAL_MONSTERS } from "./monsters/endgame.js";
 
 export const MONSTERS = {
   // === LIMGRAVE WEST===
@@ -1277,6 +1277,7 @@ export const MONSTERS = {
   },
   ...V21_MONSTERS,
   ...ENDGAME_MONSTERS,
+  ...TRIAL_MONSTERS,
 };
 
 // Chaque monstre porte desormais sa propre cle. Les instances de combat sont

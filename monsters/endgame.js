@@ -344,3 +344,109 @@ export const ENDGAME_MONSTERS = {
     },
   },
 };
+
+/* ================================================================== */
+/* Epreuves : boss hors progression                                   */
+/* ================================================================== */
+//
+// Ni butin ni runes : la recompense est l'exploit. Les paliers partent a
+// quatre fois le boss final (44 800 pv) et progressent d'un facteur trois,
+// pour rester hors de portee pendant plusieurs renaissances.
+
+export const TRIAL_MONSTERS = {
+  trial_watcher_boss: {
+    name: "Le Veilleur sans Nom",
+    hp: 180000,
+    atk: 620,
+    armor: 380,
+    runes: 0,
+    isBoss: true,
+    specificStats: { attacksPerTurn: 1, splashDamage: 200 },
+    onHitEffect: { id: "STUN", duration: 1, chance: 0.28 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2: "Le Veilleur ouvre les yeux pour la premiere fois.",
+    effectsPhase2: { id: "STUN", duration: 2, chance: 0.4 },
+    onTurnAction: (enemy) => {
+      enemy._p = (enemy._p || 0) + 1;
+      if (enemy._p % 4 === 0) {
+        return { dmgMult: 2.5, msg: "Le Veilleur abaisse sa garde et frappe une seule fois." };
+      }
+      return { msg: "Le Veilleur vous observe sans bouger." };
+    },
+  },
+  trial_twin_boss: {
+    name: "Les Jumeaux d'Ombre",
+    hp: 540000,
+    atk: 900,
+    armor: 420,
+    runes: 0,
+    isBoss: true,
+    // Deux attaques par tour : la seule epreuve qui punit le manque d'armure
+    // plutot que le manque de degats.
+    specificStats: { attacksPerTurn: 2, splashDamage: 260 },
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2: "Le second jumeau cesse d'imiter le premier.",
+    effectsPhase2: { id: "BLEED", duration: 4, chance: 0.55 },
+    onTurnAction: (enemy) => {
+      enemy._p = (enemy._p || 0) + 1;
+      if (enemy._p % 3 === 0) {
+        return { dmgMult: 1.9, msg: "Les jumeaux frappent au meme instant." };
+      }
+      return { msg: "Les jumeaux se separent et vous encerclent." };
+    },
+  },
+  trial_hollow_boss: {
+    name: "La Couronne Creuse",
+    hp: 1600000,
+    atk: 1300,
+    armor: 500,
+    runes: 0,
+    isBoss: true,
+    specificStats: { attacksPerTurn: 1, splashDamage: 340 },
+    onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.42 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.6,
+    flavorTextPhase2: "La couronne se remet en place. Il n'y a personne dessous.",
+    effectsPhase2: { id: "SCARLET_ROT", duration: 4, chance: 0.6 },
+    onTurnAction: (enemy) => {
+      // Se soigne tant qu'on ne la tue pas assez vite : filtre les builds qui
+      // n'ont pas assez de degats par tour, pas ceux qui manquent de patience.
+      enemy._p = (enemy._p || 0) + 1;
+      if (enemy._p % 5 === 0) {
+        const heal = Math.floor(enemy.maxHp * 0.04);
+        enemy.hp = Math.min(enemy.maxHp, enemy.hp + heal);
+        return { msg: `La couronne se recompose et regagne ${heal} points de vie.` };
+      }
+      return { dmgMult: 1.4, msg: "La couronne tourne lentement sur elle-meme." };
+    },
+  },
+  trial_first_boss: {
+    name: "Le Premier Sans-Eclat",
+    hp: 4500000,
+    atk: 1900,
+    armor: 620,
+    runes: 0,
+    isBoss: true,
+    specificStats: { attacksPerTurn: 2, splashDamage: 420 },
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.45 },
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.5,
+    flavorTextPhase2: "Il vous rend votre garde. Il connait deja la suite.",
+    effectsPhase2: { id: "STUN", duration: 2, chance: 0.35 },
+    onTurnAction: (enemy) => {
+      enemy._p = (enemy._p || 0) + 1;
+      if (enemy._p % 4 === 1) {
+        enemy.armor += 60;
+        return { msg: "Le Premier Sans-Eclat adopte votre propre garde.", skipAttack: true };
+      }
+      if (enemy._p % 4 === 3) {
+        enemy.armor = Math.max(620, enemy.armor - 60);
+        return { dmgMult: 2.6, msg: "Il enchaine la riposte que vous auriez faite." };
+      }
+      return { msg: "Il avance d'un pas, exactement comme vous." };
+    },
+  },
+};

@@ -2179,9 +2179,13 @@ button:disabled {
    grands et debordent vers le haut, pas vers le bas. */
 .fighter-stage {
   position: relative;
-  /* 140px rendaient la zone de combat, qui est collante en bas d'ecran,
-     assez haute pour recouvrir les panneaux au-dessus. */
-  height: 104px;
+  /* Hauteur pilotee par le gabarit de l'ennemi, pose par mountCombatEnemy sur
+     #combat-zone. Mesures reelles du bestiaire : standard 102px, rare 118px,
+     boss 136px, et jusqu'a 148px pour les boss qui reutilisent une planche
+     commune de 64px. Un cadre fige a 104px en tronquait les trois quarts.
+     La zone de combat est collante en bas d'ecran, mais sa hauteur est publiee
+     par le ResizeObserver de ui.js : la pile se readapte toute seule. */
+  height: var(--fighter-stage-height, 104px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -3015,4 +3019,146 @@ button:disabled {
 .crit-points__super.is-active {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* Cadre elargi pour les gabarits qui ne tiennent pas dans la hauteur standard.
+   Pose sur la zone de combat pour que les deux lanes montent ensemble et que
+   la ligne de sol reste alignee. */
+#combat-zone.is-tier-rare {
+  --fighter-stage-height: 124px;
+}
+
+#combat-zone.is-tier-boss {
+  --fighter-stage-height: 156px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Fin de partie : renaissance et epreuves                            */
+/* ------------------------------------------------------------------ */
+
+.endgame-panel.is-hidden {
+  display: none;
+}
+
+.endgame-panel {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.endgame-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.endgame-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.endgame-stats span {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.endgame-stats b {
+  font-family: var(--header-font);
+  font-size: 1.25rem;
+  color: var(--accent);
+}
+
+.endgame-rebirth {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--border));
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.endgame-rebirth .panel-copy {
+  flex: 1 1 320px;
+  margin: 0;
+}
+
+.endgame-rebirth__btn {
+  flex: 0 0 auto;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-family: var(--header-font);
+  letter-spacing: 0.04em;
+}
+
+.endgame-rebirth__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.trial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.trial-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+/* Une epreuve accomplie le reste pour toujours, renaissances comprises. */
+.trial-card.is-cleared {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.trial-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.trial-card__badge {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.trial-card.is-cleared .trial-card__badge {
+  color: var(--success);
+}
+
+.trial-card__lore {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+
+.trial-card button {
+  align-self: flex-start;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  border-radius: 999px;
+}
+
+.trial-card button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }

@@ -11,6 +11,8 @@ import {
   upgradeStatMultiple,
   investCritPoint,
   respecCritPoints,
+  startTrial,
+  requestRebirth,
   refundRunes,
 } from "./actions.js";
 import { startExploration } from "./core.js";
@@ -202,6 +204,8 @@ window.upgradeStat = upgradeStat;
 window.upgradeStatMultiple = upgradeStatMultiple;
 window.investCritPoint = investCritPoint;
 window.respecCritPoints = respecCritPoints;
+window.startTrial = startTrial;
+window.requestRebirth = requestRebirth;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;

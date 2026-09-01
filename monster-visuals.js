@@ -195,6 +195,12 @@ const VISUALS = {
   haligtree_putrid_avatar: ["geant", "rot"],
   haligtree_oracle_envoy: ["construct", "gold"],
   haligtree_rot_knight: ["royal_knight_loretta", "rot"],
+
+  // --- Epreuves ----------------------------------------------------
+  trial_watcher_boss: ["draconic_tree_sentinel", "silver"],
+  trial_twin_boss: ["hero_of_zamor", "glint"],
+  trial_hollow_boss: ["godrick", "ash"],
+  trial_first_boss: ["mimic_tear_boss", "ember"],
 };
 
 /* ------------------------------------------------------------------ */
@@ -255,6 +261,12 @@ const EMBLEMS = {
   mohgwyn_blood_noble: "crown",
   haligtree_rot_knight: "spore",
   haligtree_oracle_envoy: "star",
+
+  // Epreuves : elles reprennent des planches de boss existantes.
+  trial_watcher_boss: "eye",
+  trial_twin_boss: "moon",
+  trial_hollow_boss: "crown",
+  trial_first_boss: "star",
   radahn: "star",
   nighth_cavalery: "moon",
   cleanrot_revenant: "spore",
