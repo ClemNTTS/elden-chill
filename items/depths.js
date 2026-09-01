@@ -15,7 +15,9 @@ export const DEPTHS = {
     applyMult: (stats, itemLevel) => {
       stats.dexterity *= 1.12;
       stats.intelligence *= 1.12;
-      stats.strength += Math.floor(stats.dexterity * (0.45 + 0.02 * (itemLevel - 1)));
+      stats.strength += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.26 + 0.02 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects) => {
       if (Math.random() < stats.critChance) {

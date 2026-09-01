@@ -679,14 +679,48 @@ boss moved — raising a shared monster would have changed several biomes at onc
 
 `tools/apply-curve-fix.py` records exactly which monsters were touched.
 
-**Still open.** At equal investment (70% offence / 30% vigour) dexterity clears
-the game in 605 cycles against 918 for strength — a 34% gap that survives every
-fix above. The residual cause is identified: **eight original items convert
-dexterity into strength** (`item.js:76,144,249,504`, the MARIONETTE_MASTER and
-FROST_ASSASSIN sets, `silver_tear_mask`), and they stack. A pure-dex build
-reaches 379 effective strength from 0 invested; a pure-strength build with 154
-invested reaches 200. Fixing that means re-tuning those items, not another
-constant.
+### The root cause: strength was a sink
+
+`tools/audit-conversions.mjs` counts how many items convert each stat into
+another. The result explains everything the simulator measured:
+
+| conversion | items |
+| --- | --- |
+| dexterity -> strength | 8 |
+| armor -> strength | 6 |
+| vigor -> strength | 5 |
+| intelligence -> strength | 4 |
+| **strength -> anything** | **1** |
+
+Every path gave its own benefit **plus** strength. Investing in strength gave
+strength alone, so it was strictly dominated — even the vigour build beat it.
+No constant could fix that; the topology had to change.
+
+Two levers were added, both on **base** stats so they cannot feed item loops:
+
+*   **Strength grants flat armour penetration** (`base / 1.3`). Nothing else
+    touches penetration, and it is worth most exactly where strength suffered:
+    armoured late-game targets.
+*   **Vigour grants boss mitigation** (`base / 900`, capped at 25%).
+    `bossMitigation` already existed in the engine with no stat feeding it.
+
+Then the eight dexterity conversions were rebased onto **base** dexterity and
+their ratios cut by roughly 40%, and intelligence's magic went 0.8 -> 0.6.
+
+**Result** — cycles to finish the game at equal investment:
+
+| build | before | after |
+| --- | --- | --- |
+| Dexterite | 605 | 687 |
+| Intelligence | 666 | 699 |
+| Force | 918 | 717 |
+| Vigueur | 764 | 725 |
+| Trihybride | 794 | 844 |
+
+The four pure paths sit within **5.5%** of each other, down from a 40%+ spread.
+The trihybrid is now the slowest by 17%: specialisation is rewarded, which is a
+deliberate outcome rather than a defect — but it is the number to watch if the
+mix is meant to be competitive.
 
 ## Known content oddities, not yet addressed
 

@@ -133,7 +133,7 @@ export const INT_RUNE_CAP = 1.5;
  * bonus de stat par-dessus aurait fait franchir 100% et multiplie les degats
  * par cent.
  */
-export const INT_MAGIC_PER_POINT = 0.8;
+export const INT_MAGIC_PER_POINT = 0.6;
 export const getMagicDamage = (intelligence = 0) =>
   Math.floor(Math.max(0, intelligence) * INT_MAGIC_PER_POINT);
 
@@ -212,6 +212,36 @@ export function getEffectiveStats() {
    * Corollaire assume : les effets a l'impact se declenchent par attaque, donc
    * la dexterite est aussi la voie des afflictions.
    */
+  /*
+   * Levier propre a la FORCE : penetration d'armure fixe.
+   *
+   * Diagnostic a l'origine de ce bloc (tools/audit-conversions.mjs) : huit
+   * objets convertissent la dexterite en force, six l'armure, cinq la vigueur,
+   * quatre l'intelligence — et un seul convertit la force en autre chose. La
+   * force etait un puits : toutes les autres voies rapportaient leur propre
+   * effet PLUS de la force, tandis qu'investir en force ne rapportait que de
+   * la force. Aucun build force ne pouvait rivaliser, et le simulateur le
+   * mesurait : 918 cycles contre 605 pour la dexterite.
+   *
+   * La penetration est le seul levier qu'aucune autre statistique ne touche,
+   * et il monte en valeur exactement la ou la force souffre : les cibles
+   * blindees de fin de parcours. Sur la force de BASE, comme les attaques de
+   * dexterite, pour ne pas recreer une boucle avec les objets.
+   */
+  effStats.flatDamagePenetration += Math.floor((gameState.stats.strength || 0) / 1.3);
+
+  /*
+   * Levier propre a la VIGUEUR : mitigation des boss.
+   *
+   * `bossMitigation` existait dans le moteur sans qu'aucune statistique ne
+   * l'alimente. Il donne a la vigueur une identite defensive que ni l'armure
+   * ni les points de vie ne remplacent, puisqu'il agit apres la division par
+   * l'armure. Plafonne a 25%, la mitigation totale l'etant deja a 45%.
+   */
+  effStats.bossMitigation =
+    (effStats.bossMitigation || 0) +
+    Math.min(0.25, (gameState.stats.vigor || 0) / 900);
+
   // Noeud "Sang endurci" : applique apres les objets pour qu'il les amplifie,
   // et avant l'arrondi final pour ne pas perdre les decimales.
   effStats.vigor *= getRebirthVigorMult();

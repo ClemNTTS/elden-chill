@@ -2921,15 +2921,18 @@ export const showStatTooltip = (e, statType) => {
     vigor: {
       title: "Vigueur",
       text:
-        "Augmente vos points de vie maximum, par paliers degressifs." +
+        "La voie de l'endurance." +
+        "<br><strong>Augmente vos points de vie maximum</strong>, par paliers degressifs." +
+        "<br><strong>Reduit les degats des boss</strong> : 9 points = 1% de mitigation, jusqu'a 25%." +
         "<br><small>Sert aussi de base de calcul a plusieurs cendres de guerre et statuts.</small>",
     },
     strength: {
       title: "Force",
       text:
-        "La voie du coup unique." +
+        "La voie du coup unique, et la seule qui perce les armures." +
         "<br><strong>1 point = 1 degat de base</strong>, par attaque." +
-        "<br><small>Se combine avec les attaques supplementaires de la dexterite.</small>",
+        "<br><strong>2 points = 1 de penetration fixe</strong>, soustraite a l'armure adverse." +
+        "<br><small>La penetration est le levier qu'aucune autre statistique ne touche, et elle vaut d'autant plus que la cible est blindee.</small>",
     },
     dexterity: {
       title: "Dexterite",
@@ -2946,8 +2949,8 @@ export const showStatTooltip = (e, statType) => {
       title: "Intelligence",
       text:
         "La voie du sortilege : vos degats ignorent l'armure." +
-        "<br><strong>1 point = +0.8 degat magique</strong>, a chaque attaque." +
-        "<br><small>Ces degats sont ajoutes <b>apres</b> la reduction d'armure : ils ne sont jamais divises par elle. C'est la seule voie qui ne s'effondre pas face aux cibles les plus blindees.</small>" +
+        "<br><strong>1 point = +0.6 degat magique</strong>, une fois par tour." +
+        "<br><small>Ces degats sont ajoutes <b>apres</b> la reduction d'armure : ils ne sont jamais divises par elle. Ils se lancent une fois par tour et non a chaque coup, pour ne pas se multiplier avec les attaques de la dexterite.</small>" +
         "<br><strong>1 point = +1% de Runes</strong> <small>(maximum +150%)</small>." +
         "<br>4 points = 1 de Force.",
     },

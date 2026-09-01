@@ -124,7 +124,11 @@ const playerDamagePerTurn = (eff, targetArmor) => {
 /** Degats moyens recus par tour de la part d'un monstre. */
 const enemyDamagePerTurn = (eff, monster, armorMult = 1) => {
   const armor = clamp1((eff.armor ?? 100) * armorMult);
-  const perHit = Math.floor(monster.atk * (100 / armor));
+  let perHit = Math.floor(monster.atk * (100 / armor));
+  // Mitigation des boss, comme combat.js : plafonnee a 45%.
+  if (monster.isBoss) {
+    perHit = Math.floor(perHit * (1 - Math.min(0.45, eff.bossMitigation || 0)));
+  }
   const attacks = monster.specificStats?.attacksPerTurn || 1;
   const dodge = Math.min(0.5, (gameState.stats.dexterity || 0) / 400);
   return perHit * attacks * (1 - dodge);

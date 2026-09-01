@@ -34,9 +34,9 @@ export const ITEM_SETS = {
         },
       },
       3: {
-        desc: "50% de la Dex convertie en Force et +0.2x Dégâts Crit.",
+        desc: "30% de la Dex convertie en Force et +0.2x Dégâts Crit.",
         effect: (stats) => {
-          stats.strength += Math.floor(stats.dexterity * 0.5);
+          stats.strength += Math.floor(stats.dexterity * 0.3);
           stats.critDamage += 0.2;
         },
       },

@@ -72,8 +72,10 @@ export const ITEMS = {
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
-      const ratio = 0.3 + 0.01 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.dexterity * ratio);
+      const ratio = 0.18 + 0.01 * (itemLevel - 1);
+      // Sur la dexterite de BASE : l'effective est deja gonflee par les objets
+      // en pourcentage, et convertir dessus empilait deux multiplicateurs.
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * ratio);
       stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
     },
   },
@@ -140,8 +142,8 @@ export const ITEMS = {
       stats.dexterity += 5 + 1 * (itemLevel - 1);
     },
     applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.25 + 0.01 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+      const conversionRatio = 0.15 + 0.01 * (itemLevel - 1);
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
   },
@@ -245,8 +247,8 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
-        const conversionRatio = 0.25 + 0.04 * itemLevel;
-        stats.strength += Math.floor(stats.dexterity * conversionRatio);
+        const conversionRatio = 0.15 + 0.02 * itemLevel;
+        stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
       }
     },
     onHitEffect: { id: "STUN", duration: 2, chance: 0.1 },
@@ -305,8 +307,8 @@ export const ITEMS = {
         stats.dexterity = Math.floor(
           stats.dexterity * (1 + 0.02 * (itemLevel - 1)),
         );
-        const ratio = 0.04 * (itemLevel - 1);
-        stats.strength += Math.floor(ratio * stats.dexterity);
+        const ratio = 0.025 * (itemLevel - 1);
+        stats.strength += Math.floor(ratio * (gameState.stats.dexterity || 0));
       }
     },
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
@@ -500,8 +502,8 @@ export const ITEMS = {
       const baseDex = gameState.stats.dexterity || 0;
       const baseCrit = gameState.stats.critChance || 0;
       if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
-        const ratio = 0.35 + 0.01 * itemLevel;
-        stats.strength += Math.floor(stats.dexterity * ratio);
+        const ratio = 0.2 + 0.01 * itemLevel;
+        stats.strength += Math.floor((gameState.stats.dexterity || 0) * ratio);
       }
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -675,8 +677,8 @@ export const ITEMS = {
       stats.dexterity = Math.floor(stats.dexterity * 1.1);
     },
     applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.65;
-      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+      const conversionRatio = 0.38;
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
     },
 
     funcOnHit: (stats, targetEffects, itemLevel) => {
