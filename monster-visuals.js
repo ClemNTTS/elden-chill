@@ -266,6 +266,7 @@ const VISUALS = {
   throne_radagon: ["throne_radagon", "radiant"],
   elden_beast: ["elden_beast", "radiant"],
 
+  azula_beastman: ["bete", "void"],
   bestial_cleric: ["humanoide", "bone"],
   bestial_vulture: ["volant", "bone"],
   bestial_black_blade: ["bete_quadrupede_rampante", "void"],

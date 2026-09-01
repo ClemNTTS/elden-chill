@@ -158,9 +158,8 @@ export const LANDS_ITEMS = {
     funcOnHit: (stats, targetEffects, itemLevel) => {
       const maxHp = getHealth(stats.vigor);
       const heal = Math.floor(maxHp * (0.01 + 0.001 * itemLevel));
-      if (healPlayer(heal, maxHp) > 0) {
-        ActionLog(`Le calice se remplit : +${heal} PV.`, "log-heal");
-      }
+      const healed = healPlayer(heal, maxHp);
+      if (healed > 0) ActionLog(`Le calice se remplit : +${healed} PV.`, "log-heal");
     },
     applyFlat: (stats, itemLevel) => {
       stats.vigor += 8 + itemLevel * 2;

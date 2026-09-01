@@ -656,7 +656,7 @@ export const BIOMES = {
     name: "Farum Azula en Ruines",
     rareMonsters: ["azula_black_priest"],
     maxRareSpawns: 3,
-    monsters: ["azula_beast_lord", "beastman1"],
+    monsters: ["azula_beast_lord", "azula_beastman"],
     boss: "azula_tempest_avatar",
     length: 17,
     unlocks: ["farum_azula_deep", "evergaol_champions"],

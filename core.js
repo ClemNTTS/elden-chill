@@ -102,7 +102,19 @@ const dropItem = (itemId) => {
     if (inventoryItem.level >= 10) {
       if (inventoryItem.level > 10) inventoryItem.level = 10;
       ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
-      const compensation = 7 * gameState.stats.level;
+      /*
+       * Indexee sur la valeur du biome, pas sur le niveau.
+       *
+       * L'ancienne formule, 7 x niveau, plafonnait a environ 1 500 runes en
+       * fin de parcours, quand un simple monstre standard de Farum Azula en
+       * donne 55 000 : le butin cessait d'avoir la moindre valeur des que
+       * l'equipement etait maxe, c'est-a-dire exactement au moment ou il
+       * tombe le plus souvent.
+       */
+      const biomeUnit =
+        MONSTERS[BIOMES[gameState.world.currentBiome]?.monsters?.[0]]?.runes ||
+        7 * gameState.stats.level;
+      const compensation = Math.floor(biomeUnit);
       gameState.runes.banked += compensation;
       ActionLog(
         `Vous recevez ${formatNumber(compensation)} runes en compensation.`,

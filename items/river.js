@@ -64,8 +64,8 @@ export const RIVER = {
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (targetEffects.some((e) => e.id === "STUN")) {
         const heal = Math.floor(getHealth(stats.vigor) * 0.02); //
-        healPlayer(heal, getHealth(stats.vigor));
-        ActionLog(`L'Esprit vous soigne : +${heal} PV`, "log-heal");
+        const healed = healPlayer(heal, getHealth(stats.vigor));
+        if (healed > 0) ActionLog(`L'Esprit vous soigne : +${healed} PV`, "log-heal");
       }
     },
   },

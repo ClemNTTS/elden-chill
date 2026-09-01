@@ -608,10 +608,10 @@ print their amount in a sealed biome even though nothing was healed.
 
 ## Known content oddities, not yet addressed
 
-*   `crumbling_farum_azula` lists `beastman1` (84 hp) among its standard
-    monsters, next to `azula_beast_lord` (7200 hp). Almost certainly a slip.
-*   `wolf2`, `chanting_dame` and `servant_poison_companion` are defined but
-    placed in no biome.
+*   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but
+    are **companions**, summoned alongside other monsters via the `companion`
+    field. Any audit that only reads `monsters`/`rareMonsters`/`boss` will
+    wrongly report them as orphans — deleting them would break three spawns.
 *   `assets/sprites/insecte/insecte_idle_01.png` is clipped: the silhouette
     spans the full 64px cell, 6 pixels stuck to the left edge and 10 to the
     right. Pre-existing, surfaced by the edge check added to

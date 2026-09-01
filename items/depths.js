@@ -117,8 +117,8 @@ export const DEPTHS = {
       const armorBands = Math.floor(stats.armor / 100);
       if (armorBands <= 0) return;
       const heal = Math.floor(getHealth(stats.vigor) * (armorBands * 0.01));
-      healPlayer(heal, getHealth(stats.vigor));
-      ActionLog(`Écorce princière : +${heal} PV.`, "log-heal");
+      const healed = healPlayer(heal, getHealth(stats.vigor));
+      if (healed > 0) ActionLog(`Écorce princière : +${healed} PV.`, "log-heal");
     },
   },
 

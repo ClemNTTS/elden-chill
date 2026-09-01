@@ -713,6 +713,20 @@ export const LANDS_MONSTERS = {
     },
   },
 
+  /* ============ FARUM AZULA EN RUINES : correctif ============ */
+  // Le biome listait `beastman1` (84 pv) parmi ses monstres standard, a cote
+  // d'azula_beast_lord (7200) et d'un boss a 44 800. L'intention — il y a bien
+  // des hommes-betes a Farum Azula — est conservee, au bon palier.
+  azula_beastman: {
+    name: "Homme-bete de Farum Azula",
+    hp: 7000,
+    atk: 315,
+    armor: 230,
+    runes: 53900,
+    specificStats: { attacksPerTurn: 2 },
+    onHitEffect: { id: "BLEED", duration: 3, chance: 0.34 },
+  },
+
   /* ============ SANCTUAIRE BESTIAL (bonus) ============ */
   bestial_cleric: {
     name: "Clerc bestial",
