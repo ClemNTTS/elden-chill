@@ -659,24 +659,6 @@ export const BIOMES = {
     unlocks: ["farum_azula_deep", "evergaol_champions"],
     hazards: ["folie", "putrefaction"],
   },
-  Leyndell_ash: {
-    name: "WIP Leyndell, Capitale des Cendres",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: ["erdTree"],
-  },
-  erdTree: {
-    name: "WIP Arbre-Monde",
-    rareMonsters: [""],
-    maxRareSpawns: 1,
-    monsters: ["", ""],
-    boss: "",
-    length: 12,
-    unlocks: null,
-  },
   /* ================================================================
      Biomes de la version complete.
 

@@ -281,9 +281,9 @@ export const BIOME_GUIDE = {
   // repere (depth * 240 contre x * 18) : ils atterrissaient a des centaines de
   // pixels des autres et faisaient exploser le cadrage de la carte.
   //
-  // Les cinq premiers ont desormais un contenu jouable et ne sont plus en
-  // chantier. Seuls Leyndell_ash et erdTree le restent : ils n'existent pas
-  // encore dans biome.js.
+  // Tous ont desormais un contenu jouable. Les deux souches vides qui
+  // restaient dans biome.js (Leyndell_ash, erdTree) ont ete remplacees par les
+  // vrais biomes leyndell_ash et erdtree_throne du chapitre X.
   leyndell_royal: {
     chapter: "Chapitre VIII",
     region: "Leyndell",

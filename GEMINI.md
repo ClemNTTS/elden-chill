@@ -612,7 +612,10 @@ print their amount in a sealed biome even though nothing was healed.
     monsters, next to `azula_beast_lord` (7200 hp). Almost certainly a slip.
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` are defined but
     placed in no biome.
-*   `Leyndell_ash` and `erdTree` have map entries but no biome: still `wip`.
+*   Audit regexes over `biome.js` must be **case-insensitive**. Two stub biomes
+    (`Leyndell_ash`, `erdTree`) hid behind a lowercase-only `^  [a-z0-9_]+:`
+    pattern through several audits. They are gone now, superseded by the real
+    chapter X, but the lesson stands.
 
 ## Sticky layers of the combat screen
 
