@@ -121,6 +121,10 @@
                   <button type="button" onclick="navigateTo('options')">Options</button>
                 </div>
               </div>
+
+              <!-- Fin de partie : masque tant que le boss final n'est pas tombe
+                   une premiere fois. Rendu par renderEndgamePanel() dans ui.js. -->
+              <div id="endgame-panel" class="camp-panel endgame-panel is-hidden"></div>
             </div>
           </div>
         </section>
@@ -298,48 +302,51 @@
 
                   <hr />
 
-                  <div class="stat-line secondary">
-                    <div
-                      class="stat-info"
-                      data-stat="critChance"
-                      onmouseenter="showStatTooltip(event, 'critChance')"
-                      onmousemove="moveTooltip(event)"
-                      onmouseleave="hideTooltip()"
-                    >
-                      <span>Crit %</span>
-                      <b id="eff-critChance">0%</b>
-                      <span id="bonus-critChance"></span>
+                  <div class="crit-points">
+                    <div class="crit-points__head">
+                      <span class="crit-points__label">Points critiques</span>
+                      <b id="crit-points-available">0</b>
+                      <span class="crit-points__hint" id="crit-points-hint">1 point tous les 10 niveaux</span>
+                      <button class="crit-points__reset" id="btn-crit-respec" onclick="respecCritPoints()">Reinitialiser</button>
                     </div>
-                    <div class="upgrade-action">
-                      <span class="cost-label" id="cost-critChance">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-1" onclick="upgradeStat('critChance')">+</button>
-                      <span class="cost-label" id="cost-critChance-5">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-5" onclick="upgradeStatMultiple('critChance', 5)">+</button>
-                      <span class="cost-label" id="cost-critChance-10">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-10" onclick="upgradeStatMultiple('critChance', 10)">+</button>
-                    </div>
-                  </div>
 
-                  <div class="stat-line secondary">
-                    <div
-                      class="stat-info"
-                      data-stat="critDamage"
-                      onmouseenter="showStatTooltip(event, 'critDamage')"
-                      onmousemove="moveTooltip(event)"
-                      onmouseleave="hideTooltip()"
-                    >
-                      <span>Crit Dmg</span>
-                      <b id="eff-critDamage">0x</b>
-                      <span id="bonus-critDamage"></span>
+                    <div class="stat-line secondary">
+                      <div
+                        class="stat-info"
+                        data-stat="critChance"
+                        onmouseenter="showStatTooltip(event, 'critChance')"
+                        onmousemove="moveTooltip(event)"
+                        onmouseleave="hideTooltip()"
+                      >
+                        <span>Crit %</span>
+                        <b id="eff-critChance">0%</b>
+                        <span id="bonus-critChance"></span>
+                      </div>
+                      <div class="upgrade-action">
+                        <span class="cost-label" id="rank-critChance">0</span>
+                        <button class="mini-upgrade" id="btn-critChance-1" onclick="investCritPoint('chance')">+</button>
+                      </div>
                     </div>
-                    <div class="upgrade-action">
-                      <span class="cost-label" id="cost-critDamage">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-1" onclick="upgradeStat('critDamage')">+</button>
-                      <span class="cost-label" id="cost-critDamage-5">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-5" onclick="upgradeStatMultiple('critDamage', 5)">+</button>
-                      <span class="cost-label" id="cost-critDamage-10">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-10" onclick="upgradeStatMultiple('critDamage', 10)">+</button>
+
+                    <div class="stat-line secondary">
+                      <div
+                        class="stat-info"
+                        data-stat="critDamage"
+                        onmouseenter="showStatTooltip(event, 'critDamage')"
+                        onmousemove="moveTooltip(event)"
+                        onmouseleave="hideTooltip()"
+                      >
+                        <span>Crit Dmg</span>
+                        <b id="eff-critDamage">0x</b>
+                        <span id="bonus-critDamage"></span>
+                      </div>
+                      <div class="upgrade-action">
+                        <span class="cost-label" id="rank-critDamage">0</span>
+                        <button class="mini-upgrade" id="btn-critDamage-1" onclick="investCritPoint('damage')">+</button>
+                      </div>
                     </div>
+
+                    <p class="crit-points__super" id="crit-super-line"></p>
                   </div>
                 </div>
               </div>
@@ -509,6 +516,10 @@
                     <label for="music-volume">Volume musique</label>
                     <input id="music-volume" type="range" min="0" max="1" step="0.05" value="0.3" />
                   </div>
+                  <div class="option-row">
+                    <label for="sfx-volume">Volume effets</label>
+                    <input id="sfx-volume" type="range" min="0" max="1" step="0.05" value="0.5" />
+                  </div>
                 </div>
 
                 <div class="camp-panel">
@@ -621,9 +632,25 @@
             </div>
           </div>
 
-          <div class="biome-actions-bottom">
+          <div id="combat-actions" class="biome-actions-bottom">
             <div class="biome-bottom-left">
               <button class="safe-btn" onclick="toggleView('camp')">Se replier au camp</button>
+            </div>
+            <div class="automation-controls">
+              <button id="btn-auto-restart" onclick="toggleAutoRestart()" title="Relance l'expedition dans le meme biome apres une mort">
+                Relance auto : OFF
+              </button>
+              <label class="automation-cycle">
+                <span>Replier au cycle</span>
+                <input
+                  id="input-stop-cycle"
+                  type="number"
+                  min="0"
+                  max="999"
+                  step="1"
+                  onchange="setStopAfterCycle(this.value)"
+                />
+              </label>
             </div>
             <div id="offline-controls-b" class="offline-controls-b">
               <div class="bank-text">Temps sauvegarde <span id="offline-bank-b">0s</span></div>

@@ -1,7 +1,8 @@
-"""Build 24 dedicated 96px boss animation sheets from approved idle concepts."""
+"""Build dedicated 96px boss animation sheets from approved idle concepts."""
 
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
+import math
 import sys
 
 
@@ -16,6 +17,12 @@ BOSSES = [
     "liurnia_dragon_smarag", "royal_knight_loretta", "radahn", "ekzykes",
     "draconic_tree_sentinel", "ancestral_spirit", "mimic_tear_boss",
     "dragonkin_ainsel", "fia_champion_echo", "astel_bud",
+    "malenia_blade", "elden_beast", "hoarah_loux", "placidusax",
+    "rykard_lord_blasphemy", "throne_radagon", "azula_maliketh",
+    "godskin_apostle", "godskin_noble", "commander_niall", "elemer_briar",
+    "evergaol_astel", "evergaol_fortissax", "evergaol_nameless_champion",
+    "divine_tower_keeper", "catacomb_burnt_spirit",
+    "gurranq_beast_clergyman", "jarburg_great_jar",
 ]
 ROWS = [("idle", 4), ("attack", 6), ("hurt", 2), ("death", 6)]
 
@@ -160,14 +167,13 @@ def checker(size):
 def main():
     root = Path(sys.argv[1])
     sources = Path(sys.argv[2])
+    bosses = sys.argv[3:] or BOSSES
     frames_root = root / "assets" / "sprites" / "bosses"
     sheets_root = root / "assets" / "sprites" / "monsters"
     previews_root = root / "assets" / "sprites" / "previews" / "bosses"
     sheets_root.mkdir(parents=True, exist_ok=True)
     previews_root.mkdir(parents=True, exist_ok=True)
-    global_preview = Image.new("RGBA", (6*192, 4*192), (34, 28, 26, 255))
-
-    for boss_index, boss in enumerate(BOSSES):
+    for boss_index, boss in enumerate(bosses):
         concept = quantize_idle(extract(Image.open(sources / f"{boss}.png")))
         palette = sorted({(r, g, b) for r, g, b, a in concept.getdata() if a})
         if OUTLINE[:3] not in palette:
@@ -205,12 +211,15 @@ def main():
             preview.alpha_composite(tile, ((i % 6)*192, (i // 6)*192))
         preview.save(previews_root / f"{boss}.png")
 
+    preview_rows = math.ceil(len(BOSSES) / 6)
+    global_preview = Image.new("RGBA", (6*192, preview_rows*192), (34, 28, 26, 255))
+    for boss_index, boss in enumerate(BOSSES):
+        idle = Image.open(frames_root / boss / f"{boss}_idle_01.png").convert("RGBA")
         tile = checker(192)
-        tile.alpha_composite(frames["idle_01"].resize((192, 192), Image.Resampling.NEAREST))
+        tile.alpha_composite(idle.resize((192, 192), Image.Resampling.NEAREST))
         global_preview.alpha_composite(tile, ((boss_index % 6)*192, (boss_index // 6)*192))
-
     global_preview.save(previews_root / "all_bosses_idle.png")
-    print(f"built {len(BOSSES)} bosses, {len(BOSSES)*18} frames, {len(BOSSES)} sheets")
+    print(f"built {len(bosses)} bosses, {len(bosses)*18} frames, {len(bosses)} sheets")
 
 
 if __name__ == "__main__":

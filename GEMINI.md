@@ -321,6 +321,522 @@ collapse.
 *   Enemy HP is allowed to display **below zero** after a lethal blow
     (`-116 / 13`). This is an intentional UX choice: it shows overkill.
 
+## Crit — a separate currency (`crit.js`)
+
+Crit no longer draws on the 150-level rune budget. It has its own currency:
+**one skill point every 10 levels**, so 15 at max level, split freely between
+chance and damage. Points are free (they come from levels, not runes) and
+`respecCritPoints()` returns them at no cost.
+
+| | base | per point | 15 points |
+| --- | --- | --- | --- |
+| `critChance` | 5% | +5 points of percent | 80% |
+| `critDamage` | 1.5x | +0.25x | 5.25x |
+
+`CRIT_PER_RANK.chance` is 0.05 and not 0.04 for a reason: the Twin Blades
+require **10% base crit** (`item.js`). At 5 per rank the first point clears
+that gate, so the weapon becomes reachable at level 10.
+
+The payoff curve deliberately rewards splitting — average damage multiplier at
+150: 15/0 → x1.40, 9/6 → **x2.00**, 0/15 → x1.21. Going all-in on either track
+is the worst use of the points.
+
+**Super crit.** Effective crit chance above 100% is not wasted: the overflow
+becomes the chance that a crit is a *super* crit, which doubles the crit
+multiplier (`SUPER_CRIT_MULTIPLIER`). 135% chance = guaranteed crit, 35% of
+them super. `rollCrit()` in `crit.js` is the single resolution point; combat
+calls it and nothing else rolls crit.
+
+`stats.critChance` / `stats.critDamage` remain the source of truth for every
+other reader (items, combat, display). The ranks only drive them, through
+`syncCritStats()`, which `hydrate()` calls on every load. Saves predating the
+system are migrated by `migrateCritToSkillPoints()` in `save.js`: old crit
+levels are handed back, with a pro-rata share of `runesSpent` refunded.
+
+## Hero specialisation
+
+`getDominantStat()` (`sprites.js`) decides which of the five hero sheets is
+shown. It takes **effective** stats — equipment included — because that is what
+the player reads in their own panel; a weapon granting +15 strength must be
+able to change the silhouette.
+
+A stat must take a clear lead: at least **20% above the runner-up** AND at
+least **5 points** ahead (`DOMINANCE_THRESHOLD`). Below either, the appearance
+stays neutral (Sans-Eclat). The two conditions cover opposite ends of the game:
+the ratio stops the late-game flip where 1 point out of 60 means nothing, the
+absolute gap stops the early-game flip where 3 against 2 satisfies the ratio.
+
+Note that `getEffectiveStats()` folds `dexterity/4 + intelligence/4` into
+strength, so strength is structurally favoured on balanced builds. That is the
+real stat derivation, not a bug in the threshold.
+
+## What each stat actually does
+
+Damage equals strength, flat (`combat.js:141`). Every other stat is measured
+against that, which is why they need a multiplier to compete.
+
+| Stat | Role |
+| --- | --- |
+| Vigueur | HP; base of several ashes and statuses |
+| Force | Damage, per attack |
+| Dexterite | **extra attacks = (dex/60)^1.75**, dodge (dex/400, cap 50%), armor (dex/8), and dex/4 into strength |
+| Intelligence | **+0.8 magic damage per point, added after the armor division**, +1% runes per point (cap +150%), and int/4 into strength |
+
+The attack curve is **convex on purpose**. Damage per turn is
+`attacks x strength`; with a linear divisor that product mechanically peaks
+mid-budget. Measured with the old divisor of 40, the optimum sat at 76 dex —
+investing *mainly* in dexterity was worse than investing half. The exponent
+moves the optimum to **112** without touching the peak (263 vs 270 damage/turn),
+weakens early dexterity (1.15 attacks at 20 points against 1.50 before) and
+finally rewards full commitment (5.97 attacks at 150 against 4.75).
+
+The fractional part is a **per-turn chance** of one more attack
+(`extraAttackChance`), not a hard breakpoint — with a floor alone, 79 to 80
+dexterity was a 48% jump on a single point.
+
+There is no cap on total attacks; items add to `attacksPerTurn` on top of the
+curve. Worth watching if a build ever stacks both hard.
+
+Dexterity is the affliction path by design: on-hit effects roll **per attack**,
+so extra attacks are extra proc rolls.
+
+**Armor divides damage** (`damageMultiplier = 100 / armor`, `combat.js`), and
+monster armor runs from ~100 to 400. Intelligence's damage is added *after*
+that division, so it is the only path that does not collapse against armored
+targets. That is its whole identity.
+
+Percent penetration was deliberately **not** used for intelligence: items
+already stack up to ~0.9 of it, and `armor` is clamped to 1, so crossing 100%
+would multiply damage by a hundred. That latent cliff still exists if enough
+penetration items are combined — worth a cap if it ever shows up in play.
+
+Measured damage per turn over the 150-level budget, no equipment:
+
+| Build | armor 100 | 200 | 265 | 320 | 400 |
+| --- | --- | --- | --- | --- | --- |
+| Force 150 | 150 | 75 | 56 | 46 | 37 |
+| 70 for / 80 dex | 270 | 135 | 99 | 84 | 66 |
+| 70 for / 80 int | 154 | 109 | 97 | 92 | 86 |
+| Int 150 | 157 | 138 | 133 | 131 | 129 |
+| 50/50/50 | 257 | 173 | 151 | 142 | 131 |
+
+Dexterity clears packs, intelligence kills armored bosses, the trihybrid is the
+generalist. Verified in play: at 150 intelligence against 200 armor, observed
+138 damage per hit for 138 expected (18 physical + 120 magic).
+
+**Consequence to keep in mind:** attacks multiply strength, so the optimum is a
+hybrid. Measured over the 150-level budget with no equipment — pure strength
+150 dmg/turn, 80 dex / 70 str **270**, pure dexterity 176. Pure strength is now
+the weakest of the three. Change `DEX_PER_EXTRA_ATTACK` to flatten the curve
+(a larger divisor narrows the spread and weakens dexterity-heavy builds).
+
+Intelligence's rune bonus used to cap at 50 points out of a 150 budget, so it
+was a stat you finished rather than a path. It now runs the full budget.
+
+## Endgame biomes (`monsters/endgame.js`)
+
+Five biomes used to be unreachable: `leyndell_royal` and `consecrated_snowfield`
+had no predecessor, which stranded `forbidden_land`, `mohgwyn_palace` and
+`miquella_haligtree` behind them. Four of the five were also empty shells
+(`monsters: ["", ""]`, `boss: ""`), so wiring the graph alone would have sent
+the player into a biome with nothing to fight.
+
+Fixed on both fronts: two edges added (`altus_plateau -> leyndell_royal`,
+`mountaintops -> consecrated_snowfield`, matching the source game's geography),
+and 21 monsters authored in `monsters/endgame.js`, calibrated to sit between
+`mount_gelmir` (3200 hp standard, 24800 boss) and `crumbling_farum_azula`
+(7200 / 44800). Runes follow the ratios already in use: ~7.7x hp for a
+standard, ~7.6x for a rare, ~5.3x for a boss.
+
+`mountaintops_bird` was referenced by the **reachable** Mountaintops biome but
+never defined — spawning it threw on `template.groupCombinations`. It now
+exists, and `spawnMonster()` refuses an unknown id with a console error instead
+of breaking the run.
+
+All 24 boss sheets were already assigned, so the four new bosses reuse an
+existing sheet with a different tint plus a distinguishing emblem. Re-run the
+audit after any change here — `unresolved` must stay empty:
+
+```js
+const mv = await import("./monster-visuals.js");
+const sp = await import("./sprites.js");
+mv.auditMonsterVisuals(sp.MONSTER_ARCHETYPES);
+```
+
+## Expedition automation
+
+A biome already loops forever on its own (`currentLoopCount`, enemies x1.25 per
+cycle). What was missing was everything around it, so `gameState.automation`
+adds two switches — pure convenience, neither changes any rule:
+
+*   `autoRestart` — relaunch the same biome after a death. Guarded: after
+    `MAX_AUTO_DEATHS` (5) consecutive deaths **without clearing a single
+    cycle**, it switches itself off and says so. Without that guard a player
+    who enables it on too hard a biome loops on their own death forever.
+    The counter resets whenever a cycle completes.
+*   `stopAfterCycle` — retreat to camp once that many cycles are cleared.
+    0 means never, the original behaviour. It matters because carried runes are
+    banked at each cleared cycle but **lost on death**: stopping on purpose is
+    how you keep them.
+
+## Rebirth and trials (`rebirth.js`)
+
+The game stopped dead once the level cap and the 32 biomes were done. Rebirth
+makes that content replayable at a growing yield.
+
+**Rebirth** unlocks when the boss of `FINAL_BIOME_ID` falls. That constant is
+`crumbling_farum_azula` today, which is **not** the intended ending — the map
+still announces Leyndell Ash and the Erdtree in chapter X, neither of which
+exists in `biome.js` yet. Move the constant when they do; nothing else needs
+touching.
+
+Each rebirth grants **+25% rune gain** and **+10 max level**, permanently. It
+resets level, stats, crit ranks, runes, inventory, equipment and unlocked
+biomes. It keeps the codex, ashes of war and preparation unlocks — the rule is
+*keep what was discovered, return what was accumulated*. Without that, every
+cycle would restart an empty game and rebirth would read as a punishment.
+
+`normalisePlayerProfile` must **not** force `maxLevel` back to `MAX_LEVEL`; it
+derives it as `MAX_LEVEL + 10 * rebirth.count`. Forcing it wiped the bonus on
+every load.
+
+**The rebirth tree** turns each rebirth into a choice rather than a flat
+multiplier. `POINTS_PER_REBIRTH` (2) points buy ranks in five nodes: rune gain,
+max level, effective vigour, ash charges, rare-encounter chance. 21 ranks in
+total, so a full tree takes 11 rebirths. Respec is free — the points come from
+rebirths, not runes, so returning them creates nothing.
+
+**Hard constraint on any new node:** nothing may add an equipment slot or raise
+an item's level cap. The build rests on the synergy of exactly three items; a
+fourth slot would rewrite the game rather than extend it. Rebirths accelerate
+and amplify, they never change the rules. Every node hooks into a lever the
+engine already had.
+
+`getMaxLevel()` is the **single source of truth** for the level cap — it folds
+in both the rebirth count and the `will` node. `gameState.save.maxLevel` is only
+a mirror, refreshed by `hydrate()`; `normalisePlayerProfile` cannot compute it
+(it would need `rebirth.js`, which imports `MAX_LEVEL` from it — a cycle).
+Letting the two formulas diverge already cost a real bug: after a reload, the 25
+levels from a maxed `will` node vanished from the cap.
+
+**Trials** are four out-of-progression bosses (180k to 4.5M hp) with no loot and
+no runes — the reward is the achievement alone. They are biomes deliberately
+outside the unlock graph (`isTrial: true`, `length: 1`), entered only from the
+endgame panel. They are available *before* rebirthing, so a player can delay
+the reset to attempt them. The only power a rebirth grants is +10 levels, so
+the last trial stays out of reach for many cycles by design.
+
+## Combat frame sizing
+
+`.fighter-stage` height comes from `--fighter-stage-height`, set by the
+`is-tier-boss` / `is-tier-rare` classes that `mountCombatEnemy` puts on
+`#combat-zone`. Measured render heights across the bestiary: standard 102px,
+rare 118px, boss 136px, and **148px** for bosses that reuse a 64px common sheet
+(base scale 1.6 x boss scale 1.45 = 2.32). A fixed 104px frame clipped 75 of
+128 monsters.
+
+The class goes on the combat zone, not on one lane, so both sides grow together
+and the ground shadow stays aligned. The sticky stack re-adapts on its own —
+the `ResizeObserver` republishes `--combat-zone-height`.
+
+Note for later: those scales (2.32, 1.42) are fractional, and
+`image-rendering: pixelated` at a non-integer scale gives uneven pixels.
+
+## The complete version — 14 added biomes
+
+The base game now runs from Necrolimbe to the Elden Throne: **46 playable
+biomes**, 184 monsters, 147 items, 29 sets, 18 ashes, 10 blessings,
+6 consumables, 11 statuses.
+
+**Difficulty is interpolated, never hand-written.** The 32 original biomes trace
+a curve from 14 hp (Necrolimbe Ouest) to 7200 (Farum Azula), roughly x1.22 per
+biome. New tiers sit on that curve, and reuse the ratios measured on it:
+
+    rare = std x1.2      boss = std x6.8
+    atkStd = hp x0.052   atkBoss = atkStd x1.35
+    runes = hp x7.7 (std), x7.6 (rare), x5.3 (boss)
+
+`MAX_LEVEL` went from 150 to **220** to follow the biome count at the same
+~4.8 levels per biome. Raising it without adding content would have broken the
+cost curve, which grows with the square of the level.
+
+### Biome traits (`biome-traits.js`)
+
+Every added biome carries a `traits` entry — the local rule that distinguishes
+it from a pure stat tier. Three hooks only, so combat stays readable:
+
+| hook | where | what it can do |
+| --- | --- | --- |
+| `runBuff` | `startExploration` -> `activeRunBuffs` | anything `getRunModifier()` reads |
+| `enemyModifier` | `spawn.js`, per created enemy | hp, atk, armor |
+| `onTurn` | `combat.js`, once per player turn | statuses, healing, escalation |
+
+New modifier keys read by the engine: `noHeal`, `dodgeMult`, `armorMult`,
+`noRetreat`, `lootChanceMult`.
+
+A trait **must** declare `name` and `detail` — the biome sheet shows them. An
+undescribed trait is a hidden rule, i.e. an unfair surprise.
+
+### Statuses
+
+`MADNESS`, `DEATH_BLIGHT` and `SLEEP` were added. Madness fills a real hole:
+`folie` existed as a resistance and as a biome hazard from the start, but no
+status ever applied it — biomes declaring it had no effect of their own.
+
+Madness and Death Blight **stack** (`STACKING_EFFECTS` in `combat.js`) and fire
+at a threshold, like frostbite. Sleep is duration-based and breaks on the first
+hit taken — that is what separates it from stun.
+
+### Healing goes through one door
+
+`healPlayer()` in `state.js` is the only place that raises `playerCurrentHp`.
+Eight sites used to write it by hand; missing one would have made the
+"Grace scellee" trait a lie. Known cosmetic gap: a few item heal logs still
+print their amount in a sealed biome even though nothing was healed.
+
+### Traps found while writing this
+
+*   `funcOnKill` does not exist. The only item combat hooks the engine calls are
+    `funcOnHit`, `funcOnBeingHit` and `passiveStatusReduction`. An item written
+    against any other name is dead code that fails silently.
+*   Ash effects may only return `damageMult`, `status` and `msg`. Returning
+    `flatDamage` or `splash` does nothing.
+*   `dropItem()` returns silently on an unknown id. A loot table entry
+    `{ id: "great_shield" }` — an ash slipped into Caelid Ouest's table — had
+    been quietly voiding 10% of that biome's rolls since the original split.
+    Loot tables now accept `{ ashId }` properly.
+
+## Balance tooling
+
+Two tools, deliberately separate because they have different levels of trust.
+
+### `tools/audit-curve.mjs` — no combat model, fully trustworthy
+
+Measures only ratios internal to the data: boss/standard HP, rare/standard, and
+the power jump from one biome to the next, in true progression order. It makes
+**no assumption about combat**, so an anomaly it reports is a real anomaly.
+
+Reference medians across the 46 biomes: **boss/std x8.4**, rare/std x1.41,
+bossAtk/stdAtk x1.76. It flags anything past 2.2x those medians.
+
+Current findings, **16 of 18 in the original 32 biomes**:
+
+| Biome | boss/std | comment |
+| --- | --- | --- |
+| Marais de Liurnia | **x84.6** | 78 hp standard, 6600 hp boss |
+| Chateau du Lion Rouge | **x55.6** | Radahn at 10000 against 180 hp trash |
+| Tertre Draconique | x30.2 | |
+| Peninsule larmoyante | x29.5 | |
+| Riviere Ainsel | x28.9 | |
+| Academie de Raya Lucaria | x25.0 | |
+
+Sharpest jumps between consecutive biomes: Nokron **x8.0**, Riviere Ainsel
+x5.5, Lac de la Putrefaction x5.4, Entree de Caelid x4.7.
+
+### `tools/simulate-balance.mjs` — plays the game headless
+
+Runs the **real** `getEffectiveStats()` (items, sets, traits, rebirth,
+stat conversions) and greedily equips the best 3-piece loadout out of what the
+cleared biomes could have dropped. It then farms each biome, counting the
+cycles needed before its boss becomes beatable.
+
+The combat loop is reimplemented, because the real one is async and
+UI-coupled. It mirrors `combat.js` in order and was checked against the live
+game: at 150 intelligence against 200 armor, the game deals 138 per hit, the
+model predicts 138.
+
+It does **not** model ashes, blessings, item on-hit effects, statuses or boss
+phases, so its absolute verdicts are pessimistic — a biome it calls playable
+certainly is; a biome it calls a wall is worth looking at. Its **relative**
+signal between builds and between biomes is the useful part.
+
+`tools/headless-stub.mjs` provides the inert DOM both tools need. Import
+`game.js` first: it is the real entry point, and that order avoids the temporal
+dead zones of the `ui.js` / `core.js` import cycle.
+
+## What the simulator found, and what it changed
+
+Three **multiplicative loops** the tool surfaced, none of which were visible by
+reading the code:
+
+1.  `silver_tear_mask` multiplied strength by `1 + floor(baseDex/5) * 0.046`,
+    **unbounded**. At 154 dexterity that was already x2.38 on top of its x1.15.
+    Now capped at +100%.
+2.  Extra attacks were computed from **effective** dexterity, so dex-percent
+    items fed the exponent: +21% dexterity gave +39% attacks, and every attack
+    then multiplied all strength gained elsewhere. Now computed from **base**
+    dexterity, which is also what dodge and item gates already use.
+3.  Magic damage applied **per attack**, so dexterity and intelligence
+    multiplied each other — the optimiser had a pure-dex build equipping
+    intelligence gear. Magic now lands once per turn (`castsMagic: i === 0`).
+
+**Curve smoothing.** Boss/standard ratios are now clamped into
+`[x4.2, x16.8]` around the x8.4 median. Worst case went from **x84.6 to x17.1**.
+Where a biome's standard monsters are exclusive to it, the correction was split
+between raising the trash and lowering the boss, so story bosses keep their
+weight. Where they are shared (`clayman`, Raya Lucaria's monsters), only the
+boss moved — raising a shared monster would have changed several biomes at once.
+
+`tools/apply-curve-fix.py` records exactly which monsters were touched.
+
+### The root cause: strength was a sink
+
+`tools/audit-conversions.mjs` counts how many items convert each stat into
+another. The result explains everything the simulator measured:
+
+| conversion | items |
+| --- | --- |
+| dexterity -> strength | 8 |
+| armor -> strength | 6 |
+| vigor -> strength | 5 |
+| intelligence -> strength | 4 |
+| **strength -> anything** | **1** |
+
+Every path gave its own benefit **plus** strength. Investing in strength gave
+strength alone, so it was strictly dominated — even the vigour build beat it.
+No constant could fix that; the topology had to change.
+
+Two levers were added, both on **base** stats so they cannot feed item loops:
+
+*   **Strength grants flat armour penetration** (`base / 1.3`). Nothing else
+    touches penetration, and it is worth most exactly where strength suffered:
+    armoured late-game targets.
+*   **Vigour grants boss mitigation** (`base / 900`, capped at 25%).
+    `bossMitigation` already existed in the engine with no stat feeding it.
+
+Then the eight dexterity conversions were rebased onto **base** dexterity and
+their ratios cut by roughly 40%, and intelligence's magic went 0.8 -> 0.6.
+
+**Result** — cycles to finish the game at equal investment:
+
+| build | before | after |
+| --- | --- | --- |
+| Dexterite | 605 | 687 |
+| Intelligence | 666 | 699 |
+| Force | 918 | 717 |
+| Vigueur | 764 | 725 |
+| Trihybride | 794 | 844 |
+
+The four pure paths sit within **5.5%** of each other, down from a 40%+ spread.
+The trihybrid is now the slowest by 17%: specialisation is rewarded, which is a
+deliberate outcome rather than a defect — but it is the number to watch if the
+mix is meant to be competitive.
+
+## Afflictions were the real endgame
+
+Two afflictions deal a **percentage of the target's max HP**: frostbite (10%,
+x0.7 on bosses) and death blight (originally 25%). Percentage damage does not
+follow the damage curve — it grows with the target. Boss HP went x9 between
+chapter I and chapter X; player damage did not.
+
+Measured against the Elden Beast (78 000 hp), per turn at 6 attacks:
+
+| source | before | after |
+| --- | --- | --- |
+| raw damage, good build | ~700 | ~700 |
+| frostbite | **3 276** | 421 |
+| death blight | **8 970** | 323 |
+
+One death blight proc was worth 28 turns of normal damage. Afflictions were not
+a complement, they were the only thing that mattered.
+
+`AFFLICTION_CAP = 6` in `combat.js` now bounds any percentage affliction to six
+times the hit that triggered it. Early on the percentage still binds (a small
+monster's 10% is under the cap), late the cap binds. Death blight also went
+25% -> 12%.
+
+**Armour floor.** Penetration can no longer take armour below **25%** of its
+original value. `armor` is clamped to 1 to avoid a division by zero, so any
+penetration exceeding armour turned into a x100 multiplier. That cliff was
+reachable: items stack up to 0.9 percent-penetration, and strength now grants
+flat penetration too. Verified at 220 strength (169 penetration): armour 175
+against 250 gives x1.85, not x100.
+
+## Auditing conversions: watch the target list
+
+`tools/audit-conversions.mjs` first tracked only the five main stats **as
+targets**, and reported "strength converts into 1 thing". Widening the targets
+to splash, crit, penetration and rune gain changed the ranking entirely:
+
+| stat | conversions leaving it |
+| --- | --- |
+| intelligence | 13 |
+| dexterity | 7 |
+| vigor | 7 |
+| armor | 6 |
+| strength | 5 |
+
+The strength fix still held up empirically (918 -> 776 cycles), but the
+headline that justified it was wrong. Widen the target list before trusting
+this tool.
+
+The simulator also ignored splash entirely, which mattered: the average biome
+group is **1.3**, and 8 items convert intelligence into splash. Its equipment
+optimiser was scoring candidates against a single target, so it never picked a
+splash item.
+
+## Sound effects (`sfx.js`)
+
+Nine sounds, deliberately few, from the itch.io pack in `assets/itch-assets`.
+Three guards, all of them necessary:
+
+*   **Throttle** per sound (`minGap`). Combat fires up to six attacks a turn;
+    without it a dexterity build machine-guns the speakers. Measured: 20 rapid
+    calls produce **1** play, one more after a 400 ms pause.
+*   **Pool** of three `Audio` tags per sound, so two close hits overlap instead
+    of cutting each other.
+*   **Its own volume**, `save.sfxVolume`, separate from the music slider. Plenty
+    of players mute one and keep the other.
+
+Sounds hang off the animation hooks that already existed
+(`playHeroCombatAttack`, `playEnemyDeath`, ...) rather than new call sites, so
+there is one place to maintain. `playSfx()` never throws: a browser refusing
+autoplay must not interrupt a run.
+
+## Discord webhook — rotate it
+
+`core.js` used to hold a live Discord webhook URL **in plain text**. A webhook
+is not an API key: anyone holding it can post anything into that channel,
+unauthenticated and unlimited. The repo is public.
+
+The URL is out of the working tree, but **it is still in git history**
+(commit `06ef90c`). The only real fix is to delete that webhook in the Discord
+channel settings and create a new one.
+
+Note also that a webhook cannot be called from the browser at all — Discord
+sends no CORS header, which is why the old code routed through a third-party
+proxy that saw every announcement. Reliable announcements need a small
+server-side component holding the secret.
+
+## Known content oddities, not yet addressed
+
+*   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but
+    are **companions**, summoned alongside other monsters via the `companion`
+    field. Any audit that only reads `monsters`/`rareMonsters`/`boss` will
+    wrongly report them as orphans — deleting them would break three spawns.
+*   `assets/sprites/insecte/insecte_idle_01.png` is clipped: the silhouette
+    spans the full 64px cell, 6 pixels stuck to the left edge and 10 to the
+    right. Pre-existing, surfaced by the edge check added to
+    `validate_monster_frames.py`. One frame to redraw narrower.
+*   Audit regexes over `biome.js` must be **case-insensitive**. Two stub biomes
+    (`Leyndell_ash`, `erdTree`) hid behind a lowercase-only `^  [a-z0-9_]+:`
+    pattern through several audits. They are gone now, superseded by the real
+    chapter X, but the lesson stands.
+
+## Sticky layers of the combat screen
+
+Three elements are pinned to the bottom and must not overlap. Each reads the
+height of the one below it, published by the `ResizeObserver` in
+`watchCombatZoneHeight()` (`ui.js`) as `--combat-actions-height` and
+`--combat-zone-height`:
+
+1.  `#combat-actions` (retreat button) — `bottom: 0`, the floor.
+2.  `#combat-zone` (sprites and HP bars) — above the actions bar.
+3.  `.ash-container` — above both.
+
+Hard-coding any of these heights breaks the stack as soon as the sprites or a
+narrow layout change a row's height.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

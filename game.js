@@ -9,6 +9,12 @@ import {
   resetGame,
   upgradeStat,
   upgradeStatMultiple,
+  investCritPoint,
+  respecCritPoints,
+  startTrial,
+  requestRebirth,
+  investRebirthNode,
+  respecRebirthTree,
   refundRunes,
 } from "./actions.js";
 import { startExploration } from "./core.js";
@@ -198,6 +204,12 @@ const joinDiscord = () => {
 // Assign all functions that are called from the HTML (onclick) to the window object
 window.upgradeStat = upgradeStat;
 window.upgradeStatMultiple = upgradeStatMultiple;
+window.investCritPoint = investCritPoint;
+window.respecCritPoints = respecCritPoints;
+window.startTrial = startTrial;
+window.requestRebirth = requestRebirth;
+window.investRebirthNode = investRebirthNode;
+window.respecRebirthTree = respecRebirthTree;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;

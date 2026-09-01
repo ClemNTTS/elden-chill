@@ -141,7 +141,35 @@ def shape_rune(d):
     d.rectangle([5, 7, 10, 9], fill=A)
 
 
+def shape_spiral(d):
+    """Folie : une spirale qui se referme. A 16px, trois arcs suffisent a la
+    lire ; un vrai spirale continu se transforme en tache."""
+    d.ellipse([1, 1, 14, 14], outline=W)
+    d.ellipse([4, 4, 11, 11], outline=W)
+    d.rectangle([7, 6, 8, 9], fill=W)
+
+
+def shape_skull(d):
+    """Fleau mortel : crane frontal. Les orbites sont evidees en CLEAR, sinon
+    la forme se lit comme un simple bloc."""
+    d.ellipse([3, 2, 12, 11], fill=W)
+    d.rectangle([5, 10, 10, 13], fill=W)
+    d.rectangle([5, 5, 6, 7], fill=CLEAR)
+    d.rectangle([9, 5, 10, 7], fill=CLEAR)
+    d.rectangle([7, 11, 8, 13], fill=CLEAR)
+
+
+def shape_crescent(d):
+    """Sommeil : croissant. Obtenu en soustrayant un disque decale, la seule
+    facon d'avoir une pointe nette a cette taille."""
+    d.ellipse([2, 2, 13, 13], fill=W)
+    d.ellipse([5, 0, 16, 11], fill=CLEAR)
+
+
 SHAPES = {
+    "spiral": shape_spiral,
+    "skull": shape_skull,
+    "crescent": shape_crescent,
     "heart": shape_heart,
     "fist": shape_fist,
     "bow": shape_bow,
@@ -177,6 +205,10 @@ ENTRIES = [
     ("BURN",               "flame",     "ember"),
     ("FROSTBITE",          "snowflake", "hoarfrost"),
     ("DEW_PROTECTION",     "ward",      "dew"),
+
+    ("MADNESS",            "spiral",    "spark"),
+    ("DEATH_BLIGHT",       "skull",     "obsidian"),
+    ("SLEEP",              "crescent",  "moonlit"),
 
     ("rune",               "rune",      "gold"),
 ]

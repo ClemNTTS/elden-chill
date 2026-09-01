@@ -4,7 +4,10 @@ import { DEPTHS } from "./items/depths.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { V21_ITEMS } from "./items/v21.js";
-import { gameState, getHealth, runtimeState } from "./state.js";
+import { LANDS_ITEMS } from "./items/lands.js";
+import { gameState, getHealth, runtimeState,
+  healPlayer,
+} from "./state.js";
 import { ActionLog } from "./ui.js";
 
 export const ITEMS = {
@@ -69,8 +72,10 @@ export const ITEMS = {
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
-      const ratio = 0.3 + 0.01 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.dexterity * ratio);
+      const ratio = 0.18 + 0.01 * (itemLevel - 1);
+      // Sur la dexterite de BASE : l'effective est deja gonflee par les objets
+      // en pourcentage, et convertir dessus empilait deux multiplicateurs.
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * ratio);
       stats.critChance += 0.1 + 0.02 * (itemLevel - 1);
     },
   },
@@ -137,8 +142,8 @@ export const ITEMS = {
       stats.dexterity += 5 + 1 * (itemLevel - 1);
     },
     applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.25 + 0.01 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+      const conversionRatio = 0.15 + 0.01 * (itemLevel - 1);
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
   },
@@ -242,8 +247,8 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
-        const conversionRatio = 0.25 + 0.04 * itemLevel;
-        stats.strength += Math.floor(stats.dexterity * conversionRatio);
+        const conversionRatio = 0.15 + 0.02 * itemLevel;
+        stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
       }
     },
     onHitEffect: { id: "STUN", duration: 2, chance: 0.1 },
@@ -266,11 +271,8 @@ export const ITEMS = {
         const healAmount = 10 * itemLevel;
         const maxHp = getHealth(stats.vigor);
 
-        runtimeState.playerCurrentHp = Math.min(
-          maxHp,
-          runtimeState.playerCurrentHp + healAmount,
-        );
-        ActionLog(`Vous vous soignez de ${healAmount} PV.`, "log-heal");
+        const healed = healPlayer(healAmount, maxHp);
+        if (healed > 0) ActionLog(`Vous vous soignez de ${healed} PV.`, "log-heal");
       }
     },
   },
@@ -305,8 +307,8 @@ export const ITEMS = {
         stats.dexterity = Math.floor(
           stats.dexterity * (1 + 0.02 * (itemLevel - 1)),
         );
-        const ratio = 0.04 * (itemLevel - 1);
-        stats.strength += Math.floor(ratio * stats.dexterity);
+        const ratio = 0.025 * (itemLevel - 1);
+        stats.strength += Math.floor(ratio * (gameState.stats.dexterity || 0));
       }
     },
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
@@ -500,8 +502,8 @@ export const ITEMS = {
       const baseDex = gameState.stats.dexterity || 0;
       const baseCrit = gameState.stats.critChance || 0;
       if (baseDex >= 20 && baseCrit >= 0.1 - 0.0001) {
-        const ratio = 0.35 + 0.01 * itemLevel;
-        stats.strength += Math.floor(stats.dexterity * ratio);
+        const ratio = 0.2 + 0.01 * itemLevel;
+        stats.strength += Math.floor((gameState.stats.dexterity || 0) * ratio);
       }
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -675,8 +677,8 @@ export const ITEMS = {
       stats.dexterity = Math.floor(stats.dexterity * 1.1);
     },
     applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.65;
-      stats.strength += Math.floor(stats.dexterity * conversionRatio);
+      const conversionRatio = 0.38;
+      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
     },
 
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -728,11 +730,8 @@ export const ITEMS = {
       if (baseVig < 42) return;
 
       const heal = Math.floor(getHealth(stats.vigor) * 0.01);
-      runtimeState.playerCurrentHp = Math.min(
-        getHealth(stats.vigor),
-        runtimeState.playerCurrentHp + heal,
-      );
-      ActionLog(`Soin de Graine : +${heal} PV`, "log-heal");
+      const healed = healPlayer(heal, getHealth(stats.vigor));
+      if (healed > 0) ActionLog(`Soin de Graine : +${healed} PV`, "log-heal");
     },
   },
 
@@ -775,11 +774,8 @@ export const ITEMS = {
       if (!itemLevel) return;
       const heal = Math.floor(stats.intelligence * (0.1 + 0.03 * itemLevel));
       const maxHp = getHealth(stats.vigor);
-      runtimeState.playerCurrentHp = Math.min(
-        maxHp,
-        runtimeState.playerCurrentHp + heal,
-      );
-      ActionLog(`Siphon Carien : +${heal} PV`, "log-heal");
+      const healed = healPlayer(heal, maxHp);
+      if (healed > 0) ActionLog(`Siphon Carien : +${healed} PV`, "log-heal");
     },
   },
 
@@ -1161,11 +1157,8 @@ export const ITEMS = {
       if (hasThorns) {
         const heal = 5 + 2 * (itemLevel - 1);
         const maxHp = getHealth(stats.vigor);
-        runtimeState.playerCurrentHp = Math.min(
-          maxHp,
-          runtimeState.playerCurrentHp + heal,
-        );
-        ActionLog(`Sève de l'Arbre : +${heal} PV !`, "log-heal");
+        const healed = healPlayer(heal, maxHp);
+        if (healed > 0) ActionLog(`Sève de l'Arbre : +${healed} PV !`, "log-heal");
       }
     },
   },
@@ -1253,4 +1246,5 @@ export const ITEMS = {
   ...NOKRON,
   ...DEPTHS,
   ...V21_ITEMS,
+  ...LANDS_ITEMS,
 };

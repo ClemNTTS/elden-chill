@@ -57,7 +57,15 @@ export const NOKRON = {
       stats.strength *= 1.15;
       const baseDex = gameState.stats.dexterity || 0;
       const ratio = 0.01 + 0.004 * (itemLevel - 1);
-      stats.strength *= 1 + Math.floor(baseDex / 5) * ratio;
+      /*
+       * Plafond a +100%.
+       *
+       * Sans lui, ce mimetisme etait un multiplicateur de force sans borne
+       * indexe sur la dexterite : a 154 de dexterite il valait deja x2,38, et
+       * il continuait de monter. C'est lui, et non la courbe d'attaques, qui
+       * mettait la voie dexterite 33% devant toutes les autres au simulateur.
+       */
+      stats.strength *= 1 + Math.min(1, Math.floor(baseDex / 5) * ratio);
     },
   },
 

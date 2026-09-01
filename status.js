@@ -166,6 +166,54 @@ export const STATUS_EFFECTS = {
     name: "Gelure",
     color: "#3dd6c9",
   },
+  /*
+   * Folie. Elle comble un trou : `folie` existait comme resistance et comme
+   * affliction de biome depuis toujours, mais aucun statut ne l'appliquait —
+   * les biomes qui la declaraient n'avaient donc aucun effet propre.
+   *
+   * Fonctionne par cumuls, comme la gelure : rien ne se passe jusqu'au seuil,
+   * puis tout part d'un coup. Le declenchement est dans combat.js.
+   */
+  MADNESS: {
+    id: "MADNESS",
+    name: "Folie",
+    color: "#f1c40f",
+  },
+
+  /*
+   * Fleau mortel. Cumuls egalement, mais le seuil frappe en pourcentage des
+   * points de vie maximum : c'est la seule affliction qui menace autant une
+   * cible a 4 000 000 de pv qu'une a 200. Dans le jeu d'origine elle tue net ;
+   * ici elle prend un quart de la vie, ce qui reste brutal sans rendre une
+   * expedition injouable sur un seul jet malheureux.
+   */
+  DEATH_BLIGHT: {
+    id: "DEATH_BLIGHT",
+    name: "Fleau mortel",
+    color: "#8e8e9c",
+  },
+
+  /*
+   * Sommeil. Fait sauter des tours, mais se dissipe au premier coup encaisse
+   * (voir performAttack). C'est ce qui l'empeche d'etre un simple etourdissement
+   * plus long : endormir une cible que l'on frappe soi-meme ne sert a rien, il
+   * faut le jouer avec des degats sur la duree ou pour souffler.
+   */
+  SLEEP: {
+    id: "SLEEP",
+    name: "Sommeil",
+    color: "#7d8ac4",
+    onTurnStart: (entity) => {
+      const isPlayer = "currentHp" in entity;
+      return {
+        skipTurn: true,
+        message: isPlayer
+          ? "Vous dormez debout et ne pouvez pas agir !"
+          : `${entity.name} dort profondement.`,
+      };
+    },
+  },
+
   DEW_PROTECTION: {
     id: "DEW_PROTECTION",
     name: "Protection de Rosée",

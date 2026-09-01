@@ -1,10 +1,20 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx } from "./sfx.js";
+import { getTraitRunBuffs } from "./biome-traits.js";
+import {
+  getRebirthAshBonus,
+  getRebirthRareMult,
+  getTrialByBiome,
+  markFinalBiomeCleared,
+  markTrialCleared,
+} from "./rebirth.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { devSpawnQueue, spawnMonster } from "./spawn.js";
 import {
   gameState,
   getEffectiveStats,
+  INT_RUNE_CAP,
   runtimeState,
   getHealth,
 } from "./state.js";
@@ -32,6 +42,7 @@ import {
   grantPreparationRewardForBiome,
   markCodexBiomeCleared,
   markCodexSetSeen,
+  registerRunBuff,
   resolveBiomeEvent,
   syncCodexFromInventory,
 } from "./systems.js";
@@ -88,11 +99,24 @@ const dropItem = (itemId) => {
       gameState.world.currentBiome,
     );
     ActionLog(`Vous avez trouvé : ${itemTemplate.name} !`);
+    playSfx("loot");
   } else {
     if (inventoryItem.level >= 10) {
       if (inventoryItem.level > 10) inventoryItem.level = 10;
       ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
-      const compensation = 7 * gameState.stats.level;
+      /*
+       * Indexee sur la valeur du biome, pas sur le niveau.
+       *
+       * L'ancienne formule, 7 x niveau, plafonnait a environ 1 500 runes en
+       * fin de parcours, quand un simple monstre standard de Farum Azula en
+       * donne 55 000 : le butin cessait d'avoir la moindre valeur des que
+       * l'equipement etait maxe, c'est-a-dire exactement au moment ou il
+       * tombe le plus souvent.
+       */
+      const biomeUnit =
+        MONSTERS[BIOMES[gameState.world.currentBiome]?.monsters?.[0]]?.runes ||
+        7 * gameState.stats.level;
+      const compensation = Math.floor(biomeUnit);
       gameState.runes.banked += compensation;
       ActionLog(
         `Vous recevez ${formatNumber(compensation)} runes en compensation.`,
@@ -141,7 +165,11 @@ const getWeightedDrop = (lootTable) => {
   return weightedLoot[0];
 };
 
+/** Morts consecutives sans progresser avant de couper la relance automatique. */
+const MAX_AUTO_DEATHS = 5;
+
 export const handleDeath = () => {
+  playSfx("death");
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
   addJournalEntry(
     "checkpoint",
@@ -159,6 +187,40 @@ export const handleDeath = () => {
   runtimeState.enemyIntent = null;
   clearRunBuffs();
   saveGame();
+
+  /*
+   * Relance automatique.
+   *
+   * Le garde-fou n'est pas decoratif : sans lui, un joueur qui active la
+   * relance sur un biome trop dur boucle indefiniment sur sa propre mort sans
+   * jamais s'en apercevoir. Au bout de MAX_AUTO_DEATHS morts consecutives sans
+   * avoir boucle un seul cycle, on coupe et on le dit.
+   *
+   * Le compteur se remet a zero des qu'un cycle est nettoye (handleVictory).
+   */
+  const auto = gameState.automation;
+  if (auto?.autoRestart) {
+    runtimeState.autoRestartDeaths = (runtimeState.autoRestartDeaths || 0) + 1;
+    if (runtimeState.autoRestartDeaths >= MAX_AUTO_DEATHS) {
+      auto.autoRestart = false;
+      runtimeState.autoRestartDeaths = 0;
+      ActionLog(
+        `Relance automatique coupee apres ${MAX_AUTO_DEATHS} morts sans progresser.`,
+        "log-crit",
+      );
+      saveGame();
+      delayedSetTimeout(() => toggleView("camp"), 2500);
+      updateUI();
+      return;
+    }
+    ActionLog("Relance automatique de l'expedition...", "log-runes");
+    delayedSetTimeout(() => {
+      runtimeState.currentCombatSession++;
+      startExploration(biomeAtDeath);
+    }, 2000);
+    updateUI();
+    return;
+  }
 
   // If offline-time use is enabled and we still have banked time, automatically
   // restart the exploration in the same biome. Otherwise return to camp as before.
@@ -178,7 +240,7 @@ export const handleDeath = () => {
 export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus =
-    1 + Math.min(0.5, eff.intelligence / 100) + (eff.runeGainMult || 0);
+    1 + Math.min(INT_RUNE_CAP, eff.intelligence / 100) + (eff.runeGainMult || 0);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
     ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
@@ -230,22 +292,45 @@ export const handleVictory = (sessionId) => {
     runtimeState.areaCleared = false;
     runtimeState.usedRenaissance = false;
     runtimeState.usedAbsolution = false;
+    if (gameState.runes.carried > 0) playSfx("runes");
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
 
     const currentBiome = BIOMES[gameState.world.currentBiome];
     gameState.world.rareSpawnsCount = 0;
     runtimeState.ashUsesLeft = gameState.equippedAsh
-      ? ASHES_OF_WAR[gameState.equippedAsh].maxUses
+      ? ASHES_OF_WAR[gameState.equippedAsh].maxUses + getRebirthAshBonus()
       : 0;
 
     ActionLog("BOSS VAINCU !");
+    playSfx("bossDown");
     addJournalEntry(
       "checkpoint",
       "Biome nettoye",
       `${currentBiome.name} cede enfin. Les routes changent autour de vous.`,
       gameState.world.currentBiome,
     );
+    const biomeId = gameState.world.currentBiome;
+    const trial = getTrialByBiome(biomeId);
+    if (trial) {
+      if (markTrialCleared(trial.id)) {
+        ActionLog(`EPREUVE ACCOMPLIE : ${trial.name} !`, "log-crit");
+        addJournalEntry(
+          "checkpoint",
+          "Epreuve accomplie",
+          `${trial.name} tombe. Rien a ramasser : c'etait le but.`,
+          biomeId,
+        );
+      } else {
+        ActionLog(`${trial.name} tombe a nouveau.`, "log-crit");
+      }
+    } else if (markFinalBiomeCleared(biomeId)) {
+      ActionLog(
+        "La route est achevee. La Renaissance vous attend au camp.",
+        "log-crit",
+      );
+    }
+
     const prepUnlocks = grantPreparationRewardForBiome(gameState.world.currentBiome);
     if (prepUnlocks.length) {
       ActionLog(
@@ -285,30 +370,64 @@ export const handleVictory = (sessionId) => {
 
     const currentLootTable = LOOT_TABLES[gameState.world.currentBiome];
     if (currentLootTable) {
+      /*
+       * Les tables acceptent desormais des cendres (`ashId`) en plus des
+       * objets. Sans ca, les cendres ne pouvaient tomber que des monstres
+       * rares, et une entree `{ id: "great_shield" }` — une cendre glissee
+       * dans la table de Caelid Ouest — etait silencieusement perdue :
+       * dropItem() sort sans rien dire sur un identifiant inconnu.
+       */
       const eligibleLoot = currentLootTable.filter((lootItem) => {
+        if (lootItem.ashId) {
+          return !gameState.ashesOfWarOwned.includes(lootItem.ashId);
+        }
         const inventoryItem = gameState.inventory.find(
           (i) => i.id === lootItem.id,
         );
         return !inventoryItem || inventoryItem.level < 10;
       });
 
-      let itemToDrop;
-      if (eligibleLoot.length > 0) {
-        const rolled = getWeightedDrop(eligibleLoot);
-        itemToDrop = rolled.id;
-      } else {
-        itemToDrop = "rune_fragment";
-      }
+      const rolled =
+        eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
 
-      dropItem(itemToDrop);
+      if (rolled?.ashId) {
+        gameState.ashesOfWarOwned.push(rolled.ashId);
+        ActionLog(
+          `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
+          "log-crit",
+        );
+      } else {
+        dropItem(rolled?.id || "rune_fragment");
+      }
       saveGame();
     }
 
     runtimeState.currentLoopCount++;
     gameState.world.progress = 0;
     gameState.world.checkpointReached = false;
+    // Un cycle boucle : l'expedition progresse, le garde-fou repart de zero.
+    runtimeState.autoRestartDeaths = 0;
 
     updateCycleDisplay();
+
+    /*
+     * Repli automatique. Les runes portees sont encaissees a chaque cycle
+     * nettoye, mais celles du cycle en cours sont perdues a la mort : pouvoir
+     * s'arreter a un nombre de cycles choisi evite de tout risquer en boucle.
+     */
+    const stopAt = gameState.automation?.stopAfterCycle || 0;
+    if (stopAt > 0 && runtimeState.currentLoopCount >= stopAt) {
+      ActionLog(
+        `Objectif de ${stopAt} cycle(s) atteint : repli au camp.`,
+        "log-crit",
+      );
+      gameState.world.isExploring = false;
+      clearRunBuffs();
+      saveGame();
+      delayedSetTimeout(() => toggleView("camp"), 1500);
+      updateUI();
+      return;
+    }
 
     ActionLog(`--- DÉBUT DU CYCLE ${runtimeState.currentLoopCount + 1} ---`);
 
@@ -416,7 +535,8 @@ export function nextEncounter(sessionId) {
     biome.rareMonsters &&
     gameState.world.rareSpawnsCount < (biome.maxRareSpawns || 0);
 
-  const rareSpawnChance = 0.15 * getRunModifier("rareChanceMult", 1);
+  const rareSpawnChance =
+    0.15 * getRunModifier("rareChanceMult", 1) * getRebirthRareMult();
   if (canSpawnRare && Math.random() < rareSpawnChance) {
     const rareId =
       biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
@@ -454,6 +574,8 @@ export const startExploration = (biomeId) => {
   gameState.world.progress = 0;
   gameState.world.checkpointReached = false;
   gameState.world.activeBiomeHazards = biome.hazards || [];
+  // Traits du biome : la regle locale qui distingue la zone. Voir biome-traits.js.
+  gameState.world.activeTraits = biome.traits || [];
   gameState.world.lastEventProgress = -1;
   runtimeState.defeatedEnemies = [];
   gameState.playerEffects = [];
@@ -461,10 +583,14 @@ export const startExploration = (biomeId) => {
   gameState.world.rareSpawnsCount = 0;
   runtimeState.enemyIntent = null;
   const selectedAsh = ASHES_OF_WAR[gameState.equippedAsh];
-  runtimeState.ashUsesLeft = selectedAsh ? selectedAsh.maxUses : 0;
+  runtimeState.ashUsesLeft = selectedAsh
+    ? selectedAsh.maxUses + getRebirthAshBonus()
+    : 0;
   runtimeState.ashIsPrimed = false;
   runtimeState.nextNbAtkBonus = 0;
   applyPreparationLoadout();
+  // Apres applyPreparationLoadout, qui vide activeRunBuffs.
+  getTraitRunBuffs(gameState.world.activeTraits).forEach(registerRunBuff);
 
   runtimeState.playerCurrentHp = getHealth(getEffectiveStats().vigor);
 
@@ -486,33 +612,24 @@ export const startExploration = (biomeId) => {
   nextEncounter(sessionAtStart);
 };
 
-const DISCORD_WEBHOOK_URL =
-  "https://discord.com/api/webhooks/1467277773524566066/xGqF5Tb3YrQ7CKU5f50pdOdLsQsp3c0AUIBMJOE_i3_KDCV4B8Y0UqqdpgpVbDBaH0Ec";
-
-async function sendDiscordAnnouncement(bossName) {
-  // const message = {
-  //   content: `🔥 **ANNONCE DE GRÂCE** 🔥\nUn Sans-éclat a terrassé pour la première fois **${bossName}** !`,
-  // };
-
-  // try {
-  //   // On passe par un proxy pour éviter l'erreur CORS
-  //   const proxyUrl =
-  //     "https://corsproxy.io/?" + encodeURIComponent(DISCORD_WEBHOOK_URL);
-
-  //   const response = await fetch(proxyUrl, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(message),
-  //   });
-
-  //   if (response.ok) {
-  //     console.log("✅ Annonce Discord envoyée !");
-  //   }
-  // } catch (err) {
-  //   console.error("❌ Erreur lors de l'envoi Discord :", err);
-  // }
-
+/*
+ * Annonce Discord — desactivee.
+ *
+ * L'implementation precedente contenait l'URL du webhook EN CLAIR dans ce
+ * fichier. Un webhook Discord n'est pas une cle d'API : quiconque l'a peut
+ * poster ce qu'il veut dans le salon, sans limite et sans authentification.
+ * Dans un depot public, c'etait une porte ouverte.
+ *
+ * L'URL est retiree, mais elle reste dans l'historique git : le seul correctif
+ * reel est de SUPPRIMER ce webhook dans les parametres du salon Discord et
+ * d'en creer un autre.
+ *
+ * Un webhook ne peut pas etre appele depuis le navigateur de toute facon :
+ * Discord ne renvoie pas d'en-tete CORS, d'ou le proxy tiers qu'utilisait
+ * l'ancienne version — lequel voyait passer chaque annonce. Une annonce
+ * automatique fiable demande un petit service cote serveur qui garde le
+ * secret ; tant qu'il n'existe pas, cette fonction ne fait rien.
+ */
+function sendDiscordAnnouncement(bossName) {
   return;
 }

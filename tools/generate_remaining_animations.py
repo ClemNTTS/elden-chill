@@ -7,6 +7,8 @@ import sys
 ARCHETYPES = [
     "humanoide", "bete", "mortvivant", "demon", "insecte", "geant",
     "mage", "volant", "amas", "dragon", "construct",
+    "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+    "bete_quadrupede_rampante",
 ]
 OUTLINE = (26, 20, 16, 255)
 
@@ -101,7 +103,8 @@ def frames(base: Image.Image):
 
 def main() -> None:
     phase1, out_root = map(Path, sys.argv[1:3])
-    for archetype in ARCHETYPES:
+    archetypes = sys.argv[3:] or ARCHETYPES
+    for archetype in archetypes:
         source = phase1 / f"{archetype}_idle_01.png"
         base = Image.open(source).convert("RGBA")
         palette = {(r, g, b) for r, g, b, a in base.getdata() if a}

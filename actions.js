@@ -2,14 +2,138 @@ import { gameState, runtimeState } from "./state.js";
 import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import { startExploration } from "./core.js";
+import {
+  REBIRTH_LEVEL_BONUS,
+  REBIRTH_RUNE_BONUS,
+  TRIALS,
+  canRebirth,
+  getMaxLevel,
+  getRebirthCount,
+  investRebirthPoint,
+  performRebirth,
+  resetRebirthTree,
+} from "./rebirth.js";
+import {
+  getCritPointsAvailable,
+  resetCritRanks,
+  spendCritPoint,
 
+} from "./crit.js";
+
+/*
+ * Le critique n'est plus achetable avec des runes et ne consomme plus de
+ * niveau du budget global : il a sa propre monnaie, un point tous les
+ * 10 niveaux, geree par crit.js. Seules les quatre stats principales restent
+ * ici.
+ */
 const upgradeCosts = {
   vigor: 1,
   strength: 1,
   dexterity: 1,
   intelligence: 1,
-  critChance: 2,
-  critDamage: 2.5,
+};
+
+const MAIN_STATS = new Set(Object.keys(upgradeCosts));
+
+/** Depense un point de competence critique. Expose a l'interface. */
+export const investCritPoint = (track, count = 1) => {
+  if (!spendCritPoint(track, count)) return;
+  saveGame("invest_crit_point");
+  updateUI();
+};
+
+/** Rend tous les points critiques. Gratuit : ils viennent du niveau. */
+export const respecCritPoints = () => {
+  const resume = [
+    `Renaitre pour la ${next}e fois ?`,
+    "",
+    "Vous perdez : niveau, statistiques, points critiques, runes, inventaire,",
+    "equipement et biomes debloques.",
+    "Vous gardez : codex, cendres de guerre, benedictions et atouts.",
+    "",
+    `Gain permanent : +${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes`,
+    `et +${REBIRTH_LEVEL_BONUS} au niveau maximum.`,
+  ].join(String.fromCharCode(10));
+  if (!confirm(resume)) {
+    return;
+  }
+  resetCritRanks();
+  saveGame("respec_crit_points");
+  updateUI();
+};
+
+export { getCritPointsAvailable };
+
+/* ------------------------------------------------------------------ */
+/* Fin de partie                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Investit un point de renaissance dans un noeud de l'arbre. */
+export const investRebirthNode = (nodeId) => {
+  if (!investRebirthPoint(nodeId)) return;
+  gameState.save.maxLevel = getMaxLevel();
+  saveGame("invest_rebirth_node");
+  updateUI();
+};
+
+/** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
+export const respecRebirthTree = () => {
+  if (!confirm("Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.")) {
+    return;
+  }
+  resetRebirthTree();
+  gameState.save.maxLevel = getMaxLevel();
+  if (gameState.stats.level > gameState.save.maxLevel) {
+    alert(
+      "Votre niveau depasse le nouveau plafond : il ne baissera pas, mais vous ne pourrez plus monter tant que vous n'aurez pas reinvesti dans Volonte.",
+    );
+  }
+  saveGame("respec_rebirth_tree");
+  updateUI();
+};
+
+/** Lance une epreuve. Ce sont des biomes hors graphe, jamais debloques. */
+export const startTrial = (trialId) => {
+  const trial = TRIALS.find((t) => t.id === trialId);
+  if (!trial || !canRebirth()) return;
+  if (gameState.world.isExploring) {
+    alert("Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.");
+    return;
+  }
+  startExploration(trial.biomeId);
+};
+
+/**
+ * Renaissance. Double confirmation : c'est la seule action du jeu qui detruit
+ * volontairement une partie entiere, et elle n'est pas annulable.
+ */
+export const requestRebirth = () => {
+  if (!canRebirth()) return;
+  if (gameState.world.isExploring) {
+    alert("Terminez ou quittez votre expedition en cours avant de renaitre.");
+    return;
+  }
+  const next = getRebirthCount() + 1;
+  const resume = [
+    `Renaitre pour la ${next}e fois ?`,
+    "",
+    "Vous perdez : niveau, statistiques, points critiques, runes,",
+    "inventaire, equipement et biomes debloques.",
+    "Vous gardez : codex, cendres de guerre, benedictions et atouts.",
+    "",
+    `Gain permanent : +${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes`,
+    `et +${REBIRTH_LEVEL_BONUS} au niveau maximum.`,
+  ].join(String.fromCharCode(10));
+  if (!confirm(resume)) {
+    return;
+  }
+  const count = performRebirth();
+  gameState.save.maxLevel = getMaxLevel();
+  syncCritStats();
+  saveGame("rebirth");
+  updateUI();
+  alert(`Renaissance ${count}. Les Terres Intermediaires vous ont oublie.`);
 };
 
 export const equipAsh = (ashId) => {
@@ -63,30 +187,20 @@ export const getMultiUpgradeCost = (statName, count) => {
 };
 
 export const upgradeStat = (statName) => {
+  if (!MAIN_STATS.has(statName)) return;
   let cost = getUpgradeCost(statName);
 
-  if (gameState.stats.level >= gameState.save.maxLevel) {
+  if (gameState.stats.level >= getMaxLevel()) {
     alert(
-      `Niveau maximum atteint (${gameState.save.maxLevel}). Attendez la prochaine mise a jour pour progresser davantage!`,
+      `Niveau maximum atteint (${getMaxLevel()}). Montez une Renaissance ou investissez dans Volonte pour aller plus loin.`,
     );
-    return;
-  }
-
-  if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
-    alert("Votre Chance de Critique est deja au maximum (100%) !");
     return;
   }
 
   if (gameState.runes.banked >= cost) {
     gameState.runes.banked -= cost;
 
-    if (statName === "critChance") {
-      gameState.stats.critChance += 0.01;
-    } else if (statName === "critDamage") {
-      gameState.stats.critDamage += 0.1;
-    } else {
-      gameState.stats[statName] += 1;
-    }
+    gameState.stats[statName] += 1;
     gameState.stats.level++;
     gameState.stats.runesSpent = Math.floor(gameState.stats.runesSpent + cost);
     saveGame("upgrade_stat");
@@ -97,17 +211,13 @@ export const upgradeStat = (statName) => {
 };
 
 export const upgradeStatMultiple = (statName, count) => {
+  if (!MAIN_STATS.has(statName)) return;
   let totalCost = getMultiUpgradeCost(statName, count);
 
-  if (gameState.stats.level + count > gameState.save.maxLevel) {
+  if (gameState.stats.level + count > getMaxLevel()) {
     alert(
-      `Vous atteindriez le niveau maximum. Vous ne pouvez ajouter que ${gameState.save.maxLevel - gameState.stats.level} niveaux.`,
+      `Vous atteindriez le niveau maximum. Vous ne pouvez ajouter que ${getMaxLevel() - gameState.stats.level} niveaux.`,
     );
-    return;
-  }
-
-  if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
-    alert("Votre Chance de Critique est deja au maximum (100%) !");
     return;
   }
 
@@ -115,19 +225,16 @@ export const upgradeStatMultiple = (statName, count) => {
     gameState.runes.banked -= totalCost;
 
     for (let i = 0; i < count; i += 1) {
-      if (statName === "critChance") {
-        gameState.stats.critChance += 0.01;
-        if (gameState.stats.critChance > 1.0) gameState.stats.critChance = 1.0;
-      } else if (statName === "critDamage") {
-        gameState.stats.critDamage += 0.1;
-      } else {
-        gameState.stats[statName] += 1;
-      }
+      gameState.stats[statName] += 1;
       gameState.stats.level++;
-      gameState.stats.runesSpent = Math.floor(
-        gameState.stats.runesSpent + getUpgradeCost(statName),
-      );
     }
+    // On comptabilise le cout reellement debite. L'ancienne version rappelait
+    // getUpgradeCost() APRES le level++ : elle facturait donc les niveaux
+    // L+1..L+n au lieu de L..L+n-1, gonflait runesSpent, et le remboursement
+    // rendait plus de runes qu'il n'en avait ete depense.
+    gameState.stats.runesSpent = Math.floor(
+      gameState.stats.runesSpent + totalCost,
+    );
     saveGame("upgrade_stat_multiple");
     updateUI();
   } else {
@@ -153,8 +260,7 @@ export const refundRunes = () => {
   gameState.stats.strength = 0;
   gameState.stats.dexterity = 0;
   gameState.stats.intelligence = 0;
-  gameState.stats.critChance = 0.05;
-  gameState.stats.critDamage = 1.5;
+  resetCritRanks();
   gameState.stats.splashDamage = 0;
   gameState.stats.armor = 100;
   gameState.equipped = { weapon: null, armor: null, accessory: null };

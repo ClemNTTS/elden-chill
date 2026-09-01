@@ -1,6 +1,8 @@
 import { applyEffect } from "../combat.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, getHealth, runtimeState } from "../state.js";
+import { gameState, getHealth, runtimeState,
+  healPlayer,
+} from "../state.js";
 import { ActionLog } from "../ui.js";
 
 export const DEPTHS = {
@@ -13,7 +15,9 @@ export const DEPTHS = {
     applyMult: (stats, itemLevel) => {
       stats.dexterity *= 1.12;
       stats.intelligence *= 1.12;
-      stats.strength += Math.floor(stats.dexterity * (0.45 + 0.02 * (itemLevel - 1)));
+      stats.strength += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.26 + 0.02 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects) => {
       if (Math.random() < stats.critChance) {
@@ -115,11 +119,8 @@ export const DEPTHS = {
       const armorBands = Math.floor(stats.armor / 100);
       if (armorBands <= 0) return;
       const heal = Math.floor(getHealth(stats.vigor) * (armorBands * 0.01));
-      runtimeState.playerCurrentHp = Math.min(
-        getHealth(stats.vigor),
-        runtimeState.playerCurrentHp + heal,
-      );
-      ActionLog(`Écorce princière : +${heal} PV.`, "log-heal");
+      const healed = healPlayer(heal, getHealth(stats.vigor));
+      if (healed > 0) ActionLog(`Écorce princière : +${healed} PV.`, "log-heal");
     },
   },
 

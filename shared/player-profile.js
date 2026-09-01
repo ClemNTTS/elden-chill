@@ -1,5 +1,13 @@
 export const PLAYER_PROFILE_VERSION = "2.5.0";
-export const MAX_LEVEL = 150;
+/*
+ * Plafond de niveau.
+ *
+ * Il suit le nombre de biomes : 150 couvrait les 32 biomes d'origine, 220
+ * couvre les 46 de la version complete, au meme rythme d'environ 4,8 niveaux
+ * par biome. Le relever sans ajouter de contenu aurait casse la courbe de
+ * cout, qui croit en carre du niveau.
+ */
+export const MAX_LEVEL = 220;
 export const MAX_OFFLINE_TIME_BANK = 3600;
 
 /** Ecrans du camp, dans l'ordre de la navigation. Source unique : la
@@ -27,6 +35,8 @@ export const DEFAULT_PLAYER_PROFILE = {
     intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
+    // Points de competence critiques, un tous les 10 niveaux. Voir crit.js.
+    critRanks: { chance: 0, damage: 0 },
     splashDamage: 0,
     armor: 100,
     flatDamagePenetration: 0,
@@ -46,6 +56,7 @@ export const DEFAULT_PLAYER_PROFILE = {
     checkpointReached: false,
     rareSpawnsCount: 0,
     activeBiomeHazards: [],
+    activeTraits: [],
     lastEventProgress: -1,
   },
   playerEffects: [],
@@ -69,6 +80,18 @@ export const DEFAULT_PLAYER_PROFILE = {
     biomeFilter: "all",
     entries: [],
   },
+  // Automatisation d'expedition. Purement du confort : rien ici ne change les
+  // regles, seulement qui appuie sur le bouton.
+  automation: {
+    autoRestart: false,
+    stopAfterCycle: 0,
+  },
+  // Progression au-dessus de la partie : survit a chaque renaissance.
+  rebirth: {
+    count: 0,
+    finalCleared: false,
+    trialsCleared: {},
+  },
   codex: {
     monstersSeen: {},
     bossesSeen: {},
@@ -82,6 +105,7 @@ export const DEFAULT_PLAYER_PROFILE = {
     offlineTimeBank: 0,
     useOfflineTime: false,
     lastSavedAt: 0,
+    sfxVolume: 0.5,
     profileId: null,
     saveSequence: 0,
   },
@@ -175,13 +199,42 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.floor(Number(base.stats.runesSpent) || 0),
   );
-  base.save.maxLevel = MAX_LEVEL;
+  /*
+   * Le plafond de niveau n'est PAS calcule ici.
+   *
+   * Il depend du compteur de renaissances *et* du noeud Volonte de l'arbre, que
+   * ce module ne peut pas connaitre sans importer rebirth.js — qui importe
+   * MAX_LEVEL d'ici, donc cycle. La valeur ci-dessous n'est qu'un repli
+   * coherent ; hydrate() la remplace par getMaxLevel() au chargement, et c'est
+   * getMaxLevel() que lisent les consommateurs.
+   *
+   * Avoir laisse les deux formules diverger avait un cout concret : apres un
+   * rechargement, les 25 niveaux du noeud Volonte disparaissaient du plafond.
+   */
+  base.automation = {
+    ...DEFAULT_PLAYER_PROFILE.automation,
+    ...toObject(data.automation),
+  };
+  base.automation.autoRestart = !!base.automation.autoRestart;
+  base.automation.stopAfterCycle = Math.max(
+    0,
+    Math.min(999, Math.floor(Number(base.automation.stopAfterCycle) || 0)),
+  );
+  base.rebirth = { ...DEFAULT_PLAYER_PROFILE.rebirth, ...toObject(data.rebirth) };
+  base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
+  base.rebirth.finalCleared = !!base.rebirth.finalCleared;
+  base.rebirth.trialsCleared = toObject(base.rebirth.trialsCleared);
+  base.save.maxLevel = MAX_LEVEL + 10 * base.rebirth.count;
   base.save.version = PLAYER_PROFILE_VERSION;
   base.save.offlineTimeBank = Math.max(
     0,
     Math.min(MAX_OFFLINE_TIME_BANK, Math.floor(Number(base.save.offlineTimeBank) || 0)),
   );
   base.save.useOfflineTime = !!base.save.useOfflineTime;
+  base.save.sfxVolume = Math.max(
+    0,
+    Math.min(1, Number(base.save.sfxVolume ?? 0.5) || 0),
+  );
   base.save.lastSavedAt = Math.max(0, Number(base.save.lastSavedAt) || 0);
 
   ensureSaveIdentity(base, options.fallbackProfileId || null);

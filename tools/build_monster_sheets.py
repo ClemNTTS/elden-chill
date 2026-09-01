@@ -26,6 +26,8 @@ ARCHETYPES = [
     "humanoide", "chevalier", "bete", "mortvivant",
     "demon", "insecte", "geant", "mage",
     "volant", "amas", "dragon", "construct",
+    "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+    "bete_quadrupede_rampante",
 ]
 
 # Ordre des lignes dans la planche. Il doit rester synchronise avec

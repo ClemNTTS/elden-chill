@@ -137,34 +137,47 @@ export const ARCHETYPES = {
   },
   water: {
     title: "Sans-Eclat",
-    note: "Aucune voie ne se detache encore. Investissez des runes pour vous specialiser.",
+    note: "Aucune voie ne se detache : prenez une avance nette sur une stat, equipement compris.",
   },
 };
 
 /**
- * Determine la stat dominante d'un jeu de stats, et donc l'apparence.
- * En cas d'egalite entre plusieurs stats au meme niveau, on retombe sur
- * l'apparence neutre plutot que de privilegier arbitrairement une stat.
+ * Seuil de specialisation.
+ *
+ * Un simple "la plus haute gagne" faisait basculer l'apparence sur un point
+ * d'ecart : a 50 force / 49 dexterite le personnage etait un Bourreau de
+ * Foudre, et le point suivant en faisait une Lame du Vent. Il faut une avance
+ * nette pour qu'une voie se lise.
+ *
+ * Les deux conditions se cumulent et couvrent chacune un bout de la partie :
+ * le ratio empeche la bascule en fin de partie, ou 1 point sur 60 ne veut rien
+ * dire ; l'ecart absolu empeche l'inverse en debut de partie, ou 3 contre 2
+ * satisfait le ratio sans qu'aucune voie ne se detache vraiment.
+ */
+export const DOMINANCE_THRESHOLD = { ratio: 1.2, gap: 5 };
+
+/**
+ * Determine la stat dominante, et donc l'apparence.
+ *
+ * A nourrir avec les stats *effectives* (equipement compris) : c'est ce que le
+ * joueur voit dans son panneau, et une arme qui donne +15 de force doit
+ * pouvoir changer sa silhouette.
+ *
+ * Retourne null tant qu'aucune stat ne prend une avance nette : l'apparence
+ * reste alors neutre.
  */
 export const getDominantStat = (stats = {}) => {
-  const tracked = Object.keys(STAT_TO_HERO);
-  let best = null;
-  let bestValue = 0;
-  let tied = false;
+  const ranked = Object.keys(STAT_TO_HERO)
+    .map((key) => [key, Number(stats[key]) || 0])
+    .sort((a, b) => b[1] - a[1]);
 
-  tracked.forEach((key) => {
-    const value = Number(stats[key]) || 0;
-    if (value > bestValue) {
-      bestValue = value;
-      best = key;
-      tied = false;
-    } else if (value === bestValue && value > 0 && key !== best) {
-      tied = true;
-    }
-  });
+  const [bestKey, best] = ranked[0];
+  const runnerUp = ranked[1] ? ranked[1][1] : 0;
 
-  if (!best || bestValue === 0 || tied) return null;
-  return best;
+  if (best <= 0) return null;
+  if (best - runnerUp < DOMINANCE_THRESHOLD.gap) return null;
+  if (best < runnerUp * DOMINANCE_THRESHOLD.ratio) return null;
+  return bestKey;
 };
 
 export const getHeroIdForStats = (stats = {}) => {
@@ -190,12 +203,20 @@ export const BOSS_ARCHETYPES = [
   "liurnia_dragon_smarag", "royal_knight_loretta", "radahn", "ekzykes",
   "draconic_tree_sentinel", "ancestral_spirit", "mimic_tear_boss",
   "dragonkin_ainsel", "fia_champion_echo", "astel_bud",
+  "malenia_blade", "elden_beast", "hoarah_loux", "placidusax",
+  "rykard_lord_blasphemy", "throne_radagon", "azula_maliketh",
+  "godskin_apostle", "godskin_noble", "commander_niall", "elemer_briar",
+  "evergaol_astel", "evergaol_fortissax", "evergaol_nameless_champion",
+  "divine_tower_keeper", "catacomb_burnt_spirit",
+  "gurranq_beast_clergyman", "jarburg_great_jar",
 ];
 
 export const MONSTER_ARCHETYPES = [
   "humanoide", "chevalier", "bete", "mortvivant",
   "demon", "insecte", "geant", "mage",
   "volant", "amas", "dragon", "construct",
+  "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+  "bete_quadrupede_rampante",
   ...BOSS_ARCHETYPES,
 ];
 
@@ -389,6 +410,11 @@ export class SpriteAnimator {
     this.rafId = null;
     this.visible = true;
     this.onAnimationEnd = null;
+    // play() est asynchrone : sans ce drapeau, un chargement encore en vol
+    // au moment du destroy() rappelait draw() puis start() et ressuscitait un
+    // animateur mort, qui continuait a dessiner sur un canvas desormais
+    // partage avec son remplacant.
+    this.destroyed = false;
 
     this.canvas.width = Math.round(cell * scale);
     this.canvas.height = Math.round(cell * scale);
@@ -413,6 +439,7 @@ export class SpriteAnimator {
    * @param {{ fps?: number, loop?: boolean, onEnd?: () => void }} options
    */
   async play(src, row, { fps, loop = true, onEnd = null } = {}) {
+    if (this.destroyed) return;
     this.animation = { row: row[0], frames: row[1], loop };
     this.frame = 0;
     this.elapsed = 0;
@@ -427,11 +454,15 @@ export class SpriteAnimator {
       return;
     }
 
+    // Detruit pendant le chargement : on ne touche plus au canvas.
+    if (this.destroyed) return;
+
     this.draw();
     this.start();
   }
 
   start() {
+    if (this.destroyed) return;
     if (this.rafId != null || !this.image || !this.visible) return;
     this.lastTime = 0;
     const tick = (time) => {
@@ -497,6 +528,7 @@ export class SpriteAnimator {
   }
 
   destroy() {
+    this.destroyed = true;
     this.stop();
     if (this.observer) this.observer.disconnect();
     this.observer = null;

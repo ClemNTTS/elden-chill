@@ -1,4 +1,5 @@
 import { runtimeState } from "./state.js";
+import { applyTraitsToEnemy } from "./biome-traits.js";
 import { combatLoop } from "./combat.js";
 import { ActionLog, updateHealthBars, updateUI } from "./ui.js";
 import { MONSTERS } from "./monster.js";
@@ -55,13 +56,13 @@ function createEnemyInstance(template, multiplier) {
     randomMultiplier += Math.random();
   }
 
-  return {
+  return applyTraitsToEnemy({
     ...template,
     maxHp: Math.floor(template.hp * multiplier * randomMultiplier),
     atk: Math.floor(template.atk * multiplier),
     runes: Math.floor(template.runes * multiplier * randomMultiplier),
     hp: Math.floor(template.hp * multiplier * randomMultiplier),
-  };
+  });
 }
 
 function spawnEnemyWithCompanions(
@@ -118,6 +119,15 @@ export const spawnMonster = (monsterId, sessionId) => {
   runtimeState.usedAbsolution = false;
 
   const template = MONSTERS[monsterId];
+  // Un identifiant absent du bestiaire plantait le combat sur la ligne
+  // suivante (`template.groupCombinations` sur undefined). C'est arrive en
+  // vrai : les Cimes des Geants referencaient "mountaintops_bird", qui
+  // n'existait pas. On echoue bruyamment dans la console plutot que de casser
+  // l'expedition en cours.
+  if (!template) {
+    console.error(`[spawn] monstre inconnu : "${monsterId}"`);
+    return;
+  }
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
 
   let groupSize = 1;

@@ -1,4 +1,8 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx } from "./sfx.js";
+import { rollCrit } from "./crit.js";
+import { tickBiomeTraits } from "./biome-traits.js";
+import { getMagicDamage } from "./state.js";
 import { STATUS_EFFECTS } from "./status.js";
 import { ITEMS } from "./item.js";
 import { handleDeath, handleVictory } from "./core.js";
@@ -21,7 +25,11 @@ import {
   updateHealthBars,
   updateUI,
 } from "./ui.js";
-import { adjustStatusApplication, buildEnemyIntent } from "./systems.js";
+import {
+  adjustStatusApplication,
+  buildEnemyIntent,
+  getRunModifier,
+} from "./systems.js";
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -76,6 +84,27 @@ function clamp(v, min = 0) {
 
 /* ================= STATUS EFFECTS ================= */
 
+/** Afflictions qui s'accumulent au lieu de durer un nombre de tours. */
+const STACKING_EFFECTS = new Set(["BLEED", "FROSTBITE", "MADNESS", "DEATH_BLIGHT"]);
+
+/*
+ * Plafond des afflictions exprimees en pourcentage des points de vie maximum.
+ *
+ * Une affliction ne peut pas depasser six fois le coup qui la declenche. Sans
+ * ce garde-fou, une part fixe des pv maximum devient d'autant plus forte que
+ * la cible est grosse, alors que les degats du joueur, eux, ne suivent pas la
+ * meme courbe : les afflictions cessaient d'etre un complement pour devenir la
+ * seule chose qui compte en fin de partie.
+ *
+ * Le plafond conserve leur interet partout : en debut de partie c'est le
+ * pourcentage qui mord, en fin de partie c'est le plafond.
+ */
+const AFFLICTION_CAP = 6;
+
+/** Cumuls necessaires au declenchement. */
+const MADNESS_THRESHOLD = 8;
+const DEATH_BLIGHT_THRESHOLD = 12;
+
 export const applyEffect = (targetEffects, effectId, value) => {
   if (!targetEffects.__owner) {
     targetEffects.__owner = true;
@@ -83,7 +112,7 @@ export const applyEffect = (targetEffects, effectId, value) => {
   // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
   const adjustedValue = adjustStatusApplication(effectId, value || 1, targetEffects);
-  if (effectId === "BLEED" || effectId === "FROSTBITE") {
+  if (STACKING_EFFECTS.has(effectId)) {
     if (existing) {
       existing.stacks = (existing.stacks || 0) + adjustedValue;
     } else {
@@ -114,7 +143,7 @@ const processTurnEffects = (entity, effectsArray) => {
       if (result?.skipTurn) skipTurn = true;
     }
 
-    if (effectRef.id !== "BLEED" && effectRef.id !== "FROSTBITE") {
+    if (!STACKING_EFFECTS.has(effectRef.id)) {
       effectRef.duration--;
       if (effectRef.duration <= 0) {
         effectsArray.splice(i, 1);
@@ -136,6 +165,7 @@ export function performAttack({
   logPrefix,
   isPlayer = false,
   ashEffect = null,
+  castsMagic = true,
 }) {
   attackers.forEach((attacker) => {
     let damage = attacker.atk ?? stats?.strength ?? 0;
@@ -177,7 +207,19 @@ export function performAttack({
 
     let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
     if (frostEffect && frostEffect.stacks >= 10) {
-      let frostDamage = Math.floor(target.maxHp * 0.1) + 30;
+      /*
+       * Plafonne par rapport au coup du joueur (voir AFFLICTION_CAP).
+       *
+       * En pourcentage pur, cette affliction ecrasait tout : contre la Bete
+       * d'Elden elle valait 3 276 degats par tour face aux 700 d'un bon build.
+       * Les points de vie des boss ont ete multiplies par neuf entre le
+       * premier chapitre et le dixieme, ceux du joueur par bien moins : une
+       * part fixe des pv maximum devait forcement finir par tout dominer.
+       */
+      let frostDamage = Math.min(
+        Math.floor(target.maxHp * 0.1) + 30,
+        Math.floor(damage * AFFLICTION_CAP),
+      );
       if (target.isBoss) {
         frostDamage = Math.floor(frostDamage * 0.7);
       }
@@ -201,6 +243,44 @@ export function performAttack({
         if (idx > -1) targetEffects.splice(idx, 1);
       }
     }
+    /* ===== SEUIL DE FOLIE ===== */
+    const madness = targetEffects.find((e) => e.id === "MADNESS");
+    if (madness && madness.stacks >= MADNESS_THRESHOLD) {
+      const burst = Math.floor(damage * 1.5) + 40;
+      damage += burst;
+      applyEffect(targetEffects, "STUN", 1);
+      ActionLog(
+        `FOLIE ! L'esprit de ${target.name} cede : ${burst} degats et un tour perdu.`,
+        "log-crit",
+      );
+      madness.stacks -= MADNESS_THRESHOLD;
+      if (madness.stacks <= 0) {
+        const idx = targetEffects.findIndex((e) => e.id === "MADNESS");
+        if (idx > -1) targetEffects.splice(idx, 1);
+      }
+    }
+
+    /* ===== SEUIL DE FLEAU MORTEL ===== */
+    const blight = targetEffects.find((e) => e.id === "DEATH_BLIGHT");
+    if (blight && blight.stacks >= DEATH_BLIGHT_THRESHOLD) {
+      // En pourcentage des pv maximum : c'est la seule affliction qui reste
+      // dangereuse contre une cible a plusieurs millions de points de vie.
+      const maxHp = target.maxHp || 100;
+      // Meme plafond que la gelure, et une part reduite : a 25% non plafonnes,
+      // un seul proc valait 28 tours de degats normaux contre le boss final.
+      const toll = Math.min(
+        Math.floor(maxHp * 0.12),
+        Math.floor(damage * AFFLICTION_CAP),
+      );
+      damage += toll;
+      ActionLog(
+        `FLEAU MORTEL ! ${target.name} perd un quart de sa vie (${toll}).`,
+        "log-crit",
+      );
+      const idx = targetEffects.findIndex((e) => e.id === "DEATH_BLIGHT");
+      if (idx > -1) targetEffects.splice(idx, 1);
+    }
+
     if (ashEffect?.damageMult) {
       damage *= ashEffect.damageMult;
     }
@@ -218,11 +298,10 @@ export function performAttack({
       runtimeState.nextAtkMultBonus = 1;
     }
 
-    let isCrit = false;
-    const critChance = stats?.critChance ?? 0;
-    const critDamage = stats?.critDamage ?? 1.5;
-    if (critChance && Math.random() < critChance) {
-      isCrit = true;
+    const crit = rollCrit(stats);
+    const isCrit = crit.isCrit;
+    const critDamage = crit.multiplier;
+    if (isCrit) {
       damage *= critDamage;
     }
 
@@ -241,9 +320,21 @@ export function performAttack({
       armor = monsterArmor;
       armor *= 1 - playerPercentPen;
       armor -= playerFlatPen;
+      /*
+       * Plancher a 25% de l'armure d'origine.
+       *
+       * `armor` est ensuite clampe a 1 pour eviter la division par zero, ce qui
+       * transforme toute penetration superieure a l'armure en multiplicateur
+       * x100. La falaise etait atteignable : les objets cumulent jusqu'a 0,9 de
+       * penetration en pourcentage, et la force en donne desormais en fixe.
+       * Le plancher borne le gain a x4 au lieu de x100.
+       */
+      armor = Math.max(armor, monsterArmor * 0.25);
     } else {
       /* MONSTER ATTACKING PLAYER */
-      armor = (eff.armor ?? 100) - runtimeState.playerArmorDebuff;
+      armor =
+        (eff.armor ?? 100) * getRunModifier("armorMult", 1) -
+        runtimeState.playerArmorDebuff;
       const monsterPercentPen = attacker.percentDamagePenetration ?? 0;
       const monsterFlatPen = attacker.flatDamagePenetration ?? 0;
       armor *= 1 - monsterPercentPen;
@@ -255,6 +346,25 @@ export function performAttack({
     const damageMultiplier = 100 / armor;
 
     let finalDamage = Math.floor(damage * damageMultiplier);
+
+    /*
+     * Degats magiques de l'intelligence : ajoutes apres la division par
+     * l'armure, donc jamais reduits par elle. Ils critent comme le reste.
+     * Reserves au joueur — les monstres n'ont pas d'intelligence.
+     *
+     * UNE SEULE FOIS PAR TOUR, pas par attaque. Par attaque, dexterite et
+     * intelligence se multipliaient : le simulateur a montre qu'un build
+     * dexterite avait interet a equiper des objets d'intelligence pour
+     * multiplier leurs degats magiques par six attaques. Un sort se lance,
+     * il ne s'ajoute pas a chaque coup d'epee.
+     */
+    if (isPlayer && castsMagic) {
+      const magic = getMagicDamage(stats?.intelligence ?? 0);
+      if (magic > 0) {
+        finalDamage += Math.floor(isCrit ? magic * critDamage : magic);
+      }
+    }
+
     if (!isPlayer && attacker?.isBoss) {
       finalDamage = Math.floor(finalDamage * (1 - Math.min(0.45, eff.bossMitigation || 0)));
     }
@@ -265,23 +375,42 @@ export function performAttack({
     finalDamage = Math.max(0, finalDamage);
 
     /* ===== APPLY DAMAGE ===== */
+    // Le sommeil se dissipe des qu'on encaisse : c'est ce qui le distingue de
+    // l'etourdissement, qui tient quoi qu'il arrive.
+    if (finalDamage > 0) {
+      const asleep = targetEffects.findIndex((e) => e.id === "SLEEP");
+      if (asleep > -1) {
+        targetEffects.splice(asleep, 1);
+        ActionLog(`${target.name} se reveille en sursaut.`, "log-status");
+      }
+    }
+
     setEntityHp(target, getEntityHp(target) - finalDamage);
 
     // Animations : l'attaquant frappe, la cible encaisse. Si le coup est
     // mortel, la cible joue sa mort plutot que son encaissement.
     if (isPlayer) {
       playHeroCombatAttack();
-      if (getEntityHp(target) <= 0) playEnemyDeath();
-      else playEnemyHurt();
+      // Le son suit l'animation deja en place : un seul endroit a maintenir.
+      playSfx(isCrit ? "crit" : "hit");
+      if (getEntityHp(target) <= 0) {
+        playEnemyDeath();
+        playSfx("kill");
+      } else {
+        playEnemyHurt();
+      }
     } else {
       playEnemyAttack();
       playHeroCombatHurt();
+      playSfx("hurt");
     }
 
     updateHealthBars();
 
     ActionLog(
-      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(finalDamage)} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
+      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(finalDamage)} dégâts ${
+        crit.isSuper ? "SUPER CRITIQUES !!" : isCrit ? "CRITIQUES !" : "."
+      }`,
       isCrit ? "log-crit" : "",
     );
 
@@ -471,6 +600,11 @@ export const combatLoop = (sessionId) => {
     maxHp: getHealth(gameState.stats.vigor),
   };
 
+  // Tick des traits de biome, avant tout le reste du tour : c'est la regle
+  // locale de la zone, elle s'applique meme si le joueur est etourdi.
+  tickBiomeTraits(playerObj.maxHp).forEach((msg) => ActionLog(msg, "log-status"));
+  playerObj.currentHp = runtimeState.playerCurrentHp;
+
   delayedSetTimeout(() => {
     let reductionHappened = false;
     //Applique la réduction de status si le joueur possède des items adéquats
@@ -548,15 +682,19 @@ export const combatLoop = (sessionId) => {
           runtimeState.ashUsesLeft--;
           runtimeState.ashIsPrimed = false;
           playAshEffect(gameState.equippedAsh);
+          playSfx("ash");
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }
 
-        for (
-          let i = 0;
-          i < stats.attacksPerTurn + runtimeState.nextNbAtkBonus;
-          i++
-        ) {
+        // La fraction de dexterite non convertie en attaque entiere se joue
+        // ici, une fois par tour.
+        const bonusAttack =
+          Math.random() < (stats.extraAttackChance || 0) ? 1 : 0;
+        const attackCount =
+          stats.attacksPerTurn + runtimeState.nextNbAtkBonus + bonusAttack;
+
+        for (let i = 0; i < attackCount; i++) {
           // Find first alive enemy
           const currentTarget = runtimeState.currentEnemyGroup.find(
             (e) => e.hp > 0,
@@ -574,6 +712,7 @@ export const combatLoop = (sessionId) => {
             logPrefix: "Vous",
             isPlayer: true,
             ashEffect,
+            castsMagic: i === 0,
           });
         }
       }
@@ -672,7 +811,9 @@ export const combatLoop = (sessionId) => {
 
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
-            const dodgeChance = Math.min(0.5, gameState.stats.dexterity / 400);
+            const dodgeChance =
+              Math.min(0.5, gameState.stats.dexterity / 400) *
+              getRunModifier("dodgeMult", 1);
 
             const playerIsStunned = gameState.playerEffects.some(
               (e) => e.id === "STUN",

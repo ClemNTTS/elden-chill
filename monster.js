@@ -3,6 +3,8 @@ hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur d
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
 import { V21_MONSTERS } from "./monsters/v21.js";
+import { ENDGAME_MONSTERS, TRIAL_MONSTERS } from "./monsters/endgame.js";
+import { LANDS_MONSTERS } from "./monsters/lands.js";
 
 export const MONSTERS = {
   // === LIMGRAVE WEST===
@@ -198,8 +200,8 @@ export const MONSTERS = {
   },
   limgrave_dragon: {
     name: "Dragon volant Agheel",
-    hp: 840,
-    atk: 42,
+    hp: 700,
+    atk: 32,
     runes: 2500,
     isBoss: true,
     onHitEffect: { id: "BURN", duration: 2, chance: 0.5 },
@@ -207,7 +209,7 @@ export const MONSTERS = {
   // === WEEPING PENINSULA ===
   servant_poison: {
     name: "Servante empoisonée",
-    hp: 34,
+    hp: 35,
     atk: 15,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.5 },
     runes: 153,
@@ -219,7 +221,7 @@ export const MONSTERS = {
 
   bats: {
     name: "Chauve-souris",
-    hp: 10,
+    hp: 35,
     atk: 6,
     runes: 95,
     companion: ["chanting_dame"],
@@ -281,8 +283,8 @@ export const MONSTERS = {
   hero_of_zamor: {
     name: "Héros de Zamor",
     isBoss: true,
-    hp: 650,
-    atk: 55,
+    hp: 600,
+    atk: 33,
     armor: 115,
     runes: 2000,
     dodgeChance: 0.22,
@@ -421,7 +423,7 @@ export const MONSTERS = {
 
   stormveil_hawk: {
     name: "Faucon de Tempête",
-    hp: 65,
+    hp: 105,
     atk: 12,
     runes: 180,
     dodgeChance: 0.05,
@@ -435,7 +437,7 @@ export const MONSTERS = {
   godrick: {
     name: "Godrick le Greffé",
     hp: 1100,
-    atk: 65,
+    atk: 38,
     runes: 5000,
     armor: 125,
     dodgeChance: 0.05,
@@ -671,8 +673,8 @@ export const MONSTERS = {
 
   rennala: {
     name: "Rennala, Reine de la Pleine Lune",
-    hp: 2600,
-    atk: 70,
+    hp: 1700,
+    atk: 63,
     runes: 10000,
     isBoss: true,
     armor: 80,
@@ -687,8 +689,8 @@ export const MONSTERS = {
   // === MARAIS DE LIURNIA
   liurnia_dragon_smarag: {
     name: "Smarag, Dragon de Pierre d'Éclat",
-    hp: 6600,
-    atk: 175,
+    hp: 1300,
+    atk: 63,
     runes: 22000,
     isBoss: true,
     armor: 140,
@@ -701,7 +703,7 @@ export const MONSTERS = {
   // --- CARIA MANSION ---
   lesser_fingercreeper: {
     name: "Petite Main de Doigts",
-    hp: 210,
+    hp: 335,
     atk: 32,
     runes: 880,
     specificStats: { attacksPerTurn: 2 },
@@ -729,7 +731,7 @@ export const MONSTERS = {
   royal_knight_loretta: {
     name: "Loretta, Chevalier Royal",
     hp: 3200,
-    atk: 105,
+    atk: 101,
     runes: 12000,
     isBoss: true,
     armor: 130,
@@ -812,8 +814,8 @@ export const MONSTERS = {
 
   radahn: {
     name: "Radahn le Fléau des Astres",
-    hp: 10000,
-    atk: 220,
+    hp: 3000,
+    atk: 101,
     runes: 55000,
     isBoss: true,
     armor: 220,
@@ -827,8 +829,8 @@ export const MONSTERS = {
   // --- BOSS : EKZYKES L'INCURABLE ---
   ekzykes: {
     name: "Ekzykes l'Incurable",
-    hp: 9500,
-    atk: 180,
+    hp: 5300,
+    atk: 138,
     runes: 55000,
     isBoss: true,
     armor: 160,
@@ -900,14 +902,14 @@ export const MONSTERS = {
 
   ancestral_follower: {
     name: "Disciple Ancestral",
-    hp: 550,
+    hp: 475,
     atk: 45,
     runes: 450,
   },
 
   siofra_rat: {
     name: "Rat de Siofra",
-    hp: 45,
+    hp: 475,
     atk: 18,
     runes: 120,
     groupCombinations: [
@@ -946,7 +948,7 @@ export const MONSTERS = {
   ancestral_spirit: {
     name: "Esprit Ancestral",
     hp: 2500,
-    atk: 140,
+    atk: 100,
     runes: 12000,
     isBoss: true,
     dodgeChance: 0.2,
@@ -1027,7 +1029,7 @@ export const MONSTERS = {
 
   mimic_tear_boss: {
     name: "Larme Imitatrice",
-    hp: 13000,
+    hp: 10500,
     atk: 100,
     runes: 45000,
     isBoss: true,
@@ -1050,7 +1052,7 @@ export const MONSTERS = {
   // --- RIVIERE AINSEL ---
   ainsel_ant: {
     name: "Fourmi d'Ainsel",
-    hp: 620,
+    hp: 910,
     atk: 62,
     runes: 1600,
     armor: 135,
@@ -1063,7 +1065,7 @@ export const MONSTERS = {
 
   ainsel_priest: {
     name: "Prêtre d'Ainsel",
-    hp: 520,
+    hp: 910,
     atk: 78,
     runes: 1750,
     armor: 110,
@@ -1116,8 +1118,8 @@ export const MONSTERS = {
 
   dragonkin_ainsel: {
     name: "Soldat Draconide d'Ainsel",
-    hp: 16500,
-    atk: 240,
+    hp: 15300,
+    atk: 222,
     runes: 68000,
     isBoss: true,
     armor: 240,
@@ -1209,7 +1211,7 @@ export const MONSTERS = {
   // --- LAKE OF ROT ---
   rot_pest: {
     name: "Serviteur Pestiféré",
-    hp: 980,
+    hp: 1825,
     atk: 105,
     runes: 2200,
     armor: 150,
@@ -1222,7 +1224,7 @@ export const MONSTERS = {
 
   scarlet_monk: {
     name: "Moine Ecarlate",
-    hp: 1300,
+    hp: 1825,
     atk: 118,
     runes: 2500,
     armor: 175,
@@ -1275,6 +1277,9 @@ export const MONSTERS = {
     onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
   },
   ...V21_MONSTERS,
+  ...ENDGAME_MONSTERS,
+  ...TRIAL_MONSTERS,
+  ...LANDS_MONSTERS,
 };
 
 // Chaque monstre porte desormais sa propre cle. Les instances de combat sont

@@ -77,6 +77,35 @@ function playDungeonMusic() {
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
+import {
+  POINTS_PER_REBIRTH,
+  REBIRTH_LEVEL_BONUS,
+  REBIRTH_NODES,
+  REBIRTH_RUNE_BONUS,
+  TRIALS,
+  getNodeRank,
+  getRebirthPointsAvailable,
+  getRebirthPointsSpent,
+  getRebirthPointsTotal,
+  canRebirth,
+  getMaxLevel,
+  getRebirthCount,
+  getRebirthRuneBonus,
+  isTrialCleared,
+} from "./rebirth.js";
+
+import {
+  CRIT_PER_RANK,
+  LEVELS_PER_CRIT_POINT,
+  SUPER_CRIT_MULTIPLIER,
+  getCritDamageMultiplier,
+  getCritPointsAvailable,
+  getCritPointsSpent,
+  getCritPointsTotal,
+  getCritRanks,
+  getSuperCritChance,
+} from "./crit.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { MONSTERS } from "./monster.js";
 import { STATUS_EFFECTS } from "./status.js";
@@ -285,6 +314,39 @@ export const updateOfflineDisplay = () => {
   });
 };
 
+/*
+ * Automatisation d'expedition. Le champ de cycles accepte 0, qui vaut
+ * "ne jamais se replier tout seul" — c'est le comportement d'origine.
+ */
+window.toggleAutoRestart = () => {
+  if (!gameState.automation) gameState.automation = {};
+  gameState.automation.autoRestart = !gameState.automation.autoRestart;
+  runtimeState.autoRestartDeaths = 0;
+  updateAutomationDisplay();
+  saveGame();
+};
+
+window.setStopAfterCycle = (value) => {
+  if (!gameState.automation) gameState.automation = {};
+  const n = Math.max(0, Math.min(999, Math.floor(Number(value) || 0)));
+  gameState.automation.stopAfterCycle = n;
+  updateAutomationDisplay();
+  saveGame();
+};
+
+const updateAutomationDisplay = () => {
+  const auto = gameState.automation || {};
+  const btn = document.getElementById("btn-auto-restart");
+  if (btn) {
+    btn.innerText = `Relance auto : ${auto.autoRestart ? "ON" : "OFF"}`;
+    btn.classList.toggle("is-active", !!auto.autoRestart);
+  }
+  const input = document.getElementById("input-stop-cycle");
+  if (input && document.activeElement !== input) {
+    input.value = auto.stopAfterCycle || 0;
+  }
+};
+
 window.toggleUseOfflineTime = () => {
   if (!gameState.save) gameState.save = {};
   gameState.save.useOfflineTime = !gameState.save.useOfflineTime;
@@ -296,7 +358,7 @@ window.toggleUseOfflineTime = () => {
 const updateStatDisplay = () => {
   const eff = getEffectiveStats();
   const base = gameState.stats;
-  const maxLevel = gameState.save.maxLevel;
+  const maxLevel = getMaxLevel();
   const currentLevel = gameState.stats.level;
   const remainingLevels = Math.max(0, maxLevel - currentLevel);
   const levelCapBanner = document.getElementById("build-cap-status");
@@ -377,26 +439,26 @@ const updateStatDisplay = () => {
     }
   });
 
-  const updateCrit = (id, statName, isPercent) => {
-    const val = eff[statName]; // Valeur effective totale (ex: 0.15 pour 15%)
-    const baseVal = base[statName]; // Valeur de base sans equipement (ex: 0.05)
-    const bonus = val - baseVal; // Difference apportee par les items/sets (ex: 0.10)
+  /*
+   * Le critique se pilote avec des points de competence, pas avec des runes :
+   * un point tous les 10 niveaux, a repartir entre chance et degats. Les
+   * boutons ne dependent donc plus du solde de runes ni du budget de niveaux.
+   */
+  const updateCrit = (id, statName, track, isPercent) => {
+    const val = eff[statName];
+    const baseVal = base[statName];
+    const bonus = val - baseVal;
 
-    const cost = getUpgradeCost(statName);
-    const btn = document.getElementById(`btn-${id}-1`);
-
-    // Affichage de la valeur totale (ex: 15.0%)
     document.getElementById(`eff-${id}`).innerText = isPercent
-      ? (val * 100).toFixed(1) + "%"
-      : val.toFixed(1) + "x";
+      ? `${(val * 100).toFixed(1)}%`
+      : `${val.toFixed(1)}x`;
 
-    // Gestion de l'affichage du bonus (ex: +10.0%)
     const bonusEl = document.getElementById(`bonus-${id}`);
     if (bonusEl) {
-      if (bonus !== 0) {
+      if (Math.abs(bonus) > 1e-9) {
         bonusEl.innerText = isPercent
-          ? `Equip. +${(bonus * 100).toFixed(1)}%`
-          : `Equip. +${bonus.toFixed(1)}x`;
+          ? `Equip. ${bonus > 0 ? "+" : ""}${(bonus * 100).toFixed(1)}%`
+          : `Equip. ${bonus > 0 ? "+" : ""}${bonus.toFixed(1)}x`;
         bonusEl.classList.toggle("has-positive", bonus > 0);
         bonusEl.classList.toggle("has-negative", bonus < 0);
       } else {
@@ -405,63 +467,65 @@ const updateStatDisplay = () => {
       }
     }
 
-    const globalLevelMaxed = currentLevel >= maxLevel;
-    document.getElementById(`cost-${id}`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost);
+    const ranks = getCritRanks();
+    const rankEl = document.getElementById(`rank-${id}`);
+    if (rankEl) {
+      rankEl.innerText = `${ranks[track]} rg`;
+      rankEl.title = isPercent
+        ? `Chaque rang ajoute ${(CRIT_PER_RANK.chance * 100).toFixed(0)} points de pourcentage`
+        : `Chaque rang ajoute ${CRIT_PER_RANK.damage.toFixed(2)}x`;
+    }
 
+    const btn = document.getElementById(`btn-${id}-1`);
     if (btn) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn.disabled = isMax || gameState.runes.banked < cost || globalLevelMaxed;
-      btn.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
-    }
-
-    // Update +5 button for crit stats
-    const cost5 = getMultiUpgradeCost(statName, 5);
-    document.getElementById(`cost-${id}-5`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost5);
-    const btn5 = document.getElementById(`btn-${id}-5`);
-    if (btn5) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn5.disabled =
-        isMax || gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
-      btn5.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn5.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn5.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
-    }
-
-    // Update +10 button for crit stats
-    const cost10 = getMultiUpgradeCost(statName, 10);
-    document.getElementById(`cost-${id}-10`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost10);
-    const btn10 = document.getElementById(`btn-${id}-10`);
-    if (btn10) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn10.disabled =
-        isMax ||
-        gameState.runes.banked < cost10 ||
-        currentLevel + 10 > maxLevel;
-      btn10.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn10.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn10.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
+      const canSpend = available > 0;
+      btn.disabled = !canSpend;
+      btn.innerText = "+";
+      btn.classList.toggle("is-maxed", !canSpend);
+      btn.title = canSpend
+        ? "Investir un point de competence"
+        : "Aucun point disponible : montez de niveau";
     }
   };
 
-  updateCrit("critChance", "critChance", true);
-  updateCrit("critDamage", "critDamage", false);
+  const available = getCritPointsAvailable();
+  const total = getCritPointsTotal();
+  const spent = getCritPointsSpent();
+
+  const availableEl = document.getElementById("crit-points-available");
+  if (availableEl) availableEl.innerText = `${available} / ${total}`;
+
+  const hintEl = document.getElementById("crit-points-hint");
+  if (hintEl) {
+    const nextAt =
+      (Math.floor(currentLevel / LEVELS_PER_CRIT_POINT) + 1) *
+      LEVELS_PER_CRIT_POINT;
+    hintEl.innerText =
+      nextAt > maxLevel
+        ? "Tous les points sont acquis"
+        : `Prochain point au niveau ${nextAt}`;
+  }
+
+  const respecBtn = document.getElementById("btn-crit-respec");
+  if (respecBtn) respecBtn.disabled = spent === 0;
+
+  updateCrit("critChance", "critChance", "chance", true);
+  updateCrit("critDamage", "critDamage", "damage", false);
+
+  /*
+   * Au-dela de 100% de chance effective, le surplus devient du super critique.
+   * On l'affiche explicitement, sinon le joueur n'a aucun moyen de savoir que
+   * ses points de chance au-dela du plafond servent encore a quelque chose.
+   */
+  const superEl = document.getElementById("crit-super-line");
+  if (superEl) {
+    const superChance = getSuperCritChance(eff);
+    const mult = getCritDamageMultiplier(eff);
+    superEl.innerText = superChance > 0
+      ? `Super critique ${(superChance * 100).toFixed(1)}% des coups (x${(eff.critDamage * SUPER_CRIT_MULTIPLIER).toFixed(1)}) - degats moyens x${mult.toFixed(2)}`
+      : `Degats moyens x${mult.toFixed(2)}. Au-dela de 100% de chance, le surplus devient du super critique.`;
+    superEl.classList.toggle("is-active", superChance > 0);
+  }
 };
 
 const updateEquipmentDisplay = () => {
@@ -645,7 +709,8 @@ const renderHeroPortrait = () => {
   const canvas = document.getElementById("hero-canvas");
   if (!canvas) return null;
 
-  const heroId = getHeroIdForStats(gameState.stats);
+  // Stats effectives : l'equipement compte dans la silhouette.
+  const heroId = getHeroIdForStats(getEffectiveStats());
   const sheet = HERO_SHEETS[heroId];
 
   if (heroAnimatorId !== heroId) {
@@ -674,7 +739,7 @@ const mountCombatHero = () => {
   const canvas = document.getElementById("player-sprite");
   if (!canvas) return;
 
-  const heroId = getHeroIdForStats(gameState.stats);
+  const heroId = getHeroIdForStats(getEffectiveStats());
   if (combatHeroId === heroId && combatHeroAnimator) return;
 
   const sheet = HERO_SHEETS[heroId];
@@ -714,6 +779,32 @@ const mountCombatEnemy = async () => {
   if (key === enemyVisualKey) return;
   enemyVisualKey = key;
 
+  /*
+   * Le cadre s'adapte au gabarit de la creature.
+   *
+   * Il etait fige a 104px alors qu'un rare en fait 118 et un boss jusqu'a 148
+   * — un boss sur trois reutilise une planche commune de 64px, ou l'echelle
+   * cumulee monte a 2.32. Trois quarts du bestiaire debordaient par le haut.
+   * La classe est posee sur la zone de combat et non sur une seule lane : les
+   * deux camps doivent garder la meme ligne de sol.
+   */
+  const zone = document.getElementById("combat-zone");
+  if (zone) {
+    zone.classList.toggle("is-tier-boss", !!enemy.isBoss);
+    zone.classList.toggle("is-tier-rare", !enemy.isBoss && !!enemy.isRare);
+  }
+
+  // On arrete l'ancien AVANT de monter le nouveau. Les deux animateurs
+  // partagent le meme canvas : tant que l'ancien tournait pendant le
+  // chargement du nouveau, chacun y dessinait sa frame a tour de role et les
+  // deux creatures alternaient en scintillant.
+  if (enemyAnimator) {
+    enemyAnimator.destroy();
+    enemyAnimator = null;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   const token = ++enemyMountToken;
   let animator = null;
   try {
@@ -733,7 +824,6 @@ const mountCombatEnemy = async () => {
     return;
   }
 
-  if (enemyAnimator && enemyAnimator !== animator) enemyAnimator.destroy();
   enemyAnimator = animator;
   renderEnemyEmblem(visual.emblem);
 };
@@ -759,20 +849,38 @@ const renderEnemyEmblem = (emblem) => {
  */
 let combatZoneObserver = null;
 
+/*
+ * Trois elements sont epingles en bas de l'ecran de combat et doivent
+ * s'empiler sans se recouvrir : la barre d'actions (le plancher), la zone de
+ * combat au-dessus, puis le bouton de cendre. Chacun a besoin de la hauteur de
+ * celui d'en dessous, mesuree ici plutot que fixee en dur — les sprites et le
+ * repli sur petite largeur la font varier.
+ */
+const STICKY_HEIGHTS = [
+  ["combat-zone", "--combat-zone-height"],
+  ["combat-actions", "--combat-actions-height"],
+];
+
 const watchCombatZoneHeight = () => {
-  const zone = document.getElementById("combat-zone");
-  if (!zone || combatZoneObserver) return;
+  if (combatZoneObserver) return;
+
+  const nodes = STICKY_HEIGHTS
+    .map(([id, prop]) => [document.getElementById(id), prop])
+    .filter(([node]) => node);
+  if (!nodes.length) return;
 
   const publish = () => {
-    document.documentElement.style.setProperty(
-      "--combat-zone-height",
-      `${Math.round(zone.getBoundingClientRect().height)}px`,
-    );
+    nodes.forEach(([node, prop]) => {
+      document.documentElement.style.setProperty(
+        prop,
+        `${Math.round(node.getBoundingClientRect().height)}px`,
+      );
+    });
   };
 
   if (typeof ResizeObserver === "function") {
     combatZoneObserver = new ResizeObserver(publish);
-    combatZoneObserver.observe(zone);
+    nodes.forEach(([node]) => combatZoneObserver.observe(node));
   }
   publish();
 };
@@ -850,6 +958,133 @@ export const playHeroAnimation = (name) => {
   });
 };
 
+/* ------------------------------------------------------------------ */
+/* Panneau de fin de partie : renaissance et epreuves                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Reste masque tant que le boss final n'est pas tombe au moins une fois.
+ * Une fois visible, il ne disparait plus : le compteur de renaissances et les
+ * epreuves accomplies restent consultables entre deux cycles.
+ */
+const renderEndgamePanel = () => {
+  const root = document.getElementById("endgame-panel");
+  if (!root) return;
+
+  const count = getRebirthCount();
+  const ready = canRebirth();
+  if (!ready && count === 0) {
+    root.classList.add("is-hidden");
+    root.innerHTML = "";
+    return;
+  }
+  root.classList.remove("is-hidden");
+
+  const trials = TRIALS.map((trial) => {
+    const done = isTrialCleared(trial.id);
+    const locked = !ready;
+    return `
+      <div class="trial-card${done ? " is-cleared" : ""}">
+        <div class="trial-card__head">
+          <strong>${trial.name}</strong>
+          <span class="trial-card__badge">${
+            done ? "Accompli" : `Renaissance ${trial.suggestedRebirth}+`
+          }</span>
+        </div>
+        <p class="trial-card__lore">${trial.lore}</p>
+        <button
+          type="button"
+          onclick="startTrial('${trial.id}')"
+          ${locked ? "disabled" : ""}
+          title="${locked ? "Terminez le biome final de ce cycle pour y acceder" : "Aucun butin, aucune rune : l'exploit seul"}"
+        >${done ? "Recommencer" : "Affronter"}</button>
+      </div>
+    `;
+  }).join("");
+
+  const cleared = TRIALS.filter((t) => isTrialCleared(t.id)).length;
+
+  const spare = getRebirthPointsAvailable();
+  const nodes = REBIRTH_NODES.map((node) => {
+    const rank = getNodeRank(node.id);
+    const full = rank >= node.maxRank;
+    return `
+      <div class="tree-node${full ? " is-full" : ""}">
+        <div class="tree-node__head">
+          <strong>${node.name}</strong>
+          <span class="tree-node__rank">${rank} / ${node.maxRank}</span>
+        </div>
+        <p class="tree-node__detail">${node.detail}</p>
+        <button
+          type="button"
+          onclick="investRebirthNode('${node.id}')"
+          ${full || spare <= 0 ? "disabled" : ""}
+          title="${full ? "Rang maximum" : spare <= 0 ? "Aucun point disponible" : "Investir un point"}"
+        >${full ? "Max" : "+"}</button>
+      </div>
+    `;
+  }).join("");
+
+  root.innerHTML = `
+    <div class="section-head">
+      <div>
+        <h3>Fin de partie</h3>
+        <p>Renaitre pour recommencer plus vite, ou rester pour les epreuves.</p>
+      </div>
+    </div>
+
+    <div class="endgame-stats">
+      <div><span>Renaissances</span><b>${count}</b></div>
+      <div><span>Gain de runes</span><b>+${Math.round(getRebirthRuneBonus() * 100)}%</b></div>
+      <div><span>Niveau maximum</span><b>${getMaxLevel()}</b></div>
+      <div><span>Epreuves</span><b>${cleared} / ${TRIALS.length}</b></div>
+    </div>
+
+    <div class="endgame-rebirth">
+      <p class="panel-copy">
+        ${
+          ready
+            ? `Renaitre remet le niveau, les statistiques, l'inventaire et les biomes a zero. Vous conservez le codex, les cendres de guerre et les deblocages de preparation. En echange : <strong>+${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes</strong> et <strong>+${REBIRTH_LEVEL_BONUS} au niveau maximum</strong>, de facon permanente.`
+            : "Terminez le dernier biome de ce cycle pour rouvrir la Renaissance."
+        }
+      </p>
+      <button
+        type="button"
+        class="endgame-rebirth__btn"
+        onclick="requestRebirth()"
+        ${ready ? "" : "disabled"}
+      >Renaitre${ready ? ` (${count + 1})` : ""}</button>
+    </div>
+
+    ${
+      count > 0
+        ? `
+    <div class="section-head section-head-tight">
+      <div>
+        <h4>Arbre de renaissance</h4>
+        <p>${getRebirthPointsAvailable()} / ${getRebirthPointsTotal()} point(s) disponible(s). ${POINTS_PER_REBIRTH} par renaissance.</p>
+      </div>
+      <button
+        type="button"
+        class="crit-points__reset"
+        onclick="respecRebirthTree()"
+        ${getRebirthPointsSpent() === 0 ? "disabled" : ""}
+      >Reinitialiser</button>
+    </div>
+    <div class="rebirth-tree">${nodes}</div>`
+        : ""
+    }
+
+    <div class="section-head section-head-tight">
+      <div>
+        <h4>Epreuves</h4>
+        <p>Des boss hors progression. Aucun butin, aucune rune : seulement l'exploit.</p>
+      </div>
+    </div>
+    <div class="trial-grid">${trials}</div>
+  `;
+};
+
 const renderHeroPanel = () => {
   const heroId = renderHeroPortrait();
   if (!heroId) return;
@@ -866,14 +1101,18 @@ const renderHeroPanel = () => {
   const eff = getEffectiveStats();
   const keys = Object.keys(STAT_META);
   const invested = keys.map((key) => Number(gameState.stats[key]) || 0);
-  const highest = Math.max(1, ...invested);
-  const dominant = getDominantStat(gameState.stats);
+  const totals = keys.map((key) => Math.round(Number(eff[key]) || 0));
+  // La barre se lit sur le total, comme le chiffre affiche a cote. Elle etait
+  // tracee sur les points investis : une arme qui donnait +15 de force
+  // n'allongeait pas la barre de force.
+  const highest = Math.max(1, ...totals);
+  const dominant = getDominantStat(eff);
 
   const rows = keys
     .map((key, index) => {
       const meta = STAT_META[key];
       const base = invested[index];
-      const total = Math.round(Number(eff[key]) || 0);
+      const total = totals[index];
       const bonus = total - base;
       const isDominant = key === dominant;
 
@@ -884,7 +1123,7 @@ const renderHeroPanel = () => {
             ${meta.label}
           </span>
           <div class="hero-stat__track">
-            <div class="hero-stat__fill" style="width:${Math.round((base / highest) * 100)}%;background:${meta.accent}"></div>
+            <div class="hero-stat__fill" style="width:${Math.round((total / highest) * 100)}%;background:${meta.accent}"></div>
           </div>
           <span class="hero-stat__value">
             ${total}${bonus > 0 ? `<small>+${bonus}</small>` : ""}
@@ -1514,6 +1753,8 @@ const updateBiomeDisplay = () => {
   renderBiomeDetail(selectedBiomeId);
   renderBiomeShortcuts(visibleIds);
   renderHubFocus();
+  renderEndgamePanel();
+  updateAutomationDisplay();
 };
 
 const renderPreparationDisplay = () => {
@@ -2191,7 +2432,7 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Penetration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
     <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
+    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}${      eff.extraAttackChance > 0.005        ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>`        : ""    }</b></div>
     <div class="rt-stat"><span>Degats de zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Deg. min. Epines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
     <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
@@ -2680,27 +2921,47 @@ export const showStatTooltip = (e, statType) => {
   const descriptions = {
     vigor: {
       title: "Vigueur",
-      text: "Augmente vos points de vie maximum.<br>",
+      text:
+        "La voie de l'endurance." +
+        "<br><strong>Augmente vos points de vie maximum</strong>, par paliers degressifs." +
+        "<br><strong>Reduit les degats des boss</strong> : 9 points = 1% de mitigation, jusqu'a 25%." +
+        "<br><small>Sert aussi de base de calcul a plusieurs cendres de guerre et statuts.</small>",
     },
     strength: {
       title: "Force",
-      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 degat de base.</strong>",
+      text:
+        "La voie du coup unique, et la seule qui perce les armures." +
+        "<br><strong>1 point = 1 degat de base</strong>, par attaque." +
+        "<br><strong>2 points = 1 de penetration fixe</strong>, soustraite a l'armure adverse." +
+        "<br><small>La penetration est le levier qu'aucune autre statistique ne touche, et elle vaut d'autant plus que la cible est blindee.</small>",
     },
     dexterity: {
       title: "Dexterite",
-      text: "Ameliore votre agilite au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +0.5 d'Armure. 4 points en dexterite = 1 force. <small>(Les bonus sont attribues par rapport aux stats de BASE)</small>",
+      text:
+        "La voie des afflictions : vous frappez plus souvent, donc vous appliquez plus de statuts." +
+        "<br><strong>Attaques par tour : 1 + (Dexterite / 60) puissance 1,75.</strong>" +
+        "<br><small>La courbe accelere : 40 points donnent 1,5 attaque, 80 en donnent 2,7, et 150 en donnent 6. Un investissement lourd rapporte plus que proportionnellement.</small>" +
+        "<br><small>Les effets a l'impact (saignement, gel, poison) se declenchent <b>a chaque attaque</b> : chaque attaque gagnee est aussi une chance de proc en plus.</small>" +
+        "<br>4 points = 1% d'Esquive <small>(maximum 50%)</small>." +
+        "<br>4 points = +0.5 d'Armure." +
+        "<br>4 points = 1 de Force.",
     },
     intelligence: {
       title: "Intelligence",
-      text: "Augmente votre capacite a absorber l'energie des runes.<br><strong>1 point = +1% de Runes.</strong> (max +50%). 4 points en Intelligence = 1 force.",
+      text:
+        "La voie du sortilege : vos degats ignorent l'armure." +
+        "<br><strong>1 point = +0.6 degat magique</strong>, une fois par tour." +
+        "<br><small>Ces degats sont ajoutes <b>apres</b> la reduction d'armure : ils ne sont jamais divises par elle. Ils se lancent une fois par tour et non a chaque coup, pour ne pas se multiplier avec les attaques de la dexterite.</small>" +
+        "<br><strong>1 point = +1% de Runes</strong> <small>(maximum +150%)</small>." +
+        "<br>4 points = 1 de Force.",
     },
     critChance: {
       title: "Chance de Critique",
-      text: "Probabilite d'infliger un coup critique lors d'une attaque.",
+      text: "Probabilite d'infliger un coup critique. +5 points de pourcentage par point de competence. Au-dela de 100%, le surplus devient de la chance de super critique.",
     },
     critDamage: {
       title: "Degats Critiques",
-      text: "Multiplicateur de degats applique lors d'un coup critique.",
+      text: "Multiplicateur applique lors d'un coup critique. +0,25x par point de competence. Un super critique double ce multiplicateur.",
     },
   };
   const data = descriptions[statType];
@@ -2878,6 +3139,26 @@ export const initCampParallax = () => {
 };
 
 export const setAudioListener = () => {
+  /*
+   * Deux curseurs separes. Beaucoup de joueurs coupent la musique et gardent
+   * les effets, ou l'inverse : un reglage unique force a choisir entre les
+   * deux.
+   */
+  const sfxSlider = document.getElementById("sfx-volume");
+  if (sfxSlider) {
+    sfxSlider.value = gameState.save?.sfxVolume ?? 0.5;
+    sfxSlider.oninput = (e) => {
+      setSfxVolume(parseFloat(e.target.value));
+      // Un retour immediat : sans lui, on regle a l'aveugle.
+      playSfx("hit");
+      saveGame();
+    };
+  }
+
+  // Precharge les bruitages de combat : sans ca le premier coup est muet, le
+  // temps que le navigateur telecharge le fichier.
+  primeSfx();
+
   const volumeSlider = document.getElementById("music-volume");
 
   if (volumeSlider) {
