@@ -379,14 +379,23 @@ against that, which is why they need a multiplier to compete.
 | --- | --- |
 | Vigueur | HP; base of several ashes and statuses |
 | Force | Damage, per attack |
-| Dexterite | **1 extra attack per 40 points**, dodge (dex/400, cap 50%), armor (dex/8), and dex/4 into strength |
+| Dexterite | **extra attacks = (dex/60)^1.75**, dodge (dex/400, cap 50%), armor (dex/8), and dex/4 into strength |
 | Intelligence | **+0.8 magic damage per point, added after the armor division**, +1% runes per point (cap +150%), and int/4 into strength |
 
-`DEX_PER_EXTRA_ATTACK = 40` is calibrated for parity at full budget: 150 dex
-gives 4 attacks x 37 derived strength = 148 damage/turn against 150 for pure
-strength. The remainder is a **per-turn chance** of one more attack
-(`extraAttackChance`), not a hard breakpoint — without it, 79 to 80 dexterity
-was a 48% jump on a single point.
+The attack curve is **convex on purpose**. Damage per turn is
+`attacks x strength`; with a linear divisor that product mechanically peaks
+mid-budget. Measured with the old divisor of 40, the optimum sat at 76 dex —
+investing *mainly* in dexterity was worse than investing half. The exponent
+moves the optimum to **112** without touching the peak (263 vs 270 damage/turn),
+weakens early dexterity (1.15 attacks at 20 points against 1.50 before) and
+finally rewards full commitment (5.97 attacks at 150 against 4.75).
+
+The fractional part is a **per-turn chance** of one more attack
+(`extraAttackChance`), not a hard breakpoint — with a floor alone, 79 to 80
+dexterity was a 48% jump on a single point.
+
+There is no cap on total attacks; items add to `attacksPerTurn` on top of the
+curve. Worth watching if a build ever stacks both hard.
 
 Dexterity is the affliction path by design: on-hit effects roll **per attack**,
 so extra attacks are extra proc rolls.
@@ -453,6 +462,22 @@ const mv = await import("./monster-visuals.js");
 const sp = await import("./sprites.js");
 mv.auditMonsterVisuals(sp.MONSTER_ARCHETYPES);
 ```
+
+## Expedition automation
+
+A biome already loops forever on its own (`currentLoopCount`, enemies x1.25 per
+cycle). What was missing was everything around it, so `gameState.automation`
+adds two switches — pure convenience, neither changes any rule:
+
+*   `autoRestart` — relaunch the same biome after a death. Guarded: after
+    `MAX_AUTO_DEATHS` (5) consecutive deaths **without clearing a single
+    cycle**, it switches itself off and says so. Without that guard a player
+    who enables it on too hard a biome loops on their own death forever.
+    The counter resets whenever a cycle completes.
+*   `stopAfterCycle` — retreat to camp once that many cycles are cleared.
+    0 means never, the original behaviour. It matters because carried runes are
+    banked at each cleared cycle but **lost on death**: stopping on purpose is
+    how you keep them.
 
 ## Rebirth and trials (`rebirth.js`)
 

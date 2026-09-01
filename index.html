@@ -632,6 +632,22 @@
             <div class="biome-bottom-left">
               <button class="safe-btn" onclick="toggleView('camp')">Se replier au camp</button>
             </div>
+            <div class="automation-controls">
+              <button id="btn-auto-restart" onclick="toggleAutoRestart()" title="Relance l'expedition dans le meme biome apres une mort">
+                Relance auto : OFF
+              </button>
+              <label class="automation-cycle">
+                <span>Replier au cycle</span>
+                <input
+                  id="input-stop-cycle"
+                  type="number"
+                  min="0"
+                  max="999"
+                  step="1"
+                  onchange="setStopAfterCycle(this.value)"
+                />
+              </label>
+            </div>
             <div id="offline-controls-b" class="offline-controls-b">
               <div class="bank-text">Temps sauvegarde <span id="offline-bank-b">0s</span></div>
               <button id="btn-use-offline-b" onclick="toggleUseOfflineTime()">Utiliser : OFF</button>

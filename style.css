@@ -3162,3 +3162,45 @@ button:disabled {
   opacity: 0.4;
   cursor: default;
 }
+
+/* ------------------------------------------------------------------ */
+/* Automatisation d'expedition                                        */
+/* ------------------------------------------------------------------ */
+
+.automation-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#btn-auto-restart {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  border-radius: 999px;
+}
+
+/* L'etat actif doit se lire sans relire le texte du bouton. */
+#btn-auto-restart.is-active {
+  border-color: color-mix(in srgb, var(--success) 55%, var(--border-strong));
+  color: var(--success);
+}
+
+.automation-cycle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+.automation-cycle input {
+  width: 58px;
+  padding: 5px 6px;
+  font-size: 0.78rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-strong);
+  color: var(--text);
+}

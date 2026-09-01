@@ -71,6 +71,12 @@ export const DEFAULT_PLAYER_PROFILE = {
     biomeFilter: "all",
     entries: [],
   },
+  // Automatisation d'expedition. Purement du confort : rien ici ne change les
+  // regles, seulement qui appuie sur le bouton.
+  automation: {
+    autoRestart: false,
+    stopAfterCycle: 0,
+  },
   // Progression au-dessus de la partie : survit a chaque renaissance.
   rebirth: {
     count: 0,
@@ -185,6 +191,15 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   );
   // Le plafond de niveau monte de 10 par renaissance : on ne peut donc pas le
   // forcer a MAX_LEVEL ici, ce qui annulerait le gain a chaque chargement.
+  base.automation = {
+    ...DEFAULT_PLAYER_PROFILE.automation,
+    ...toObject(data.automation),
+  };
+  base.automation.autoRestart = !!base.automation.autoRestart;
+  base.automation.stopAfterCycle = Math.max(
+    0,
+    Math.min(999, Math.floor(Number(base.automation.stopAfterCycle) || 0)),
+  );
   base.rebirth = { ...DEFAULT_PLAYER_PROFILE.rebirth, ...toObject(data.rebirth) };
   base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
   base.rebirth.finalCleared = !!base.rebirth.finalCleared;

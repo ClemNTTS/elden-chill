@@ -147,6 +147,9 @@ const getWeightedDrop = (lootTable) => {
   return weightedLoot[0];
 };
 
+/** Morts consecutives sans progresser avant de couper la relance automatique. */
+const MAX_AUTO_DEATHS = 5;
+
 export const handleDeath = () => {
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
   addJournalEntry(
@@ -165,6 +168,40 @@ export const handleDeath = () => {
   runtimeState.enemyIntent = null;
   clearRunBuffs();
   saveGame();
+
+  /*
+   * Relance automatique.
+   *
+   * Le garde-fou n'est pas decoratif : sans lui, un joueur qui active la
+   * relance sur un biome trop dur boucle indefiniment sur sa propre mort sans
+   * jamais s'en apercevoir. Au bout de MAX_AUTO_DEATHS morts consecutives sans
+   * avoir boucle un seul cycle, on coupe et on le dit.
+   *
+   * Le compteur se remet a zero des qu'un cycle est nettoye (handleVictory).
+   */
+  const auto = gameState.automation;
+  if (auto?.autoRestart) {
+    runtimeState.autoRestartDeaths = (runtimeState.autoRestartDeaths || 0) + 1;
+    if (runtimeState.autoRestartDeaths >= MAX_AUTO_DEATHS) {
+      auto.autoRestart = false;
+      runtimeState.autoRestartDeaths = 0;
+      ActionLog(
+        `Relance automatique coupee apres ${MAX_AUTO_DEATHS} morts sans progresser.`,
+        "log-crit",
+      );
+      saveGame();
+      delayedSetTimeout(() => toggleView("camp"), 2500);
+      updateUI();
+      return;
+    }
+    ActionLog("Relance automatique de l'expedition...", "log-runes");
+    delayedSetTimeout(() => {
+      runtimeState.currentCombatSession++;
+      startExploration(biomeAtDeath);
+    }, 2000);
+    updateUI();
+    return;
+  }
 
   // If offline-time use is enabled and we still have banked time, automatically
   // restart the exploration in the same biome. Otherwise return to camp as before.
@@ -334,8 +371,29 @@ export const handleVictory = (sessionId) => {
     runtimeState.currentLoopCount++;
     gameState.world.progress = 0;
     gameState.world.checkpointReached = false;
+    // Un cycle boucle : l'expedition progresse, le garde-fou repart de zero.
+    runtimeState.autoRestartDeaths = 0;
 
     updateCycleDisplay();
+
+    /*
+     * Repli automatique. Les runes portees sont encaissees a chaque cycle
+     * nettoye, mais celles du cycle en cours sont perdues a la mort : pouvoir
+     * s'arreter a un nombre de cycles choisi evite de tout risquer en boucle.
+     */
+    const stopAt = gameState.automation?.stopAfterCycle || 0;
+    if (stopAt > 0 && runtimeState.currentLoopCount >= stopAt) {
+      ActionLog(
+        `Objectif de ${stopAt} cycle(s) atteint : repli au camp.`,
+        "log-crit",
+      );
+      gameState.world.isExploring = false;
+      clearRunBuffs();
+      saveGame();
+      delayedSetTimeout(() => toggleView("camp"), 1500);
+      updateUI();
+      return;
+    }
 
     ActionLog(`--- DÉBUT DU CYCLE ${runtimeState.currentLoopCount + 1} ---`);
 

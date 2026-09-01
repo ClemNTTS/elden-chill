@@ -307,6 +307,39 @@ export const updateOfflineDisplay = () => {
   });
 };
 
+/*
+ * Automatisation d'expedition. Le champ de cycles accepte 0, qui vaut
+ * "ne jamais se replier tout seul" — c'est le comportement d'origine.
+ */
+window.toggleAutoRestart = () => {
+  if (!gameState.automation) gameState.automation = {};
+  gameState.automation.autoRestart = !gameState.automation.autoRestart;
+  runtimeState.autoRestartDeaths = 0;
+  updateAutomationDisplay();
+  saveGame();
+};
+
+window.setStopAfterCycle = (value) => {
+  if (!gameState.automation) gameState.automation = {};
+  const n = Math.max(0, Math.min(999, Math.floor(Number(value) || 0)));
+  gameState.automation.stopAfterCycle = n;
+  updateAutomationDisplay();
+  saveGame();
+};
+
+const updateAutomationDisplay = () => {
+  const auto = gameState.automation || {};
+  const btn = document.getElementById("btn-auto-restart");
+  if (btn) {
+    btn.innerText = `Relance auto : ${auto.autoRestart ? "ON" : "OFF"}`;
+    btn.classList.toggle("is-active", !!auto.autoRestart);
+  }
+  const input = document.getElementById("input-stop-cycle");
+  if (input && document.activeElement !== input) {
+    input.value = auto.stopAfterCycle || 0;
+  }
+};
+
 window.toggleUseOfflineTime = () => {
   if (!gameState.save) gameState.save = {};
   gameState.save.useOfflineTime = !gameState.save.useOfflineTime;
@@ -1674,6 +1707,7 @@ const updateBiomeDisplay = () => {
   renderBiomeShortcuts(visibleIds);
   renderHubFocus();
   renderEndgamePanel();
+  updateAutomationDisplay();
 };
 
 const renderPreparationDisplay = () => {
@@ -2855,7 +2889,8 @@ export const showStatTooltip = (e, statType) => {
       title: "Dexterite",
       text:
         "La voie des afflictions : vous frappez plus souvent, donc vous appliquez plus de statuts." +
-        "<br><strong>40 points = 1 attaque supplementaire par tour.</strong>" +
+        "<br><strong>Attaques par tour : 1 + (Dexterite / 60) puissance 1,75.</strong>" +
+        "<br><small>La courbe accelere : 40 points donnent 1,5 attaque, 80 en donnent 2,7, et 150 en donnent 6. Un investissement lourd rapporte plus que proportionnellement.</small>" +
         "<br><small>Les effets a l'impact (saignement, gel, poison) se declenchent <b>a chaque attaque</b> : chaque attaque gagnee est aussi une chance de proc en plus.</small>" +
         "<br>4 points = 1% d'Esquive <small>(maximum 50%)</small>." +
         "<br>4 points = +0.5 d'Armure." +

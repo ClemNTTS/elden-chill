@@ -19,6 +19,7 @@ export const runtimeState = {
   playerCurrentHp: 0,
   currentCombatSession: 0,
   currentLoopCount: 0,
+  autoRestartDeaths: 0,
   ashUsesLeft: 0,
   ashIsPrimed: false,
   enemyIntent: null,
@@ -55,7 +56,7 @@ export function setGameState(newState) {
     }
   };
 
-  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save", "rebirth"]
+  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save", "rebirth", "automation"]
     .forEach(mergeObject);
 
   mergeObject("ashesOfWaruses");
@@ -84,8 +85,27 @@ export function setGameState(newState) {
     : [];
 }
 
-/** Points de dexterite necessaires pour une attaque supplementaire. */
-export const DEX_PER_EXTRA_ATTACK = 40;
+/*
+ * Courbe d'attaques supplementaires de la dexterite.
+ *
+ * Elle est convexe, et ce n'est pas cosmetique. Les degats par tour valent
+ * `attaques x force` : avec un diviseur lineaire, ce produit de deux termes
+ * lineaires culmine mecaniquement au milieu du budget. Mesure faite avec
+ * l'ancien diviseur de 40 — l'optimum tombait a 76 de dexterite, ce qui
+ * rendait un investissement *principalement* en dexterite moins bon qu'un
+ * demi-investissement. L'exact inverse de l'intention.
+ *
+ * L'exposant deplace l'optimum a 112 sans toucher au pic (263 contre 270
+ * degats par tour), affaiblit nettement la dexterite precoce (1,15 attaque a
+ * 20 points contre 1,50 avant) et recompense enfin l'engagement complet
+ * (5,97 attaques a 150 contre 4,75).
+ */
+export const DEX_ATTACK_DIVISOR = 60;
+export const DEX_ATTACK_EXPONENT = 1.75;
+
+/** Attaques supplementaires apportees par la dexterite, partie decimale incluse. */
+export const getDexExtraAttacks = (dexterity = 0) =>
+  Math.pow(Math.max(0, dexterity) / DEX_ATTACK_DIVISOR, DEX_ATTACK_EXPONENT);
 
 /**
  * Rendement de l'intelligence.
@@ -185,16 +205,14 @@ export function getEffectiveStats() {
    *
    * Les degats valent la force (combat.js), et la dexterite n'en rend qu'un
    * quart : sans multiplicateur, un build dexterite valait structurellement
-   * quatre fois moins qu'un build force. Le diviseur de 40 est calibre pour la
-   * parite exacte a budget plein — a 150 de dexterite, 1 + floor(150/40) = 4
-   * attaques pour 37 de force derivee, soit 148 de degats par tour contre 150
-   * pour un build force pur. La dexterite garde en prime son esquive et son
-   * armure ; elle les paie en fragilite face aux coups uniques.
+   * quatre fois moins qu'un build force. La courbe est definie plus haut ; la
+   * dexterite garde en prime son esquive et son armure, qu'elle paie en
+   * fragilite face aux coups uniques.
    *
    * Corollaire assume : les effets a l'impact se declenchent par attaque, donc
    * la dexterite est aussi la voie des afflictions.
    */
-  const dexAttacks = (effStats.dexterity || 0) / DEX_PER_EXTRA_ATTACK;
+  const dexAttacks = getDexExtraAttacks(effStats.dexterity);
   effStats.attacksPerTurn += Math.floor(dexAttacks);
   /*
    * Le reste devient une chance d'attaque supplementaire, tiree a chaque tour.
