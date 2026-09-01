@@ -606,6 +606,54 @@ print their amount in a sealed biome even though nothing was healed.
     been quietly voiding 10% of that biome's rolls since the original split.
     Loot tables now accept `{ ashId }` properly.
 
+## Balance tooling
+
+Two tools, deliberately separate because they have different levels of trust.
+
+### `tools/audit-curve.mjs` — no combat model, fully trustworthy
+
+Measures only ratios internal to the data: boss/standard HP, rare/standard, and
+the power jump from one biome to the next, in true progression order. It makes
+**no assumption about combat**, so an anomaly it reports is a real anomaly.
+
+Reference medians across the 46 biomes: **boss/std x8.4**, rare/std x1.41,
+bossAtk/stdAtk x1.76. It flags anything past 2.2x those medians.
+
+Current findings, **16 of 18 in the original 32 biomes**:
+
+| Biome | boss/std | comment |
+| --- | --- | --- |
+| Marais de Liurnia | **x84.6** | 78 hp standard, 6600 hp boss |
+| Chateau du Lion Rouge | **x55.6** | Radahn at 10000 against 180 hp trash |
+| Tertre Draconique | x30.2 | |
+| Peninsule larmoyante | x29.5 | |
+| Riviere Ainsel | x28.9 | |
+| Academie de Raya Lucaria | x25.0 | |
+
+Sharpest jumps between consecutive biomes: Nokron **x8.0**, Riviere Ainsel
+x5.5, Lac de la Putrefaction x5.4, Entree de Caelid x4.7.
+
+### `tools/simulate-balance.mjs` — plays the game headless
+
+Runs the **real** `getEffectiveStats()` (items, sets, traits, rebirth,
+stat conversions) and greedily equips the best 3-piece loadout out of what the
+cleared biomes could have dropped. It then farms each biome, counting the
+cycles needed before its boss becomes beatable.
+
+The combat loop is reimplemented, because the real one is async and
+UI-coupled. It mirrors `combat.js` in order and was checked against the live
+game: at 150 intelligence against 200 armor, the game deals 138 per hit, the
+model predicts 138.
+
+It does **not** model ashes, blessings, item on-hit effects, statuses or boss
+phases, so its absolute verdicts are pessimistic — a biome it calls playable
+certainly is; a biome it calls a wall is worth looking at. Its **relative**
+signal between builds and between biomes is the useful part.
+
+`tools/headless-stub.mjs` provides the inert DOM both tools need. Import
+`game.js` first: it is the real entry point, and that order avoids the temporal
+dead zones of the `ui.js` / `core.js` import cycle.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but
