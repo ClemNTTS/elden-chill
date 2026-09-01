@@ -775,6 +775,39 @@ group is **1.3**, and 8 items convert intelligence into splash. Its equipment
 optimiser was scoring candidates against a single target, so it never picked a
 splash item.
 
+## Sound effects (`sfx.js`)
+
+Nine sounds, deliberately few, from the itch.io pack in `assets/itch-assets`.
+Three guards, all of them necessary:
+
+*   **Throttle** per sound (`minGap`). Combat fires up to six attacks a turn;
+    without it a dexterity build machine-guns the speakers. Measured: 20 rapid
+    calls produce **1** play, one more after a 400 ms pause.
+*   **Pool** of three `Audio` tags per sound, so two close hits overlap instead
+    of cutting each other.
+*   **Its own volume**, `save.sfxVolume`, separate from the music slider. Plenty
+    of players mute one and keep the other.
+
+Sounds hang off the animation hooks that already existed
+(`playHeroCombatAttack`, `playEnemyDeath`, ...) rather than new call sites, so
+there is one place to maintain. `playSfx()` never throws: a browser refusing
+autoplay must not interrupt a run.
+
+## Discord webhook — rotate it
+
+`core.js` used to hold a live Discord webhook URL **in plain text**. A webhook
+is not an API key: anyone holding it can post anything into that channel,
+unauthenticated and unlimited. The repo is public.
+
+The URL is out of the working tree, but **it is still in git history**
+(commit `06ef90c`). The only real fix is to delete that webhook in the Discord
+channel settings and create a new one.
+
+Note also that a webhook cannot be called from the browser at all — Discord
+sends no CORS header, which is why the old code routed through a third-party
+proxy that saw every announcement. Reliable announcements need a small
+server-side component holding the secret.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but

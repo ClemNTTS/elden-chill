@@ -105,6 +105,7 @@ export const DEFAULT_PLAYER_PROFILE = {
     offlineTimeBank: 0,
     useOfflineTime: false,
     lastSavedAt: 0,
+    sfxVolume: 0.5,
     profileId: null,
     saveSequence: 0,
   },
@@ -230,6 +231,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     Math.min(MAX_OFFLINE_TIME_BANK, Math.floor(Number(base.save.offlineTimeBank) || 0)),
   );
   base.save.useOfflineTime = !!base.save.useOfflineTime;
+  base.save.sfxVolume = Math.max(
+    0,
+    Math.min(1, Number(base.save.sfxVolume ?? 0.5) || 0),
+  );
   base.save.lastSavedAt = Math.max(0, Number(base.save.lastSavedAt) || 0);
 
   ensureSaveIdentity(base, options.fallbackProfileId || null);

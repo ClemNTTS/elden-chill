@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx } from "./sfx.js";
 import { getTraitRunBuffs } from "./biome-traits.js";
 import {
   getRebirthAshBonus,
@@ -98,6 +99,7 @@ const dropItem = (itemId) => {
       gameState.world.currentBiome,
     );
     ActionLog(`Vous avez trouvé : ${itemTemplate.name} !`);
+    playSfx("loot");
   } else {
     if (inventoryItem.level >= 10) {
       if (inventoryItem.level > 10) inventoryItem.level = 10;
@@ -167,6 +169,7 @@ const getWeightedDrop = (lootTable) => {
 const MAX_AUTO_DEATHS = 5;
 
 export const handleDeath = () => {
+  playSfx("death");
   ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
   addJournalEntry(
     "checkpoint",
@@ -289,6 +292,7 @@ export const handleVictory = (sessionId) => {
     runtimeState.areaCleared = false;
     runtimeState.usedRenaissance = false;
     runtimeState.usedAbsolution = false;
+    if (gameState.runes.carried > 0) playSfx("runes");
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
 
@@ -299,6 +303,7 @@ export const handleVictory = (sessionId) => {
       : 0;
 
     ActionLog("BOSS VAINCU !");
+    playSfx("bossDown");
     addJournalEntry(
       "checkpoint",
       "Biome nettoye",
@@ -607,33 +612,24 @@ export const startExploration = (biomeId) => {
   nextEncounter(sessionAtStart);
 };
 
-const DISCORD_WEBHOOK_URL =
-  "https://discord.com/api/webhooks/1467277773524566066/xGqF5Tb3YrQ7CKU5f50pdOdLsQsp3c0AUIBMJOE_i3_KDCV4B8Y0UqqdpgpVbDBaH0Ec";
-
-async function sendDiscordAnnouncement(bossName) {
-  // const message = {
-  //   content: `🔥 **ANNONCE DE GRÂCE** 🔥\nUn Sans-éclat a terrassé pour la première fois **${bossName}** !`,
-  // };
-
-  // try {
-  //   // On passe par un proxy pour éviter l'erreur CORS
-  //   const proxyUrl =
-  //     "https://corsproxy.io/?" + encodeURIComponent(DISCORD_WEBHOOK_URL);
-
-  //   const response = await fetch(proxyUrl, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify(message),
-  //   });
-
-  //   if (response.ok) {
-  //     console.log("✅ Annonce Discord envoyée !");
-  //   }
-  // } catch (err) {
-  //   console.error("❌ Erreur lors de l'envoi Discord :", err);
-  // }
-
+/*
+ * Annonce Discord — desactivee.
+ *
+ * L'implementation precedente contenait l'URL du webhook EN CLAIR dans ce
+ * fichier. Un webhook Discord n'est pas une cle d'API : quiconque l'a peut
+ * poster ce qu'il veut dans le salon, sans limite et sans authentification.
+ * Dans un depot public, c'etait une porte ouverte.
+ *
+ * L'URL est retiree, mais elle reste dans l'historique git : le seul correctif
+ * reel est de SUPPRIMER ce webhook dans les parametres du salon Discord et
+ * d'en creer un autre.
+ *
+ * Un webhook ne peut pas etre appele depuis le navigateur de toute facon :
+ * Discord ne renvoie pas d'en-tete CORS, d'ou le proxy tiers qu'utilisait
+ * l'ancienne version — lequel voyait passer chaque annonce. Une annonce
+ * automatique fiable demande un petit service cote serveur qui garde le
+ * secret ; tant qu'il n'existe pas, cette fonction ne fait rien.
+ */
+function sendDiscordAnnouncement(bossName) {
   return;
 }

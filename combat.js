@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx } from "./sfx.js";
 import { rollCrit } from "./crit.js";
 import { tickBiomeTraits } from "./biome-traits.js";
 import { getMagicDamage } from "./state.js";
@@ -390,11 +391,18 @@ export function performAttack({
     // mortel, la cible joue sa mort plutot que son encaissement.
     if (isPlayer) {
       playHeroCombatAttack();
-      if (getEntityHp(target) <= 0) playEnemyDeath();
-      else playEnemyHurt();
+      // Le son suit l'animation deja en place : un seul endroit a maintenir.
+      playSfx(isCrit ? "crit" : "hit");
+      if (getEntityHp(target) <= 0) {
+        playEnemyDeath();
+        playSfx("kill");
+      } else {
+        playEnemyHurt();
+      }
     } else {
       playEnemyAttack();
       playHeroCombatHurt();
+      playSfx("hurt");
     }
 
     updateHealthBars();
@@ -674,6 +682,7 @@ export const combatLoop = (sessionId) => {
           runtimeState.ashUsesLeft--;
           runtimeState.ashIsPrimed = false;
           playAshEffect(gameState.equippedAsh);
+          playSfx("ash");
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }

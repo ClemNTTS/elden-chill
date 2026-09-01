@@ -77,6 +77,7 @@ function playDungeonMusic() {
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
+import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
 import {
   POINTS_PER_REBIRTH,
   REBIRTH_LEVEL_BONUS,
@@ -3138,6 +3139,26 @@ export const initCampParallax = () => {
 };
 
 export const setAudioListener = () => {
+  /*
+   * Deux curseurs separes. Beaucoup de joueurs coupent la musique et gardent
+   * les effets, ou l'inverse : un reglage unique force a choisir entre les
+   * deux.
+   */
+  const sfxSlider = document.getElementById("sfx-volume");
+  if (sfxSlider) {
+    sfxSlider.value = gameState.save?.sfxVolume ?? 0.5;
+    sfxSlider.oninput = (e) => {
+      setSfxVolume(parseFloat(e.target.value));
+      // Un retour immediat : sans lui, on regle a l'aveugle.
+      playSfx("hit");
+      saveGame();
+    };
+  }
+
+  // Precharge les bruitages de combat : sans ca le premier coup est muet, le
+  // temps que le navigateur telecharge le fichier.
+  primeSfx();
+
   const volumeSlider = document.getElementById("music-volume");
 
   if (volumeSlider) {
