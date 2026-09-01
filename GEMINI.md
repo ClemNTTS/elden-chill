@@ -654,6 +654,40 @@ signal between builds and between biomes is the useful part.
 `game.js` first: it is the real entry point, and that order avoids the temporal
 dead zones of the `ui.js` / `core.js` import cycle.
 
+## What the simulator found, and what it changed
+
+Three **multiplicative loops** the tool surfaced, none of which were visible by
+reading the code:
+
+1.  `silver_tear_mask` multiplied strength by `1 + floor(baseDex/5) * 0.046`,
+    **unbounded**. At 154 dexterity that was already x2.38 on top of its x1.15.
+    Now capped at +100%.
+2.  Extra attacks were computed from **effective** dexterity, so dex-percent
+    items fed the exponent: +21% dexterity gave +39% attacks, and every attack
+    then multiplied all strength gained elsewhere. Now computed from **base**
+    dexterity, which is also what dodge and item gates already use.
+3.  Magic damage applied **per attack**, so dexterity and intelligence
+    multiplied each other — the optimiser had a pure-dex build equipping
+    intelligence gear. Magic now lands once per turn (`castsMagic: i === 0`).
+
+**Curve smoothing.** Boss/standard ratios are now clamped into
+`[x4.2, x16.8]` around the x8.4 median. Worst case went from **x84.6 to x17.1**.
+Where a biome's standard monsters are exclusive to it, the correction was split
+between raising the trash and lowering the boss, so story bosses keep their
+weight. Where they are shared (`clayman`, Raya Lucaria's monsters), only the
+boss moved — raising a shared monster would have changed several biomes at once.
+
+`tools/apply-curve-fix.py` records exactly which monsters were touched.
+
+**Still open.** At equal investment (70% offence / 30% vigour) dexterity clears
+the game in 605 cycles against 918 for strength — a 34% gap that survives every
+fix above. The residual cause is identified: **eight original items convert
+dexterity into strength** (`item.js:76,144,249,504`, the MARIONETTE_MASTER and
+FROST_ASSASSIN sets, `silver_tear_mask`), and they stack. A pure-dex build
+reaches 379 effective strength from 0 invested; a pure-strength build with 154
+invested reaches 200. Fixing that means re-tuning those items, not another
+constant.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but

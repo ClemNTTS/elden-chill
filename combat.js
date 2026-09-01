@@ -150,6 +150,7 @@ export function performAttack({
   logPrefix,
   isPlayer = false,
   ashEffect = null,
+  castsMagic = true,
 }) {
   attackers.forEach((attacker) => {
     let damage = attacker.atk ?? stats?.strength ?? 0;
@@ -308,8 +309,14 @@ export function performAttack({
      * Degats magiques de l'intelligence : ajoutes apres la division par
      * l'armure, donc jamais reduits par elle. Ils critent comme le reste.
      * Reserves au joueur — les monstres n'ont pas d'intelligence.
+     *
+     * UNE SEULE FOIS PAR TOUR, pas par attaque. Par attaque, dexterite et
+     * intelligence se multipliaient : le simulateur a montre qu'un build
+     * dexterite avait interet a equiper des objets d'intelligence pour
+     * multiplier leurs degats magiques par six attaques. Un sort se lance,
+     * il ne s'ajoute pas a chaque coup d'epee.
      */
-    if (isPlayer) {
+    if (isPlayer && castsMagic) {
       const magic = getMagicDamage(stats?.intelligence ?? 0);
       if (magic > 0) {
         finalDamage += Math.floor(isCrit ? magic * critDamage : magic);
@@ -655,6 +662,7 @@ export const combatLoop = (sessionId) => {
             logPrefix: "Vous",
             isPlayer: true,
             ashEffect,
+            castsMagic: i === 0,
           });
         }
       }

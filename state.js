@@ -216,7 +216,20 @@ export function getEffectiveStats() {
   // et avant l'arrondi final pour ne pas perdre les decimales.
   effStats.vigor *= getRebirthVigorMult();
 
-  const dexAttacks = getDexExtraAttacks(effStats.dexterity);
+  /*
+   * Sur la dexterite de BASE, pas l'effective.
+   *
+   * Avec l'effective, les objets en pourcentage de dexterite creaient une
+   * boucle multiplicative : +21% de dexterite donnait +39% d'attaques a cause
+   * de l'exposant, et chaque attaque multipliait a son tour toute la force
+   * gagnee par ailleurs. Mesure au simulateur : un build dexterite atteignait
+   * 10,2 attaques par tour et 7 fois les degats d'un build force a
+   * investissement egal.
+   *
+   * C'est aussi la convention du reste du moteur : l'esquive et les conditions
+   * d'objet lisent deja gameState.stats.dexterity.
+   */
+  const dexAttacks = getDexExtraAttacks(gameState.stats.dexterity);
   effStats.attacksPerTurn += Math.floor(dexAttacks);
   /*
    * Le reste devient une chance d'attaque supplementaire, tiree a chaque tour.

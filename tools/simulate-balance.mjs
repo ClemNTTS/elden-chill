@@ -74,19 +74,25 @@ const progressionOrder = () => {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Comparaison a investissement EGAL : 70% offensif et 30% en vigueur pour
+ * tous, sauf le build vigueur qui inverse. Sans cette normalisation on compare
+ * des repartitions differentes, et on attribue a une statistique un avantage
+ * qui venait en realite d'une part defensive plus faible. C'est exactement
+ * l'erreur qui masquait l'ampleur du desequilibre de la dexterite.
+ *
  * Chaque build est une politique de depense : comment repartir un niveau
  * gagne. On teste les voies que le jeu pretend offrir — si l'une d'elles
  * s'effondre, c'est une promesse non tenue.
  */
 const BUILDS = {
-  force: { label: "Force pure", weights: { strength: 0.6, vigor: 0.4 } },
-  dex: { label: "Dexterite", weights: { dexterity: 0.5, strength: 0.2, vigor: 0.3 } },
-  int: { label: "Intelligence", weights: { intelligence: 0.5, strength: 0.2, vigor: 0.3 } },
+  force: { label: "Force pure", weights: { strength: 0.7, vigor: 0.3 } },
+  dex: { label: "Dexterite", weights: { dexterity: 0.7, vigor: 0.3 } },
+  int: { label: "Intelligence", weights: { intelligence: 0.7, vigor: 0.3 } },
   hybride: {
     label: "Trihybride",
-    weights: { strength: 0.25, dexterity: 0.25, intelligence: 0.2, vigor: 0.3 },
+    weights: { strength: 0.24, dexterity: 0.23, intelligence: 0.23, vigor: 0.3 },
   },
-  tank: { label: "Vigueur", weights: { vigor: 0.7, strength: 0.3 } },
+  tank: { label: "Vigueur", weights: { strength: 0.3, vigor: 0.7 } },
 };
 
 /* ------------------------------------------------------------------ */
@@ -109,9 +115,10 @@ const playerDamagePerTurn = (eff, targetArmor) => {
   const critMean = 1 - hit + (hit - sup) * dmg + sup * dmg * 2;
 
   const physical = Math.floor(eff.strength * critMean * (100 / armor));
+  // Les degats magiques ne se lancent qu'une fois par tour, pas par attaque.
   const magic = Math.floor(getMagicDamage(eff.intelligence) * critMean);
   const attacks = (eff.attacksPerTurn || 1) + (eff.extraAttackChance || 0);
-  return attacks * (physical + magic);
+  return attacks * physical + magic;
 };
 
 /** Degats moyens recus par tour de la part d'un monstre. */
