@@ -808,6 +808,43 @@ sends no CORS header, which is why the old code routed through a third-party
 proxy that saw every announcement. Reliable announcements need a small
 server-side component holding the secret.
 
+## Descriptions must match the code
+
+`tools/audit-descriptions.mjs` compares the numbers an item's description
+announces against the numbers its code actually contains. A lying description
+is worse than no description: the player builds around it, and the mismatch is
+invisible in review because text and code sit twenty lines apart and are almost
+never edited together.
+
+It found two distinct classes of error.
+
+**Stale numbers.** Seven descriptions still announced the dexterity conversion
+ratios from before the rebalance (30%, 25%, 65%...). The ratios were cut by
+roughly 40%; the texts were not.
+
+**Effects that were never written.** Six items promised a mechanic no code
+implemented — "heals halved", "cancels the eternal-night dodge penalty",
+"+60% against sleeping targets", "+25% against frozen targets", "death blight
+builds twice as fast", "cancels the ashen veil". They had no `funcOnHit` and no
+matching stat: the sentence was pure fiction.
+
+Two were implemented (halved healing via a new `healReceivedMult` read by
+`healPlayer`, and the death blight stacks via `funcOnHit`); the other four were
+rewritten to state what the item really does.
+
+An item that promises a *conditional* behaviour needs one of the three real
+hooks — `funcOnHit`, `funcOnBeingHit`, `passiveStatusReduction` — or a stat the
+engine already reads. Anything else is flavour text pretending to be a
+mechanic.
+
+## First reward should not be a downgrade
+
+`fists`, the starting weapon, grants +5 strength. `keen_dagger`, the first rare
+drop of the first biome, granted +4. At 0 dexterity its conversion adds
+nothing, so the game's first reward was strictly worse than what the player
+already held — which reads as "loot is pointless" at the exact moment they pick
+up their first piece. Raised to 5, so it is never a step backwards.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but

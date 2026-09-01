@@ -95,7 +95,8 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "BRIAR",
-    description: "Convertit votre armure en represailles : +1 de Force par 8 d'armure.",
+    description:
+      "Convertit votre armure en represailles : +1 de Force par 10 d'armure, et jusqu'a 1 par 8 au niveau maximum.",
     applyMult: (stats, itemLevel) => {
       stats.strength += Math.floor(stats.armor / (10 - Math.floor(itemLevel / 4)));
     },
@@ -210,9 +211,12 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "TOWER",
     description:
-      "Scelle vos plaies : +12% de Vigueur effective, mais les soins recus sont reduits de moitie.",
+      "Scelle vos plaies : +12% (+1% / Niv) de Vigueur effective, mais les soins recus sont reduits de moitie.",
     applyMult: (stats, itemLevel) => {
       stats.vigor *= 1.12 + 0.01 * itemLevel;
+      // Le malus passe par healReceivedMult, lu dans healPlayer : il s'applique
+      // donc a toutes les sources de soin, pas seulement aux cendres.
+      stats.healReceivedMult = (stats.healReceivedMult ?? 1) * 0.5;
     },
   },
   sealed_plate: {
@@ -252,7 +256,8 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ARMOR,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
-    description: "Annule la penalite d'esquive de la nuit eternelle.",
+    description:
+      "Taillee pour la nuit : +38 Armure (+3 / Niv), +8 Dexterite et resistance au Gel.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 38 + itemLevel * 3;
       stats.dexterity += 8 + itemLevel;
@@ -264,7 +269,7 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
-    description: "Frapper une cible endormie inflige 60% de degats en plus.",
+    description: "+12 Intelligence (+2 / Niv). La lumiere des astres porte les sorts.",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 12 + itemLevel * 2;
     },
@@ -303,7 +308,8 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "ZAMOR",
-    description: "Les cibles gelees prennent 25% de degats en plus.",
+    description:
+      "+10 Force (+2 / Niv) et +6 resistance au Gel (+1 / Niv) : tenir dans le froid et frapper dedans.",
     applyFlat: (stats, itemLevel) => {
       stats.resistances.gel += 6 + itemLevel;
       stats.strength += 10 + itemLevel * 2;
@@ -384,10 +390,14 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RELIC,
     set: "DESTINED_DEATH",
-    description: "Le Fleau mortel s'accumule deux fois plus vite.",
+    description:
+      "Chaque coup ajoute 2 cumuls de Fleau mortel, en plus de ceux de votre arme.",
     applyFlat: (stats, itemLevel) => {
       stats.strength += 18 + itemLevel * 3;
       stats.percentDamagePenetration += 0.05 + 0.005 * itemLevel;
+    },
+    funcOnHit: (stats, targetEffects) => {
+      applyEffect(targetEffects, "DEATH_BLIGHT", 2);
     },
   },
 
@@ -424,7 +434,8 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RELIC,
     set: "ALL_KNOWING",
-    description: "Annule la reduction d'armure du Voile de cendre.",
+    description:
+      "+26 Armure (+4 / Niv) et +14 Intelligence : de quoi compenser la cendre qui ronge les plaques.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 26 + itemLevel * 4;
       stats.intelligence += 14 + itemLevel * 2;

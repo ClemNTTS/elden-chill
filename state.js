@@ -144,6 +144,9 @@ export function getEffectiveStats() {
     extraAttackChance: 0,
     // Gain permanent des renaissances, avant tout bonus d'objet.
     runeGainMult: getRebirthRuneBonus(),
+    // Multiplicateur des soins RECUS. Lu par healPlayer, seul point de passage
+    // des soins du joueur, donc un objet qui le modifie agit partout.
+    healReceivedMult: 1,
     bossMitigation: 0,
     resistances: {
       poison: 0,
@@ -311,9 +314,12 @@ export const isHealingSealed = () =>
  */
 export const healPlayer = (amount, maxHp) => {
   if (!(amount > 0) || isHealingSealed()) return 0;
-  const cap = maxHp ?? getHealth(getEffectiveStats().vigor);
+  const eff = getEffectiveStats();
+  const scaled = amount * (eff.healReceivedMult ?? 1);
+  if (!(scaled > 0)) return 0;
+  const cap = maxHp ?? getHealth(eff.vigor);
   const before = runtimeState.playerCurrentHp;
-  runtimeState.playerCurrentHp = Math.min(cap, before + amount);
+  runtimeState.playerCurrentHp = Math.min(cap, before + scaled);
   return runtimeState.playerCurrentHp - before;
 };
 
