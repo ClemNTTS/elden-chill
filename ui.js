@@ -78,6 +78,7 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
+import { getBiomeTrait } from "./biome-traits.js";
 import {
   POINTS_PER_REBIRTH,
   REBIRTH_LEVEL_BONUS,
@@ -1663,6 +1664,12 @@ const renderWorldMap = (visibleIds) => {
   map.innerHTML = "";
 };
 
+/*
+ * Les traits sont affiches ici, et c'est indispensable : un trait modifie les
+ * regles pendant toute l'expedition (soins coupes, esquive annulee, ennemis qui
+ * s'emballent). Une regle qu'on subit sans pouvoir la lire avant de partir est
+ * une mauvaise surprise, pas une mecanique.
+ */
 const renderBiomeDetail = (biomeId) => {
   const card = document.getElementById("biome-detail-card");
   if (!card || !biomeId) return;
@@ -1670,6 +1677,7 @@ const renderBiomeDetail = (biomeId) => {
   const biome = BIOMES[biomeId];
   const guide = BIOME_GUIDE[biomeId];
   const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
+  const traits = (BIOMES[biomeId]?.traits || []).map(getBiomeTrait).filter(Boolean);
   const lootPreview = (LOOT_TABLES[biomeId] || [])
     .map((loot) => ITEMS[loot.id]?.name)
     .filter(Boolean)
@@ -1726,6 +1734,16 @@ const renderBiomeDetail = (biomeId) => {
         <strong>${nextBiomes.join(", ") || "Cul-de-sac rentable"}</strong>
       </div>
     </div>
+    ${traits
+      .map(
+        (t) => `
+      <div class="biome-trait">
+        <span class="biome-trait__label">Regle de la zone</span>
+        <strong>${t.name}</strong>
+        <p>${t.detail}</p>
+      </div>`,
+      )
+      .join("")}
     <div class="biome-detail-actions">
       <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
         ${isUnlocked ? "Explorer cette zone" : "Zone pas encore debloquee"}

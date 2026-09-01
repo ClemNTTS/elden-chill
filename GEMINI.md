@@ -574,8 +574,11 @@ it from a pure stat tier. Three hooks only, so combat stays readable:
 New modifier keys read by the engine: `noHeal`, `dodgeMult`, `armorMult`,
 `noRetreat`, `lootChanceMult`.
 
-A trait **must** declare `name` and `detail` — the biome sheet shows them. An
-undescribed trait is a hidden rule, i.e. an unfair surprise.
+A trait **must** declare `name` and `detail`, and `renderBiomeDetail` shows
+them on the zone sheet as a `.biome-trait` card. That rendering was missing for
+a while: all 14 traits had descriptions, this file claimed the sheet displayed
+them, and nothing did. Players met the rule by suffering it. A rule you cannot
+read before departing is a bad surprise, not a mechanic.
 
 ### Statuses
 
