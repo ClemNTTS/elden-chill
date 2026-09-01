@@ -45,9 +45,12 @@ def normalize(src: Path, dst: Path) -> None:
     # Reserve one pixel for the forced outline and place that outline on y=58.
     max_w, max_h = 60, 54
     scale = min(max_w / crop.width, max_h / crop.height)
-    # Very wide flying/low creatures still need at least 40 px of visible height.
-    if crop.height * scale < 38:
-        scale = 38 / crop.height
+    # Keep low creatures readable only when doing so still respects max_w.
+    # Otherwise the height floor would re-expand a wide silhouette into the
+    # cell edges after the width constraint had already made it fit.
+    min_height_scale = 38 / crop.height
+    if crop.height * scale < 38 and crop.width * min_height_scale <= max_w:
+        scale = min_height_scale
     nw = max(1, round(crop.width * scale))
     nh = max(1, round(crop.height * scale))
     crop = crop.resize((nw, nh), Image.Resampling.NEAREST)

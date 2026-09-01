@@ -612,6 +612,10 @@ print their amount in a sealed biome even though nothing was healed.
     monsters, next to `azula_beast_lord` (7200 hp). Almost certainly a slip.
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` are defined but
     placed in no biome.
+*   `assets/sprites/insecte/insecte_idle_01.png` is clipped: the silhouette
+    spans the full 64px cell, 6 pixels stuck to the left edge and 10 to the
+    right. Pre-existing, surfaced by the edge check added to
+    `validate_monster_frames.py`. One frame to redraw narrower.
 *   Audit regexes over `biome.js` must be **case-insensitive**. Two stub biomes
     (`Leyndell_ash`, `erdTree`) hid behind a lowercase-only `^  [a-z0-9_]+:`
     pattern through several audits. They are gone now, superseded by the real

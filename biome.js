@@ -102,6 +102,7 @@ export const LOOT_TABLES = {
   caelid_dragonbarrow: [{ id: "rotten_dragon_heart", chance: 1 }],
 
   altus_plateau: [
+    { ashId: "executioners_step", chance: 0.16 },
     { id: "golden_tree_halberd", chance: 0.3 },
     { id: "golden_sentinel_armor", chance: 0.3 },
     { id: "sentinel_greatshield_talisman", chance: 0.4 },
@@ -181,6 +182,7 @@ export const LOOT_TABLES = {
   ],
 
   nokron: [
+    { ashId: "astral_shatter", chance: 0.16 },
     { id: "celestial_dew_talisman", chance: 0.5 },
     { id: "nokron_flame_dagger", chance: 0.5 },
   ],
@@ -190,6 +192,7 @@ export const LOOT_TABLES = {
     { id: "ainsel_silk_robe", chance: 0.33 },
   ],
   deeproot_depths: [
+    { ashId: "rootward_vow", chance: 0.16 },
     { id: "rootbound_maul", chance: 0.34 },
     { id: "rootbound_plate", chance: 0.33 },
     { id: "prince_bark_talisman", chance: 0.33 },
