@@ -1,6 +1,8 @@
 import { applyEffect } from "../combat.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, getHealth, runtimeState } from "../state.js";
+import { gameState, getHealth, runtimeState,
+  healPlayer,
+} from "../state.js";
 import { ActionLog } from "../ui.js";
 
 export const RIVER = {
@@ -62,10 +64,7 @@ export const RIVER = {
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (targetEffects.some((e) => e.id === "STUN")) {
         const heal = Math.floor(getHealth(stats.vigor) * 0.02); //
-        runtimeState.playerCurrentHp = Math.min(
-          getHealth(stats.vigor),
-          runtimeState.playerCurrentHp + heal,
-        );
+        healPlayer(heal, getHealth(stats.vigor));
         ActionLog(`L'Esprit vous soigne : +${heal} PV`, "log-heal");
       }
     },

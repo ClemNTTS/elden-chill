@@ -1,5 +1,13 @@
 export const PLAYER_PROFILE_VERSION = "2.5.0";
-export const MAX_LEVEL = 150;
+/*
+ * Plafond de niveau.
+ *
+ * Il suit le nombre de biomes : 150 couvrait les 32 biomes d'origine, 220
+ * couvre les 46 de la version complete, au meme rythme d'environ 4,8 niveaux
+ * par biome. Le relever sans ajouter de contenu aurait casse la courbe de
+ * cout, qui croit en carre du niveau.
+ */
+export const MAX_LEVEL = 220;
 export const MAX_OFFLINE_TIME_BANK = 3600;
 
 /** Ecrans du camp, dans l'ordre de la navigation. Source unique : la
@@ -48,6 +56,7 @@ export const DEFAULT_PLAYER_PROFILE = {
     checkpointReached: false,
     rareSpawnsCount: 0,
     activeBiomeHazards: [],
+    activeTraits: [],
     lastEventProgress: -1,
   },
   playerEffects: [],

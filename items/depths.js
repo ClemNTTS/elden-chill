@@ -1,6 +1,8 @@
 import { applyEffect } from "../combat.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, getHealth, runtimeState } from "../state.js";
+import { gameState, getHealth, runtimeState,
+  healPlayer,
+} from "../state.js";
 import { ActionLog } from "../ui.js";
 
 export const DEPTHS = {
@@ -115,10 +117,7 @@ export const DEPTHS = {
       const armorBands = Math.floor(stats.armor / 100);
       if (armorBands <= 0) return;
       const heal = Math.floor(getHealth(stats.vigor) * (armorBands * 0.01));
-      runtimeState.playerCurrentHp = Math.min(
-        getHealth(stats.vigor),
-        runtimeState.playerCurrentHp + heal,
-      );
+      healPlayer(heal, getHealth(stats.vigor));
       ActionLog(`Écorce princière : +${heal} PV.`, "log-heal");
     },
   },

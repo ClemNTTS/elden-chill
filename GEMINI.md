@@ -542,6 +542,70 @@ the `ResizeObserver` republishes `--combat-zone-height`.
 Note for later: those scales (2.32, 1.42) are fractional, and
 `image-rendering: pixelated` at a non-integer scale gives uneven pixels.
 
+## The complete version — 14 added biomes
+
+The base game now runs from Necrolimbe to the Elden Throne: **46 playable
+biomes**, 184 monsters, 147 items, 29 sets, 18 ashes, 10 blessings,
+6 consumables, 11 statuses.
+
+**Difficulty is interpolated, never hand-written.** The 32 original biomes trace
+a curve from 14 hp (Necrolimbe Ouest) to 7200 (Farum Azula), roughly x1.22 per
+biome. New tiers sit on that curve, and reuse the ratios measured on it:
+
+    rare = std x1.2      boss = std x6.8
+    atkStd = hp x0.052   atkBoss = atkStd x1.35
+    runes = hp x7.7 (std), x7.6 (rare), x5.3 (boss)
+
+`MAX_LEVEL` went from 150 to **220** to follow the biome count at the same
+~4.8 levels per biome. Raising it without adding content would have broken the
+cost curve, which grows with the square of the level.
+
+### Biome traits (`biome-traits.js`)
+
+Every added biome carries a `traits` entry — the local rule that distinguishes
+it from a pure stat tier. Three hooks only, so combat stays readable:
+
+| hook | where | what it can do |
+| --- | --- | --- |
+| `runBuff` | `startExploration` -> `activeRunBuffs` | anything `getRunModifier()` reads |
+| `enemyModifier` | `spawn.js`, per created enemy | hp, atk, armor |
+| `onTurn` | `combat.js`, once per player turn | statuses, healing, escalation |
+
+New modifier keys read by the engine: `noHeal`, `dodgeMult`, `armorMult`,
+`noRetreat`, `lootChanceMult`.
+
+A trait **must** declare `name` and `detail` — the biome sheet shows them. An
+undescribed trait is a hidden rule, i.e. an unfair surprise.
+
+### Statuses
+
+`MADNESS`, `DEATH_BLIGHT` and `SLEEP` were added. Madness fills a real hole:
+`folie` existed as a resistance and as a biome hazard from the start, but no
+status ever applied it — biomes declaring it had no effect of their own.
+
+Madness and Death Blight **stack** (`STACKING_EFFECTS` in `combat.js`) and fire
+at a threshold, like frostbite. Sleep is duration-based and breaks on the first
+hit taken — that is what separates it from stun.
+
+### Healing goes through one door
+
+`healPlayer()` in `state.js` is the only place that raises `playerCurrentHp`.
+Eight sites used to write it by hand; missing one would have made the
+"Grace scellee" trait a lie. Known cosmetic gap: a few item heal logs still
+print their amount in a sealed biome even though nothing was healed.
+
+### Traps found while writing this
+
+*   `funcOnKill` does not exist. The only item combat hooks the engine calls are
+    `funcOnHit`, `funcOnBeingHit` and `passiveStatusReduction`. An item written
+    against any other name is dead code that fails silently.
+*   Ash effects may only return `damageMult`, `status` and `msg`. Returning
+    `flatDamage` or `splash` does nothing.
+*   `dropItem()` returns silently on an unknown id. A loot table entry
+    `{ id: "great_shield" }` — an ash slipped into Caelid Ouest's table — had
+    been quietly voiding 10% of that biome's rolls since the original split.
+    Loot tables now accept `{ ashId }` properly.
+
 ## Known content oddities, not yet addressed
 
 *   `crumbling_farum_azula` lists `beastman1` (84 hp) among its standard

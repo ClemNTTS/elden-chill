@@ -29,6 +29,19 @@ export const CRIT_PER_RANK = { chance: 0.05, damage: 0.25 };
 /** Un point de competence tous les N niveaux. */
 export const LEVELS_PER_CRIT_POINT = 10;
 
+/*
+ * Plafond de rangs par voie.
+ *
+ * Le budget de points suit le niveau maximum : 22 points a 220. Sans plafond,
+ * tout mettre en chance donnerait 5% + 22x5 = 115%, et le super critique
+ * cesserait de dependre des objets — c'etait pourtant sa raison d'etre. Le
+ * plafond de 15 en chance maintient le maximum a 80% par les seuls points.
+ *
+ * Les deux plafonds cumules (35) restent hors de portee : il faudrait 350
+ * niveaux. La repartition demeure donc un choix a tous les paliers.
+ */
+export const CRIT_MAX_RANK = { chance: 15, damage: 20 };
+
 /**
  * Multiplicateur applique aux degats critiques lors d'un super critique.
  * Le super critique est la soupape des builds qui depassent 100% de chance
@@ -78,10 +91,11 @@ export const syncCritStats = () => {
 /** @param {"chance"|"damage"} track */
 export const spendCritPoint = (track, count = 1) => {
   if (track !== "chance" && track !== "damage") return false;
-  const available = getCritPointsAvailable();
-  const spend = Math.min(count, available);
+  const ranks = getCritRanks();
+  const room = CRIT_MAX_RANK[track] - ranks[track];
+  const spend = Math.min(count, getCritPointsAvailable(), room);
   if (spend <= 0) return false;
-  getCritRanks()[track] += spend;
+  ranks[track] += spend;
   syncCritStats();
   return true;
 };

@@ -221,10 +221,15 @@ const STATUS_CELLS = {
   BURN: [3, 1],
   FROSTBITE: [4, 1],
   DEW_PROTECTION: [5, 1],
+  MADNESS: [0, 2],
+  DEATH_BLIGHT: [1, 2],
+  SLEEP: [2, 2],
 };
 
 const MISC_CELLS = {
-  rune: [0, 2],
+  // Decalee par l'ajout des trois afflictions ; la valeur vient de la sortie
+  // de tools/build_ui_atlas.py, ne pas la deviner.
+  rune: [3, 2],
 };
 
 /* ------------------------------------------------------------------ */

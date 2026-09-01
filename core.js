@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { getTraitRunBuffs } from "./biome-traits.js";
 import {
   getRebirthAshBonus,
   getRebirthRareMult,
@@ -40,6 +41,7 @@ import {
   grantPreparationRewardForBiome,
   markCodexBiomeCleared,
   markCodexSetSeen,
+  registerRunBuff,
   resolveBiomeEvent,
   syncCodexFromInventory,
 } from "./systems.js";
@@ -351,22 +353,35 @@ export const handleVictory = (sessionId) => {
 
     const currentLootTable = LOOT_TABLES[gameState.world.currentBiome];
     if (currentLootTable) {
+      /*
+       * Les tables acceptent desormais des cendres (`ashId`) en plus des
+       * objets. Sans ca, les cendres ne pouvaient tomber que des monstres
+       * rares, et une entree `{ id: "great_shield" }` — une cendre glissee
+       * dans la table de Caelid Ouest — etait silencieusement perdue :
+       * dropItem() sort sans rien dire sur un identifiant inconnu.
+       */
       const eligibleLoot = currentLootTable.filter((lootItem) => {
+        if (lootItem.ashId) {
+          return !gameState.ashesOfWarOwned.includes(lootItem.ashId);
+        }
         const inventoryItem = gameState.inventory.find(
           (i) => i.id === lootItem.id,
         );
         return !inventoryItem || inventoryItem.level < 10;
       });
 
-      let itemToDrop;
-      if (eligibleLoot.length > 0) {
-        const rolled = getWeightedDrop(eligibleLoot);
-        itemToDrop = rolled.id;
-      } else {
-        itemToDrop = "rune_fragment";
-      }
+      const rolled =
+        eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
 
-      dropItem(itemToDrop);
+      if (rolled?.ashId) {
+        gameState.ashesOfWarOwned.push(rolled.ashId);
+        ActionLog(
+          `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
+          "log-crit",
+        );
+      } else {
+        dropItem(rolled?.id || "rune_fragment");
+      }
       saveGame();
     }
 
@@ -542,6 +557,8 @@ export const startExploration = (biomeId) => {
   gameState.world.progress = 0;
   gameState.world.checkpointReached = false;
   gameState.world.activeBiomeHazards = biome.hazards || [];
+  // Traits du biome : la regle locale qui distingue la zone. Voir biome-traits.js.
+  gameState.world.activeTraits = biome.traits || [];
   gameState.world.lastEventProgress = -1;
   runtimeState.defeatedEnemies = [];
   gameState.playerEffects = [];
@@ -555,6 +572,8 @@ export const startExploration = (biomeId) => {
   runtimeState.ashIsPrimed = false;
   runtimeState.nextNbAtkBonus = 0;
   applyPreparationLoadout();
+  // Apres applyPreparationLoadout, qui vide activeRunBuffs.
+  getTraitRunBuffs(gameState.world.activeTraits).forEach(registerRunBuff);
 
   runtimeState.playerCurrentHp = getHealth(getEffectiveStats().vigor);
 

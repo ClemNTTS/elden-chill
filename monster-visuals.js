@@ -31,6 +31,12 @@ export const TINTS = {
   silver: { dark: [0x33, 0x36, 0x3b], mid: [0x74, 0x7b, 0x84], light: [0xc6, 0xcd, 0xd6] },
   verdant: { dark: [0x20, 0x30, 0x1c], mid: [0x4a, 0x68, 0x3a], light: [0x8c, 0xac, 0x68] },
   ember: { dark: [0x40, 0x1a, 0x0a], mid: [0x93, 0x42, 0x14], light: [0xe0, 0x8b, 0x3a] },
+  // Ajoutees pour les 14 biomes de la version complete : neuf rampes ne
+  // suffisaient plus a separer 184 creatures.
+  bloom: { dark: [0x4a, 0x12, 0x24], mid: [0x9c, 0x2b, 0x45], light: [0xe0, 0x6c, 0x84] },
+  bone: { dark: [0x4a, 0x44, 0x36], mid: [0x8f, 0x85, 0x70], light: [0xd8, 0xcf, 0xb6] },
+  void: { dark: [0x1e, 0x14, 0x33], mid: [0x45, 0x2e, 0x70], light: [0x8a, 0x6c, 0xc4] },
+  radiant: { dark: [0x5c, 0x4c, 0x1a], mid: [0xb8, 0x9c, 0x3c], light: [0xf5, 0xe4, 0x9a] },
 };
 
 /* ------------------------------------------------------------------ */
@@ -201,6 +207,79 @@ const VISUALS = {
   trial_twin_boss: ["hero_of_zamor", "glint"],
   trial_hollow_boss: ["godrick", "ash"],
   trial_first_boss: ["mimic_tear_boss", "ember"],
+  // --- Version complete : 14 biomes ------------------------------
+  // Les boss reutilisent une planche de boss existante avec une teinte et un
+  // embleme distincts. Ceux qui meriteraient une planche dediee sont listes
+  // dans GEMINI.md.
+  dominula_celebrant: ["humanoide", "bloom"],
+  dominula_drummer: ["humanoide", "ember"],
+  dominula_maypole_dancer: ["mage", "bloom"],
+  godskin_apostle: ["hero_of_zamor", "bone"] ,
+
+  shaded_sentry: ["chevalier", "verdant"],
+  shaded_poison_hound: ["bete", "verdant"],
+  shaded_briar_scion: ["amas", "verdant"],
+  elemer_briar: ["carian_knight_bols", "verdant"],
+
+  volcano_manservant: ["humanoide", "ember"],
+  volcano_abductor: ["construct", "silver"],
+  volcano_iron_virgin: ["construct", "crimson"],
+  godskin_noble: ["misbegotten_leonine", "bone"],
+
+  rykard_serpent_spawn: ["dragon", "crimson"],
+  rykard_devoured: ["mortvivant", "ember"],
+  rykard_blasphemous_priest: ["mage", "crimson"],
+  rykard_lord_blasphemy: ["limgrave_dragon", "ember"],
+
+  divine_tower_watch: ["chevalier", "glint"],
+  divine_tower_oracle: ["mage", "glint"],
+  divine_tower_gargoyle: ["volant", "silver"],
+  divine_tower_keeper: ["godrick", "glint"],
+
+  sol_banished_knight: ["chevalier", "frost"],
+  sol_night_stalker: ["humanoide", "void"],
+  sol_eochaid_wraith: ["mortvivant", "void"],
+  commander_niall: ["red_wolf_radagon", "frost"],
+
+  catacomb_ember_shade: ["mortvivant", "ember"],
+  catacomb_grave_giant: ["geant", "ash"],
+  catacomb_ancient_hero: ["geant", "frost"],
+  catacomb_burnt_spirit: ["ancestral_spirit", "ember"],
+
+  elphael_cleanrot_knight: ["chevalier", "rot"],
+  elphael_rot_swarm: ["insecte", "rot"],
+  elphael_rot_dog: ["bete", "rot"],
+  malenia_blade: ["royal_knight_loretta", "bloom"],
+
+  azula_dragon_warrior: ["chevalier", "void"],
+  azula_storm_hawk: ["volant", "glint"],
+  azula_maliketh: ["bloodhound_knight_darriwil", "void"],
+  placidusax: ["draconic_tree_sentinel", "void"],
+
+  ash_gilded_guard: ["chevalier", "ash"],
+  ash_putrid_avatar: ["geant", "ash"],
+  ash_gideon_ozz: ["mage", "radiant"],
+  hoarah_loux: ["radahn", "ash"],
+
+  throne_golden_shade: ["humanoide", "radiant"],
+  throne_order_fragment: ["construct", "radiant"],
+  throne_radagon: ["margit", "radiant"],
+  elden_beast: ["astel_bud", "radiant"],
+
+  bestial_cleric: ["humanoide", "bone"],
+  bestial_vulture: ["volant", "bone"],
+  bestial_black_blade: ["bete", "void"],
+  gurranq_beast_clergyman: ["misbegotten_leonine", "void"],
+
+  jarburg_living_jar: ["amas", "gold"],
+  jarburg_jar_bairn: ["amas", "bone"],
+  jarburg_alexander_shard: ["amas", "ember"],
+  jarburg_great_jar: ["troll1_boss", "gold"],
+
+  evergaol_fortissax: ["ekzykes", "void"],
+  evergaol_astel: ["astel_bud", "void"],
+  evergaol_ancient_dragon: ["dragon", "radiant"],
+  evergaol_nameless_champion: ["commander_oneil_strong", "silver"],
 };
 
 /* ------------------------------------------------------------------ */
@@ -280,6 +359,18 @@ const EMBLEMS = {
   icy_colossus: "frost",
   wormface_altus: "eye",
   ulcerated_rot_spirit: "spore",
+  // Version complete : separe les creatures qui partageaient planche, teinte
+  // et palier avec une creature deja existante. Liste produite par
+  // auditMonsterVisuals, pas devinee.
+  rykard_lord_blasphemy: "flame",
+  divine_tower_oracle: "eye",
+  elphael_rot_swarm: "spore",
+  shaded_poison_hound: "claw",
+  divine_tower_gargoyle: "crystal",
+  sol_banished_knight: "moon",
+  volcano_manservant: "flame",
+  catacomb_ember_shade: "chain",
+  ash_putrid_avatar: "spore",
 };
 
 export const EMBLEM_NAMES = [

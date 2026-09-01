@@ -4,6 +4,7 @@ mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont 
 */
 import { V21_MONSTERS } from "./monsters/v21.js";
 import { ENDGAME_MONSTERS, TRIAL_MONSTERS } from "./monsters/endgame.js";
+import { LANDS_MONSTERS } from "./monsters/lands.js";
 
 export const MONSTERS = {
   // === LIMGRAVE WEST===
@@ -1278,6 +1279,7 @@ export const MONSTERS = {
   ...V21_MONSTERS,
   ...ENDGAME_MONSTERS,
   ...TRIAL_MONSTERS,
+  ...LANDS_MONSTERS,
 };
 
 // Chaque monstre porte desormais sa propre cle. Les instances de combat sont

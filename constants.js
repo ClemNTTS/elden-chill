@@ -291,4 +291,283 @@ export const ITEM_SETS = {
       },
     },
   },
+  /* ================================================================
+     Panoplies de la version complete.
+
+     Une par biome ajoute, trois pieces chacune (arme, armure,
+     accessoire). Comme le personnage n'a que trois emplacements,
+     porter une panoplie complete signifie renoncer a tout melange :
+     le bonus de 3 pieces doit donc valoir ce renoncement, et pousser
+     une voie reconnaissable plutot qu'empiler des pourcentages.
+     ================================================================ */
+
+  FESTIVAL: {
+    name: "Atours du Festival",
+    bonuses: {
+      2: {
+        desc: "Resistance a la Folie +6.",
+        effect: (stats) => {
+          stats.resistances.folie += 6;
+        },
+      },
+      3: {
+        desc: "La Folie devient une ressource : +25% de Force, et vos cumuls de Folie ne vous etourdissent plus.",
+        effect: (stats) => {
+          stats.strength *= 1.25;
+          stats.resistances.folie += 12;
+        },
+      },
+    },
+  },
+
+  BRIAR: {
+    name: "Panoplie de la Ronce",
+    bonuses: {
+      2: {
+        desc: "Armure +12%.",
+        effect: (stats) => {
+          stats.armor *= 1.12;
+        },
+      },
+      3: {
+        desc: "Represailles : 25% de l'Armure ajoutee a la Force.",
+        effect: (stats) => {
+          stats.strength += Math.floor(stats.armor * 0.25);
+        },
+      },
+    },
+  },
+
+  MANOR: {
+    name: "Livree du Manoir du Volcan",
+    bonuses: {
+      2: {
+        desc: "Gain de runes +20%.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.2;
+        },
+      },
+      3: {
+        desc: "Contrat complet : +45% de runes et degats de zone egaux a 60% de l'Intelligence.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.45;
+          stats.splashDamage += Math.floor(stats.intelligence * 0.6);
+        },
+      },
+    },
+  },
+
+  BLASPHEMY: {
+    name: "Heritage du Blaspheme",
+    bonuses: {
+      2: {
+        desc: "Vigueur +12%.",
+        effect: (stats) => {
+          stats.vigor *= 1.12;
+        },
+      },
+      3: {
+        desc: "Le sang vole nourrit : +20% de Vigueur et +20% de Force.",
+        effect: (stats) => {
+          stats.vigor *= 1.2;
+          stats.strength *= 1.2;
+        },
+      },
+    },
+  },
+
+  TOWER: {
+    name: "Panoplie de la Tour Divine",
+    bonuses: {
+      2: {
+        desc: "Armure +15%.",
+        effect: (stats) => {
+          stats.armor *= 1.15;
+        },
+      },
+      3: {
+        desc: "Sceau complet : +30% d'Armure et 20 de penetration fixe.",
+        effect: (stats) => {
+          stats.armor *= 1.3;
+          stats.flatDamagePenetration += 20;
+        },
+      },
+    },
+  },
+
+  NIGHT: {
+    name: "Tenue de la Nuit eternelle",
+    bonuses: {
+      2: {
+        desc: "Dexterite +15%.",
+        effect: (stats) => {
+          stats.dexterity *= 1.15;
+        },
+      },
+      3: {
+        desc: "Une attaque supplementaire, et Dexterite +25%.",
+        effect: (stats) => {
+          stats.dexterity *= 1.25;
+          stats.attacksPerTurn += 1;
+        },
+      },
+    },
+  },
+
+  ZAMOR: {
+    name: "Panoplie de Zamor",
+    bonuses: {
+      2: {
+        desc: "Resistance au Gel +8.",
+        effect: (stats) => {
+          stats.resistances.gel += 8;
+        },
+      },
+      3: {
+        desc: "Givre perpetuel : +30% de Force et 15 de penetration fixe.",
+        effect: (stats) => {
+          stats.strength *= 1.3;
+          stats.flatDamagePenetration += 15;
+        },
+      },
+    },
+  },
+
+  CLEANROT: {
+    name: "Armure de la Purge",
+    bonuses: {
+      2: {
+        desc: "Resistance a la Putrefaction +10.",
+        effect: (stats) => {
+          stats.resistances.putrefaction += 10;
+        },
+      },
+      3: {
+        desc: "Immunite pratique a la Putrefaction, +20% de Dexterite et +20% d'Armure.",
+        effect: (stats) => {
+          stats.resistances.putrefaction += 20;
+          stats.dexterity *= 1.2;
+          stats.armor *= 1.2;
+        },
+      },
+    },
+  },
+
+  DESTINED_DEATH: {
+    name: "Attirail de la Mort destinee",
+    bonuses: {
+      2: {
+        desc: "Penetration fixe +18.",
+        effect: (stats) => {
+          stats.flatDamagePenetration += 18;
+        },
+      },
+      3: {
+        desc: "La Mort destinee : +35% de Force et 10% de penetration en pourcentage.",
+        effect: (stats) => {
+          stats.strength *= 1.35;
+          stats.percentDamagePenetration += 0.1;
+        },
+      },
+    },
+  },
+
+  ALL_KNOWING: {
+    name: "Parure du Tout-Savant",
+    bonuses: {
+      2: {
+        desc: "Intelligence +18%.",
+        effect: (stats) => {
+          stats.intelligence *= 1.18;
+        },
+      },
+      3: {
+        desc: "Savoir total : +40% d'Intelligence et degats de zone egaux a 50% de celle-ci.",
+        effect: (stats) => {
+          stats.intelligence *= 1.4;
+          stats.splashDamage += Math.floor(stats.intelligence * 0.5);
+        },
+      },
+    },
+  },
+
+  GOLDEN_ORDER: {
+    name: "Ordre d'Or",
+    bonuses: {
+      2: {
+        desc: "Vigueur et Intelligence +15%.",
+        effect: (stats) => {
+          stats.vigor *= 1.15;
+          stats.intelligence *= 1.15;
+        },
+      },
+      3: {
+        desc: "L'Ordre restaure : toutes les statistiques principales +25%.",
+        effect: (stats) => {
+          stats.vigor *= 1.25;
+          stats.strength *= 1.25;
+          stats.dexterity *= 1.25;
+          stats.intelligence *= 1.25;
+        },
+      },
+    },
+  },
+
+  BEASTIAL: {
+    name: "Depouille bestiale",
+    bonuses: {
+      2: {
+        desc: "Gain de runes +25%.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.25;
+        },
+      },
+      3: {
+        desc: "Offrande complete : +50% de runes et +20% de Dexterite.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.5;
+          stats.dexterity *= 1.2;
+        },
+      },
+    },
+  },
+
+  JAR: {
+    name: "Attirail de Jarburg",
+    bonuses: {
+      2: {
+        desc: "Gain de runes +35%.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.35;
+        },
+      },
+      3: {
+        desc: "Fragile mais riche : +80% de runes, Armure divisee par deux.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.8;
+          stats.armor *= 0.5;
+        },
+      },
+    },
+  },
+
+  ANCIENT_DRAGON: {
+    name: "Depouille du Dragon ancien",
+    bonuses: {
+      2: {
+        desc: "Armure +18%.",
+        effect: (stats) => {
+          stats.armor *= 1.18;
+        },
+      },
+      3: {
+        desc: "Foudre rouge : +30% de Force, +30% d'Armure et degats de zone egaux a 30% de la Force.",
+        effect: (stats) => {
+          stats.strength *= 1.3;
+          stats.armor *= 1.3;
+          stats.splashDamage += Math.floor(stats.strength * 0.3);
+        },
+      },
+    },
+  }
 };

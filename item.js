@@ -4,7 +4,10 @@ import { DEPTHS } from "./items/depths.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { V21_ITEMS } from "./items/v21.js";
-import { gameState, getHealth, runtimeState } from "./state.js";
+import { LANDS_ITEMS } from "./items/lands.js";
+import { gameState, getHealth, runtimeState,
+  healPlayer,
+} from "./state.js";
 import { ActionLog } from "./ui.js";
 
 export const ITEMS = {
@@ -266,10 +269,7 @@ export const ITEMS = {
         const healAmount = 10 * itemLevel;
         const maxHp = getHealth(stats.vigor);
 
-        runtimeState.playerCurrentHp = Math.min(
-          maxHp,
-          runtimeState.playerCurrentHp + healAmount,
-        );
+        healPlayer(healAmount, maxHp);
         ActionLog(`Vous vous soignez de ${healAmount} PV.`, "log-heal");
       }
     },
@@ -728,10 +728,7 @@ export const ITEMS = {
       if (baseVig < 42) return;
 
       const heal = Math.floor(getHealth(stats.vigor) * 0.01);
-      runtimeState.playerCurrentHp = Math.min(
-        getHealth(stats.vigor),
-        runtimeState.playerCurrentHp + heal,
-      );
+      healPlayer(heal, getHealth(stats.vigor));
       ActionLog(`Soin de Graine : +${heal} PV`, "log-heal");
     },
   },
@@ -775,10 +772,7 @@ export const ITEMS = {
       if (!itemLevel) return;
       const heal = Math.floor(stats.intelligence * (0.1 + 0.03 * itemLevel));
       const maxHp = getHealth(stats.vigor);
-      runtimeState.playerCurrentHp = Math.min(
-        maxHp,
-        runtimeState.playerCurrentHp + heal,
-      );
+      healPlayer(heal, maxHp);
       ActionLog(`Siphon Carien : +${heal} PV`, "log-heal");
     },
   },
@@ -1161,10 +1155,7 @@ export const ITEMS = {
       if (hasThorns) {
         const heal = 5 + 2 * (itemLevel - 1);
         const maxHp = getHealth(stats.vigor);
-        runtimeState.playerCurrentHp = Math.min(
-          maxHp,
-          runtimeState.playerCurrentHp + heal,
-        );
+        healPlayer(heal, maxHp);
         ActionLog(`Sève de l'Arbre : +${heal} PV !`, "log-heal");
       }
     },
@@ -1253,4 +1244,5 @@ export const ITEMS = {
   ...NOKRON,
   ...DEPTHS,
   ...V21_ITEMS,
+  ...LANDS_ITEMS,
 };

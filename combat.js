@@ -1,5 +1,6 @@
 import { ASHES_OF_WAR } from "./ashes.js";
 import { rollCrit } from "./crit.js";
+import { tickBiomeTraits } from "./biome-traits.js";
 import { getMagicDamage } from "./state.js";
 import { STATUS_EFFECTS } from "./status.js";
 import { ITEMS } from "./item.js";
@@ -23,7 +24,11 @@ import {
   updateHealthBars,
   updateUI,
 } from "./ui.js";
-import { adjustStatusApplication, buildEnemyIntent } from "./systems.js";
+import {
+  adjustStatusApplication,
+  buildEnemyIntent,
+  getRunModifier,
+} from "./systems.js";
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -78,6 +83,13 @@ function clamp(v, min = 0) {
 
 /* ================= STATUS EFFECTS ================= */
 
+/** Afflictions qui s'accumulent au lieu de durer un nombre de tours. */
+const STACKING_EFFECTS = new Set(["BLEED", "FROSTBITE", "MADNESS", "DEATH_BLIGHT"]);
+
+/** Cumuls necessaires au declenchement. */
+const MADNESS_THRESHOLD = 8;
+const DEATH_BLIGHT_THRESHOLD = 12;
+
 export const applyEffect = (targetEffects, effectId, value) => {
   if (!targetEffects.__owner) {
     targetEffects.__owner = true;
@@ -85,7 +97,7 @@ export const applyEffect = (targetEffects, effectId, value) => {
   // value can be duration or stacks
   const existing = targetEffects.find((e) => e.id === effectId);
   const adjustedValue = adjustStatusApplication(effectId, value || 1, targetEffects);
-  if (effectId === "BLEED" || effectId === "FROSTBITE") {
+  if (STACKING_EFFECTS.has(effectId)) {
     if (existing) {
       existing.stacks = (existing.stacks || 0) + adjustedValue;
     } else {
@@ -116,7 +128,7 @@ const processTurnEffects = (entity, effectsArray) => {
       if (result?.skipTurn) skipTurn = true;
     }
 
-    if (effectRef.id !== "BLEED" && effectRef.id !== "FROSTBITE") {
+    if (!STACKING_EFFECTS.has(effectRef.id)) {
       effectRef.duration--;
       if (effectRef.duration <= 0) {
         effectsArray.splice(i, 1);
@@ -203,6 +215,39 @@ export function performAttack({
         if (idx > -1) targetEffects.splice(idx, 1);
       }
     }
+    /* ===== SEUIL DE FOLIE ===== */
+    const madness = targetEffects.find((e) => e.id === "MADNESS");
+    if (madness && madness.stacks >= MADNESS_THRESHOLD) {
+      const burst = Math.floor(damage * 1.5) + 40;
+      damage += burst;
+      applyEffect(targetEffects, "STUN", 1);
+      ActionLog(
+        `FOLIE ! L'esprit de ${target.name} cede : ${burst} degats et un tour perdu.`,
+        "log-crit",
+      );
+      madness.stacks -= MADNESS_THRESHOLD;
+      if (madness.stacks <= 0) {
+        const idx = targetEffects.findIndex((e) => e.id === "MADNESS");
+        if (idx > -1) targetEffects.splice(idx, 1);
+      }
+    }
+
+    /* ===== SEUIL DE FLEAU MORTEL ===== */
+    const blight = targetEffects.find((e) => e.id === "DEATH_BLIGHT");
+    if (blight && blight.stacks >= DEATH_BLIGHT_THRESHOLD) {
+      // En pourcentage des pv maximum : c'est la seule affliction qui reste
+      // dangereuse contre une cible a plusieurs millions de points de vie.
+      const maxHp = ("currentHp" in target ? target.maxHp : target.maxHp) || 100;
+      const toll = Math.floor(maxHp * 0.25);
+      damage += toll;
+      ActionLog(
+        `FLEAU MORTEL ! ${target.name} perd un quart de sa vie (${toll}).`,
+        "log-crit",
+      );
+      const idx = targetEffects.findIndex((e) => e.id === "DEATH_BLIGHT");
+      if (idx > -1) targetEffects.splice(idx, 1);
+    }
+
     if (ashEffect?.damageMult) {
       damage *= ashEffect.damageMult;
     }
@@ -244,7 +289,9 @@ export function performAttack({
       armor -= playerFlatPen;
     } else {
       /* MONSTER ATTACKING PLAYER */
-      armor = (eff.armor ?? 100) - runtimeState.playerArmorDebuff;
+      armor =
+        (eff.armor ?? 100) * getRunModifier("armorMult", 1) -
+        runtimeState.playerArmorDebuff;
       const monsterPercentPen = attacker.percentDamagePenetration ?? 0;
       const monsterFlatPen = attacker.flatDamagePenetration ?? 0;
       armor *= 1 - monsterPercentPen;
@@ -279,6 +326,16 @@ export function performAttack({
     finalDamage = Math.max(0, finalDamage);
 
     /* ===== APPLY DAMAGE ===== */
+    // Le sommeil se dissipe des qu'on encaisse : c'est ce qui le distingue de
+    // l'etourdissement, qui tient quoi qu'il arrive.
+    if (finalDamage > 0) {
+      const asleep = targetEffects.findIndex((e) => e.id === "SLEEP");
+      if (asleep > -1) {
+        targetEffects.splice(asleep, 1);
+        ActionLog(`${target.name} se reveille en sursaut.`, "log-status");
+      }
+    }
+
     setEntityHp(target, getEntityHp(target) - finalDamage);
 
     // Animations : l'attaquant frappe, la cible encaisse. Si le coup est
@@ -487,6 +544,11 @@ export const combatLoop = (sessionId) => {
     maxHp: getHealth(gameState.stats.vigor),
   };
 
+  // Tick des traits de biome, avant tout le reste du tour : c'est la regle
+  // locale de la zone, elle s'applique meme si le joueur est etourdi.
+  tickBiomeTraits(playerObj.maxHp).forEach((msg) => ActionLog(msg, "log-status"));
+  playerObj.currentHp = runtimeState.playerCurrentHp;
+
   delayedSetTimeout(() => {
     let reductionHappened = false;
     //Applique la réduction de status si le joueur possède des items adéquats
@@ -691,7 +753,9 @@ export const combatLoop = (sessionId) => {
 
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
-            const dodgeChance = Math.min(0.5, gameState.stats.dexterity / 400);
+            const dodgeChance =
+              Math.min(0.5, gameState.stats.dexterity / 400) *
+              getRunModifier("dodgeMult", 1);
 
             const playerIsStunned = gameState.playerEffects.some(
               (e) => e.id === "STUN",

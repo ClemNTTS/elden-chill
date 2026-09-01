@@ -250,6 +250,30 @@ export function getEffectiveStats() {
   return effStats;
 }
 
+/**
+ * Le biome scelle-t-il les soins ? (trait `noHeal`, voir biome-traits.js)
+ *
+ * Lu directement dans gameState plutot que via getRunModifier : systems.js
+ * importe state.js, l'inverse creerait un cycle.
+ */
+export const isHealingSealed = () =>
+  (gameState.preparation?.activeRunBuffs || []).some((buff) => buff.noHeal);
+
+/**
+ * Point de passage unique de tous les soins du joueur.
+ *
+ * Il y avait huit endroits qui ecrivaient `playerCurrentHp` a la main : en
+ * oublier un rendait le trait "Grace scellee" mensonger. Renvoie le soin
+ * reellement applique, 0 si scelle.
+ */
+export const healPlayer = (amount, maxHp) => {
+  if (!(amount > 0) || isHealingSealed()) return 0;
+  const cap = maxHp ?? getHealth(getEffectiveStats().vigor);
+  const before = runtimeState.playerCurrentHp;
+  runtimeState.playerCurrentHp = Math.min(cap, before + amount);
+  return runtimeState.playerCurrentHp - before;
+};
+
 export function getHealth(vigor) {
   let hp = 300;
 

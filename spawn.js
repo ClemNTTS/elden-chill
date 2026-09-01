@@ -1,4 +1,5 @@
 import { runtimeState } from "./state.js";
+import { applyTraitsToEnemy } from "./biome-traits.js";
 import { combatLoop } from "./combat.js";
 import { ActionLog, updateHealthBars, updateUI } from "./ui.js";
 import { MONSTERS } from "./monster.js";
@@ -55,13 +56,13 @@ function createEnemyInstance(template, multiplier) {
     randomMultiplier += Math.random();
   }
 
-  return {
+  return applyTraitsToEnemy({
     ...template,
     maxHp: Math.floor(template.hp * multiplier * randomMultiplier),
     atk: Math.floor(template.atk * multiplier),
     runes: Math.floor(template.runes * multiplier * randomMultiplier),
     hp: Math.floor(template.hp * multiplier * randomMultiplier),
-  };
+  });
 }
 
 function spawnEnemyWithCompanions(

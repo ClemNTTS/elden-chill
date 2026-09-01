@@ -13,11 +13,10 @@ import { MAX_LEVEL } from "./shared/player-profile.js";
 /*
  * Biome dont la victoire ouvre la renaissance.
  *
- * Ce n'est pas la fin prevue : la carte annonce encore Leyndell la Cendreuse
- * puis l'Arbre-Monde en chapitre X, qui n'existent pas encore dans biome.js.
- * Quand ils seront ecrits, il n'y a que cette constante a changer.
+ * Le chapitre X est desormais ecrit : la renaissance s'ouvre en abattant la
+ * Bete d'Elden au Trone, ce qui est bien la fin de la trame principale.
  */
-export const FINAL_BIOME_ID = "crumbling_farum_azula";
+export const FINAL_BIOME_ID = "erdtree_throne";
 
 /** Gain de runes permanent par renaissance. */
 export const REBIRTH_RUNE_BONUS = 0.25;

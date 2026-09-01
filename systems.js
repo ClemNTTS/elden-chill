@@ -17,7 +17,7 @@ export const HAZARD_LABELS = {
   putrefaction: "Putréfaction",
 };
 
-const registerRunBuff = (buff) => {
+export const registerRunBuff = (buff) => {
   if (!gameState.preparation.activeRunBuffs) {
     gameState.preparation.activeRunBuffs = [];
   }
@@ -149,6 +149,79 @@ export const BLESSINGS = {
       stats.critChance += 0.04;
     },
   },
+  /* ================================================================
+     Benedictions de la version complete.
+
+     Chacune repond a un trait de biome precis : le choix doit dependre
+     de la destination, pas rester le meme toute la partie.
+     ================================================================ */
+
+  grace_of_lucidity: {
+    id: "grace_of_lucidity",
+    name: "Benediction de Lucidite",
+    description: "Contre la Folie du Village et de la Tour.",
+    detailedDescription:
+      "+8 Resistance Folie et +6% Armure effective pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.resistances.folie += 8;
+      stats.armor *= 1.06;
+    },
+  },
+  grace_of_embers: {
+    id: "grace_of_embers",
+    name: "Benediction des Braises",
+    description: "Pour les zones qui brulent en permanence.",
+    detailedDescription:
+      "+30 Armure effective et +4 Vigueur effective pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.armor += 30;
+      stats.vigor += 4;
+    },
+  },
+  grace_of_purge: {
+    id: "grace_of_purge",
+    name: "Benediction de la Purge",
+    description: "La seule reponse serieuse a la floraison ecarlate d'Elphael.",
+    detailedDescription:
+      "+10 Resistance Putrefaction et +6 Resistance Poison pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.resistances.putrefaction += 10;
+      stats.resistances.poison += 6;
+    },
+  },
+  grace_of_vigil: {
+    id: "grace_of_vigil",
+    name: "Benediction de la Veille",
+    description: "Compense la nuit eternelle du Chateau Sol.",
+    detailedDescription:
+      "+8 Dexterite effective et +4% Chance de critique pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.dexterity += 8;
+      stats.critChance += 0.04;
+    },
+  },
+  grace_of_sovereign: {
+    id: "grace_of_sovereign",
+    name: "Benediction du Souverain",
+    description: "Le dernier souffle avant le Trone.",
+    detailedDescription:
+      "+10% Vigueur effective et +10% Force effective pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.vigor *= 1.1;
+      stats.strength *= 1.1;
+    },
+  },
+  grace_of_avarice: {
+    id: "grace_of_avarice",
+    name: "Benediction de l'Avarice",
+    description: "Pour recolter, pas pour survivre.",
+    detailedDescription:
+      "+35% de gain de runes, mais -15% d'Armure effective pendant l'expedition.",
+    applyToStats: (stats) => {
+      stats.runeGainMult += 0.35;
+      stats.armor *= 0.85;
+    },
+  },
 };
 
 export const PREP_CONSUMABLES = {
@@ -194,6 +267,49 @@ export const PREP_CONSUMABLES = {
         lootRarityBoost: 0.3,
       }),
   },
+  ember_ward: {
+    id: "ember_ward",
+    name: "Onguent anti-braise",
+    description: "Etouffe les braises et les flammes du biome.",
+    detailedDescription:
+      "Reduit de 25% les degats recus pendant la prochaine expedition et donne +20 d'armure.",
+    onRunStart: () =>
+      registerRunBuff({
+        id: "ember_ward",
+        label: "Onguent anti-braise",
+        kind: "defense",
+        armorBonus: 20,
+        bossMitigation: 0.1,
+      }),
+  },
+  rune_censer: {
+    id: "rune_censer",
+    name: "Encensoir a runes",
+    description: "Fait fumer les runes hors des cadavres.",
+    detailedDescription:
+      "+45% de gain de runes pendant la prochaine expedition.",
+    onRunStart: () =>
+      registerRunBuff({
+        id: "rune_censer",
+        label: "Encensoir a runes",
+        kind: "utility",
+        runeGainMult: 0.45,
+      }),
+  },
+  purge_draught: {
+    id: "purge_draught",
+    name: "Decoction de la Purge",
+    description: "Contre les zones ou l'air lui-meme est une affliction.",
+    detailedDescription:
+      "+6 a toutes les resistances pendant la prochaine expedition.",
+    onRunStart: () =>
+      registerRunBuff({
+        id: "purge_draught",
+        label: "Decoction de la Purge",
+        kind: "defense",
+        resistBonus: 6,
+      }),
+  },
 };
 
 export const PREPARATION_UNLOCKS = {
@@ -202,6 +318,19 @@ export const PREPARATION_UNLOCKS = {
   nokron: { consumableId: "boss_ward" },
   altus_plateau: { consumableId: "relic_lens" },
   deeproot_depths: { blessingId: "grace_of_focus" },
+
+  // Version complete : neuf biomes de plus distribuent une preparation, ce qui
+  // porte le total a quatorze. Cinq recompenses pour 32 biomes rendaient le
+  // choix de preparation fige des le milieu de partie.
+  dominula_village: { blessingId: "grace_of_lucidity" },
+  giants_catacombs: { blessingId: "grace_of_embers" },
+  elphael: { blessingId: "grace_of_purge" },
+  castle_sol: { blessingId: "grace_of_vigil" },
+  leyndell_ash: { blessingId: "grace_of_sovereign" },
+  jarburg: { blessingId: "grace_of_avarice" },
+  shaded_castle: { consumableId: "purge_draught" },
+  volcano_manor: { consumableId: "rune_censer" },
+  rykard_lair: { consumableId: "ember_ward" },
 };
 
 const unlockPreparationEntry = (collectionKey, entryId) => {
@@ -423,6 +552,9 @@ export const getHazardForStatus = (effectId) => {
   const map = {
     POISON: "poison",
     FROSTBITE: "gel",
+    // La folie a enfin son propre statut ; l'etourdissement lui reste rattache
+    // parce que c'est la meme resistance mentale qui l'attenue.
+    MADNESS: "folie",
     STUN: "folie",
     SCARLET_ROT: "putrefaction",
   };

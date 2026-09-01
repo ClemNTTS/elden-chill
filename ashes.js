@@ -1,8 +1,10 @@
+import { applyEffect } from "./combat.js";
 import {
   gameState,
   getEffectiveStats,
   getHealth,
   runtimeState,
+  healPlayer,
 } from "./state.js";
 
 export const ASHES_OF_WAR = {
@@ -17,10 +19,7 @@ export const ASHES_OF_WAR = {
       const healAmount = Math.min(gameState.stats.level * 5, 250);
       const maxHp = getHealth(getEffectiveStats().vigor);
 
-      runtimeState.playerCurrentHp = Math.min(
-        maxHp,
-        runtimeState.playerCurrentHp + healAmount,
-      );
+      healPlayer(healAmount, maxHp);
 
       return {
         msg: `Vous récupérez ${healAmount} PV !`,
@@ -163,13 +162,96 @@ export const ASHES_OF_WAR = {
     effect: () => {
       runtimeState.playerArmorDebuff -= 30;
       const healAmount = Math.min(180, getHealth(getEffectiveStats().vigor) * 0.08);
-      runtimeState.playerCurrentHp = Math.min(
-        getHealth(getEffectiveStats().vigor),
-        runtimeState.playerCurrentHp + healAmount,
-      );
+      healPlayer(healAmount, getHealth(getEffectiveStats().vigor));
       return {
         msg: `Les racines referment vos plaies (+${Math.floor(healAmount)} PV).`,
       };
+    },
+  },
+  /* ================================================================
+     Cendres de la version complete.
+
+     Chacune repond a un trait de biome precis plutot que d'ajouter un
+     multiplicateur de plus : c'est la seule facon de rendre le choix de
+     cendre dependant de la destination.
+     ================================================================ */
+
+  madding_toll: {
+    name: "Glas affolant",
+    description:
+      "Retourne la Folie contre l'ennemi : 6 cumuls d'un coup, soit presque le seuil de declenchement.",
+    maxUses: 3,
+    effect: (stats, enemy) => {
+      applyEffect(gameState.ennemyEffects, "MADNESS", 6);
+      return { msg: "Le glas resonne : l'esprit d'en face vacille." };
+    },
+  },
+
+  briar_riposte: {
+    name: "Riposte de la Ronce",
+    description:
+      "Convertit votre armure en degats : un coup egal a 150% de votre armure effective.",
+    maxUses: 2,
+    effect: (stats) => {
+      // Exprime en multiplicateur plutot qu'en degats fixes : le moteur ne lit
+      // que damageMult, et un rapport armure/force reste lisible.
+      const ratio = Math.max(1.2, Math.min(4, (stats.armor || 100) / Math.max(1, stats.strength) * 2));
+      applyEffect(gameState.ennemyEffects, "THORNS", 3);
+      return {
+        damageMult: ratio,
+        msg: `Les ronces jaillissent de votre garde (x${ratio.toFixed(1)}).`,
+      };
+    },
+  },
+
+  magma_eruption: {
+    name: "Eruption de magma",
+    description:
+      "Frappe tout le groupe. Degats de zone egaux a 80% de votre Intelligence, plus la Brulure.",
+    maxUses: 3,
+    effect: (stats) => {
+      // Le splash du tour vient de stats.splashDamage, lu par performAttack :
+      // on le gonfle pour ce tour au lieu d'inventer un champ.
+      stats.splashDamage += Math.floor((stats.intelligence || 0) * 0.8) + 40;
+      return {
+        damageMult: 1.3,
+        status: { id: "BURN", duration: 4 },
+        msg: "Le sol se fend et crache une gerbe de magma.",
+      };
+    },
+  },
+
+  sleep_pot: {
+    name: "Pot de sommeil",
+    description:
+      "Endort la cible pour 2 tours. Le sommeil se brise au premier coup : a jouer pour souffler, pas pour enchainer.",
+    maxUses: 2,
+    effect: () => {
+      applyEffect(gameState.ennemyEffects, "SLEEP", 2);
+      return { msg: "Une vapeur epaisse retombe : l'ennemi ferme les yeux." };
+    },
+  },
+
+  destined_cut: {
+    name: "Entaille destinee",
+    description:
+      "Applique 6 cumuls de Fleau mortel. A douze, la cible perd un quart de sa vie maximale.",
+    maxUses: 2,
+    effect: () => {
+      applyEffect(gameState.ennemyEffects, "DEATH_BLIGHT", 6);
+      return { msg: "Une ligne noire s'ouvre dans l'air et suit la cible." };
+    },
+  },
+
+  golden_vow: {
+    name: "Voeu dore",
+    description:
+      "Le serment de l'Ordre : +40% de degats sur votre prochaine attaque, et 60 d'armure regagnee.",
+    maxUses: 3,
+    effect: () => {
+      runtimeState.nextAtkMultBonus = 1.4;
+      runtimeState.playerArmorDebuff -= 60;
+      return { msg: "Le voeu dore se referme sur vous." };
     },
   },
 };
