@@ -298,48 +298,51 @@
 
                   <hr />
 
-                  <div class="stat-line secondary">
-                    <div
-                      class="stat-info"
-                      data-stat="critChance"
-                      onmouseenter="showStatTooltip(event, 'critChance')"
-                      onmousemove="moveTooltip(event)"
-                      onmouseleave="hideTooltip()"
-                    >
-                      <span>Crit %</span>
-                      <b id="eff-critChance">0%</b>
-                      <span id="bonus-critChance"></span>
+                  <div class="crit-points">
+                    <div class="crit-points__head">
+                      <span class="crit-points__label">Points critiques</span>
+                      <b id="crit-points-available">0</b>
+                      <span class="crit-points__hint" id="crit-points-hint">1 point tous les 10 niveaux</span>
+                      <button class="crit-points__reset" id="btn-crit-respec" onclick="respecCritPoints()">Reinitialiser</button>
                     </div>
-                    <div class="upgrade-action">
-                      <span class="cost-label" id="cost-critChance">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-1" onclick="upgradeStat('critChance')">+</button>
-                      <span class="cost-label" id="cost-critChance-5">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-5" onclick="upgradeStatMultiple('critChance', 5)">+</button>
-                      <span class="cost-label" id="cost-critChance-10">0</span>
-                      <button class="mini-upgrade" id="btn-critChance-10" onclick="upgradeStatMultiple('critChance', 10)">+</button>
-                    </div>
-                  </div>
 
-                  <div class="stat-line secondary">
-                    <div
-                      class="stat-info"
-                      data-stat="critDamage"
-                      onmouseenter="showStatTooltip(event, 'critDamage')"
-                      onmousemove="moveTooltip(event)"
-                      onmouseleave="hideTooltip()"
-                    >
-                      <span>Crit Dmg</span>
-                      <b id="eff-critDamage">0x</b>
-                      <span id="bonus-critDamage"></span>
+                    <div class="stat-line secondary">
+                      <div
+                        class="stat-info"
+                        data-stat="critChance"
+                        onmouseenter="showStatTooltip(event, 'critChance')"
+                        onmousemove="moveTooltip(event)"
+                        onmouseleave="hideTooltip()"
+                      >
+                        <span>Crit %</span>
+                        <b id="eff-critChance">0%</b>
+                        <span id="bonus-critChance"></span>
+                      </div>
+                      <div class="upgrade-action">
+                        <span class="cost-label" id="rank-critChance">0</span>
+                        <button class="mini-upgrade" id="btn-critChance-1" onclick="investCritPoint('chance')">+</button>
+                      </div>
                     </div>
-                    <div class="upgrade-action">
-                      <span class="cost-label" id="cost-critDamage">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-1" onclick="upgradeStat('critDamage')">+</button>
-                      <span class="cost-label" id="cost-critDamage-5">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-5" onclick="upgradeStatMultiple('critDamage', 5)">+</button>
-                      <span class="cost-label" id="cost-critDamage-10">0</span>
-                      <button class="mini-upgrade" id="btn-critDamage-10" onclick="upgradeStatMultiple('critDamage', 10)">+</button>
+
+                    <div class="stat-line secondary">
+                      <div
+                        class="stat-info"
+                        data-stat="critDamage"
+                        onmouseenter="showStatTooltip(event, 'critDamage')"
+                        onmousemove="moveTooltip(event)"
+                        onmouseleave="hideTooltip()"
+                      >
+                        <span>Crit Dmg</span>
+                        <b id="eff-critDamage">0x</b>
+                        <span id="bonus-critDamage"></span>
+                      </div>
+                      <div class="upgrade-action">
+                        <span class="cost-label" id="rank-critDamage">0</span>
+                        <button class="mini-upgrade" id="btn-critDamage-1" onclick="investCritPoint('damage')">+</button>
+                      </div>
                     </div>
+
+                    <p class="crit-points__super" id="crit-super-line"></p>
                   </div>
                 </div>
               </div>

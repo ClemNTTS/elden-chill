@@ -2,15 +2,50 @@ import { gameState, runtimeState } from "./state.js";
 import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import {
+  getCritPointsAvailable,
+  resetCritRanks,
+  spendCritPoint,
 
+} from "./crit.js";
+
+/*
+ * Le critique n'est plus achetable avec des runes et ne consomme plus de
+ * niveau du budget global : il a sa propre monnaie, un point tous les
+ * 10 niveaux, geree par crit.js. Seules les quatre stats principales restent
+ * ici.
+ */
 const upgradeCosts = {
   vigor: 1,
   strength: 1,
   dexterity: 1,
   intelligence: 1,
-  critChance: 2,
-  critDamage: 2.5,
 };
+
+const MAIN_STATS = new Set(Object.keys(upgradeCosts));
+
+/** Depense un point de competence critique. Expose a l'interface. */
+export const investCritPoint = (track, count = 1) => {
+  if (!spendCritPoint(track, count)) return;
+  saveGame("invest_crit_point");
+  updateUI();
+};
+
+/** Rend tous les points critiques. Gratuit : ils viennent du niveau. */
+export const respecCritPoints = () => {
+  if (
+    !confirm(
+      "Reinitialiser la repartition de vos points critiques ? Ils vous seront tous rendus.",
+    )
+  ) {
+    return;
+  }
+  resetCritRanks();
+  saveGame("respec_crit_points");
+  updateUI();
+};
+
+export { getCritPointsAvailable };
 
 export const equipAsh = (ashId) => {
   gameState.equippedAsh = gameState.equippedAsh === ashId ? null : ashId;
@@ -63,6 +98,7 @@ export const getMultiUpgradeCost = (statName, count) => {
 };
 
 export const upgradeStat = (statName) => {
+  if (!MAIN_STATS.has(statName)) return;
   let cost = getUpgradeCost(statName);
 
   if (gameState.stats.level >= gameState.save.maxLevel) {
@@ -72,21 +108,10 @@ export const upgradeStat = (statName) => {
     return;
   }
 
-  if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
-    alert("Votre Chance de Critique est deja au maximum (100%) !");
-    return;
-  }
-
   if (gameState.runes.banked >= cost) {
     gameState.runes.banked -= cost;
 
-    if (statName === "critChance") {
-      gameState.stats.critChance += 0.01;
-    } else if (statName === "critDamage") {
-      gameState.stats.critDamage += 0.1;
-    } else {
-      gameState.stats[statName] += 1;
-    }
+    gameState.stats[statName] += 1;
     gameState.stats.level++;
     gameState.stats.runesSpent = Math.floor(gameState.stats.runesSpent + cost);
     saveGame("upgrade_stat");
@@ -97,6 +122,7 @@ export const upgradeStat = (statName) => {
 };
 
 export const upgradeStatMultiple = (statName, count) => {
+  if (!MAIN_STATS.has(statName)) return;
   let totalCost = getMultiUpgradeCost(statName, count);
 
   if (gameState.stats.level + count > gameState.save.maxLevel) {
@@ -106,23 +132,11 @@ export const upgradeStatMultiple = (statName, count) => {
     return;
   }
 
-  if (statName === "critChance" && gameState.stats.critChance >= 1.0) {
-    alert("Votre Chance de Critique est deja au maximum (100%) !");
-    return;
-  }
-
   if (gameState.runes.banked >= totalCost) {
     gameState.runes.banked -= totalCost;
 
     for (let i = 0; i < count; i += 1) {
-      if (statName === "critChance") {
-        gameState.stats.critChance += 0.01;
-        if (gameState.stats.critChance > 1.0) gameState.stats.critChance = 1.0;
-      } else if (statName === "critDamage") {
-        gameState.stats.critDamage += 0.1;
-      } else {
-        gameState.stats[statName] += 1;
-      }
+      gameState.stats[statName] += 1;
       gameState.stats.level++;
     }
     // On comptabilise le cout reellement debite. L'ancienne version rappelait
@@ -157,8 +171,7 @@ export const refundRunes = () => {
   gameState.stats.strength = 0;
   gameState.stats.dexterity = 0;
   gameState.stats.intelligence = 0;
-  gameState.stats.critChance = 0.05;
-  gameState.stats.critDamage = 1.5;
+  resetCritRanks();
   gameState.stats.splashDamage = 0;
   gameState.stats.armor = 100;
   gameState.equipped = { weapon: null, armor: null, accessory: null };

@@ -1,4 +1,5 @@
 import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
+import { CRIT_BASE, syncCritStats } from "./crit.js";
 import {
   CAMP_SCREEN_IDS,
   LOCAL_PREFS_KEY,
@@ -205,8 +206,56 @@ export const loadGame = () => {
   return lastLoadReport;
 };
 
+/*
+ * Migration des sauvegardes anterieures au systeme de points critiques.
+ *
+ * Avant, chaque amelioration de critique consommait un niveau du budget global
+ * et coutait des runes. Ces niveaux ne servent plus a rien : on les rend, avec
+ * la part correspondante des runes depensees, et le critique repart de sa base
+ * — le joueur le reconstruit avec ses points, gratuits.
+ *
+ * Le remboursement en runes est proportionnel : le cout exact d'un niveau
+ * donne depend de l'ordre d'achat, que la sauvegarde ne conserve pas. Une part
+ * au prorata ne peut jamais s'ecarter beaucoup du vrai montant, et elle a le
+ * merite d'etre neutre plutot que systematiquement genereuse ou avare.
+ */
+const migrateCritToSkillPoints = (profile) => {
+  const stats = profile?.stats;
+  if (!stats || stats.critRanks) return profile;
+
+  const chanceLevels = Math.max(
+    0,
+    Math.round(((stats.critChance ?? CRIT_BASE.chance) - CRIT_BASE.chance) / 0.01),
+  );
+  const damageLevels = Math.max(
+    0,
+    Math.round(((stats.critDamage ?? CRIT_BASE.damage) - CRIT_BASE.damage) / 0.1),
+  );
+  const spent = chanceLevels + damageLevels;
+
+  stats.critRanks = { chance: 0, damage: 0 };
+  stats.critChance = CRIT_BASE.chance;
+  stats.critDamage = CRIT_BASE.damage;
+  if (spent <= 0) return profile;
+
+  const level = stats.level || 0;
+  if (level > 0 && stats.runesSpent > 0) {
+    const share = Math.min(1, spent / level);
+    const refund = Math.floor(stats.runesSpent * share);
+    profile.runes = profile.runes || { banked: 0, carried: 0 };
+    profile.runes.banked = Math.floor((profile.runes.banked || 0) + refund);
+    stats.runesSpent = Math.max(0, Math.floor(stats.runesSpent - refund));
+  }
+  stats.level = Math.max(0, level - spent);
+
+  console.info(
+    `[save] migration critique : ${spent} niveau(x) rendu(s), critique remis a sa base`,
+  );
+  return profile;
+};
+
 const hydrate = (profile) => {
-  const withOfflineTime = applyOfflineTimeProgress(profile);
+  const withOfflineTime = applyOfflineTimeProgress(migrateCritToSkillPoints(profile));
   ensureSaveIdentity(withOfflineTime);
 
   // Une sauvegarde prise en pleine expedition restaure isExploring a true,
@@ -225,6 +274,9 @@ const hydrate = (profile) => {
   }
 
   setGameState(withOfflineTime);
+  // Les rangs font foi : ils reconstruisent critChance et critDamage, y compris
+  // si la sauvegarde portait des valeurs incoherentes.
+  syncCritStats();
   applyLocalPreferences();
 
   // Meme probleme cote interface : ui.currentScreen peut valoir "combat", qui

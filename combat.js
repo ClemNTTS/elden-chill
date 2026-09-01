@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { rollCrit } from "./crit.js";
 import { STATUS_EFFECTS } from "./status.js";
 import { ITEMS } from "./item.js";
 import { handleDeath, handleVictory } from "./core.js";
@@ -218,11 +219,10 @@ export function performAttack({
       runtimeState.nextAtkMultBonus = 1;
     }
 
-    let isCrit = false;
-    const critChance = stats?.critChance ?? 0;
-    const critDamage = stats?.critDamage ?? 1.5;
-    if (critChance && Math.random() < critChance) {
-      isCrit = true;
+    const crit = rollCrit(stats);
+    const isCrit = crit.isCrit;
+    const critDamage = crit.multiplier;
+    if (isCrit) {
       damage *= critDamage;
     }
 
@@ -281,7 +281,9 @@ export function performAttack({
     updateHealthBars();
 
     ActionLog(
-      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(finalDamage)} dégâts ${isCrit ? "CRITIQUES !" : "."}`,
+      `${logPrefix} ${isPlayer ? "infligez" : "frappe"} ${formatNumber(finalDamage)} dégâts ${
+        crit.isSuper ? "SUPER CRITIQUES !!" : isCrit ? "CRITIQUES !" : "."
+      }`,
       isCrit ? "log-crit" : "",
     );
 

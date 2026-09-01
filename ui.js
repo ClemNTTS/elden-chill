@@ -77,6 +77,17 @@ function playDungeonMusic() {
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
+import {
+  CRIT_PER_RANK,
+  LEVELS_PER_CRIT_POINT,
+  SUPER_CRIT_MULTIPLIER,
+  getCritDamageMultiplier,
+  getCritPointsAvailable,
+  getCritPointsSpent,
+  getCritPointsTotal,
+  getCritRanks,
+  getSuperCritChance,
+} from "./crit.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { MONSTERS } from "./monster.js";
 import { STATUS_EFFECTS } from "./status.js";
@@ -377,26 +388,26 @@ const updateStatDisplay = () => {
     }
   });
 
-  const updateCrit = (id, statName, isPercent) => {
-    const val = eff[statName]; // Valeur effective totale (ex: 0.15 pour 15%)
-    const baseVal = base[statName]; // Valeur de base sans equipement (ex: 0.05)
-    const bonus = val - baseVal; // Difference apportee par les items/sets (ex: 0.10)
+  /*
+   * Le critique se pilote avec des points de competence, pas avec des runes :
+   * un point tous les 10 niveaux, a repartir entre chance et degats. Les
+   * boutons ne dependent donc plus du solde de runes ni du budget de niveaux.
+   */
+  const updateCrit = (id, statName, track, isPercent) => {
+    const val = eff[statName];
+    const baseVal = base[statName];
+    const bonus = val - baseVal;
 
-    const cost = getUpgradeCost(statName);
-    const btn = document.getElementById(`btn-${id}-1`);
-
-    // Affichage de la valeur totale (ex: 15.0%)
     document.getElementById(`eff-${id}`).innerText = isPercent
-      ? (val * 100).toFixed(1) + "%"
-      : val.toFixed(1) + "x";
+      ? `${(val * 100).toFixed(1)}%`
+      : `${val.toFixed(1)}x`;
 
-    // Gestion de l'affichage du bonus (ex: +10.0%)
     const bonusEl = document.getElementById(`bonus-${id}`);
     if (bonusEl) {
-      if (bonus !== 0) {
+      if (Math.abs(bonus) > 1e-9) {
         bonusEl.innerText = isPercent
-          ? `Equip. +${(bonus * 100).toFixed(1)}%`
-          : `Equip. +${bonus.toFixed(1)}x`;
+          ? `Equip. ${bonus > 0 ? "+" : ""}${(bonus * 100).toFixed(1)}%`
+          : `Equip. ${bonus > 0 ? "+" : ""}${bonus.toFixed(1)}x`;
         bonusEl.classList.toggle("has-positive", bonus > 0);
         bonusEl.classList.toggle("has-negative", bonus < 0);
       } else {
@@ -405,63 +416,65 @@ const updateStatDisplay = () => {
       }
     }
 
-    const globalLevelMaxed = currentLevel >= maxLevel;
-    document.getElementById(`cost-${id}`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost);
+    const ranks = getCritRanks();
+    const rankEl = document.getElementById(`rank-${id}`);
+    if (rankEl) {
+      rankEl.innerText = `${ranks[track]} rg`;
+      rankEl.title = isPercent
+        ? `Chaque rang ajoute ${(CRIT_PER_RANK.chance * 100).toFixed(0)} points de pourcentage`
+        : `Chaque rang ajoute ${CRIT_PER_RANK.damage.toFixed(2)}x`;
+    }
 
+    const btn = document.getElementById(`btn-${id}-1`);
     if (btn) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn.disabled = isMax || gameState.runes.banked < cost || globalLevelMaxed;
-      btn.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
-    }
-
-    // Update +5 button for crit stats
-    const cost5 = getMultiUpgradeCost(statName, 5);
-    document.getElementById(`cost-${id}-5`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost5);
-    const btn5 = document.getElementById(`btn-${id}-5`);
-    if (btn5) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn5.disabled =
-        isMax || gameState.runes.banked < cost5 || currentLevel + 5 > maxLevel;
-      btn5.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn5.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn5.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
-    }
-
-    // Update +10 button for crit stats
-    const cost10 = getMultiUpgradeCost(statName, 10);
-    document.getElementById(`cost-${id}-10`).innerText = globalLevelMaxed
-      ? "CAP"
-      : formatNumber(cost10);
-    const btn10 = document.getElementById(`btn-${id}-10`);
-    if (btn10) {
-      const isMax = statName === "critChance" && base.critChance >= 1.0;
-      btn10.disabled =
-        isMax ||
-        gameState.runes.banked < cost10 ||
-        currentLevel + 10 > maxLevel;
-      btn10.innerText = isMax || globalLevelMaxed ? "MAX" : "+";
-      btn10.classList.toggle("is-maxed", isMax || globalLevelMaxed);
-      btn10.title =
-        isMax || globalLevelMaxed
-          ? "Cap atteint pour cette statistique"
-          : "Ameliorer cette statistique";
+      const canSpend = available > 0;
+      btn.disabled = !canSpend;
+      btn.innerText = "+";
+      btn.classList.toggle("is-maxed", !canSpend);
+      btn.title = canSpend
+        ? "Investir un point de competence"
+        : "Aucun point disponible : montez de niveau";
     }
   };
 
-  updateCrit("critChance", "critChance", true);
-  updateCrit("critDamage", "critDamage", false);
+  const available = getCritPointsAvailable();
+  const total = getCritPointsTotal();
+  const spent = getCritPointsSpent();
+
+  const availableEl = document.getElementById("crit-points-available");
+  if (availableEl) availableEl.innerText = `${available} / ${total}`;
+
+  const hintEl = document.getElementById("crit-points-hint");
+  if (hintEl) {
+    const nextAt =
+      (Math.floor(currentLevel / LEVELS_PER_CRIT_POINT) + 1) *
+      LEVELS_PER_CRIT_POINT;
+    hintEl.innerText =
+      nextAt > maxLevel
+        ? "Tous les points sont acquis"
+        : `Prochain point au niveau ${nextAt}`;
+  }
+
+  const respecBtn = document.getElementById("btn-crit-respec");
+  if (respecBtn) respecBtn.disabled = spent === 0;
+
+  updateCrit("critChance", "critChance", "chance", true);
+  updateCrit("critDamage", "critDamage", "damage", false);
+
+  /*
+   * Au-dela de 100% de chance effective, le surplus devient du super critique.
+   * On l'affiche explicitement, sinon le joueur n'a aucun moyen de savoir que
+   * ses points de chance au-dela du plafond servent encore a quelque chose.
+   */
+  const superEl = document.getElementById("crit-super-line");
+  if (superEl) {
+    const superChance = getSuperCritChance(eff);
+    const mult = getCritDamageMultiplier(eff);
+    superEl.innerText = superChance > 0
+      ? `Super critique ${(superChance * 100).toFixed(1)}% des coups (x${(eff.critDamage * SUPER_CRIT_MULTIPLIER).toFixed(1)}) - degats moyens x${mult.toFixed(2)}`
+      : `Degats moyens x${mult.toFixed(2)}. Au-dela de 100% de chance, le surplus devient du super critique.`;
+    superEl.classList.toggle("is-active", superChance > 0);
+  }
 };
 
 const updateEquipmentDisplay = () => {
@@ -2724,11 +2737,11 @@ export const showStatTooltip = (e, statType) => {
     },
     critChance: {
       title: "Chance de Critique",
-      text: "Probabilite d'infliger un coup critique lors d'une attaque.",
+      text: "Probabilite d'infliger un coup critique. +5 points de pourcentage par point de competence. Au-dela de 100%, le surplus devient de la chance de super critique.",
     },
     critDamage: {
       title: "Degats Critiques",
-      text: "Multiplicateur de degats applique lors d'un coup critique.",
+      text: "Multiplicateur applique lors d'un coup critique. +0,25x par point de competence. Un super critique double ce multiplicateur.",
     },
   };
   const data = descriptions[statType];

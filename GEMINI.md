@@ -320,14 +320,38 @@ collapse.
 
 *   Enemy HP is allowed to display **below zero** after a lethal blow
     (`-116 / 13`). This is an intentional UX choice: it shows overkill.
-*   **Crit shares the single 150-level budget with the four main stats.**
-    `critChance` gives +1 point of percent per level at 2x the rune cost of a
-    main stat, `critDamage` +0.1x at 2.5x. A character maxed into main stats is
-    therefore locked at the starting 5% / 1.5x — that is the design, not a bug.
-    The break-even against strength (damage is linear in effective strength,
-    `combat.js:141`) is around 200 effective strength: below that a level in
-    strength buys more DPS, above it a level in crit does. The only way to
-    change lane is the 80% rune refund in Options.
+
+## Crit — a separate currency (`crit.js`)
+
+Crit no longer draws on the 150-level rune budget. It has its own currency:
+**one skill point every 10 levels**, so 15 at max level, split freely between
+chance and damage. Points are free (they come from levels, not runes) and
+`respecCritPoints()` returns them at no cost.
+
+| | base | per point | 15 points |
+| --- | --- | --- | --- |
+| `critChance` | 5% | +5 points of percent | 80% |
+| `critDamage` | 1.5x | +0.25x | 5.25x |
+
+`CRIT_PER_RANK.chance` is 0.05 and not 0.04 for a reason: the Twin Blades
+require **10% base crit** (`item.js`). At 5 per rank the first point clears
+that gate, so the weapon becomes reachable at level 10.
+
+The payoff curve deliberately rewards splitting — average damage multiplier at
+150: 15/0 → x1.40, 9/6 → **x2.00**, 0/15 → x1.21. Going all-in on either track
+is the worst use of the points.
+
+**Super crit.** Effective crit chance above 100% is not wasted: the overflow
+becomes the chance that a crit is a *super* crit, which doubles the crit
+multiplier (`SUPER_CRIT_MULTIPLIER`). 135% chance = guaranteed crit, 35% of
+them super. `rollCrit()` in `crit.js` is the single resolution point; combat
+calls it and nothing else rolls crit.
+
+`stats.critChance` / `stats.critDamage` remain the source of truth for every
+other reader (items, combat, display). The ranks only drive them, through
+`syncCritStats()`, which `hydrate()` calls on every load. Saves predating the
+system are migrated by `migrateCritToSkillPoints()` in `save.js`: old crit
+levels are handed back, with a pro-rata share of `runesSpent` refunded.
 
 ## Sticky layers of the combat screen
 

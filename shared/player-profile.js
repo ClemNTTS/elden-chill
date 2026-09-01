@@ -27,6 +27,8 @@ export const DEFAULT_PLAYER_PROFILE = {
     intelligence: 0,
     critChance: 0.05,
     critDamage: 1.5,
+    // Points de competence critiques, un tous les 10 niveaux. Voir crit.js.
+    critRanks: { chance: 0, damage: 0 },
     splashDamage: 0,
     armor: 100,
     flatDamagePenetration: 0,

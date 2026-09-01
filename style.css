@@ -2951,3 +2951,68 @@ button:disabled {
     text-align: left;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Points de competence critiques                                     */
+/* ------------------------------------------------------------------ */
+
+.crit-points {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.crit-points__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.crit-points__label {
+  font-family: var(--header-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+#crit-points-available {
+  font-family: var(--header-font);
+  font-size: 1.15rem;
+  color: var(--accent);
+}
+
+.crit-points__hint {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.crit-points__reset {
+  margin-left: auto;
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  border-radius: 999px;
+}
+
+.crit-points__reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.crit-points__super {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+
+/* Le super critique n'existe qu'au-dela de 100% de chance : quand il s'active,
+   la ligne cesse d'etre une explication et devient une valeur a lire. */
+.crit-points__super.is-active {
+  color: var(--accent);
+  font-weight: 600;
+}
