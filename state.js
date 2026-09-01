@@ -83,10 +83,27 @@ export function setGameState(newState) {
     : [];
 }
 
+/** Points de dexterite necessaires pour une attaque supplementaire. */
+export const DEX_PER_EXTRA_ATTACK = 40;
+
+/**
+ * Rendement de l'intelligence.
+ *
+ * Le plafond etait a 50 (`min(0.5, int/100)`) : l'intelligence etait finie a
+ * 50 points sur un budget de 150, et chaque point au-dela ne servait plus qu'a
+ * nourrir la force a 25%. Il suit desormais le budget complet.
+ */
+export const INT_RUNE_CAP = 1.5;
+/** Bonus de chance de butin, plafonne : l'intelligence est la stat de rendement. */
+export const INT_DROP_CAP = 0.5;
+export const getIntDropBonus = (intelligence = 0) =>
+  1 + Math.min(INT_DROP_CAP, Math.max(0, intelligence) / 300);
+
 export function getEffectiveStats() {
   let effStats = {
     ...gameState.stats,
     attacksPerTurn: 1,
+    extraAttackChance: 0,
     runeGainMult: 0,
     bossMitigation: 0,
     resistances: {
@@ -144,7 +161,33 @@ export function getEffectiveStats() {
   // 4. Bonus "Mult" (Multiplicateurs % des objets)
   applyItemBonus("applyMult");
 
-  // 5. Arrondi final pour éviter les PV/Dégâts à virgule
+  /*
+   * 5. Attaques supplementaires de dexterite.
+   *
+   * Les degats valent la force (combat.js), et la dexterite n'en rend qu'un
+   * quart : sans multiplicateur, un build dexterite valait structurellement
+   * quatre fois moins qu'un build force. Le diviseur de 40 est calibre pour la
+   * parite exacte a budget plein — a 150 de dexterite, 1 + floor(150/40) = 4
+   * attaques pour 37 de force derivee, soit 148 de degats par tour contre 150
+   * pour un build force pur. La dexterite garde en prime son esquive et son
+   * armure ; elle les paie en fragilite face aux coups uniques.
+   *
+   * Corollaire assume : les effets a l'impact se declenchent par attaque, donc
+   * la dexterite est aussi la voie des afflictions.
+   */
+  const dexAttacks = (effStats.dexterity || 0) / DEX_PER_EXTRA_ATTACK;
+  effStats.attacksPerTurn += Math.floor(dexAttacks);
+  /*
+   * Le reste devient une chance d'attaque supplementaire, tiree a chaque tour.
+   *
+   * Sans ca, le palier etait une falaise : a 79 de dexterite on frappait deux
+   * fois, a 80 trois fois, soit +48% de degats par tour pour un seul point.
+   * La progression devient continue et il n'y a plus de seuil a viser au point
+   * pres.
+   */
+  effStats.extraAttackChance = dexAttacks - Math.floor(dexAttacks);
+
+  // 6. Arrondi final pour éviter les PV/Dégâts à virgule
   const keysToFloor = [
     "strength",
     "vigor",

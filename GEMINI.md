@@ -370,6 +370,36 @@ Note that `getEffectiveStats()` folds `dexterity/4 + intelligence/4` into
 strength, so strength is structurally favoured on balanced builds. That is the
 real stat derivation, not a bug in the threshold.
 
+## What each stat actually does
+
+Damage equals strength, flat (`combat.js:141`). Every other stat is measured
+against that, which is why they need a multiplier to compete.
+
+| Stat | Role |
+| --- | --- |
+| Vigueur | HP; base of several ashes and statuses |
+| Force | Damage, per attack |
+| Dexterite | **1 extra attack per 40 points**, dodge (dex/400, cap 50%), armor (dex/8), and dex/4 into strength |
+| Intelligence | **+1% runes per point (cap +150%)**, **+1% loot chance per 3 points (cap +50%)**, and int/4 into strength |
+
+`DEX_PER_EXTRA_ATTACK = 40` is calibrated for parity at full budget: 150 dex
+gives 4 attacks x 37 derived strength = 148 damage/turn against 150 for pure
+strength. The remainder is a **per-turn chance** of one more attack
+(`extraAttackChance`), not a hard breakpoint — without it, 79 to 80 dexterity
+was a 48% jump on a single point.
+
+Dexterity is the affliction path by design: on-hit effects roll **per attack**,
+so extra attacks are extra proc rolls.
+
+**Consequence to keep in mind:** attacks multiply strength, so the optimum is a
+hybrid. Measured over the 150-level budget with no equipment — pure strength
+150 dmg/turn, 80 dex / 70 str **270**, pure dexterity 176. Pure strength is now
+the weakest of the three. Change `DEX_PER_EXTRA_ATTACK` to flatten the curve
+(a larger divisor narrows the spread and weakens dexterity-heavy builds).
+
+Intelligence's rune bonus used to cap at 50 points out of a 150 budget, so it
+was a stat you finished rather than a path. It now runs the full budget.
+
 ## Endgame biomes (`monsters/endgame.js`)
 
 Five biomes used to be unreachable: `leyndell_royal` and `consecrated_snowfield`

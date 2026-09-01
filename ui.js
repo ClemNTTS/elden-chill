@@ -2237,7 +2237,7 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Penetration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
     <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}</b></div>
+    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}${      eff.extraAttackChance > 0.005        ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>`        : ""    }</b></div>
     <div class="rt-stat"><span>Degats de zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Deg. min. Epines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
     <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
@@ -2726,19 +2726,34 @@ export const showStatTooltip = (e, statType) => {
   const descriptions = {
     vigor: {
       title: "Vigueur",
-      text: "Augmente vos points de vie maximum.<br>",
+      text:
+        "Augmente vos points de vie maximum, par paliers degressifs." +
+        "<br><small>Sert aussi de base de calcul a plusieurs cendres de guerre et statuts.</small>",
     },
     strength: {
       title: "Force",
-      text: "Augmente la puissance de vos attaques.<br><strong>1 point = 1 degat de base.</strong>",
+      text:
+        "La voie du coup unique." +
+        "<br><strong>1 point = 1 degat de base</strong>, par attaque." +
+        "<br><small>Se combine avec les attaques supplementaires de la dexterite.</small>",
     },
     dexterity: {
       title: "Dexterite",
-      text: "Ameliore votre agilite au combat.<br><strong>4 points = 1% d'Esquive.</strong><br><small>(Maximum 50%)</small>. Et 4 points = +0.5 d'Armure. 4 points en dexterite = 1 force. <small>(Les bonus sont attribues par rapport aux stats de BASE)</small>",
+      text:
+        "La voie des afflictions : vous frappez plus souvent, donc vous appliquez plus de statuts." +
+        "<br><strong>40 points = 1 attaque supplementaire par tour.</strong>" +
+        "<br><small>Les effets a l'impact (saignement, gel, poison) se declenchent <b>a chaque attaque</b> : chaque attaque gagnee est aussi une chance de proc en plus.</small>" +
+        "<br>4 points = 1% d'Esquive <small>(maximum 50%)</small>." +
+        "<br>4 points = +0.5 d'Armure." +
+        "<br>4 points = 1 de Force.",
     },
     intelligence: {
       title: "Intelligence",
-      text: "Augmente votre capacite a absorber l'energie des runes.<br><strong>1 point = +1% de Runes.</strong> (max +50%). 4 points en Intelligence = 1 force.",
+      text:
+        "La stat de rendement : elle ne frappe pas, elle recolte." +
+        "<br><strong>1 point = +1% de Runes</strong> <small>(maximum +150%)</small>." +
+        "<br><strong>3 points = +1% de chance de butin</strong> <small>(maximum +50%)</small>." +
+        "<br>4 points = 1 de Force.",
     },
     critChance: {
       title: "Chance de Critique",

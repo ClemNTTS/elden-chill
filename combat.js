@@ -554,11 +554,14 @@ export const combatLoop = (sessionId) => {
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }
 
-        for (
-          let i = 0;
-          i < stats.attacksPerTurn + runtimeState.nextNbAtkBonus;
-          i++
-        ) {
+        // La fraction de dexterite non convertie en attaque entiere se joue
+        // ici, une fois par tour.
+        const bonusAttack =
+          Math.random() < (stats.extraAttackChance || 0) ? 1 : 0;
+        const attackCount =
+          stats.attacksPerTurn + runtimeState.nextNbAtkBonus + bonusAttack;
+
+        for (let i = 0; i < attackCount; i++) {
           // Find first alive enemy
           const currentTarget = runtimeState.currentEnemyGroup.find(
             (e) => e.hp > 0,
