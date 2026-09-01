@@ -124,10 +124,14 @@ export const upgradeStatMultiple = (statName, count) => {
         gameState.stats[statName] += 1;
       }
       gameState.stats.level++;
-      gameState.stats.runesSpent = Math.floor(
-        gameState.stats.runesSpent + getUpgradeCost(statName),
-      );
     }
+    // On comptabilise le cout reellement debite. L'ancienne version rappelait
+    // getUpgradeCost() APRES le level++ : elle facturait donc les niveaux
+    // L+1..L+n au lieu de L..L+n-1, gonflait runesSpent, et le remboursement
+    // rendait plus de runes qu'il n'en avait ete depense.
+    gameState.stats.runesSpent = Math.floor(
+      gameState.stats.runesSpent + totalCost,
+    );
     saveGame("upgrade_stat_multiple");
     updateUI();
   } else {

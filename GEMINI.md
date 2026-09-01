@@ -320,6 +320,28 @@ collapse.
 
 *   Enemy HP is allowed to display **below zero** after a lethal blow
     (`-116 / 13`). This is an intentional UX choice: it shows overkill.
+*   **Crit shares the single 150-level budget with the four main stats.**
+    `critChance` gives +1 point of percent per level at 2x the rune cost of a
+    main stat, `critDamage` +0.1x at 2.5x. A character maxed into main stats is
+    therefore locked at the starting 5% / 1.5x — that is the design, not a bug.
+    The break-even against strength (damage is linear in effective strength,
+    `combat.js:141`) is around 200 effective strength: below that a level in
+    strength buys more DPS, above it a level in crit does. The only way to
+    change lane is the 80% rune refund in Options.
+
+## Sticky layers of the combat screen
+
+Three elements are pinned to the bottom and must not overlap. Each reads the
+height of the one below it, published by the `ResizeObserver` in
+`watchCombatZoneHeight()` (`ui.js`) as `--combat-actions-height` and
+`--combat-zone-height`:
+
+1.  `#combat-actions` (retreat button) — `bottom: 0`, the floor.
+2.  `#combat-zone` (sprites and HP bars) — above the actions bar.
+3.  `.ash-container` — above both.
+
+Hard-coding any of these heights breaks the stack as soon as the sprites or a
+narrow layout change a row's height.
 
 ## Key Functions & Logic
 

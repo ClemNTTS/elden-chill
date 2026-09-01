@@ -389,6 +389,11 @@ export class SpriteAnimator {
     this.rafId = null;
     this.visible = true;
     this.onAnimationEnd = null;
+    // play() est asynchrone : sans ce drapeau, un chargement encore en vol
+    // au moment du destroy() rappelait draw() puis start() et ressuscitait un
+    // animateur mort, qui continuait a dessiner sur un canvas desormais
+    // partage avec son remplacant.
+    this.destroyed = false;
 
     this.canvas.width = Math.round(cell * scale);
     this.canvas.height = Math.round(cell * scale);
@@ -413,6 +418,7 @@ export class SpriteAnimator {
    * @param {{ fps?: number, loop?: boolean, onEnd?: () => void }} options
    */
   async play(src, row, { fps, loop = true, onEnd = null } = {}) {
+    if (this.destroyed) return;
     this.animation = { row: row[0], frames: row[1], loop };
     this.frame = 0;
     this.elapsed = 0;
@@ -427,11 +433,15 @@ export class SpriteAnimator {
       return;
     }
 
+    // Detruit pendant le chargement : on ne touche plus au canvas.
+    if (this.destroyed) return;
+
     this.draw();
     this.start();
   }
 
   start() {
+    if (this.destroyed) return;
     if (this.rafId != null || !this.image || !this.visible) return;
     this.lastTime = 0;
     const tick = (time) => {
@@ -497,6 +507,7 @@ export class SpriteAnimator {
   }
 
   destroy() {
+    this.destroyed = true;
     this.stop();
     if (this.observer) this.observer.disconnect();
     this.observer = null;

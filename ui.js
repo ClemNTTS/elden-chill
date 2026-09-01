@@ -714,6 +714,17 @@ const mountCombatEnemy = async () => {
   if (key === enemyVisualKey) return;
   enemyVisualKey = key;
 
+  // On arrete l'ancien AVANT de monter le nouveau. Les deux animateurs
+  // partagent le meme canvas : tant que l'ancien tournait pendant le
+  // chargement du nouveau, chacun y dessinait sa frame a tour de role et les
+  // deux creatures alternaient en scintillant.
+  if (enemyAnimator) {
+    enemyAnimator.destroy();
+    enemyAnimator = null;
+  }
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   const token = ++enemyMountToken;
   let animator = null;
   try {
@@ -733,7 +744,6 @@ const mountCombatEnemy = async () => {
     return;
   }
 
-  if (enemyAnimator && enemyAnimator !== animator) enemyAnimator.destroy();
   enemyAnimator = animator;
   renderEnemyEmblem(visual.emblem);
 };
@@ -759,20 +769,38 @@ const renderEnemyEmblem = (emblem) => {
  */
 let combatZoneObserver = null;
 
+/*
+ * Trois elements sont epingles en bas de l'ecran de combat et doivent
+ * s'empiler sans se recouvrir : la barre d'actions (le plancher), la zone de
+ * combat au-dessus, puis le bouton de cendre. Chacun a besoin de la hauteur de
+ * celui d'en dessous, mesuree ici plutot que fixee en dur — les sprites et le
+ * repli sur petite largeur la font varier.
+ */
+const STICKY_HEIGHTS = [
+  ["combat-zone", "--combat-zone-height"],
+  ["combat-actions", "--combat-actions-height"],
+];
+
 const watchCombatZoneHeight = () => {
-  const zone = document.getElementById("combat-zone");
-  if (!zone || combatZoneObserver) return;
+  if (combatZoneObserver) return;
+
+  const nodes = STICKY_HEIGHTS
+    .map(([id, prop]) => [document.getElementById(id), prop])
+    .filter(([node]) => node);
+  if (!nodes.length) return;
 
   const publish = () => {
-    document.documentElement.style.setProperty(
-      "--combat-zone-height",
-      `${Math.round(zone.getBoundingClientRect().height)}px`,
-    );
+    nodes.forEach(([node, prop]) => {
+      document.documentElement.style.setProperty(
+        prop,
+        `${Math.round(node.getBoundingClientRect().height)}px`,
+      );
+    });
   };
 
   if (typeof ResizeObserver === "function") {
     combatZoneObserver = new ResizeObserver(publish);
-    combatZoneObserver.observe(zone);
+    nodes.forEach(([node]) => combatZoneObserver.observe(node));
   }
   publish();
 };

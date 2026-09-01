@@ -592,9 +592,18 @@ button:disabled {
 }
 
 .hero-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  /* Grille commune aux quatre lignes plutot qu'une grille par ligne : la
+     colonne de libelle s'adapte au plus long ("Intelligence", qui debordait
+     sous la barre avec les 108px fixes d'avant) et les quatre barres restent
+     alignees entre elles. */
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) 62px;
+  gap: 10px 12px;
+}
+
+.hero-stats__head,
+.hero-stats > :not(.hero-stat) {
+  grid-column: 1 / -1;
 }
 
 .hero-stats__head {
@@ -619,9 +628,14 @@ button:disabled {
 
 .hero-stat {
   display: grid;
-  grid-template-columns: 108px minmax(0, 1fr) 62px;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 12px;
+}
+
+.hero-stat__label {
+  /* Sans ca le libelle se coupait en deux et passait sous la barre. */
+  white-space: nowrap;
 }
 
 .hero-stat__label {
@@ -1889,7 +1903,10 @@ button:disabled {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   position: sticky;
-  bottom: 10px;
+  /* Empilement : la barre d'actions est le plancher, la zone de combat se cale
+     juste au-dessus. Sans ce decalage le bouton "Se replier" recouvrait les
+     combattants. */
+  bottom: calc(var(--combat-actions-height, 68px) + 10px);
   z-index: 3;
   padding: 16px 18px;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
@@ -2075,7 +2092,9 @@ button:disabled {
   /* Cale au-dessus de la zone de combat, dont la hauteur est mesuree par
      ui.js. C'etait 118px en dur : l'ajout des sprites a rendu la zone plus
      haute et le bouton retombait par-dessus les combattants. */
-  bottom: calc(var(--combat-zone-height, 118px) + 12px);
+  bottom: calc(
+    var(--combat-actions-height, 68px) + var(--combat-zone-height, 118px) + 22px
+  );
   z-index: 4;
   display: flex;
   justify-content: flex-end;
@@ -2290,7 +2309,35 @@ button:disabled {
   margin-right: 4px;
 }
 
+/* Colle sous la zone de combat, au meme titre que le bouton de cendre : se
+   replier est l'action la plus urgente d'un combat, elle ne doit pas demander
+   de defiler. La hauteur de la zone de combat est publiee par ui.js. */
+/* Fondu de raccord entre le journal qui defile et le bandeau opaque. */
+.biome-actions-bottom::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 18px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0),
+    var(--surface-strong)
+  );
+}
+
 .biome-actions-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  /* Le journal defile derriere la barre. Un fond opaque, pas un degrade : un
+     degre d'opacite intermediaire laissait passer les entrees du journal
+     derriere le bouton. Le fondu est reporte sur le ::before, au-dessus. */
+  padding: 12px 14px;
+  margin: -4px -14px 0;
+  background: var(--surface-strong);
   display: flex;
   justify-content: space-between;
   align-items: center;
