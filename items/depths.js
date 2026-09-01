@@ -11,7 +11,7 @@ export const DEPTHS = {
     type: ITEM_TYPES.WEAPON,
     set: "AINSEL_ASTRAL",
     description:
-      "Dex +12%, Int +12%. Convertit 45% (+2% / niv) de votre Dexterité en Force et applique 2 Gelures sur critique.",
+      "Dex +12%, Int +12%. Convertit 26% (+2% / niv) de votre Dexterité de base en Force et applique 2 Gelures sur critique.",
     applyMult: (stats, itemLevel) => {
       stats.dexterity *= 1.12;
       stats.intelligence *= 1.12;

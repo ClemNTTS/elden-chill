@@ -808,6 +808,60 @@ sends no CORS header, which is why the old code routed through a third-party
 proxy that saw every announcement. Reliable announcements need a small
 server-side component holding the secret.
 
+## Descriptions must match the code
+
+`tools/audit-descriptions.mjs` compares the numbers an item's description
+announces against the numbers its code actually contains. A lying description
+is worse than no description: the player builds around it, and the mismatch is
+invisible in review because text and code sit twenty lines apart and are almost
+never edited together.
+
+It found two distinct classes of error.
+
+**Stale numbers.** Seven descriptions still announced the dexterity conversion
+ratios from before the rebalance (30%, 25%, 65%...). The ratios were cut by
+roughly 40%; the texts were not.
+
+**Effects that were never written.** Six items promised a mechanic no code
+implemented — "heals halved", "cancels the eternal-night dodge penalty",
+"+60% against sleeping targets", "+25% against frozen targets", "death blight
+builds twice as fast", "cancels the ashen veil". They had no `funcOnHit` and no
+matching stat: the sentence was pure fiction.
+
+Two were implemented (halved healing via a new `healReceivedMult` read by
+`healPlayer`, and the death blight stacks via `funcOnHit`); the other four were
+rewritten to state what the item really does.
+
+An item that promises a *conditional* behaviour needs one of the three real
+hooks — `funcOnHit`, `funcOnBeingHit`, `passiveStatusReduction` — or a stat the
+engine already reads. Anything else is flavour text pretending to be a
+mechanic.
+
+## Judging a weapon: the rule, and three ways I got it wrong
+
+**A weapon is judged on the build it serves, at damage per turn, with its own
+conditions satisfied.** Anything less produces false alarms. I produced three
+in a row on the same question, so the failure modes are worth recording.
+
+1.  **Measured at 0 stats.** 24 weapons showed "0 strength, therefore 0 damage".
+    But a converting or multiplying weapon is *supposed* to give nothing until
+    you invest in its stat. Checked on the matching build at 40 points, every
+    one beats fists: Cimeterre 37 vs 22 at dex 40, Baton de la Reine 35 vs 15
+    at int 40.
+2.  **Measured raw strength.** Twin Blades looked 5 strength behind fists — it
+    grants a whole extra attack. Comparing one dimension of a multiplicative
+    system proves nothing.
+3.  **Ignored the items' own conditions.** Seven weapons still looked weak
+    because they require e.g. 20 base dexterity *and* 10% base crit, and the
+    test build had no crit points.
+
+On the strength of the first false alarm I added a flat damage floor to four
+weapons, which erased their identity as scaling weapons. All four were
+restored. `git diff` on the mechanics is empty; only the descriptions changed.
+
+The lesson is not about weapons. It is that a single-dimension measurement in
+this engine is almost always wrong, because everything here multiplies.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but

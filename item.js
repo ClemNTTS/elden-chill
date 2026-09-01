@@ -66,9 +66,12 @@ export const ITEMS = {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+4 de Force. Dextérité +15%. Convertit 30% de la Dex en Force. +10% Chance de Critique (+2% / Niv).",
+      "+5 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 4;
+      // 5, comme les poings de depart : une arme d'ouverture ne doit pas etre
+      // en retrait sur l'equipement initial. La conversion de dexterite vient
+      // par-dessus.
+      stats.strength += 5;
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
@@ -83,9 +86,13 @@ export const ITEMS = {
   heavy_club: {
     name: "Gourdin Lourd",
     description:
-      "Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
+      "+5 de Force. Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
     type: ITEM_TYPES.WEAPON,
     applyFlat: (stats, itemLevel) => {
+      // Base fixe de 5, alignee sur les poings : sans elle, un personnage sans
+      // vigueur investie ne tirait aucun degat de cette arme. La conversion de
+      // vigueur reste ce qui la distingue, elle s'ajoute par-dessus.
+      stats.strength += 5;
       const baseVigor = gameState.stats.vigor || 0;
       const ratio = 0.25 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor(baseVigor * ratio);
@@ -119,7 +126,7 @@ export const ITEMS = {
     name: "Faucille",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Inelligence",
+      "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Intelligence",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 5;
     },
@@ -137,7 +144,7 @@ export const ITEMS = {
     name: "Croc de Limier",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+5 Dextérité (+1 / Niv). Convertit 25% (+1% / Niveau) de la Dextérité en force bonus. 40% chance d'appliquer 3 saignements",
+      "+5 Dextérité (+1 / Niv). Convertit 15% (+1% / Niveau) de la Dextérité de base en force bonus. 40% chance d'appliquer 3 saignements",
     applyFlat: (stats, itemLevel) => {
       stats.dexterity += 5 + 1 * (itemLevel - 1);
     },
@@ -236,7 +243,7 @@ export const ITEMS = {
     name: "Marteau de Margit",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 20 Dextérité de base pour être utilisé. Donne +20% de Force , Convertit +50% de la Dextérité de base en Dégats de zone. Converit 25% (+2% / Niveau) de la Dextérité en Force. <em style='color: grey;'>(+10% de chance d'étourdir l'ennemi pendant 2 tours.)</em>",
+      "Requiert 20 Dextérité de base pour être utilisé. Donne +20% de Force , Convertit +50% de la Dextérité de base en Dégats de zone. Convertit 15% (+2% / Niveau) de la Dextérité de base en Force. <em style='color: grey;'>(+10% de chance d'étourdir l'ennemi pendant 2 tours.)</em>",
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
@@ -296,7 +303,7 @@ export const ITEMS = {
     name: "Épée Courbe de Zamor",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 15 de Force et 18 de Dextérité de base pour être utilisé. +1% de Force et +2% de Dextérité par Niveau. Convertit +4% de la dextérité en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
+      "Requiert 15 de Force et 18 de Dextérité de base pour être utilisé. +1% de Force et +2% de Dextérité par Niveau. Convertit 2,5% de la dextérité de base en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
     applyMult: (stats, itemLevel) => {
       const baseStr = gameState.stats.strength || 0;
       const baseDex = gameState.stats.dexterity || 0;
@@ -490,7 +497,7 @@ export const ITEMS = {
     name: "Lames Jumelles",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 20 de dextérité et 10% de chance de Crit de base pour être utilisé. Attaque 2 fois, 35% (+1% / Niveau) de chance d'appliquer 3 saignements. Vous gagnez 35% (+1% / Niv) de votre Dextérité en Force.",
+      "Requiert 20 de dextérité et 10% de chance de Crit de base pour être utilisé. Attaque 2 fois, 35% (+1% / Niveau) de chance d'appliquer 3 saignements. Vous gagnez 20% (+1% / Niv) de votre Dextérité de base en Force.",
     applyFlat: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
       const baseCrit = gameState.stats.critChance || 0;
@@ -672,7 +679,7 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     set: "MARIONETTE_MASTER",
     description:
-      "Dextérité +10%. Vous convertissez 65% de votre Dextérité en Force. Chaque coup a 25% de chance de déclencher une attaque supplémentaire immédiate. (+1% / Niv)",
+      "Dextérité +10%. Vous convertissez 38% de votre Dextérité de base en Force. Chaque coup a 25% de chance de déclencher une attaque supplémentaire immédiate. (+1% / Niv)",
     applyFlat: (stats, itemLevel) => {
       stats.dexterity = Math.floor(stats.dexterity * 1.1);
     },
