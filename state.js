@@ -1,5 +1,5 @@
 import { ITEM_SETS } from "./constants.js";
-import { getRebirthRuneBonus } from "./rebirth.js";
+import { getRebirthRuneBonus, getRebirthVigorMult } from "./rebirth.js";
 import { ITEMS } from "./item.js";
 import { applyPreparationStats } from "./systems.js";
 import { DEFAULT_PLAYER_PROFILE } from "./shared/player-profile.js";
@@ -212,6 +212,10 @@ export function getEffectiveStats() {
    * Corollaire assume : les effets a l'impact se declenchent par attaque, donc
    * la dexterite est aussi la voie des afflictions.
    */
+  // Noeud "Sang endurci" : applique apres les objets pour qu'il les amplifie,
+  // et avant l'arrondi final pour ne pas perdre les decimales.
+  effStats.vigor *= getRebirthVigorMult();
+
   const dexAttacks = getDexExtraAttacks(effStats.dexterity);
   effStats.attacksPerTurn += Math.floor(dexAttacks);
   /*

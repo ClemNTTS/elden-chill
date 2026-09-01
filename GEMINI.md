@@ -500,6 +500,25 @@ cycle would restart an empty game and rebirth would read as a punishment.
 derives it as `MAX_LEVEL + 10 * rebirth.count`. Forcing it wiped the bonus on
 every load.
 
+**The rebirth tree** turns each rebirth into a choice rather than a flat
+multiplier. `POINTS_PER_REBIRTH` (2) points buy ranks in five nodes: rune gain,
+max level, effective vigour, ash charges, rare-encounter chance. 21 ranks in
+total, so a full tree takes 11 rebirths. Respec is free — the points come from
+rebirths, not runes, so returning them creates nothing.
+
+**Hard constraint on any new node:** nothing may add an equipment slot or raise
+an item's level cap. The build rests on the synergy of exactly three items; a
+fourth slot would rewrite the game rather than extend it. Rebirths accelerate
+and amplify, they never change the rules. Every node hooks into a lever the
+engine already had.
+
+`getMaxLevel()` is the **single source of truth** for the level cap — it folds
+in both the rebirth count and the `will` node. `gameState.save.maxLevel` is only
+a mirror, refreshed by `hydrate()`; `normalisePlayerProfile` cannot compute it
+(it would need `rebirth.js`, which imports `MAX_LEVEL` from it — a cycle).
+Letting the two formulas diverge already cost a real bug: after a reload, the 25
+levels from a maxed `will` node vanished from the cap.
+
 **Trials** are four out-of-progression bosses (180k to 4.5M hp) with no loot and
 no runes — the reward is the achievement alone. They are biomes deliberately
 outside the unlock graph (`isTrial: true`, `length: 1`), entered only from the

@@ -189,8 +189,18 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.floor(Number(base.stats.runesSpent) || 0),
   );
-  // Le plafond de niveau monte de 10 par renaissance : on ne peut donc pas le
-  // forcer a MAX_LEVEL ici, ce qui annulerait le gain a chaque chargement.
+  /*
+   * Le plafond de niveau n'est PAS calcule ici.
+   *
+   * Il depend du compteur de renaissances *et* du noeud Volonte de l'arbre, que
+   * ce module ne peut pas connaitre sans importer rebirth.js — qui importe
+   * MAX_LEVEL d'ici, donc cycle. La valeur ci-dessous n'est qu'un repli
+   * coherent ; hydrate() la remplace par getMaxLevel() au chargement, et c'est
+   * getMaxLevel() que lisent les consommateurs.
+   *
+   * Avoir laisse les deux formules diverger avait un cout concret : apres un
+   * rechargement, les 25 niveaux du noeud Volonte disparaissaient du plafond.
+   */
   base.automation = {
     ...DEFAULT_PLAYER_PROFILE.automation,
     ...toObject(data.automation),

@@ -1,5 +1,6 @@
 import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 import { CRIT_BASE, syncCritStats } from "./crit.js";
+import { getMaxLevel } from "./rebirth.js";
 import {
   CAMP_SCREEN_IDS,
   LOCAL_PREFS_KEY,
@@ -277,6 +278,8 @@ const hydrate = (profile) => {
   // Les rangs font foi : ils reconstruisent critChance et critDamage, y compris
   // si la sauvegarde portait des valeurs incoherentes.
   syncCritStats();
+  // Source de verite unique du plafond de niveau : voir player-profile.js.
+  gameState.save.maxLevel = getMaxLevel();
   applyLocalPreferences();
 
   // Meme probleme cote interface : ui.currentScreen peut valoir "combat", qui

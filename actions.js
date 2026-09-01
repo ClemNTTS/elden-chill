@@ -10,7 +10,9 @@ import {
   canRebirth,
   getMaxLevel,
   getRebirthCount,
+  investRebirthPoint,
   performRebirth,
+  resetRebirthTree,
 } from "./rebirth.js";
 import {
   getCritPointsAvailable,
@@ -66,6 +68,30 @@ export { getCritPointsAvailable };
 /* ------------------------------------------------------------------ */
 /* Fin de partie                                                      */
 /* ------------------------------------------------------------------ */
+
+/** Investit un point de renaissance dans un noeud de l'arbre. */
+export const investRebirthNode = (nodeId) => {
+  if (!investRebirthPoint(nodeId)) return;
+  gameState.save.maxLevel = getMaxLevel();
+  saveGame("invest_rebirth_node");
+  updateUI();
+};
+
+/** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
+export const respecRebirthTree = () => {
+  if (!confirm("Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.")) {
+    return;
+  }
+  resetRebirthTree();
+  gameState.save.maxLevel = getMaxLevel();
+  if (gameState.stats.level > gameState.save.maxLevel) {
+    alert(
+      "Votre niveau depasse le nouveau plafond : il ne baissera pas, mais vous ne pourrez plus monter tant que vous n'aurez pas reinvesti dans Volonte.",
+    );
+  }
+  saveGame("respec_rebirth_tree");
+  updateUI();
+};
 
 /** Lance une epreuve. Ce sont des biomes hors graphe, jamais debloques. */
 export const startTrial = (trialId) => {
@@ -164,9 +190,9 @@ export const upgradeStat = (statName) => {
   if (!MAIN_STATS.has(statName)) return;
   let cost = getUpgradeCost(statName);
 
-  if (gameState.stats.level >= gameState.save.maxLevel) {
+  if (gameState.stats.level >= getMaxLevel()) {
     alert(
-      `Niveau maximum atteint (${gameState.save.maxLevel}). Attendez la prochaine mise a jour pour progresser davantage!`,
+      `Niveau maximum atteint (${getMaxLevel()}). Montez une Renaissance ou investissez dans Volonte pour aller plus loin.`,
     );
     return;
   }
@@ -188,9 +214,9 @@ export const upgradeStatMultiple = (statName, count) => {
   if (!MAIN_STATS.has(statName)) return;
   let totalCost = getMultiUpgradeCost(statName, count);
 
-  if (gameState.stats.level + count > gameState.save.maxLevel) {
+  if (gameState.stats.level + count > getMaxLevel()) {
     alert(
-      `Vous atteindriez le niveau maximum. Vous ne pouvez ajouter que ${gameState.save.maxLevel - gameState.stats.level} niveaux.`,
+      `Vous atteindriez le niveau maximum. Vous ne pouvez ajouter que ${getMaxLevel() - gameState.stats.level} niveaux.`,
     );
     return;
   }

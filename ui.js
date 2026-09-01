@@ -78,9 +78,15 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import {
+  POINTS_PER_REBIRTH,
   REBIRTH_LEVEL_BONUS,
+  REBIRTH_NODES,
   REBIRTH_RUNE_BONUS,
   TRIALS,
+  getNodeRank,
+  getRebirthPointsAvailable,
+  getRebirthPointsSpent,
+  getRebirthPointsTotal,
   canRebirth,
   getMaxLevel,
   getRebirthCount,
@@ -351,7 +357,7 @@ window.toggleUseOfflineTime = () => {
 const updateStatDisplay = () => {
   const eff = getEffectiveStats();
   const base = gameState.stats;
-  const maxLevel = gameState.save.maxLevel;
+  const maxLevel = getMaxLevel();
   const currentLevel = gameState.stats.level;
   const remainingLevels = Math.max(0, maxLevel - currentLevel);
   const levelCapBanner = document.getElementById("build-cap-status");
@@ -997,6 +1003,27 @@ const renderEndgamePanel = () => {
 
   const cleared = TRIALS.filter((t) => isTrialCleared(t.id)).length;
 
+  const spare = getRebirthPointsAvailable();
+  const nodes = REBIRTH_NODES.map((node) => {
+    const rank = getNodeRank(node.id);
+    const full = rank >= node.maxRank;
+    return `
+      <div class="tree-node${full ? " is-full" : ""}">
+        <div class="tree-node__head">
+          <strong>${node.name}</strong>
+          <span class="tree-node__rank">${rank} / ${node.maxRank}</span>
+        </div>
+        <p class="tree-node__detail">${node.detail}</p>
+        <button
+          type="button"
+          onclick="investRebirthNode('${node.id}')"
+          ${full || spare <= 0 ? "disabled" : ""}
+          title="${full ? "Rang maximum" : spare <= 0 ? "Aucun point disponible" : "Investir un point"}"
+        >${full ? "Max" : "+"}</button>
+      </div>
+    `;
+  }).join("");
+
   root.innerHTML = `
     <div class="section-head">
       <div>
@@ -1027,6 +1054,25 @@ const renderEndgamePanel = () => {
         ${ready ? "" : "disabled"}
       >Renaitre${ready ? ` (${count + 1})` : ""}</button>
     </div>
+
+    ${
+      count > 0
+        ? `
+    <div class="section-head section-head-tight">
+      <div>
+        <h4>Arbre de renaissance</h4>
+        <p>${getRebirthPointsAvailable()} / ${getRebirthPointsTotal()} point(s) disponible(s). ${POINTS_PER_REBIRTH} par renaissance.</p>
+      </div>
+      <button
+        type="button"
+        class="crit-points__reset"
+        onclick="respecRebirthTree()"
+        ${getRebirthPointsSpent() === 0 ? "disabled" : ""}
+      >Reinitialiser</button>
+    </div>
+    <div class="rebirth-tree">${nodes}</div>`
+        : ""
+    }
 
     <div class="section-head section-head-tight">
       <div>

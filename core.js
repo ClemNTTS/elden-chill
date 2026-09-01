@@ -1,5 +1,7 @@
 import { ASHES_OF_WAR } from "./ashes.js";
 import {
+  getRebirthAshBonus,
+  getRebirthRareMult,
   getTrialByBiome,
   markFinalBiomeCleared,
   markTrialCleared,
@@ -279,7 +281,7 @@ export const handleVictory = (sessionId) => {
     const currentBiome = BIOMES[gameState.world.currentBiome];
     gameState.world.rareSpawnsCount = 0;
     runtimeState.ashUsesLeft = gameState.equippedAsh
-      ? ASHES_OF_WAR[gameState.equippedAsh].maxUses
+      ? ASHES_OF_WAR[gameState.equippedAsh].maxUses + getRebirthAshBonus()
       : 0;
 
     ActionLog("BOSS VAINCU !");
@@ -501,7 +503,8 @@ export function nextEncounter(sessionId) {
     biome.rareMonsters &&
     gameState.world.rareSpawnsCount < (biome.maxRareSpawns || 0);
 
-  const rareSpawnChance = 0.15 * getRunModifier("rareChanceMult", 1);
+  const rareSpawnChance =
+    0.15 * getRunModifier("rareChanceMult", 1) * getRebirthRareMult();
   if (canSpawnRare && Math.random() < rareSpawnChance) {
     const rareId =
       biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
@@ -546,7 +549,9 @@ export const startExploration = (biomeId) => {
   gameState.world.rareSpawnsCount = 0;
   runtimeState.enemyIntent = null;
   const selectedAsh = ASHES_OF_WAR[gameState.equippedAsh];
-  runtimeState.ashUsesLeft = selectedAsh ? selectedAsh.maxUses : 0;
+  runtimeState.ashUsesLeft = selectedAsh
+    ? selectedAsh.maxUses + getRebirthAshBonus()
+    : 0;
   runtimeState.ashIsPrimed = false;
   runtimeState.nextNbAtkBonus = 0;
   applyPreparationLoadout();

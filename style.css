@@ -3204,3 +3204,59 @@ button:disabled {
   background: var(--surface-strong);
   color: var(--text);
 }
+
+/* Arbre de renaissance. Meme grammaire visuelle que les epreuves : ce sont
+   deux moities du meme panneau de fin de partie. */
+.rebirth-tree {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tree-node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.tree-node.is-full {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.tree-node__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tree-node__rank {
+  font-family: var(--header-font);
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.tree-node__detail {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-soft);
+}
+
+.tree-node button {
+  align-self: flex-start;
+  min-width: 46px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  border-radius: 999px;
+}
+
+.tree-node button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

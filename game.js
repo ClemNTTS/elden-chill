@@ -13,6 +13,8 @@ import {
   respecCritPoints,
   startTrial,
   requestRebirth,
+  investRebirthNode,
+  respecRebirthTree,
   refundRunes,
 } from "./actions.js";
 import { startExploration } from "./core.js";
@@ -206,6 +208,8 @@ window.investCritPoint = investCritPoint;
 window.respecCritPoints = respecCritPoints;
 window.startTrial = startTrial;
 window.requestRebirth = requestRebirth;
+window.investRebirthNode = investRebirthNode;
+window.respecRebirthTree = respecRebirthTree;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;
