@@ -358,7 +358,7 @@ export const TRIAL_MONSTERS = {
     name: "Le Veilleur sans Nom",
     hp: 180000,
     atk: 620,
-    armor: 380,
+    armor: 280,
     runes: 0,
     isBoss: true,
     specificStats: { attacksPerTurn: 1, splashDamage: 200 },
@@ -379,7 +379,7 @@ export const TRIAL_MONSTERS = {
     name: "Les Jumeaux d'Ombre",
     hp: 540000,
     atk: 900,
-    armor: 420,
+    armor: 320,
     runes: 0,
     isBoss: true,
     // Deux attaques par tour : la seule epreuve qui punit le manque d'armure
@@ -402,7 +402,7 @@ export const TRIAL_MONSTERS = {
     name: "La Couronne Creuse",
     hp: 1600000,
     atk: 1300,
-    armor: 500,
+    armor: 360,
     runes: 0,
     isBoss: true,
     specificStats: { attacksPerTurn: 1, splashDamage: 340 },
@@ -427,7 +427,7 @@ export const TRIAL_MONSTERS = {
     name: "Le Premier Sans-Eclat",
     hp: 4500000,
     atk: 1900,
-    armor: 620,
+    armor: 400,
     runes: 0,
     isBoss: true,
     specificStats: { attacksPerTurn: 2, splashDamage: 420 },
@@ -443,7 +443,7 @@ export const TRIAL_MONSTERS = {
         return { msg: "Le Premier Sans-Eclat adopte votre propre garde.", skipAttack: true };
       }
       if (enemy._p % 4 === 3) {
-        enemy.armor = Math.max(620, enemy.armor - 60);
+        enemy.armor = Math.max(400, enemy.armor - 60);
         return { dmgMult: 2.6, msg: "Il enchaine la riposte que vous auriez faite." };
       }
       return { msg: "Il avance d'un pas, exactement comme vous." };

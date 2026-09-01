@@ -1,5 +1,6 @@
 import { ASHES_OF_WAR } from "./ashes.js";
 import { rollCrit } from "./crit.js";
+import { getMagicDamage } from "./state.js";
 import { STATUS_EFFECTS } from "./status.js";
 import { ITEMS } from "./item.js";
 import { handleDeath, handleVictory } from "./core.js";
@@ -255,6 +256,19 @@ export function performAttack({
     const damageMultiplier = 100 / armor;
 
     let finalDamage = Math.floor(damage * damageMultiplier);
+
+    /*
+     * Degats magiques de l'intelligence : ajoutes apres la division par
+     * l'armure, donc jamais reduits par elle. Ils critent comme le reste.
+     * Reserves au joueur — les monstres n'ont pas d'intelligence.
+     */
+    if (isPlayer) {
+      const magic = getMagicDamage(stats?.intelligence ?? 0);
+      if (magic > 0) {
+        finalDamage += Math.floor(isCrit ? magic * critDamage : magic);
+      }
+    }
+
     if (!isPlayer && attacker?.isBoss) {
       finalDamage = Math.floor(finalDamage * (1 - Math.min(0.45, eff.bossMitigation || 0)));
     }

@@ -95,10 +95,27 @@ export const DEX_PER_EXTRA_ATTACK = 40;
  * nourrir la force a 25%. Il suit desormais le budget complet.
  */
 export const INT_RUNE_CAP = 1.5;
-/** Bonus de chance de butin, plafonne : l'intelligence est la stat de rendement. */
-export const INT_DROP_CAP = 0.5;
-export const getIntDropBonus = (intelligence = 0) =>
-  1 + Math.min(INT_DROP_CAP, Math.max(0, intelligence) / 300);
+
+/*
+ * Degats magiques par point d'intelligence.
+ *
+ * Ils sont ajoutes APRES la division par l'armure : ils l'ignorent
+ * entierement. C'est ce qui donne a l'intelligence une place que ni la force
+ * ni la dexterite n'occupent — les deux voient leurs degats divises par
+ * l'armure de la cible, qui monte a 620 en fin de parcours.
+ *
+ * Le coefficient est calibre pour la parite a budget plein contre une cible
+ * d'armure moyenne : a 150 d'intelligence, 120 de degats magiques plus 14 de
+ * physique derive, contre 150 pour un build force pur.
+ *
+ * La penetration en pourcentage a ete ecartee volontairement : les objets en
+ * cumulent deja jusqu'a 0,9, et `armor` est clampe a 1 dans combat.js. Un
+ * bonus de stat par-dessus aurait fait franchir 100% et multiplie les degats
+ * par cent.
+ */
+export const INT_MAGIC_PER_POINT = 0.8;
+export const getMagicDamage = (intelligence = 0) =>
+  Math.floor(Math.max(0, intelligence) * INT_MAGIC_PER_POINT);
 
 export function getEffectiveStats() {
   let effStats = {

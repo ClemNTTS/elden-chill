@@ -2864,9 +2864,10 @@ export const showStatTooltip = (e, statType) => {
     intelligence: {
       title: "Intelligence",
       text:
-        "La stat de rendement : elle ne frappe pas, elle recolte." +
+        "La voie du sortilege : vos degats ignorent l'armure." +
+        "<br><strong>1 point = +0.8 degat magique</strong>, a chaque attaque." +
+        "<br><small>Ces degats sont ajoutes <b>apres</b> la reduction d'armure : ils ne sont jamais divises par elle. C'est la seule voie qui ne s'effondre pas face aux cibles les plus blindees.</small>" +
         "<br><strong>1 point = +1% de Runes</strong> <small>(maximum +150%)</small>." +
-        "<br><strong>3 points = +1% de chance de butin</strong> <small>(maximum +50%)</small>." +
         "<br>4 points = 1 de Force.",
     },
     critChance: {

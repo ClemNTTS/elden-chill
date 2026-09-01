@@ -11,7 +11,6 @@ import {
   gameState,
   getEffectiveStats,
   INT_RUNE_CAP,
-  getIntDropBonus,
   runtimeState,
   getHealth,
 } from "./state.js";
@@ -186,8 +185,6 @@ export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus =
     1 + Math.min(INT_RUNE_CAP, eff.intelligence / 100) + (eff.runeGainMult || 0);
-  // L'intelligence est la stat de rendement : runes et butin.
-  const dropBonus = getIntDropBonus(eff.intelligence);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
     ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
@@ -207,7 +204,7 @@ export const handleDrops = (sessionId) => {
         if (loot.ashId) {
           if (
             !gameState.ashesOfWarOwned.includes(loot.ashId) &&
-            Math.random() < loot.chance * dropBonus
+            Math.random() < loot.chance
           ) {
             gameState.ashesOfWarOwned.push(loot.ashId);
             ActionLog(
@@ -215,7 +212,7 @@ export const handleDrops = (sessionId) => {
               "log-crit",
             );
           }
-        } else if (loot.id && Math.random() < loot.chance * dropBonus) {
+        } else if (loot.id && Math.random() < loot.chance) {
           dropItem(loot.id);
         }
       });

@@ -380,7 +380,7 @@ against that, which is why they need a multiplier to compete.
 | Vigueur | HP; base of several ashes and statuses |
 | Force | Damage, per attack |
 | Dexterite | **1 extra attack per 40 points**, dodge (dex/400, cap 50%), armor (dex/8), and dex/4 into strength |
-| Intelligence | **+1% runes per point (cap +150%)**, **+1% loot chance per 3 points (cap +50%)**, and int/4 into strength |
+| Intelligence | **+0.8 magic damage per point, added after the armor division**, +1% runes per point (cap +150%), and int/4 into strength |
 
 `DEX_PER_EXTRA_ATTACK = 40` is calibrated for parity at full budget: 150 dex
 gives 4 attacks x 37 derived strength = 148 damage/turn against 150 for pure
@@ -390,6 +390,30 @@ was a 48% jump on a single point.
 
 Dexterity is the affliction path by design: on-hit effects roll **per attack**,
 so extra attacks are extra proc rolls.
+
+**Armor divides damage** (`damageMultiplier = 100 / armor`, `combat.js`), and
+monster armor runs from ~100 to 400. Intelligence's damage is added *after*
+that division, so it is the only path that does not collapse against armored
+targets. That is its whole identity.
+
+Percent penetration was deliberately **not** used for intelligence: items
+already stack up to ~0.9 of it, and `armor` is clamped to 1, so crossing 100%
+would multiply damage by a hundred. That latent cliff still exists if enough
+penetration items are combined — worth a cap if it ever shows up in play.
+
+Measured damage per turn over the 150-level budget, no equipment:
+
+| Build | armor 100 | 200 | 265 | 320 | 400 |
+| --- | --- | --- | --- | --- | --- |
+| Force 150 | 150 | 75 | 56 | 46 | 37 |
+| 70 for / 80 dex | 270 | 135 | 99 | 84 | 66 |
+| 70 for / 80 int | 154 | 109 | 97 | 92 | 86 |
+| Int 150 | 157 | 138 | 133 | 131 | 129 |
+| 50/50/50 | 257 | 173 | 151 | 142 | 131 |
+
+Dexterity clears packs, intelligence kills armored bosses, the trihybrid is the
+generalist. Verified in play: at 150 intelligence against 200 armor, observed
+138 damage per hit for 138 expected (18 physical + 120 magic).
 
 **Consequence to keep in mind:** attacks multiply strength, so the optimum is a
 hybrid. Measured over the 150-level budget with no equipment — pure strength
