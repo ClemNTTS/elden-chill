@@ -66,9 +66,12 @@ export const ITEMS = {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+4 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
+      "+5 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 4;
+      // 5, comme les poings de depart : une arme d'ouverture ne doit pas etre
+      // en retrait sur l'equipement initial. La conversion de dexterite vient
+      // par-dessus.
+      stats.strength += 5;
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
@@ -83,9 +86,13 @@ export const ITEMS = {
   heavy_club: {
     name: "Gourdin Lourd",
     description:
-      "Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
+      "+5 de Force. Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
     type: ITEM_TYPES.WEAPON,
     applyFlat: (stats, itemLevel) => {
+      // Base fixe de 5, alignee sur les poings : sans elle, un personnage sans
+      // vigueur investie ne tirait aucun degat de cette arme. La conversion de
+      // vigueur reste ce qui la distingue, elle s'ajoute par-dessus.
+      stats.strength += 5;
       const baseVigor = gameState.stats.vigor || 0;
       const ratio = 0.25 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor(baseVigor * ratio);
