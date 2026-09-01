@@ -722,6 +722,59 @@ The trihybrid is now the slowest by 17%: specialisation is rewarded, which is a
 deliberate outcome rather than a defect — but it is the number to watch if the
 mix is meant to be competitive.
 
+## Afflictions were the real endgame
+
+Two afflictions deal a **percentage of the target's max HP**: frostbite (10%,
+x0.7 on bosses) and death blight (originally 25%). Percentage damage does not
+follow the damage curve — it grows with the target. Boss HP went x9 between
+chapter I and chapter X; player damage did not.
+
+Measured against the Elden Beast (78 000 hp), per turn at 6 attacks:
+
+| source | before | after |
+| --- | --- | --- |
+| raw damage, good build | ~700 | ~700 |
+| frostbite | **3 276** | 421 |
+| death blight | **8 970** | 323 |
+
+One death blight proc was worth 28 turns of normal damage. Afflictions were not
+a complement, they were the only thing that mattered.
+
+`AFFLICTION_CAP = 6` in `combat.js` now bounds any percentage affliction to six
+times the hit that triggered it. Early on the percentage still binds (a small
+monster's 10% is under the cap), late the cap binds. Death blight also went
+25% -> 12%.
+
+**Armour floor.** Penetration can no longer take armour below **25%** of its
+original value. `armor` is clamped to 1 to avoid a division by zero, so any
+penetration exceeding armour turned into a x100 multiplier. That cliff was
+reachable: items stack up to 0.9 percent-penetration, and strength now grants
+flat penetration too. Verified at 220 strength (169 penetration): armour 175
+against 250 gives x1.85, not x100.
+
+## Auditing conversions: watch the target list
+
+`tools/audit-conversions.mjs` first tracked only the five main stats **as
+targets**, and reported "strength converts into 1 thing". Widening the targets
+to splash, crit, penetration and rune gain changed the ranking entirely:
+
+| stat | conversions leaving it |
+| --- | --- |
+| intelligence | 13 |
+| dexterity | 7 |
+| vigor | 7 |
+| armor | 6 |
+| strength | 5 |
+
+The strength fix still held up empirically (918 -> 776 cycles), but the
+headline that justified it was wrong. Widen the target list before trusting
+this tool.
+
+The simulator also ignored splash entirely, which mattered: the average biome
+group is **1.3**, and 8 items convert intelligence into splash. Its equipment
+optimiser was scoring candidates against a single target, so it never picked a
+splash item.
+
 ## Known content oddities, not yet addressed
 
 *   `wolf2`, `chanting_dame` and `servant_poison_companion` look unplaced but

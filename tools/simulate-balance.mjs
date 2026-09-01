@@ -101,11 +101,36 @@ const BUILDS = {
 
 const clamp1 = (n) => (n < 1 ? 1 : n);
 
-/** Degats moyens infliges par tour a une cible d'armure donnee. */
-const playerDamagePerTurn = (eff, targetArmor) => {
+/**
+ * Taille de groupe moyenne d'un monstre, d'apres ses groupCombinations.
+ * Sert a peser les degats de zone, qui ne touchent que les cibles autres que
+ * la principale.
+ */
+const avgGroupSize = (monster) => {
+  const combos = monster?.groupCombinations;
+  if (!combos?.length) return 1;
+  const total = combos.reduce((s, c) => s + (c.chance || 0), 0) || 1;
+  return combos.reduce((s, c) => s + (c.size || 1) * ((c.chance || 0) / total), 0);
+};
+
+/**
+ * Degats moyens infliges par tour a une cible d'armure donnee.
+ *
+ * `groupSize` fait entrer les degats de zone dans le calcul. Sans eux le
+ * modele sous-estimait l'intelligence, qui dispose de huit objets convertissant
+ * l'intelligence en degats de zone — le plus gros paquet de conversions du jeu.
+ * Comme le splash s'applique par attaque dans combat.js, il remultiplie aussi
+ * la dexterite : c'est un canal de couplage a part entiere.
+ */
+const playerDamagePerTurn = (eff, targetArmor, groupSize = 1) => {
+  // Meme plancher que combat.js : la penetration ne peut pas descendre
+  // l'armure sous 25% de sa valeur d'origine.
   const armor = clamp1(
-    targetArmor * (1 - (eff.percentDamagePenetration || 0)) -
-      (eff.flatDamagePenetration || 0),
+    Math.max(
+      targetArmor * (1 - (eff.percentDamagePenetration || 0)) -
+        (eff.flatDamagePenetration || 0),
+      targetArmor * 0.25,
+    ),
   );
   // Esperance du multiplicateur critique, super critique inclus.
   const chance = Math.max(0, eff.critChance || 0);
@@ -118,7 +143,10 @@ const playerDamagePerTurn = (eff, targetArmor) => {
   // Les degats magiques ne se lancent qu'une fois par tour, pas par attaque.
   const magic = Math.floor(getMagicDamage(eff.intelligence) * critMean);
   const attacks = (eff.attacksPerTurn || 1) + (eff.extraAttackChance || 0);
-  return attacks * physical + magic;
+  // Le splash ignore l'armure et frappe les membres du groupe autres que la
+  // cible principale. Ramene par monstre pour rester comparable a un ttk.
+  const splash = Math.max(0, groupSize - 1) * Math.floor((eff.splashDamage || 0) * critMean);
+  return attacks * (physical + splash) + magic;
 };
 
 /** Degats moyens recus par tour de la part d'un monstre. */
@@ -203,7 +231,7 @@ const lootPoolFor = (cleared) => {
  * approchee ne les aurait vus. Deux passes, pour laisser un set se declarer
  * une fois sa premiere piece portee.
  */
-const equipBest = (pool, refArmor) => {
+const equipBest = (pool, refArmor, groupe = 1.3) => {
   const slots = { weapon: "Arme", armor: "Armure", accessory: "Accessoire" };
   gameState.equipped = { weapon: null, armor: null, accessory: null };
   gameState.inventory = pool.map((id) => ({ id, name: id, level: 8, count: 0 }));
@@ -218,7 +246,8 @@ const equipBest = (pool, refArmor) => {
         let eff;
         try { eff = getEffectiveStats(); } catch { continue; }
         const score =
-          playerDamagePerTurn(eff, refArmor) * Math.sqrt(Math.max(1, getHealth(eff.vigor)));
+          playerDamagePerTurn(eff, refArmor, groupe) *
+          Math.sqrt(Math.max(1, getHealth(eff.vigor)));
         if (score > bestScore) { bestScore = score; best = id; }
       }
       gameState.equipped[slot] = best;
@@ -260,6 +289,7 @@ const run = (buildKey) => {
     const stdArmor = avg((m) => m.armor || 100);
     const stdHp = avg((m) => m.hp);
     const stdRunes = avg((m) => m.runes);
+    const groupe = avg(avgGroupSize);
 
     const pool = lootPoolFor(cleared);
     const niveauEntree = level;
@@ -275,11 +305,11 @@ const run = (buildKey) => {
     while (cycles < CYCLES_MAX) {
       while (level < MAX_LEVEL && cumulativeCost(level + 1) <= runes) level += 1;
       applyBuild(build, level);
-      if (pool.length) equipBest(pool, boss.armor || 100);
+      if (pool.length) equipBest(pool, boss.armor || 100, groupe);
       eff = getEffectiveStats();
       maxHp = getHealth(eff.vigor);
 
-      ttkStd = stdHp / Math.max(1, playerDamagePerTurn(eff, stdArmor));
+      ttkStd = stdHp / Math.max(1, playerDamagePerTurn(eff, stdArmor, groupe));
       ttkBoss = boss.hp / Math.max(1, playerDamagePerTurn(eff, boss.armor || 100));
       margeStd = maxHp / Math.max(1, avg((m) => enemyDamagePerTurn(eff, m, armorMult))) / ttkStd;
       margeBoss = maxHp / Math.max(1, enemyDamagePerTurn(eff, boss, armorMult)) / ttkBoss;

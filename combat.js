@@ -86,6 +86,20 @@ function clamp(v, min = 0) {
 /** Afflictions qui s'accumulent au lieu de durer un nombre de tours. */
 const STACKING_EFFECTS = new Set(["BLEED", "FROSTBITE", "MADNESS", "DEATH_BLIGHT"]);
 
+/*
+ * Plafond des afflictions exprimees en pourcentage des points de vie maximum.
+ *
+ * Une affliction ne peut pas depasser six fois le coup qui la declenche. Sans
+ * ce garde-fou, une part fixe des pv maximum devient d'autant plus forte que
+ * la cible est grosse, alors que les degats du joueur, eux, ne suivent pas la
+ * meme courbe : les afflictions cessaient d'etre un complement pour devenir la
+ * seule chose qui compte en fin de partie.
+ *
+ * Le plafond conserve leur interet partout : en debut de partie c'est le
+ * pourcentage qui mord, en fin de partie c'est le plafond.
+ */
+const AFFLICTION_CAP = 6;
+
 /** Cumuls necessaires au declenchement. */
 const MADNESS_THRESHOLD = 8;
 const DEATH_BLIGHT_THRESHOLD = 12;
@@ -192,7 +206,19 @@ export function performAttack({
 
     let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
     if (frostEffect && frostEffect.stacks >= 10) {
-      let frostDamage = Math.floor(target.maxHp * 0.1) + 30;
+      /*
+       * Plafonne par rapport au coup du joueur (voir AFFLICTION_CAP).
+       *
+       * En pourcentage pur, cette affliction ecrasait tout : contre la Bete
+       * d'Elden elle valait 3 276 degats par tour face aux 700 d'un bon build.
+       * Les points de vie des boss ont ete multiplies par neuf entre le
+       * premier chapitre et le dixieme, ceux du joueur par bien moins : une
+       * part fixe des pv maximum devait forcement finir par tout dominer.
+       */
+      let frostDamage = Math.min(
+        Math.floor(target.maxHp * 0.1) + 30,
+        Math.floor(damage * AFFLICTION_CAP),
+      );
       if (target.isBoss) {
         frostDamage = Math.floor(frostDamage * 0.7);
       }
@@ -238,8 +264,13 @@ export function performAttack({
     if (blight && blight.stacks >= DEATH_BLIGHT_THRESHOLD) {
       // En pourcentage des pv maximum : c'est la seule affliction qui reste
       // dangereuse contre une cible a plusieurs millions de points de vie.
-      const maxHp = ("currentHp" in target ? target.maxHp : target.maxHp) || 100;
-      const toll = Math.floor(maxHp * 0.25);
+      const maxHp = target.maxHp || 100;
+      // Meme plafond que la gelure, et une part reduite : a 25% non plafonnes,
+      // un seul proc valait 28 tours de degats normaux contre le boss final.
+      const toll = Math.min(
+        Math.floor(maxHp * 0.12),
+        Math.floor(damage * AFFLICTION_CAP),
+      );
       damage += toll;
       ActionLog(
         `FLEAU MORTEL ! ${target.name} perd un quart de sa vie (${toll}).`,
@@ -288,6 +319,16 @@ export function performAttack({
       armor = monsterArmor;
       armor *= 1 - playerPercentPen;
       armor -= playerFlatPen;
+      /*
+       * Plancher a 25% de l'armure d'origine.
+       *
+       * `armor` est ensuite clampe a 1 pour eviter la division par zero, ce qui
+       * transforme toute penetration superieure a l'armure en multiplicateur
+       * x100. La falaise etait atteignable : les objets cumulent jusqu'a 0,9 de
+       * penetration en pourcentage, et la force en donne desormais en fixe.
+       * Le plancher borne le gain a x4 au lieu de x100.
+       */
+      armor = Math.max(armor, monsterArmor * 0.25);
     } else {
       /* MONSTER ATTACKING PLAYER */
       armor =

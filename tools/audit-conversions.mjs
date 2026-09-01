@@ -18,7 +18,27 @@ const files = [
   "constants.js",
 ];
 
-const STATS = ["strength", "dexterity", "intelligence", "vigor", "armor"];
+/*
+ * SOURCES : ce que le joueur investit. CIBLES : tout ce qu'un objet peut
+ * alimenter a partir d'une source.
+ *
+ * La premiere version de cet outil ne suivait que les cinq statistiques
+ * principales, des deux cotes. Elle ratait donc toutes les conversions vers
+ * les degats de zone, le critique, la penetration et le gain de runes — soit
+ * une bonne part de ce que font reellement les objets, et la totalite de ce
+ * que font plusieurs des plus recents.
+ */
+const SOURCES = ["strength", "dexterity", "intelligence", "vigor", "armor"];
+const TARGETS = [
+  ...SOURCES,
+  "splashDamage",
+  "critChance",
+  "critDamage",
+  "runeGainMult",
+  "attacksPerTurn",
+  "flatDamagePenetration",
+  "percentDamagePenetration",
+];
 const found = [];
 
 for (const file of files) {
@@ -29,13 +49,13 @@ for (const file of files) {
       line.match(/^\s{4}name:\s*"([^"]+)"/) || line.match(/^\s{2}([A-Z_]+):\s*\{/);
     if (named) owner = named[1];
 
-    for (const target of STATS) {
+    for (const target of TARGETS) {
       const assign = new RegExp("stats\\." + target + "\\s*(\\+=|\\*=|=)([^;]*)");
       const match = line.match(assign);
       if (!match) continue;
       const expression = match[2];
 
-      for (const source of STATS) {
+      for (const source of SOURCES) {
         if (source === target) continue;
         const capitalised = source[0].toUpperCase() + source.slice(1);
         const usesSource = new RegExp(
