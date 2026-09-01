@@ -353,6 +353,61 @@ other reader (items, combat, display). The ranks only drive them, through
 system are migrated by `migrateCritToSkillPoints()` in `save.js`: old crit
 levels are handed back, with a pro-rata share of `runesSpent` refunded.
 
+## Hero specialisation
+
+`getDominantStat()` (`sprites.js`) decides which of the five hero sheets is
+shown. It takes **effective** stats — equipment included — because that is what
+the player reads in their own panel; a weapon granting +15 strength must be
+able to change the silhouette.
+
+A stat must take a clear lead: at least **20% above the runner-up** AND at
+least **5 points** ahead (`DOMINANCE_THRESHOLD`). Below either, the appearance
+stays neutral (Sans-Eclat). The two conditions cover opposite ends of the game:
+the ratio stops the late-game flip where 1 point out of 60 means nothing, the
+absolute gap stops the early-game flip where 3 against 2 satisfies the ratio.
+
+Note that `getEffectiveStats()` folds `dexterity/4 + intelligence/4` into
+strength, so strength is structurally favoured on balanced builds. That is the
+real stat derivation, not a bug in the threshold.
+
+## Endgame biomes (`monsters/endgame.js`)
+
+Five biomes used to be unreachable: `leyndell_royal` and `consecrated_snowfield`
+had no predecessor, which stranded `forbidden_land`, `mohgwyn_palace` and
+`miquella_haligtree` behind them. Four of the five were also empty shells
+(`monsters: ["", ""]`, `boss: ""`), so wiring the graph alone would have sent
+the player into a biome with nothing to fight.
+
+Fixed on both fronts: two edges added (`altus_plateau -> leyndell_royal`,
+`mountaintops -> consecrated_snowfield`, matching the source game's geography),
+and 21 monsters authored in `monsters/endgame.js`, calibrated to sit between
+`mount_gelmir` (3200 hp standard, 24800 boss) and `crumbling_farum_azula`
+(7200 / 44800). Runes follow the ratios already in use: ~7.7x hp for a
+standard, ~7.6x for a rare, ~5.3x for a boss.
+
+`mountaintops_bird` was referenced by the **reachable** Mountaintops biome but
+never defined — spawning it threw on `template.groupCombinations`. It now
+exists, and `spawnMonster()` refuses an unknown id with a console error instead
+of breaking the run.
+
+All 24 boss sheets were already assigned, so the four new bosses reuse an
+existing sheet with a different tint plus a distinguishing emblem. Re-run the
+audit after any change here — `unresolved` must stay empty:
+
+```js
+const mv = await import("./monster-visuals.js");
+const sp = await import("./sprites.js");
+mv.auditMonsterVisuals(sp.MONSTER_ARCHETYPES);
+```
+
+## Known content oddities, not yet addressed
+
+*   `crumbling_farum_azula` lists `beastman1` (84 hp) among its standard
+    monsters, next to `azula_beast_lord` (7200 hp). Almost certainly a slip.
+*   `wolf2`, `chanting_dame` and `servant_poison_companion` are defined but
+    placed in no biome.
+*   `Leyndell_ash` and `erdTree` have map entries but no biome: still `wip`.
+
 ## Sticky layers of the combat screen
 
 Three elements are pinned to the bottom and must not overlap. Each reads the

@@ -163,6 +163,38 @@ const VISUALS = {
   azula_beast_lord: ["demon", "ash"],
   azula_black_priest: ["mage", "ash"],
   azula_tempest_avatar: ["demon", "glint"],
+
+  // --- Biomes de fin de parcours ----------------------------------
+  // Les 24 planches de boss etaient toutes assignees : les quatre boss
+  // ci-dessous reutilisent une planche existante avec une teinte differente,
+  // et un embleme les separe de leur jumeau. auditMonsterVisuals verifie que
+  // rien ne devient indistinguable.
+  mountaintops_bird: ["volant", "frost"],
+
+  leyndell_gilded_knight: ["chevalier", "gold"],
+  leyndell_omen_killer: ["humanoide", "crimson"],
+  leyndell_tree_watcher: ["geant", "gold"],
+  leyndell_erdtree_avatar: ["grafted_scion", "gold"],
+
+  forbidden_black_knife: ["humanoide", "ash"],
+  forbidden_grave_bird: ["volant", "ash"],
+  forbidden_deathbird: ["volant", "silver"],
+  forbidden_gravekeeper: ["hero_of_zamor", "ash"],
+
+  snowfield_albinauric_rider: ["chevalier", "frost"],
+  snowfield_frost_hound: ["bete", "frost"],
+  snowfield_night_cavalry: ["chevalier", "silver"],
+  snowfield_rime_dragon: ["ekzykes", "frost"],
+
+  mohgwyn_blood_noble: ["humanoide", "crimson"],
+  mohgwyn_albinauric_wretch: ["amas", "crimson"],
+  mohgwyn_blood_hound: ["bete", "crimson"],
+  mohgwyn_blood_lord_echo: ["bloodhound_knight_darriwil", "ember"],
+
+  haligtree_misbegotten_crusader: ["demon", "verdant"],
+  haligtree_putrid_avatar: ["geant", "rot"],
+  haligtree_oracle_envoy: ["construct", "gold"],
+  haligtree_rot_knight: ["royal_knight_loretta", "rot"],
 };
 
 /* ------------------------------------------------------------------ */
@@ -208,6 +240,21 @@ const EMBLEMS = {
 
   // chevalier, boss et rares
   bloodhound_knight_darriwil: "blood",
+
+  // Biomes de fin : separe les nouvelles creatures de leurs homonymes
+  // visuels (meme planche, meme teinte, meme palier).
+  leyndell_omen_killer: "chain",
+  leyndell_gilded_knight: "star",
+  forbidden_black_knife: "moon",
+  forbidden_grave_bird: "eye",
+  mohgwyn_blood_hound: "blood",
+  leyndell_erdtree_avatar: "crown",
+  forbidden_gravekeeper: "moon",
+  snowfield_rime_dragon: "frost",
+  mohgwyn_blood_lord_echo: "blood",
+  mohgwyn_blood_noble: "crown",
+  haligtree_rot_knight: "spore",
+  haligtree_oracle_envoy: "star",
   radahn: "star",
   nighth_cavalery: "moon",
   cleanrot_revenant: "spore",

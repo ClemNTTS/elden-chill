@@ -658,7 +658,8 @@ const renderHeroPortrait = () => {
   const canvas = document.getElementById("hero-canvas");
   if (!canvas) return null;
 
-  const heroId = getHeroIdForStats(gameState.stats);
+  // Stats effectives : l'equipement compte dans la silhouette.
+  const heroId = getHeroIdForStats(getEffectiveStats());
   const sheet = HERO_SHEETS[heroId];
 
   if (heroAnimatorId !== heroId) {
@@ -687,7 +688,7 @@ const mountCombatHero = () => {
   const canvas = document.getElementById("player-sprite");
   if (!canvas) return;
 
-  const heroId = getHeroIdForStats(gameState.stats);
+  const heroId = getHeroIdForStats(getEffectiveStats());
   if (combatHeroId === heroId && combatHeroAnimator) return;
 
   const sheet = HERO_SHEETS[heroId];
@@ -907,14 +908,18 @@ const renderHeroPanel = () => {
   const eff = getEffectiveStats();
   const keys = Object.keys(STAT_META);
   const invested = keys.map((key) => Number(gameState.stats[key]) || 0);
-  const highest = Math.max(1, ...invested);
-  const dominant = getDominantStat(gameState.stats);
+  const totals = keys.map((key) => Math.round(Number(eff[key]) || 0));
+  // La barre se lit sur le total, comme le chiffre affiche a cote. Elle etait
+  // tracee sur les points investis : une arme qui donnait +15 de force
+  // n'allongeait pas la barre de force.
+  const highest = Math.max(1, ...totals);
+  const dominant = getDominantStat(eff);
 
   const rows = keys
     .map((key, index) => {
       const meta = STAT_META[key];
       const base = invested[index];
-      const total = Math.round(Number(eff[key]) || 0);
+      const total = totals[index];
       const bonus = total - base;
       const isDominant = key === dominant;
 
@@ -925,7 +930,7 @@ const renderHeroPanel = () => {
             ${meta.label}
           </span>
           <div class="hero-stat__track">
-            <div class="hero-stat__fill" style="width:${Math.round((base / highest) * 100)}%;background:${meta.accent}"></div>
+            <div class="hero-stat__fill" style="width:${Math.round((total / highest) * 100)}%;background:${meta.accent}"></div>
           </div>
           <span class="hero-stat__value">
             ${total}${bonus > 0 ? `<small>+${bonus}</small>` : ""}

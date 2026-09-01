@@ -275,12 +275,15 @@ export const BIOME_GUIDE = {
     pathRole: "Fin de route terrestre",
     hazards: ["folie", "putrefaction"],
   },
-  // --- Contenu en chantier -----------------------------------------
-  // Ces sept biomes existaient dans biome.js sans entree ici. Sans
-  // coordonnees, ils basculaient sur la disposition automatique, qui vit dans
-  // un tout autre repere (depth * 240 contre x * 18) : ils atterrissaient a
-  // des centaines de pixels des autres et faisaient exploser le cadrage de la
-  // carte. Ils sont marques wip pour etre affiches en retrait.
+  // --- Fin de parcours ---------------------------------------------
+  // Ces biomes existaient dans biome.js sans entree ici. Sans coordonnees, ils
+  // basculaient sur la disposition automatique, qui vit dans un tout autre
+  // repere (depth * 240 contre x * 18) : ils atterrissaient a des centaines de
+  // pixels des autres et faisaient exploser le cadrage de la carte.
+  //
+  // Les cinq premiers ont desormais un contenu jouable et ne sont plus en
+  // chantier. Seuls Leyndell_ash et erdTree le restent : ils n'existent pas
+  // encore dans biome.js.
   leyndell_royal: {
     chapter: "Chapitre VIII",
     region: "Leyndell",
@@ -290,7 +293,6 @@ export const BIOME_GUIDE = {
     danger: "Extreme",
     focus: "Capitale doree, gardes royaux et longues avenues.",
     pathRole: "Route royale",
-    wip: true,
   },
   forbidden_land: {
     chapter: "Chapitre VIII",
@@ -301,7 +303,6 @@ export const BIOME_GUIDE = {
     danger: "Extreme",
     focus: "Col battu par les vents avant les sommets.",
     pathRole: "Passage vers les Cimes",
-    wip: true,
   },
   consecrated_snowfield: {
     chapter: "Chapitre IX",
@@ -312,7 +313,6 @@ export const BIOME_GUIDE = {
     danger: "Extreme",
     focus: "Plaine blanche ou l'on ne voit pas a dix pas.",
     pathRole: "Route cachee",
-    wip: true,
   },
   mohgwyn_palace: {
     chapter: "Chapitre IX",
@@ -323,7 +323,6 @@ export const BIOME_GUIDE = {
     danger: "Abyssal",
     focus: "Lac de sang sous une lune rouge.",
     pathRole: "Detour sanglant",
-    wip: true,
   },
   miquella_haligtree: {
     chapter: "Chapitre IX",
@@ -334,7 +333,6 @@ export const BIOME_GUIDE = {
     danger: "Abyssal",
     focus: "Ramures suspendues et gardiens putrides.",
     pathRole: "Voie alternative vers Azula",
-    wip: true,
   },
   Leyndell_ash: {
     chapter: "Chapitre X",

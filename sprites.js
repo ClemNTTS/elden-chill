@@ -137,34 +137,47 @@ export const ARCHETYPES = {
   },
   water: {
     title: "Sans-Eclat",
-    note: "Aucune voie ne se detache encore. Investissez des runes pour vous specialiser.",
+    note: "Aucune voie ne se detache : prenez une avance nette sur une stat, equipement compris.",
   },
 };
 
 /**
- * Determine la stat dominante d'un jeu de stats, et donc l'apparence.
- * En cas d'egalite entre plusieurs stats au meme niveau, on retombe sur
- * l'apparence neutre plutot que de privilegier arbitrairement une stat.
+ * Seuil de specialisation.
+ *
+ * Un simple "la plus haute gagne" faisait basculer l'apparence sur un point
+ * d'ecart : a 50 force / 49 dexterite le personnage etait un Bourreau de
+ * Foudre, et le point suivant en faisait une Lame du Vent. Il faut une avance
+ * nette pour qu'une voie se lise.
+ *
+ * Les deux conditions se cumulent et couvrent chacune un bout de la partie :
+ * le ratio empeche la bascule en fin de partie, ou 1 point sur 60 ne veut rien
+ * dire ; l'ecart absolu empeche l'inverse en debut de partie, ou 3 contre 2
+ * satisfait le ratio sans qu'aucune voie ne se detache vraiment.
+ */
+export const DOMINANCE_THRESHOLD = { ratio: 1.2, gap: 5 };
+
+/**
+ * Determine la stat dominante, et donc l'apparence.
+ *
+ * A nourrir avec les stats *effectives* (equipement compris) : c'est ce que le
+ * joueur voit dans son panneau, et une arme qui donne +15 de force doit
+ * pouvoir changer sa silhouette.
+ *
+ * Retourne null tant qu'aucune stat ne prend une avance nette : l'apparence
+ * reste alors neutre.
  */
 export const getDominantStat = (stats = {}) => {
-  const tracked = Object.keys(STAT_TO_HERO);
-  let best = null;
-  let bestValue = 0;
-  let tied = false;
+  const ranked = Object.keys(STAT_TO_HERO)
+    .map((key) => [key, Number(stats[key]) || 0])
+    .sort((a, b) => b[1] - a[1]);
 
-  tracked.forEach((key) => {
-    const value = Number(stats[key]) || 0;
-    if (value > bestValue) {
-      bestValue = value;
-      best = key;
-      tied = false;
-    } else if (value === bestValue && value > 0 && key !== best) {
-      tied = true;
-    }
-  });
+  const [bestKey, best] = ranked[0];
+  const runnerUp = ranked[1] ? ranked[1][1] : 0;
 
-  if (!best || bestValue === 0 || tied) return null;
-  return best;
+  if (best <= 0) return null;
+  if (best - runnerUp < DOMINANCE_THRESHOLD.gap) return null;
+  if (best < runnerUp * DOMINANCE_THRESHOLD.ratio) return null;
+  return bestKey;
 };
 
 export const getHeroIdForStats = (stats = {}) => {

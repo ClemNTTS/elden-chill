@@ -118,6 +118,15 @@ export const spawnMonster = (monsterId, sessionId) => {
   runtimeState.usedAbsolution = false;
 
   const template = MONSTERS[monsterId];
+  // Un identifiant absent du bestiaire plantait le combat sur la ligne
+  // suivante (`template.groupCombinations` sur undefined). C'est arrive en
+  // vrai : les Cimes des Geants referencaient "mountaintops_bird", qui
+  // n'existait pas. On echoue bruyamment dans la console plutot que de casser
+  // l'expedition en cours.
+  if (!template) {
+    console.error(`[spawn] monstre inconnu : "${monsterId}"`);
+    return;
+  }
   const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
 
   let groupSize = 1;
