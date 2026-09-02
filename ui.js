@@ -2409,14 +2409,31 @@ const updateCombatPresentation = () => {
 
 const updateEnemyIntentDisplay = () => {
   const label = document.getElementById("enemy-intent-label");
-  const hint = document.getElementById("enemy-intent-hint");
+  if (!label) return;
   // La severite se pose desormais sur la lane de l'ennemi : le panneau dedie
   // a ete fusionne dedans.
   const panel = label.closest(".combat-lane") || label;
-  if (!label || !hint) return;
 
   const groupe = runtimeState.currentEnemyGroup || [];
   const enemy = groupe.find((e) => e.hp > 0) || groupe[0];
+
+  /*
+   * Plus personne en face : on efface la ligne.
+   *
+   * Elle gardait sinon la derniere intention affichee, et la lane annonçait
+   * "Aucune menace" tout en promettant une "Attaque directe · Elite".
+   */
+  if (!enemy || enemy.hp <= 0) {
+    panel.classList.remove(
+      "intent-boss",
+      "intent-elite",
+      "intent-heavy",
+      "intent-normal",
+    );
+    label.innerText = "";
+    return;
+  }
+
   const intent = runtimeState.enemyIntent || buildEnemyIntent(enemy);
   panel.classList.remove(
     "intent-boss",
@@ -2428,13 +2445,18 @@ const updateEnemyIntentDisplay = () => {
   if (!intent) {
     panel.classList.add("intent-normal");
     label.innerText = "Analyse en cours";
-    hint.innerText = "Le biome se met en place.";
     return;
   }
 
   panel.classList.add(`intent-${intent.severity || "normal"}`);
-  label.innerText = intent.label;
-  hint.innerText = [
+  /*
+   * Intitule et precisions sur UNE ligne.
+   *
+   * Ils occupaient deux lignes, ce qui donnait cinq rangees a la lane de
+   * l'ennemi contre trois au joueur : les barres de vie ne s'alignaient plus.
+   */
+  label.innerText = [
+    intent.label,
     intent.targetHint,
     intent.hazard ? HAZARD_LABELS[intent.hazard] : null,
   ]
