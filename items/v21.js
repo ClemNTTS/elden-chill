@@ -56,7 +56,8 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "GELMIR_DRAGON",
     description:
-      "Force et Intelligence. Vos coups peuvent déposer une morsure de foudre.",
+      "+9 Force <em style='color: grey;'>(+1 / Niv)</em>. +5 Intelligence <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "23% de chance d'infliger 2 Brûlure <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.strength += 8 + itemLevel;
       stats.intelligence += 5 + Math.floor(itemLevel / 2);
@@ -73,7 +74,8 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ARMOR,
     rarity: ITEM_RARITIES.RARE,
     set: "GELMIR_DRAGON",
-    description: "Résistance accrue au feu, au gel et aux pics de dégâts.",
+    description:
+      "+49 Armure <em style='color: grey;'>(+4 / Niv)</em>. +2 Résistance Gel <em style='color: grey;'>(+1 tous les 3 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 45 + itemLevel * 4;
       stats.resistances.gel += 2 + Math.floor(itemLevel / 3);
@@ -84,7 +86,9 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RELIC,
     set: "GELMIR_DRAGON",
-    description: "Chance de critique et dégâts d'explosion liés à l'Intelligence.",
+    description:
+      "+5,5% Chance de Critique <em style='color: grey;'>(+0,5% / Niv)</em>. " +
+      "Convertit 24% de votre Intelligence en Dégâts de zone <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.critChance += 0.05 + itemLevel * 0.005;
     },
@@ -98,13 +102,19 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.WEAPON,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "COLOSSUS_ARENA",
-    description: "Force massive, cadence plus faible mais posture écrasante.",
+    description:
+      "+16 Force <em style='color: grey;'>(+2 / Niv)</em>. +15 Armure <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "Arme lourde : vous perdez une attaque par tour, sans jamais descendre " +
+      "sous une attaque.",
     applyFlat: (stats, itemLevel) => {
       stats.strength += 14 + itemLevel * 2;
       stats.armor += 12 + itemLevel * 3;
     },
     applyMult: (stats) => {
-      stats.attacksPerTurn = Math.max(1, stats.attacksPerTurn);
+      // Math.max(1, stats.attacksPerTurn) ne faisait rien : la valeur etait
+      // deja au moins 1. La description annoncait une cadence reduite, elle
+      // l'est desormais pour de bon.
+      stats.attacksPerTurn = Math.max(1, stats.attacksPerTurn - 1);
     },
   },
   arena_colossus_plate: {
@@ -112,7 +122,8 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ARMOR,
     rarity: ITEM_RARITIES.RARE,
     set: "COLOSSUS_ARENA",
-    description: "Armure et vigueur. Chaque coup reçu alimente votre posture.",
+    description:
+      "+65 Armure <em style='color: grey;'>(+5 / Niv)</em>. +6 Vigueur <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 60 + itemLevel * 5;
       stats.vigor += 6 + Math.floor(itemLevel / 2);
@@ -123,7 +134,8 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "COLOSSUS_ARENA",
-    description: "Convertit une partie de l'armure en force brutale.",
+    description:
+      "Convertit 13% de votre Armure en Force <em style='color: grey;'>(+1% / Niv)</em>.",
     applyMult: (stats, itemLevel) => {
       stats.strength += Math.floor(stats.armor * (0.12 + itemLevel * 0.01));
     },
@@ -135,7 +147,8 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLACK_REVENANT",
     description:
-      "Arme cérémonielle. Intelligence, critique et putréfaction se répondent.",
+      "+10 Intelligence <em style='color: grey;'>(+1 / Niv)</em>. +3,5% Chance de Critique <em style='color: grey;'>(+0,5% / Niv)</em>. " +
+      "19% de chance d'infliger 2 Putréfaction <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 9 + itemLevel;
       stats.critChance += 0.03 + itemLevel * 0.005;
@@ -152,7 +165,9 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ARMOR,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "BLACK_REVENANT",
-    description: "Tenue légère dédiée aux expéditions corrompues.",
+    description:
+      "+33 Armure <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "+3 Résistance Putréfaction et +2 Résistance Folie <em style='color: grey;'>(+1 chacune tous les 2 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 30 + itemLevel * 3;
       stats.resistances.putrefaction += 3 + Math.floor(itemLevel / 2);
@@ -165,7 +180,9 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLACK_REVENANT",
     description:
-      "Les statuts hostiles deviennent un levier offensif au lieu d'être un poids.",
+      "Par affliction active sur vous parmi Poison, Putréfaction, Gel et " +
+      "Étourdissement : +6 Intelligence <em style='color: grey;'>(+1 / Niv)</em> et +4% Pénétration, " +
+      "cette pénétration plafonnant à 20%.",
     applyMult: (stats, itemLevel) => {
       const statusCount = gameState.playerEffects.filter((effect) =>
         ["POISON", "SCARLET_ROT", "FROSTBITE", "STUN"].includes(effect.id),
@@ -179,20 +196,23 @@ export const V21_ITEMS = {
     name: "Talisman de posture de duelliste",
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
-    description: "Réduit les dégâts lourds et transforme l'armure en force défensive.",
+    description:
+      "+34 Armure <em style='color: grey;'>(+4 / Niv)</em>. +5,5% de réduction des dégâts de boss <em style='color: grey;'>(+0,5% / Niv)</em>. " +
+      "Convertit 8,4% de votre Armure en Force <em style='color: grey;'>(+0,4% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 30 + itemLevel * 4;
       stats.bossMitigation += 0.05 + itemLevel * 0.005;
     },
-    applyMult: (stats) => {
-      stats.strength += Math.floor(stats.armor * 0.08);
+    applyMult: (stats, itemLevel) => {
+      stats.strength += Math.floor(stats.armor * (0.08 + itemLevel * 0.004));
     },
   },
   talisman_execution: {
     name: "Talisman du couperet final",
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
-    description: "Punition accrue sur les ennemis déjà affaiblis.",
+    description:
+      "+6,6% Chance de Critique <em style='color: grey;'>(+0,6% / Niv)</em>. +14% Dégâts Critiques <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.critChance += 0.06 + itemLevel * 0.006;
       stats.critDamage += 0.12 + itemLevel * 0.02;
@@ -202,7 +222,8 @@ export const V21_ITEMS = {
     name: "Talisman de tempête draconique",
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
-    description: "Foudre et souffle gagnent en portée et en éclat.",
+    description:
+      "+16 Dégâts de zone <em style='color: grey;'>(+6 / Niv)</em>. +4 Intelligence <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.splashDamage += 10 + itemLevel * 6;
       stats.intelligence += 4 + Math.floor(itemLevel / 2);
@@ -212,22 +233,29 @@ export const V21_ITEMS = {
     name: "Talisman de corruption rituelle",
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RELIC,
-    description: "Convertit une part de vos résistances en pénétration et critique.",
+    description:
+      "Vos Résistances Poison, Gel, Folie et Putréfaction cumulées donnent " +
+      "1,1% de Pénétration <em style='color: grey;'>(+0,1% / Niv)</em> et 0,44% de Chance de Critique <em style='color: grey;'>(+0,04% / Niv)</em> " +
+      "par point, plafonnés à 25% et 12%.",
     applyMult: (stats, itemLevel) => {
       const totalRes =
         stats.resistances.poison +
         stats.resistances.gel +
         stats.resistances.folie +
         stats.resistances.putrefaction;
-      stats.percentDamagePenetration += Math.min(0.25, totalRes * 0.01);
-      stats.critChance += Math.min(0.12, totalRes * 0.004);
+      stats.percentDamagePenetration += Math.min(
+        0.25,
+        totalRes * (0.01 + itemLevel * 0.001),
+      );
+      stats.critChance += Math.min(0.12, totalRes * (0.004 + itemLevel * 0.0004));
     },
   },
   talisman_wayfarer: {
     name: "Talisman du veilleur de sentier",
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RARE,
-    description: "Affûte la route: meilleures rencontres et plus de butin rare.",
+    description:
+      "+9% de runes gagnées <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.runeGainMult += 0.08 + itemLevel * 0.01;
     },

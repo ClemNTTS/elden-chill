@@ -2,6 +2,8 @@ import { ASHES_OF_WAR } from "./ashes.js";
 import { playSfx } from "./sfx.js";
 import { getTraitRunBuffs } from "./biome-traits.js";
 import {
+  MAIN_BOSS_BIOMES,
+  getProgressionCap,
   getRebirthAshBonus,
   getRebirthRareMult,
   getTrialByBiome,
@@ -26,6 +28,7 @@ import {
   triggerShake,
   updateCycleDisplay,
   updateHealthBars,
+  showEventBanner,
   updateStepper,
   updateUI,
 } from "./ui.js";
@@ -248,6 +251,24 @@ export const handleDrops = (sessionId) => {
   runtimeState.defeatedEnemies.forEach((enemy) => {
     if (enemy.isBoss) {
       wasABossEncounter = true;
+      /*
+       * On note le biome, pas le boss : c'est le biome qui figure dans la
+       * liste des boss principaux, et deux zones peuvent partager un modele
+       * de creature.
+       */
+      const zone = gameState.world.currentBiome;
+      if (!gameState.world.defeatedBosses) gameState.world.defeatedBosses = [];
+      if (zone && !gameState.world.defeatedBosses.includes(zone)) {
+        gameState.world.defeatedBosses.push(zone);
+        // getProgressionCap() relit la liste qu'on vient d'etendre, donc la
+        // valeur annoncee est deja la nouvelle.
+        if (MAIN_BOSS_BIOMES.includes(zone)) {
+          ActionLog(
+            `Le chemin s'ouvre : niveau maximum porte a ${getProgressionCap()}.`,
+            "log-crit",
+          );
+        }
+      }
     }
     const runesAwarded = Math.floor(enemy.runes * intBonus) || 1;
     gameState.runes.carried += Math.floor(runesAwarded);
@@ -387,17 +408,35 @@ export const handleVictory = (sessionId) => {
         return !inventoryItem || inventoryItem.level < 10;
       });
 
-      const rolled =
-        eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
+      /*
+       * lootChanceMult donne des TIRAGES supplementaires.
+       *
+       * Le trait "Offrande bestiale" annonçait +120% de chance de butin et
+       * posait lootChanceMult: 2.2, que rien ne lisait. Il n'y avait de toute
+       * facon aucune chance a multiplier : le butin tombe systematiquement a
+       * la fin d'un biome, getWeightedDrop choisit lequel et non si.
+       *
+       * 2.2 se lit donc : deux objets garantis, plus 20% de chance d'un
+       * troisieme.
+       */
+      const tirages = Math.max(1, getRunModifier("lootChanceMult", 1));
+      const garantis = Math.floor(tirages);
+      const total = garantis + (Math.random() < tirages - garantis ? 1 : 0);
 
-      if (rolled?.ashId) {
-        gameState.ashesOfWarOwned.push(rolled.ashId);
-        ActionLog(
-          `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
-          "log-crit",
-        );
-      } else {
-        dropItem(rolled?.id || "rune_fragment");
+      for (let n = 0; n < total; n += 1) {
+        const rolled =
+          eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
+        if (rolled?.ashId) {
+          if (!gameState.ashesOfWarOwned.includes(rolled.ashId)) {
+            gameState.ashesOfWarOwned.push(rolled.ashId);
+            ActionLog(
+              `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
+              "log-crit",
+            );
+          }
+        } else {
+          dropItem(rolled?.id || "rune_fragment");
+        }
       }
       saveGame();
     }
@@ -503,6 +542,12 @@ export function nextEncounter(sessionId) {
 
     if (eventResult?.log) {
       ActionLog(eventResult.log, "log-event");
+      // Le journal seul ne suffisait pas : la banniere rend l'evenement visible.
+      showEventBanner({
+        title: eventDef?.title,
+        kind: eventDef?.kind,
+        text: eventResult.log,
+      });
     }
 
     if (eventResult?.applyHazard) {

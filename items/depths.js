@@ -32,11 +32,12 @@ export const DEPTHS = {
     type: ITEM_TYPES.ACCESSORY,
     set: "AINSEL_ASTRAL",
     description:
-      "Int +18%. Chaque tranche de 10 Int de base ajoute 3 dégâts de zone. Les ennemis gelés subissent aussi une Brûlure légère.",
+      "Intelligence +18%. Chaque tranche de 10 Intelligence investie ajoute " +
+      "3 Dégâts de zone <em style='color: grey;'>(+1 / Niv)</em>. Un ennemi gelé subit aussi 1 Brûlure.",
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.18;
       const baseInt = gameState.stats.intelligence || 0;
-      stats.splashDamage += Math.floor(baseInt / 10) * 3;
+      stats.splashDamage += Math.floor(baseInt / 10) * (3 + itemLevel);
     },
     funcOnHit: (stats, targetEffects) => {
       if (targetEffects.some((effect) => effect.id === "FROSTBITE")) {
@@ -111,14 +112,17 @@ export const DEPTHS = {
     type: ITEM_TYPES.ACCESSORY,
     set: "ROOTBOUND",
     description:
-      "Vigueur +15%. Chaque tranche de 100 Armure soigne 1% de vos PV max à chaque coup porté.",
+      "Vigueur +15%. Chaque tranche de 100 Armure soigne 1,1% de vos PV max " +
+      "à chaque coup porté <em style='color: grey;'>(+0,1% / Niv)</em>.",
     applyMult: (stats) => {
       stats.vigor *= 1.15;
     },
-    funcOnHit: (stats) => {
+    funcOnHit: (stats, targetEffects, itemLevel = 1) => {
       const armorBands = Math.floor(stats.armor / 100);
       if (armorBands <= 0) return;
-      const heal = Math.floor(getHealth(stats.vigor) * (armorBands * 0.01));
+      const heal = Math.floor(
+        getHealth(stats.vigor) * (armorBands * (0.01 + itemLevel * 0.001)),
+      );
       const healed = healPlayer(heal, getHealth(stats.vigor));
       if (healed > 0) ActionLog(`Écorce princière : +${healed} PV.`, "log-heal");
     },
@@ -129,10 +133,13 @@ export const DEPTHS = {
     type: ITEM_TYPES.WEAPON,
     set: "ROTBLOOM",
     description:
-      "Force +12%, Dex +12%. 35% de chance d'appliquer 2 Putréfactions, +10% dégâts sur cible déjà affectée.",
-    applyMult: (stats) => {
-      stats.strength *= 1.12;
-      stats.dexterity *= 1.12;
+      "Force +12%, Dextérité +12% <em style='color: grey;'>(+0,5% chacune / Niv)</em>. 35% de chance d'infliger " +
+      "2 Putréfaction. +10% de dégâts contre une cible déjà affectée par " +
+      "Putréfaction, Poison ou Saignement.",
+    applyMult: (stats, itemLevel) => {
+      const bonus = 1.12 + itemLevel * 0.005;
+      stats.strength *= bonus;
+      stats.dexterity *= bonus;
     },
     onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
     funcOnHit: (stats, targetEffects) => {
@@ -147,9 +154,10 @@ export const DEPTHS = {
     type: ITEM_TYPES.ARMOR,
     set: "ROTBLOOM",
     description:
-      "Vigueur +12%, Armure +24. Les statuts négatifs expirent 20% plus vite et la Putréfaction est ralentie.",
-    applyFlat: (stats) => {
-      stats.armor += 24;
+      "Vigueur +12%, +24 Armure <em style='color: grey;'>(+3 Armure / Niv)</em>. Chaque tour, 20% de chance de retirer " +
+      "1 charge de Putréfaction, Poison, Saignement ou Brûlure.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor += 24 + itemLevel * 3;
     },
     applyMult: (stats) => {
       stats.vigor *= 1.12;
@@ -174,12 +182,14 @@ export const DEPTHS = {
     type: ITEM_TYPES.ACCESSORY,
     set: "ROTBLOOM",
     description:
-      "Crit +8%. Chaque statut négatif sur la cible donne +4 pénétration fixe. Si vos PV tombent sous 20%, gagne Épines pendant 2 tours.",
-    applyMult: (stats) => {
-      stats.critChance += 0.08;
+      "+8% Chance de Critique <em style='color: grey;'>(+0,4% / Niv)</em>. Chaque affliction présente sur la cible " +
+      "donne +4 Pénétration fixe. Sous 20% de vos PV, vous gagnez Épines " +
+      "pendant 2 tours.",
+    applyMult: (stats, itemLevel) => {
+      stats.critChance += 0.08 + itemLevel * 0.004;
     },
-    funcOnHit: (stats, targetEffects) => {
-      stats.flatDamagePenetration += targetEffects.length * 4;
+    funcOnHit: (stats, targetEffects, itemLevel = 1) => {
+      stats.flatDamagePenetration += targetEffects.length * (4 + itemLevel);
       if (runtimeState.playerCurrentHp < getHealth(stats.vigor) * 0.2) {
         applyEffect(gameState.playerEffects, "THORNS", 2);
       }

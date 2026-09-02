@@ -987,6 +987,318 @@ get right:
 `onerror` routes to `endNarrator` as well, so a missing file leaves the game
 with music rather than silence.
 
+## Conversions must read the BASE stat, never the effective one
+
+`gameState.stats.X` is what the player invested. `stats.X` is the running
+effective value, already raised by every item applied so far — including the
+item doing the conversion.
+
+Reading the effective value builds a loop. The Queen's Staff applied
+`stats.intelligence *= 1.1`, then converted 58% of the *effective* value into
+strength. At 48 invested intelligence it returned **42 strength with zero
+points spent on strength** — 87% of what a pure strength build gets from
+spending all 48 — and magic damage on top, which ignores armour because it is
+added after the armour division.
+
+That, not the magic formula, is why intelligence dominated the first 25 levels.
+Fixed on the Queen's Staff, Astronomer's Staff, Sickle, and the three later
+shard staves.
+
+`tools/audit-boucles.mjs` finds the rest. **Twelve conversions still read the
+effective stat** — mostly into `splashDamage`, plus four `vigor -> strength`
+and one `dexterity -> strength`. Those last five are left alone deliberately:
+fixing them would nerf vigour and dexterity, which are already the weakest
+early. Loops and ratios have to move together, never one without the other.
+
+Watch the shape of the regex when auditing this. The first version looked for
+`Math.floor(` immediately followed by `stats.X` and found **nothing**, because
+the stat is often on the right of the multiplication and the call often spans
+several lines. A clean "no problems found" from a pattern this narrow means
+nothing.
+
+## Early-game balance is not visible in the full simulator
+
+`simulate-balance.mjs` farms to level 55 before facing Godrick. A real player
+gets there around 24. Whole-run totals therefore hid a large imbalance in the
+first tier — the four pure builds sat within 11% over 46 biomes while
+intelligence was ahead of everything for the first 25 levels.
+
+`tools/diag-debut.mjs` freezes a level and the items reachable before the boss,
+and compares the four builds there.
+
+**Trust it only early.** Its damage model treats attacks per turn as a plain
+multiplier; with the full item pool at level 220 it reports 113,959 damage per
+turn for dexterity, which the real simulator flatly contradicts. It also cannot
+reproduce a player's actual screenshot exactly. What it gives is a *relative*
+comparison under one identical method, which is enough to size a gap and not
+enough to state an absolute.
+
+After the fixes: early spread x1.8-2.0 -> x1.5, whole-run spread across the
+four pure builds 11.1% -> 8.8%.
+
+## Item icons are a lookup table, and 48 entries are missing
+
+`getItemIcon` returns null when the id is absent from `WEAPON_CELLS` /
+`ARMOUR_CELLS` / `ACCESSORY_CELLS`, and the UI draws a hatched square. Nothing
+warns; it shows up only when a player picks the item up.
+
+All 48 gaps are content added for the complete version — 14 weapons, 14
+armours, 14 accessories, 6 ashes — and every one sits 8 to 17 biomes from the
+start. `tools/audit-icones.mjs` lists them sorted by how early they appear.
+
+## Four requirements per item — `tools/audit-items-complet.mjs`
+
+Every item must have an icon, a description that states its numbers, level
+scaling unless `isAlwaysMax`, and an effect the engine actually reads.
+
+**Describe the value AT LEVEL 1**, not the literal in the code. `30 + itemLevel
+* 4` is announced as "+34 Armure (+4 / Niv)". Announcing "+30" would be wrong:
+that value never occurs at any level.
+
+`isAlwaysMax: true` is the codebase's own answer to "an item without scaling".
+An item carrying it is always at max level and has nothing to vary; anything
+else that ignores `itemLevel` silently wastes the player's upgrade runes.
+
+### The audit lied to me four times before it was usable
+
+Each false positive taught the same lesson — a probe must resemble a real
+character:
+
+- probing with **stats at zero** made every conversion return 0 at both levels:
+  44 items looked unscaled;
+- starting from **armour 10** hid a +0.5%/level scaling inside `Math.floor`;
+- several items require a minimum of **base crit** to activate, so their branch
+  never ran;
+- **resistances at zero** did the same to items that sum resistances.
+
+Then the comparison approach itself failed: scaling often lives behind a
+`Math.random()` that does not fire during a probe, or behind a cap already
+reached. The check is now **static** — does the item body mention `itemLevel`
+at all? No false positives, and it is certain.
+
+`audit-descriptions.mjs` had the mirror problem: it searched for literals, so
+the level-1 values above looked absent and it reported 68 false positives. It
+now evaluates each item at levels 1 and 10 and treats the produced values as
+present. Strong suspicions: 20 -> 1.
+
+### Fictional effects found
+
+- **Marionette Mask** wrote `stats.dodgeChance` and announced +5% dodge, but
+  nothing read the key — player dodge came only from
+  `gameState.stats.dexterity / 400`. The stat is now real and capped together
+  with the dexterity share at 50%.
+- **Giant-breaker Maul** ran `stats.attacksPerTurn = Math.max(1,
+  stats.attacksPerTurn)`, a no-op, while promising a slower cadence. The malus
+  is now applied.
+- **Godslayer Greatsword** claimed to eat a share of a boss's maximum HP; it
+  only applies Burn. **Scarlet Bloom Charm** claimed to extend afflictions; it
+  does not. **Wayfarer Talisman** promised rarer loot; it only gives runes.
+  Descriptions corrected to what the code does.
+- **Jarburg Charm** announced +40% runes and gives 43% at level 1.
+
+One key is exempt: `customStunChance` is not an engine stat but the Nokron
+Flaming Dagger writes it and reads it back itself.
+
+## Item icons
+
+All 147 items and 18 ashes have a cell. The 48 that were missing came from the
+complete-version content; every one was found in the existing sheets, so **no
+SVG fallback was needed**.
+
+The accessory sheet was full (42 of 48 cells, the last 6 empty) and is
+regenerated at 8x7 by `tools/build_accessory_atlas.py`. Its rendering depends
+only on the shape/palette pair, so two accessories sharing that pair produce
+the **same image** — five collisions on the first attempt.
+
+`tools/audit-icones.mjs` finds missing cells; `tools/audit-icones-doublons.mjs`
+finds shared or empty ones, which the first cannot see. Choosing cells by eye
+put two items on cells already taken. One share is deliberate and predates
+this: fists reuse the gauntlet.
+
+The armour sheet holds only chest pieces, so the Serpent King Crown and the
+Haligtree Crest Shield were showing as breastplates. They now come from
+`armour-extras.png`, drawn with the same `pixelart.py` pipeline as the
+accessories rather than as SVG: an SVG would be the only smooth image among 164
+pixel-art icons, and would need its own render path. An `ARMOUR_CELLS` entry may
+carry a third element naming another sheet.
+
+Drawing 16x16 shapes against `render_cell` has one trap worth knowing: it
+shades by VERTICAL POSITION, lightening the accent in the top third and
+darkening it below. A gem placed low in the crown's band came out darker than
+the metal and read as a hole; the shield's tree canopy, placed high, merged
+with the already-light top of the shield. Both were fixed by moving the accent,
+not by changing colours.
+
+## Events: coverage, visibility, and four decorative promises
+
+`registerRunBuff` accepts any object. An invented key raises nothing and does
+nothing — the same trap as the fictional item stats.
+`tools/audit-runbuffs.mjs` compares what events, biome traits and consumables
+write against what the engine reads. It found four dead keys:
+
+- `extraHazardPressure` — the Greedy Route promised "riskier but richer" and
+  had only upside. It now adds a per-turn chance of taking a stack of the
+  biome's dominant hazard, capped at 30%.
+- `noRetreat` — the trait is printed on the biome sheet and the player could
+  still retreat. `toggleView` now refuses and says so.
+- `lootChanceMult` — there was no drop chance to multiply: loot always falls at
+  the end of a biome, and `getWeightedDrop` picks *which*, not *whether*. The
+  key now grants extra rolls: 2.2 reads as two guaranteed items plus a 20%
+  chance of a third.
+- `bossMitigation` — Sentinel Resin (-12%) and Ember Salve (-10%) wrote it into
+  a run buff, but `combat.js` reads only `eff.bossMitigation`, fed by vigour and
+  items. `getEffectiveStats` now sums run buffs too.
+
+The usable key set is: `armorBonus`, `armorMult`, `bossMitigation`,
+`dodgeMult`, `extraHazardPressure`, `lootChanceMult`, `lootRarityBoost`,
+`noHeal`, `noRetreat`, `rareChanceMult`, `resistBonus`, `runeGainMult`.
+
+### Coverage is derived, not hand-written
+
+`BIOME_EVENTS` was a hand-kept table that never followed the content: 38 of 50
+biomes fired nothing. `getBiomeEventPool` falls back to a universal pool plus
+one event per declared hazard, so every biome has something. An explicit list
+still wins where it exists — it expresses an intention for that zone.
+
+### The banner, and why it must not use rAF
+
+Events produced only a log line, lost in the flow of combat blows. A banner now
+sits over the combat zone for five seconds with a tone bar saying at a glance
+whether it is a windfall or a blow. It takes no click and captures none:
+automated expeditions have to run with nobody watching.
+
+Revealing it uses a **forced reflow** (`void el.offsetWidth`), never
+`requestAnimationFrame`. rAF is suspended in a background tab, so the first
+version prepared the banner, never revealed it, and hid it five seconds later —
+a player returning to the tab had seen nothing. This is the second time rAF
+suspension has cost a debugging session; see the sprite-flicker note.
+
+"Bifurcation", not "Route choice": the game draws at random. A real choice
+would need to pause the expedition, which breaks auto-run.
+
+## Measuring instruments lie more often than the game does
+
+Four separate audits gave confident wrong answers this session. The pattern is
+always the same: **a probe that does not resemble a real character, or a model
+that ignores a whole mechanic.**
+
+`audit-weapons.mjs` reported 6 "useless" weapons. All six were its own fault:
+
+- it gave the probe **no base crit**, so weapons gated on crit never activated
+  (Twin Blades);
+- it only used **pure builds**, so weapons needing two stats never activated
+  (Zamor Curved Sword wants 15 STR *and* 18 DEX);
+- it measured **strength only**, so intelligence weapons whose whole output is
+  magic scored zero (Azula's Black Censer);
+- it modelled **no target armour**, so a weapon whose entire point is
+  penetration scored zero (Frost Hatchet).
+
+After fixing all four, no weapon is genuinely dead. The two still listed are
+percentage-scaling weapons judged at level 5 against fists at level 10; both
+overtake fists from level 6.
+
+`audit-orphelins.mjs` reported 4 unreachable biomes and 3 unplaced monsters.
+The biomes are the Trials, opened by rebirth rather than by `unlocks`; the
+monsters are `companion` entries, spawned alongside a host. Both were the
+tool's blind spots. Nothing in the game is unreachable.
+
+### The simulator equipped for the wrong fight
+
+`equipBest` scored candidates against the **boss's armour** but **with the
+group multiplier**, while `ttkBoss` correctly ignores it — a boss is alone, so
+splash has nobody else to hit. The optimiser therefore overvalued area damage
+and equipped group-clearing gear right before the fight that gates progress.
+
+Giving the Sage of Caelid Robe its missing level scaling was enough to spring
+that trap: the intelligence build went from 891 to 942 cycles. A regression of
+the *model*, not of the game — bisected commit by commit, then file by file,
+then down to the single changed line.
+
+The score is now the geometric mean of damage against groups and against the
+boss: one loadout has to serve both, which is what a player actually carries.
+
+**With that fixed, the standings change:** dexterity 737, vigour 747, force
+809, intelligence 884, trihybrid 935. Intelligence is 20% behind the best pure
+build, not 8.8% ahead of the pack as the broken model suggested. Its magic term
+is linear in intelligence, so it fades over a full run — the same conclusion
+reached earlier from a different broken tool, now supported by a sound one.
+
+## The level cap is earned, not farmed
+
+Leaving the game running in the first zone used to reach level 220: runes accrue
+forever and nothing gated the climb. The cap now comes from the **main story
+bosses** — the 18 biomes on the shortest path to the Elden Throne, listed in
+`MAIN_BOSS_BIOMES`. Optional biomes give loot, never levels.
+
+`LEVEL_CAP_BASE = 25`, `LEVEL_PER_MAIN_BOSS = 20`, so the ceiling runs
+25 → 45 → 65 → … → 220 after ten of the eighteen. The last third is
+deliberately free: the exploit being closed is passive farming in the starting
+zone, not endgame progression.
+
+**Both numbers are calibrated against the simulator, and the first attempt made
+the game unfinishable.** At 12 levels per boss the run showed 17–27 walls
+including the Elden Throne itself. From 20 upward the wall count stops moving
+and matches the uncapped game exactly — the cap binds early and releases before
+it can block anyone.
+
+Two things that made this safe to ship:
+
+- **The cap explains itself.** Both the build banner and the blocked-upgrade
+  message name the next boss and what beating it is worth. A ceiling with no
+  stated cause reads as a bug, and the player farms for nothing.
+- **Old saves are grandfathered.** They have no `defeatedBosses`, so it is
+  rebuilt from `unlockedBiomes` — a biome whose `unlocks` are open has had its
+  boss killed, since victory is what opens them. And `legacyLevelFloor` pins the
+  cap at the character's current level, so nobody reads "Niveau 200/105".
+  Levels were never at risk (the cap only blocks *gaining*), but the display
+  would have been nonsense.
+
+Rebirth clears `defeatedBosses` along with `unlockedBiomes`: a new run re-earns
+its ceiling.
+
+## Why the magic curve was NOT changed
+
+The plan was to make `getMagicDamage` super-linear, since the corrected
+simulator put intelligence 20% behind. Measured per biome, the gap is
+**entirely in the first third** — 517 cycles against dexterity's 421, while the
+last thirds tie at 49 and 48. Three early biomes hitting the 60-cycle cap
+account for the whole difference.
+
+An exponent cannot fix that, and the calibration proved it: every setting that
+improved the whole-run number did so by making intelligence *stronger early*,
+which is the opposite of what the game felt like. Calibrating on invested
+intelligence was also wrong — items push the effective value well past the
+crossover, so the "weaker early" curve landed 15% stronger at level 24.
+
+Reverted to linear. The real work is those three biomes, not the formula.
+
+## `itemLevel - 1` makes an item worthless the moment it drops
+
+`stats.strength * (1 + 0.035 * (itemLevel - 1))` is exactly 1 at level 1. The
+item gives **nothing at all** when found, while its description says "+3.5%
+Force / Niv" — which any player reads as 3.5% right away.
+
+Two starting weapons shipped like that: the Burning Sword (Necrolimbe Lake, one
+biome from the start) and the Zamor Curved Sword (Weeping Peninsula, two
+biomes). Both were strictly worse than bare fists, which give a flat +5.
+
+Both now use `itemLevel`. Use `itemLevel - 1` only where an item is *meant* to
+be inert until upgraded, and say so in its description.
+
+`audit-items-complet.mjs` gained a fifth check for this: it compares the item
+against **no item at all** at level 1. If they match, the item is inert.
+
+That check immediately produced two more false positives, from the same root
+cause as every other one in this project: the probe was not a plausible
+character. The Madding Charm reads the player's Madness stacks, the Rotting
+Dusk Idol counts active statuses — with no afflictions on the probe they
+returned zero at every level. The probe now carries three afflictions.
+
+Running total of false positives traced to an unrealistic probe: stats at zero,
+armour too low to survive `Math.floor`, no base crit, resistances at zero, no
+afflictions. **Whenever a tool here reports something surprising, suspect the
+probe before the game.**
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

@@ -147,6 +147,15 @@ export function getEffectiveStats() {
     // Multiplicateur des soins RECUS. Lu par healPlayer, seul point de passage
     // des soins du joueur, donc un objet qui le modifie agit partout.
     healReceivedMult: 1,
+    /*
+     * Esquive apportee par les OBJETS, en plus de celle de la dexterite.
+     *
+     * Le Masque de Soldat Marionnette ecrivait deja stats.dodgeChance et
+     * annoncait +5% d'esquive, mais rien ne lisait cette cle : l'effet etait
+     * purement decoratif. combat.js l'additionne desormais a la part venant
+     * de la dexterite, sous le meme plafond de 50%.
+     */
+    dodgeChance: 0,
     bossMitigation: 0,
     resistances: {
       poison: 0,
@@ -243,7 +252,21 @@ export function getEffectiveStats() {
    */
   effStats.bossMitigation =
     (effStats.bossMitigation || 0) +
-    Math.min(0.25, (gameState.stats.vigor || 0) / 900);
+    Math.min(0.25, (gameState.stats.vigor || 0) / 900) +
+    /*
+     * Part venant des buffs d'expedition.
+     *
+     * La Resine de sentinelle et l'Onguent anti-braise annoncent -12% et -10%
+     * de degats de boss et posaient bien bossMitigation dans un buff de run,
+     * mais combat.js ne lit que eff.bossMitigation, alimente par la vigueur et
+     * les objets. Les deux consommables ne faisaient donc rien de ce qu'ils
+     * promettaient. Le plafond de 45% applique dans combat.js reste la seule
+     * borne.
+     */
+    (gameState.preparation?.activeRunBuffs || []).reduce(
+      (total, buff) => total + (buff.bossMitigation || 0),
+      0,
+    );
 
   // Noeud "Sang endurci" : applique apres les objets pour qu'il les amplifie,
   // et avant l'arrondi final pour ne pas perdre les decimales.

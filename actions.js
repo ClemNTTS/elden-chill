@@ -2,13 +2,16 @@ import { gameState, runtimeState } from "./state.js";
 import { clearSaveStorage, saveGame } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import { BIOMES } from "./biome.js";
 import { startExploration } from "./core.js";
 import {
   REBIRTH_LEVEL_BONUS,
   REBIRTH_RUNE_BONUS,
   TRIALS,
   canRebirth,
+  LEVEL_PER_MAIN_BOSS,
   getMaxLevel,
+  getNextMainBoss,
   getRebirthCount,
   investRebirthPoint,
   performRebirth,
@@ -192,7 +195,14 @@ export const upgradeStat = (statName) => {
 
   if (gameState.stats.level >= getMaxLevel()) {
     alert(
-      `Niveau maximum atteint (${getMaxLevel()}). Montez une Renaissance ou investissez dans Volonte pour aller plus loin.`,
+      (() => {
+        // Meme message que la banniere du build : le joueur doit savoir quel
+        // boss lever, pas seulement qu'il est bloque.
+        const prochain = getNextMainBoss();
+        return prochain
+          ? `Niveau maximum atteint (${getMaxLevel()}). Abattez le boss de ${BIOMES[prochain]?.name || prochain} pour gagner ${LEVEL_PER_MAIN_BOSS} niveaux.`
+          : `Niveau maximum atteint (${getMaxLevel()}). Montez une Renaissance ou investissez dans Volonte pour aller plus loin.`;
+      })(),
     );
     return;
   }

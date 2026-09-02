@@ -3007,6 +3007,14 @@ button:disabled {
   cursor: default;
 }
 
+/* Les deux lignes de critique vivent dans .crit-points, un bloc simple, et non
+   dans le conteneur flex a gap 12px qui espace les statistiques principales :
+   sans cette regle elles se touchent. On reprend la meme valeur pour que les
+   six lignes du panneau respirent pareil. */
+.crit-points .stat-line + .stat-line {
+  margin-top: 12px;
+}
+
 .crit-points__super {
   margin: 10px 0 0;
   font-size: 0.8rem;
@@ -3194,15 +3202,60 @@ button:disabled {
   color: var(--text-soft);
 }
 
+/* Les fleches natives du champ nombre jurent avec le reste : minuscules,
+   dessinees par le navigateur, differentes sur chaque plateforme. On les
+   supprime au profit de deux boutons qui reprennent la grammaire des boutons
+   d'amelioration. */
 .automation-cycle input {
-  width: 58px;
-  padding: 5px 6px;
+  width: 46px;
+  padding: 5px 4px;
   font-size: 0.78rem;
   text-align: center;
+  border: none;
+  background: none;
+  color: var(--text);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.automation-cycle input::-webkit-outer-spin-button,
+.automation-cycle input::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* La bordure passe sur l'ensemble : le champ et ses deux boutons forment un
+   seul objet, pas trois elements poses cote a cote. */
+.cycle-stepper {
+  display: inline-flex;
+  align-items: stretch;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm, 6px);
   background: var(--surface-strong);
+  overflow: hidden;
+}
+
+.cycle-stepper__btn {
+  width: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--surface-strong) 70%, var(--border));
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.cycle-stepper__btn:hover {
+  background: var(--accent-soft);
   color: var(--text);
+}
+
+.cycle-stepper__btn:active {
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface-strong));
 }
 
 /* Arbre de renaissance. Meme grammaire visuelle que les epreuves : ce sont
@@ -3292,4 +3345,81 @@ button:disabled {
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--text-soft);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banniere d'evenement                                               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Les evenements ne s'annonçaient que par une ligne dans le journal de
+ * combat, noyee dans le flot des coups : le joueur ne les voyait pas passer.
+ * La banniere se pose au-dessus de la zone de combat, reste cinq secondes et
+ * disparait. Elle ne capte jamais le clic — l'expedition automatique doit
+ * continuer sans intervention.
+ */
+.event-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  z-index: 6;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: min(420px, calc(100% - 24px));
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-strong) 92%, var(--accent));
+  box-shadow: 0 10px 26px rgb(0 0 0 / 45%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.event-banner.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Barre de teinte a gauche : elle dit d'un coup d'oeil si c'est une aubaine
+   ou une tuile, avant meme d'avoir lu le texte. */
+.event-banner__kind {
+  flex: 0 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.event-banner[data-tone="gain"] .event-banner__kind { background: #2ecc71; }
+.event-banner[data-tone="danger"] .event-banner__kind { background: #e74c3c; }
+.event-banner[data-tone="grace"] .event-banner__kind { background: #f1c40f; }
+.event-banner[data-tone="route"] .event-banner__kind { background: #54a0d4; }
+
+.event-banner__body {
+  min-width: 0;
+}
+
+.event-banner__title {
+  margin: 0 0 2px;
+  font-family: var(--header-font);
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+
+.event-banner__text {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .event-banner {
+    top: 6px;
+    padding: 8px 10px;
+  }
+  .event-banner__title { font-size: 0.84rem; }
+  .event-banner__text { font-size: 0.72rem; }
 }

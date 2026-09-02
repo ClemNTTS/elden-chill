@@ -605,6 +605,15 @@
             <!-- Effet de cendre de guerre, joue par-dessus la zone de combat.
                  Vide au repos, efface a la fin de chaque animation. -->
             <canvas id="ash-effect-canvas" aria-hidden="true"></canvas>
+            <!-- Banniere d'evenement. Purement informative : elle ne bloque
+                 rien, pour rester compatible avec l'expedition automatique. -->
+            <div id="event-banner" class="event-banner" role="status" aria-live="polite" hidden>
+              <div class="event-banner__kind" id="event-banner-kind"></div>
+              <div class="event-banner__body">
+                <p class="event-banner__title" id="event-banner-title"></p>
+                <p class="event-banner__text" id="event-banner-text"></p>
+              </div>
+            </div>
             <div class="combat-lane">
               <div class="fighter-stage">
                 <canvas id="player-sprite" class="fighter-sprite" aria-hidden="true"></canvas>
@@ -643,17 +652,21 @@
               <button id="btn-auto-restart" onclick="toggleAutoRestart()" title="Relance l'expedition dans le meme biome apres une mort">
                 Relance auto : OFF
               </button>
-              <label class="automation-cycle">
-                <span>Replier au cycle</span>
-                <input
-                  id="input-stop-cycle"
-                  type="number"
-                  min="0"
-                  max="999"
-                  step="1"
-                  onchange="setStopAfterCycle(this.value)"
-                />
-              </label>
+              <div class="automation-cycle">
+                <label for="input-stop-cycle">Replier au cycle</label>
+                <span class="cycle-stepper">
+                  <button type="button" class="cycle-stepper__btn" onclick="nudgeStopCycle(-1)" aria-label="Un cycle de moins">&minus;</button>
+                  <input
+                    id="input-stop-cycle"
+                    type="number"
+                    min="0"
+                    max="999"
+                    step="1"
+                    onchange="setStopAfterCycle(this.value)"
+                  />
+                  <button type="button" class="cycle-stepper__btn" onclick="nudgeStopCycle(1)" aria-label="Un cycle de plus">+</button>
+                </span>
+              </div>
             </div>
             <div id="offline-controls-b" class="offline-controls-b">
               <div class="bank-text">Temps sauvegarde <span id="offline-bank-b">0s</span></div>

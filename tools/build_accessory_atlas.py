@@ -225,6 +225,27 @@ ITEMS = [
 
     ("talisman_blackrot",             "seed",      "rot"),
     ("talisman_wayfarer",             "ring",      "leather"),
+
+    # Version complete : quatorze accessoires livres avec le contenu tardif
+    # n'avaient aucune icone et s'affichaient en carre hachure.
+    #
+    # Chaque couple forme/palette doit etre UNIQUE : le rendu ne depend que de
+    # ces deux valeurs, donc deux bijoux qui les partagent donnent exactement
+    # la meme image. Cinq collisions au premier essai.
+    ("madding_charm",                    "eye",         "spark"),
+    ("deathroot_charm",                  "seed",        "putrid"),
+    ("briar_thorn_seal",                 "medallion",   "bramble"),
+    ("manor_contract_seal",              "medallion",   "ember"),
+    ("blasphemous_chalice",              "heart",       "blood"),
+    ("tower_seal_ring",                  "shield",      "glint"),
+    ("jar_luck_charm",                   "seed",        "amber"),
+    ("starlight_shard",                  "shard",       "moonlit"),
+    ("zamor_ice_seal",                   "medallion",   "hoarfrost"),
+    ("destined_death_rune",              "shard",       "obsidian"),
+    ("lansseax_glaive_ring",             "ring",        "spark"),
+    ("ashen_capital_seal",               "shield",      "obsidian"),
+    ("scarlet_bloom_charm",              "feather",     "rot"),
+    ("golden_order_seal",                "mask",        "gold"),
 ]
 
 # --------------------------------------------------------------------------

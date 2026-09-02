@@ -1,6 +1,12 @@
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
-import { gameState, getEffectiveStats, runtimeState } from "./state.js";
+import {
+  gameState,
+  getEffectiveStats,
+  getHealth,
+  healPlayer,
+  runtimeState,
+} from "./state.js";
 import { BIOME_GUIDE } from "./world-map.js";
 
 export const ITEM_RARITIES = {
@@ -272,7 +278,7 @@ export const PREP_CONSUMABLES = {
     name: "Onguent anti-braise",
     description: "Etouffe les braises et les flammes du biome.",
     detailedDescription:
-      "Reduit de 25% les degats recus pendant la prochaine expedition et donne +20 d'armure.",
+      "Reduit de 10% les degats recus des boss pendant la prochaine expedition et donne +20 d'armure.",
     onRunStart: () =>
       registerRunBuff({
         id: "ember_ward",
@@ -328,6 +334,14 @@ export const PREPARATION_UNLOCKS = {
   castle_sol: { blessingId: "grace_of_vigil" },
   leyndell_ash: { blessingId: "grace_of_sovereign" },
   jarburg: { blessingId: "grace_of_avarice" },
+
+  /*
+   * La Benediction des Runes etait acquise des la premiere seconde de jeu, et
+   * +18% de runes sur toute la partie est le bonus economique le plus fort du
+   * jeu. Elle se gagne desormais au Palais de Mohgwyn, tardif et optionnel,
+   * ce qui la rend coherente avec ce qu'elle apporte.
+   */
+  mohgwyn_palace: { blessingId: "grace_of_runes" },
   shaded_castle: { consumableId: "purge_draught" },
   volcano_manor: { consumableId: "rune_censer" },
   rykard_lair: { consumableId: "ember_ward" },
@@ -377,6 +391,46 @@ const getLockedPreparationIds = (type) => {
   return Object.keys(defs).filter((id) => !unlocked.has(id));
 };
 
+/*
+ * Chance qu'un evenement genereux lache VRAIMENT une preparation.
+ *
+ * L'autel et la caravane en donnaient une a chaque declenchement. Les
+ * evenements sortent a 22% par pas de progression, et a Stormhill l'autel pese
+ * la moitie du tirage : environ un pas sur neuf. On rassemblait donc les dix
+ * benedictions en farmant le chapitre II.
+ */
+const PREPARATION_DROP_CHANCE = 0.3;
+
+/**
+ * Tire une preparation encore verrouillee, parmi celles que le joueur POUVAIT
+ * deja gagner.
+ *
+ * Le tirage etait fait sur l'ensemble du jeu, donc la Benediction du Souverain
+ * de Leyndell pouvait tomber a Stormhill. On restreint aux entrees dont le
+ * biome source est deja debloque : l'evenement devient une seconde chance sur
+ * une recompense a portee, et non un raccourci vers la fin du jeu.
+ *
+ * Une entree sans biome source reste eligible : elle n'est rattachee a aucune
+ * progression, rien ne serait saute en la donnant.
+ */
+const rollPreparationReward = (type) => {
+  if (Math.random() >= PREPARATION_DROP_CHANCE) return null;
+
+  const cle = type === "blessing" ? "blessingId" : "consumableId";
+  const atteignables = new Set(gameState.world?.unlockedBiomes || []);
+  const source = {};
+  for (const [biomeId, reward] of Object.entries(PREPARATION_UNLOCKS)) {
+    if (reward[cle]) source[reward[cle]] = biomeId;
+  }
+
+  const candidats = getLockedPreparationIds(type).filter((id) => {
+    const biomeId = source[id];
+    return !biomeId || atteignables.has(biomeId);
+  });
+  if (!candidats.length) return null;
+  return candidats[Math.floor(Math.random() * candidats.length)];
+};
+
 export const EVENT_DEFS = {
   caravane_perdue: {
     id: "caravane_perdue",
@@ -385,7 +439,7 @@ export const EVENT_DEFS = {
     weight: 4,
     resolve: (biomeId) => {
       const runeGain = Math.max(60, Math.floor(gameState.stats.level * 38 + 120));
-      const lockedConsumables = getLockedPreparationIds("consumable");
+      const recompense = rollPreparationReward("consumable");
       gameState.runes.carried += runeGain;
       registerRunBuff({
         id: "caravan_supplies",
@@ -396,12 +450,8 @@ export const EVENT_DEFS = {
       const text = `Vous fouillez une caravane abandonnée et sécurisez ${runeGain} runes ainsi que des réserves pour la suite.`;
       addJournalEntry("event", "Caravane perdue", text, biomeId);
       let unlockText = "";
-      if (lockedConsumables.length) {
-        const rewardId =
-          lockedConsumables[Math.floor(Math.random() * lockedConsumables.length)];
-        if (unlockConsumable(rewardId, biomeId)) {
-          unlockText = ` Vous mettez aussi la main sur ${PREP_CONSUMABLES[rewardId].name}.`;
-        }
+      if (recompense && unlockConsumable(recompense, biomeId)) {
+        unlockText = ` Vous mettez aussi la main sur ${PREP_CONSUMABLES[recompense].name}.`;
       }
       return {
         log: `Une caravane perdue vous offre ${runeGain} runes et des provisions précieuses.${unlockText}`,
@@ -432,7 +482,7 @@ export const EVENT_DEFS = {
     kind: "altar",
     weight: 3,
     resolve: (biomeId) => {
-      const lockedBlessings = getLockedPreparationIds("blessing");
+      const recompense = rollPreparationReward("blessing");
       gameState.playerEffects = [];
       registerRunBuff({
         id: `altar_${biomeId}`,
@@ -448,12 +498,8 @@ export const EVENT_DEFS = {
         biomeId,
       );
       let unlockText = "";
-      if (lockedBlessings.length) {
-        const rewardId =
-          lockedBlessings[Math.floor(Math.random() * lockedBlessings.length)];
-        if (unlockBlessing(rewardId, biomeId)) {
-          unlockText = ` ${BLESSINGS[rewardId].name} rejoint désormais votre préparation.`;
-        }
+      if (recompense && unlockBlessing(recompense, biomeId)) {
+        unlockText = ` ${BLESSINGS[recompense].name} rejoint désormais votre préparation.`;
       }
       return {
         log: `Un autel oublié dissipe vos maux et bénit votre route.${unlockText}`,
@@ -485,7 +531,13 @@ export const EVENT_DEFS = {
   },
   choix_route: {
     id: "choix_route",
-    title: "Choix de route",
+    /*
+     * "Bifurcation" et non "Choix de route" : le joueur ne choisit pas, le
+     * jeu tire au sort entre les deux routes. Un vrai choix demanderait de
+     * mettre l'expedition en attente, ce qui casserait l'expedition
+     * automatique. Le titre dit donc ce qui se passe vraiment.
+     */
+    title: "Bifurcation",
     kind: "route",
     weight: 5,
     resolve: (biomeId) => {
@@ -530,11 +582,177 @@ export const EVENT_DEFS = {
   },
 };
 
+/*
+ * Evenements ajoutes pour etoffer la feature.
+ *
+ * Contrainte : ne poser que des cles que getRunModifier sait lire. Une cle
+ * inventee ne provoque aucune erreur et ne fait rien — quatre promesses
+ * decoratives ont deja ete trouvees ainsi. Le jeu de cles utilisable est
+ * armorBonus, armorMult, dodgeMult, lootChanceMult, lootRarityBoost, noHeal,
+ * rareChanceMult, resistBonus, runeGainMult, extraHazardPressure et
+ * bossMitigation.
+ */
+Object.assign(EVENT_DEFS, {
+  marchand_errant: {
+    id: "marchand_errant",
+    title: "Marchand errant",
+    kind: "marchand",
+    weight: 3,
+    resolve: (biomeId) => {
+      const runes = Math.max(80, Math.floor(gameState.stats.level * 26 + 90));
+      gameState.runes.carried += runes;
+      registerRunBuff({
+        id: "marchand_errant",
+        label: "Bourse du marchand",
+        kind: "loot",
+        runeGainMult: 0.15,
+      });
+      addJournalEntry(
+        "event",
+        "Marchand errant",
+        "Un colporteur rachete ce que vous ne portiez plus et vous indique les bonnes poches.",
+        biomeId,
+      );
+      return {
+        log: `Un marchand errant vous achete votre surplus : +${runes} runes, et +15% de runes pour la sortie.`,
+      };
+    },
+  },
+
+  veine_de_runes: {
+    id: "veine_de_runes",
+    title: "Veine de runes",
+    kind: "runes",
+    weight: 2,
+    resolve: (biomeId) => {
+      const runes = Math.max(150, Math.floor(gameState.stats.level * 55 + 200));
+      gameState.runes.carried += runes;
+      addJournalEntry(
+        "event",
+        "Veine de runes",
+        "Une veine affleure sous la mousse. Elle ne durera pas.",
+        biomeId,
+      );
+      return { log: `Une veine de runes affleure : +${runes} runes.` };
+    },
+  },
+
+  echo_de_grace: {
+    id: "echo_de_grace",
+    title: "Echo de grace",
+    kind: "heal",
+    weight: 3,
+    resolve: (biomeId) => {
+      const eff = getEffectiveStats();
+      const maxHp = getHealth(eff.vigor);
+      const soigne = healPlayer(Math.floor(maxHp * 0.35), maxHp);
+      gameState.playerEffects = [];
+      addJournalEntry(
+        "event",
+        "Echo de grace",
+        "Une grace eteinte garde assez de chaleur pour recoudre une plaie.",
+        biomeId,
+      );
+      // healPlayer renvoie 0 quand le soin est scelle par un trait de biome :
+      // on le dit plutot que d'annoncer un soin qui n'a pas eu lieu.
+      return {
+        log: soigne > 0
+          ? `Un echo de grace vous rend ${soigne} PV et dissipe vos maux.`
+          : "Un echo de grace dissipe vos maux, mais la zone refuse les soins.",
+      };
+    },
+  },
+
+  brume_epaisse: {
+    id: "brume_epaisse",
+    title: "Brume epaisse",
+    kind: "brume",
+    weight: 3,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "brume_epaisse",
+        label: "Brume epaisse",
+        kind: "route",
+        dodgeMult: 0.6,
+        lootRarityBoost: 0.25,
+        rareChanceMult: 1.2,
+      });
+      addJournalEntry(
+        "event",
+        "Brume epaisse",
+        "On ne voit plus arriver les coups, mais on trebuche sur ce que les autres ont laisse.",
+        biomeId,
+      );
+      return {
+        log: "Une brume epaisse tombe : esquive reduite de 40%, mais butin plus rare et plus riche.",
+      };
+    },
+  },
+
+  carcasse_de_dragon: {
+    id: "carcasse_de_dragon",
+    title: "Carcasse de dragon",
+    kind: "altar",
+    weight: 2,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "carcasse_de_dragon",
+        label: "Ecailles arrachees",
+        kind: "defense",
+        armorBonus: 35,
+        resistBonus: 3,
+        bossMitigation: 0.06,
+      });
+      addJournalEntry(
+        "event",
+        "Carcasse de dragon",
+        "Assez d'ecailles tiennent encore pour s'en faire un plastron de fortune.",
+        biomeId,
+      );
+      return {
+        log: "Vous arrachez des ecailles a une carcasse : +35 armure, +3 resistances, -6% de degats de boss.",
+      };
+    },
+  },
+
+  chant_de_folie: {
+    id: "chant_de_folie",
+    title: "Chant de folie",
+    kind: "hazard",
+    weight: 2,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "chant_de_folie",
+        label: "Chant de folie",
+        kind: "hazard",
+        armorMult: 0.85,
+        runeGainMult: 0.3,
+        extraHazardPressure: 1,
+      });
+      addJournalEntry(
+        "event",
+        "Chant de folie",
+        "Quelque chose chante sous la pierre. On avance moins prudemment.",
+        biomeId,
+      );
+      return {
+        log: "Un chant monte de la pierre : -15% d'armure et le danger vous gagne plus vite, mais +30% de runes.",
+      };
+    },
+  },
+});
+
 export const BIOME_EVENTS = {
   limgrave_west: ["caravane_perdue", "choix_route"],
   limgrave_east: ["patrouille_rare", "choix_route"],
-  stormhill: ["patrouille_rare", "autel"],
-  caelid_swamp: ["piege", "autel", "choix_route"],
+  /*
+   * "stormhill" et "caelid_swamp" n'existent pas dans BIOMES : ces deux
+   * entrees ne se sont jamais declenchees. Remappees sur les identifiants
+   * reels — Valorage est bien la region de Stormhill, et le marais de Caelid
+   * correspond au Sud de Caelid.
+   */
+  limgrave_north: ["patrouille_rare", "autel"],
+  caelid_south: ["piege", "autel", "choix_route"],
   nokron: ["autel", "patrouille_rare"],
   ainsel_river: ["choix_route", "caravane_perdue"],
   deeproot_depths: ["autel", "piege"],
@@ -659,8 +877,49 @@ export const applyPreparationStats = (stats) => {
   });
 };
 
+/*
+ * Pool universel : ces trois-la peuvent survenir partout.
+ *
+ * Sans lui, 38 biomes sur 50 ne declenchaient jamais rien — la table
+ * BIOME_EVENTS etait ecrite a la main et n'avait jamais suivi l'ajout de
+ * contenu. Une liste explicite reste prioritaire quand elle existe : elle
+ * exprime une intention pour ce biome precis.
+ */
+const POOL_UNIVERSEL = ["caravane_perdue", "marchand_errant", "veine_de_runes"];
+
+/** Evenement supplementaire attache a chaque danger declare par le biome. */
+const EVENT_PAR_DANGER = {
+  poison: "piege",
+  putrefaction: "piege",
+  gel: "brume_epaisse",
+  folie: "chant_de_folie",
+  saignement: "patrouille_rare",
+};
+
+/**
+ * Pool d'un biome : sa liste explicite si elle existe, sinon un pool derive de
+ * ses dangers. Un biome garde ainsi une couleur propre sans qu'il faille
+ * ecrire une ligne par zone.
+ */
+export const getBiomeEventPool = (biomeId) => {
+  const explicite = BIOME_EVENTS[biomeId];
+  if (explicite?.length) return explicite;
+
+  const pool = [...POOL_UNIVERSEL];
+  const dangers = getBiomeHazards(biomeId);
+  for (const danger of dangers) {
+    const id = EVENT_PAR_DANGER[danger];
+    if (id && !pool.includes(id)) pool.push(id);
+  }
+  // Une zone sans danger declare est une zone de passage : on y trouve des
+  // choses plutot que des ennuis.
+  if (!dangers.length) pool.push("echo_de_grace", "choix_route");
+  else pool.push("echo_de_grace", "carcasse_de_dragon");
+  return pool;
+};
+
 export const getWeightedBiomeEvent = (biomeId) => {
-  const eventIds = BIOME_EVENTS[biomeId] || [];
+  const eventIds = getBiomeEventPool(biomeId);
   const weighted = eventIds
     .map((id) => EVENT_DEFS[id])
     .filter(Boolean);

@@ -23,7 +23,7 @@ import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 await import("../game.js");
 
-const { gameState, getEffectiveStats } = await import("../state.js");
+const { gameState, getEffectiveStats, getMagicDamage } = await import("../state.js");
 const { ITEMS } = await import("../item.js");
 const { DEFAULT_PLAYER_PROFILE } = await import("../shared/player-profile.js");
 const { ITEM_TYPES } = await import("../constants.js");
@@ -72,16 +72,30 @@ const strengthAtZero = (id, level) => {
   }
 };
 
+/* Armure de reference : un ennemi de milieu de partie. */
+const ARMURE_REF = 200;
+
 const PLANCHER = strengthAtZero("fists", 10);
 
 const NL = String.fromCharCode(10);
 
 /* Chaque arme est jugee sur le build qu'elle sert, a 40 points investis. */
+/*
+ * Quatre builds purs ET deux hybrides.
+ *
+ * Plusieurs armes exigent DEUX statistiques de base — l'Epee Courbe de Zamor
+ * demande 15 de Force et 18 de Dexterite, la Grande Epee Forgee 30 et 10. Un
+ * build pur n'en satisfait jamais qu'une, la branche ne s'executait pas, et
+ * l'arme ressortait "sans emploi". Juger une arme sur des builds qui ne
+ * peuvent pas l'equiper ne prouve rien.
+ */
 const BUILDS = {
-  strength: "Force",
-  dexterity: "Dexterite",
-  intelligence: "Intelligence",
-  vigor: "Vigueur",
+  strength: { label: "Force", stats: { strength: 40 } },
+  dexterity: { label: "Dexterite", stats: { dexterity: 40 } },
+  intelligence: { label: "Intelligence", stats: { intelligence: 40 } },
+  vigor: { label: "Vigueur", stats: { vigor: 40 } },
+  strDex: { label: "Force/Dex", stats: { strength: 32, dexterity: 32 } },
+  intDex: { label: "Int/Dex", stats: { intelligence: 32, dexterity: 32 } },
 };
 
 /*
@@ -92,9 +106,19 @@ const BUILDS = {
  * Force et gagnent une attaque entiere. Comparer une seule dimension d'un
  * systeme multiplicatif ne prouve rien.
  */
-const dptWith = (id, stat, level) => {
-  const st = { vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50 };
-  st[stat] = 40;
+const dptWith = (id, stats, level) => {
+  /*
+   * Le critique de BASE fait partie du personnage sonde.
+   *
+   * Plusieurs armes exigent un minimum de critique investi pour s'activer —
+   * les Lames Jumelles demandent 20 de dexterite ET 10% de critique. Avec un
+   * critique a zero leur branche ne s'executait jamais et elles ressortaient
+   * "sans emploi". La lecon avait ete notee sans que l'outil soit corrige.
+   */
+  const st = {
+    vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50,
+    critChance: 0.15, critDamage: 2, ...stats,
+  };
   Object.assign(gameState.stats, JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)), st);
   gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
   gameState.inventory = [{ id, name: id, level, count: 0 }];
@@ -105,14 +129,46 @@ const dptWith = (id, stat, level) => {
     const hit = Math.min(1, c);
     const crit = 1 - hit + hit * (e.critDamage || 1.5);
     const atk = (e.attacksPerTurn || 1) + (e.extraAttackChance || 0);
-    return e.strength * atk * crit;
+    /*
+     * L'armure de la cible entre dans le calcul.
+     *
+     * Sans elle, une arme dont tout l'interet est la penetration mesurait
+     * zero : la Hachette de Givre donne +15% de penetration et aucune Force,
+     * elle ressortait "sans emploi". Meme formule que combat.js, plancher a
+     * 25% de l'armure d'origine compris.
+     */
+    const armure = Math.max(
+      ARMURE_REF * 0.25,
+      Math.max(
+        1,
+        ARMURE_REF * (1 - (e.percentDamagePenetration || 0)) -
+          (e.flatDamagePenetration || 0),
+      ),
+    );
+    const mult = 100 / armure;
+    /*
+     * Les degats magiques comptent.
+     *
+     * Ne mesurer que la Force sous-evaluait systematiquement les armes
+     * d'intelligence : l'Encensoir noir d'Azula donne +10 Intelligence et
+     * aucune conversion, donc zero Force. Il ressortait "sans emploi" alors
+     * que toute sa puissance passe par la magie, qui ignore l'armure.
+     */
+    // Le physique passe par l'armure, la magie non : elle s'ajoute apres la
+    // division, exactement comme dans combat.js.
+    return (
+      e.strength * atk * crit * mult + getMagicDamage(e.intelligence) * crit
+    );
   } catch {
     return -1;
   }
 };
 
 const strengthWith = (id, stat, level) => {
-  const st = { vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50 };
+  const st = {
+    vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50,
+    critChance: 0.15, critDamage: 2,
+  };
   st[stat] = 40;
   Object.assign(gameState.stats, JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)), st);
   gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
@@ -130,9 +186,9 @@ for (const [id, item] of Object.entries(ITEMS)) {
   // Meilleur ecart face aux poings, sur les quatre builds, au niveau 5.
   let meilleur = -Infinity;
   let meilleurBuild = null;
-  for (const stat of Object.keys(BUILDS)) {
-    const ecart = dptWith(id, stat, 5) - dptWith("fists", stat, 10);
-    if (ecart > meilleur) { meilleur = ecart; meilleurBuild = BUILDS[stat]; }
+  for (const build of Object.values(BUILDS)) {
+    const ecart = dptWith(id, build.stats, 5) - dptWith("fists", build.stats, 10);
+    if (ecart > meilleur) { meilleur = ecart; meilleurBuild = build.label; }
   }
   if (meilleur <= 0) inutiles.push({ nom: item.name, meilleur, meilleurBuild });
   if (strengthAtZero(id, 1) <= 0) nulles.push(item.name);

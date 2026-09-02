@@ -236,7 +236,9 @@ import {
   getRebirthPointsSpent,
   getRebirthPointsTotal,
   canRebirth,
+  LEVEL_PER_MAIN_BOSS,
   getMaxLevel,
+  getNextMainBoss,
   getRebirthCount,
   getRebirthRuneBonus,
   isTrialCleared,
@@ -306,6 +308,7 @@ import {
   HAZARD_LABELS,
   buildEnemyIntent,
   clearRunBuffs,
+  getRunModifier,
   describeHazards,
   getCodexBiomeInfo,
   getItemRarity,
@@ -481,6 +484,16 @@ window.setStopAfterCycle = (value) => {
   saveGame();
 };
 
+/*
+ * Les deux boutons du pas. On repart de l'etat, pas de la valeur affichee dans
+ * le champ : le joueur peut avoir tape quelque chose sans valider, et un pas
+ * doit rester previsible.
+ */
+window.nudgeStopCycle = (delta) => {
+  const courant = gameState.automation?.stopAfterCycle || 0;
+  window.setStopAfterCycle(courant + delta);
+};
+
 const updateAutomationDisplay = () => {
   const auto = gameState.automation || {};
   const btn = document.getElementById("btn-auto-restart");
@@ -513,9 +526,22 @@ const updateStatDisplay = () => {
   if (levelCapBanner) {
     levelCapBanner.classList.add("is-visible");
     levelCapBanner.classList.toggle("is-maxed", remainingLevels === 0);
+    /*
+     * Le plafond doit dire D'OU il vient et COMMENT le lever.
+     *
+     * Il depend maintenant des boss de la trame abattus. Un joueur bloque sans
+     * explication conclurait a un bug, ou pire, farmerait pour rien : c'est
+     * exactement le genre de regle invisible qu'on a deja corrigee ailleurs.
+     */
+    const prochain = getNextMainBoss();
+    const nomProchain = prochain ? BIOMES[prochain]?.name || prochain : null;
+    const commentLever = nomProchain
+      ? ` Abattez le boss de ${nomProchain} pour gagner ${LEVEL_PER_MAIN_BOSS} niveaux.`
+      : " Montez une Renaissance ou investissez dans Volonte pour aller plus loin.";
+
     levelCapBanner.innerText =
       remainingLevels === 0
-        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}). Les attributs sont bloques pour cette version.`
+        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}).${commentLever}`
         : `Niveau ${currentLevel}/${maxLevel} · ${remainingLevels} amelioration(s) restante(s) avant le cap.`;
   }
 
@@ -1078,6 +1104,79 @@ const watchCombatZoneHeight = () => {
     nodes.forEach(([node]) => combatZoneObserver.observe(node));
   }
   publish();
+};
+
+/*
+ * Banniere d'evenement.
+ *
+ * Les evenements ne produisaient qu'une ligne de journal, perdue dans le flot
+ * des coups : le joueur ne les remarquait pas. La banniere reste cinq secondes
+ * au-dessus de la zone de combat, avec une barre de teinte qui dit tout de
+ * suite s'il s'agit d'une aubaine ou d'une tuile.
+ *
+ * Elle n'attend aucun clic et n'en capte aucun : l'expedition automatique doit
+ * pouvoir tourner sans personne devant l'ecran.
+ */
+const TON_PAR_GENRE = {
+  caravane: "gain",
+  loot: "gain",
+  marchand: "gain",
+  runes: "gain",
+  altar: "grace",
+  blessing: "grace",
+  heal: "grace",
+  trap: "danger",
+  // Le genre de la patrouille rare est "ambush" et non "rare" : sans cette
+  // ligne elle tombait dans le repli bleu, alors que c'est une menace.
+  ambush: "danger",
+  hazard: "danger",
+  route: "route",
+  brume: "route",
+};
+
+let masqueBanniereId = null;
+
+export const showEventBanner = ({ title, kind, text }) => {
+  const banniere = document.getElementById("event-banner");
+  if (!banniere) return;
+
+  document.getElementById("event-banner-title").innerText = title || "Evenement";
+  document.getElementById("event-banner-text").innerText = text || "";
+  banniere.dataset.tone = TON_PAR_GENRE[kind] || "route";
+
+  // On repart de zero : un evenement qui en chasse un autre doit rejouer
+  // l'apparition, pas heriter du minuteur precedent.
+  clearTimeout(masqueBanniereId);
+  banniere.hidden = false;
+  /*
+   * Un reflow force, et surtout PAS requestAnimationFrame.
+   *
+   * La transition a besoin que le navigateur ait calcule l'etat de depart
+   * avant qu'on ajoute la classe, sinon elle ne se declenche pas. La premiere
+   * version passait par rAF — qui est SUSPENDU quand l'onglet est en arriere-
+   * plan. La banniere etait alors preparee, jamais revelee, puis masquee cinq
+   * secondes plus tard : un joueur revenant sur l'onglet n'avait rien vu.
+   *
+   * Lire offsetWidth force le calcul immediatement, quel que soit l'etat de
+   * l'onglet.
+   */
+  void banniere.offsetWidth;
+  banniere.classList.add("is-visible");
+  playSfx("event");
+
+  masqueBanniereId = setTimeout(() => {
+    banniere.classList.remove("is-visible");
+    setTimeout(() => { banniere.hidden = true; }, 300);
+  }, 5000);
+};
+
+/** Efface la banniere sans attendre, au retour au camp. */
+export const clearEventBanner = () => {
+  const banniere = document.getElementById("event-banner");
+  if (!banniere) return;
+  clearTimeout(masqueBanniereId);
+  banniere.classList.remove("is-visible");
+  banniere.hidden = true;
 };
 
 /** Appele a chaque rafraichissement des barres de vie. */
@@ -2621,8 +2720,9 @@ export const updateRealTimeStatsDisplay = () => {
   const container = document.getElementById("real-time-content");
 
   // Calcul des stats spÃ©cifiques
+  // Meme formule que combat.js, objets compris.
   const dodgeChance = Math.floor(
-    Math.min(0.5, gameState.stats.dexterity / 400) * 100,
+    Math.min(0.5, gameState.stats.dexterity / 400 + (eff.dodgeChance || 0)) * 100,
   );
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
@@ -2681,6 +2781,25 @@ export const updateUI = () => {
 };
 
 export const toggleView = (view) => {
+  /*
+   * "Nulle part ou fuir" bloque enfin le repli.
+   *
+   * Le trait posait runBuff: { noRetreat: 1 } et l'affichait sur la fiche de
+   * biome, mais aucune ligne ne lisait cette cle : le joueur pouvait se replier
+   * d'une zone qui lui annonçait le contraire.
+   */
+  if (
+    view !== "biome" &&
+    gameState.world.isExploring &&
+    getRunModifier("noRetreat", 0) > 0
+  ) {
+    ActionLog(
+      "Il n'y a plus de route derriere vous. Le repli est impossible ici.",
+      "log-event",
+    );
+    return;
+  }
+
   const camp = document.getElementById("camp-view");
   const biome = document.getElementById("biome-view");
   const particles = document.getElementById("fire-particles");
@@ -2697,6 +2816,7 @@ export const toggleView = (view) => {
     if (scene) scene.classList.add("hidden");
     playDungeonMusic();
   } else {
+    clearEventBanner();
     clearRunBuffs();
     runtimeState.enemyIntent = null;
     gameState.runes.banked += gameState.runes.carried;

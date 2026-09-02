@@ -58,6 +58,15 @@ export const DEFAULT_PLAYER_PROFILE = {
     activeBiomeHazards: [],
     activeTraits: [],
     lastEventProgress: -1,
+    /*
+     * Biomes dont le boss est tombe. Sert de cle au plafond de niveau : sans
+     * lui, on pouvait laisser tourner le jeu dans la premiere zone et arriver
+     * au niveau 220 sans jamais avoir reflechi a un build.
+     */
+    defeatedBosses: [],
+    // Zero pour une partie neuve : seules les sauvegardes d'avant le plafond
+    // en heritent une valeur, pour ne pas afficher un niveau au-dessus du cap.
+    legacyLevelFloor: 0,
   },
   playerEffects: [],
   ennemyEffects: [],
@@ -69,10 +78,17 @@ export const DEFAULT_PLAYER_PROFILE = {
     selectedBiomeId: "limgrave_west",
   },
   preparation: {
-    selectedBlessingId: "grace_of_runes",
+    /*
+     * Aucune benediction au depart.
+     *
+     * La Benediction des Runes etait donnee d'emblee, alors que ses +18% de
+     * gains sont le plus gros bonus economique du jeu. La premiere se gagne
+     * maintenant au Lac de Limgrave, et celle des Runes au Palais de Mohgwyn.
+     */
+    selectedBlessingId: null,
     selectedConsumableId: "rare_tracker",
     activeRunBuffs: [],
-    unlockedBlessings: ["grace_of_runes"],
+    unlockedBlessings: [],
     unlockedConsumables: ["rare_tracker"],
   },
   journal: {
