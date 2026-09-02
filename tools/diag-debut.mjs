@@ -41,7 +41,7 @@ const PRECOCES = (() => {
       if (BIOMES[n] && !vus.has(n)) { vus.add(n); file.push([n, d + 1]); }
     }
   }
-  return ordre.slice(0, 7);
+  return process.env.TOUT_LE_POOL ? Object.keys(BIOMES) : ordre.slice(0, 7);
 })();
 
 /* Objets qu'un joueur peut RAISONNABLEMENT avoir a ce stade. */

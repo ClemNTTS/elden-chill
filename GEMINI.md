@@ -987,6 +987,65 @@ get right:
 `onerror` routes to `endNarrator` as well, so a missing file leaves the game
 with music rather than silence.
 
+## Conversions must read the BASE stat, never the effective one
+
+`gameState.stats.X` is what the player invested. `stats.X` is the running
+effective value, already raised by every item applied so far — including the
+item doing the conversion.
+
+Reading the effective value builds a loop. The Queen's Staff applied
+`stats.intelligence *= 1.1`, then converted 58% of the *effective* value into
+strength. At 48 invested intelligence it returned **42 strength with zero
+points spent on strength** — 87% of what a pure strength build gets from
+spending all 48 — and magic damage on top, which ignores armour because it is
+added after the armour division.
+
+That, not the magic formula, is why intelligence dominated the first 25 levels.
+Fixed on the Queen's Staff, Astronomer's Staff, Sickle, and the three later
+shard staves.
+
+`tools/audit-boucles.mjs` finds the rest. **Twelve conversions still read the
+effective stat** — mostly into `splashDamage`, plus four `vigor -> strength`
+and one `dexterity -> strength`. Those last five are left alone deliberately:
+fixing them would nerf vigour and dexterity, which are already the weakest
+early. Loops and ratios have to move together, never one without the other.
+
+Watch the shape of the regex when auditing this. The first version looked for
+`Math.floor(` immediately followed by `stats.X` and found **nothing**, because
+the stat is often on the right of the multiplication and the call often spans
+several lines. A clean "no problems found" from a pattern this narrow means
+nothing.
+
+## Early-game balance is not visible in the full simulator
+
+`simulate-balance.mjs` farms to level 55 before facing Godrick. A real player
+gets there around 24. Whole-run totals therefore hid a large imbalance in the
+first tier — the four pure builds sat within 11% over 46 biomes while
+intelligence was ahead of everything for the first 25 levels.
+
+`tools/diag-debut.mjs` freezes a level and the items reachable before the boss,
+and compares the four builds there.
+
+**Trust it only early.** Its damage model treats attacks per turn as a plain
+multiplier; with the full item pool at level 220 it reports 113,959 damage per
+turn for dexterity, which the real simulator flatly contradicts. It also cannot
+reproduce a player's actual screenshot exactly. What it gives is a *relative*
+comparison under one identical method, which is enough to size a gap and not
+enough to state an absolute.
+
+After the fixes: early spread x1.8-2.0 -> x1.5, whole-run spread across the
+four pure builds 11.1% -> 8.8%.
+
+## Item icons are a lookup table, and 48 entries are missing
+
+`getItemIcon` returns null when the id is absent from `WEAPON_CELLS` /
+`ARMOUR_CELLS` / `ACCESSORY_CELLS`, and the UI draws a hatched square. Nothing
+warns; it shows up only when a player picks the item up.
+
+All 48 gaps are content added for the complete version — 14 weapons, 14
+armours, 14 accessories, 6 ashes — and every one sits 8 to 17 biomes from the
+start. `tools/audit-icones.mjs` lists them sorted by how early they appear.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

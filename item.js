@@ -66,7 +66,7 @@ export const ITEMS = {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+5 de Force. Dextérité +15%. Convertit 18% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
+      "+5 de Force. Dextérité +15%. Convertit 28% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
       // 5, comme les poings de depart : une arme d'ouverture ne doit pas etre
       // en retrait sur l'equipement initial. La conversion de dexterite vient
@@ -75,7 +75,11 @@ export const ITEMS = {
       stats.dexterity *= 1.15;
     },
     applyMult: (stats, itemLevel) => {
-      const ratio = 0.18 + 0.01 * (itemLevel - 1);
+      // 28% et non 18% : a niveau egal la dexterite rendait 52 degats par
+      // tour contre 80 pour la force, un retard de 1.8x sur tout le premier
+      // tiers. Les attaques supplementaires de la dexterite ne rattrapent
+      // qu'a partir du niveau 40 environ.
+      const ratio = 0.28 + 0.01 * (itemLevel - 1);
       // Sur la dexterite de BASE : l'effective est deja gonflee par les objets
       // en pourcentage, et convertir dessus empilait deux multiplicateurs.
       stats.strength += Math.floor((gameState.stats.dexterity || 0) * ratio);
@@ -86,7 +90,7 @@ export const ITEMS = {
   heavy_club: {
     name: "Gourdin Lourd",
     description:
-      "+5 de Force. Transforme 25% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
+      "+5 de Force. Transforme 42% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
     type: ITEM_TYPES.WEAPON,
     applyFlat: (stats, itemLevel) => {
       // Base fixe de 5, alignee sur les poings : sans elle, un personnage sans
@@ -94,7 +98,11 @@ export const ITEMS = {
       // vigueur reste ce qui la distingue, elle s'ajoute par-dessus.
       stats.strength += 5;
       const baseVigor = gameState.stats.vigor || 0;
-      const ratio = 0.25 + 0.01 * (itemLevel - 1);
+      // 42% et non 25% : la vigueur etait le build le plus faible en degats
+      // du jeu (45 par tour au niveau 24 contre 80 pour la force). Ses points
+      // de vie ne compensent pas, puisqu'un combat qui ne se gagne pas ne se
+      // termine pas.
+      const ratio = 0.42 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor(baseVigor * ratio);
     },
     applyMult: (stats, itemLevel) => {
@@ -131,8 +139,11 @@ export const ITEMS = {
       stats.intelligence += 5;
     },
     applyMult: (stats, itemLevel) => {
+      // Depuis l'Intelligence investie, pas l'effective : voir le Baton de
+      // l'Astronome pour le detail de la boucle.
+      const baseIntelligence = gameState.stats.intelligence || 0;
       stats.strength += Math.floor(
-        stats.intelligence * (0.3 + 0.02 * itemLevel),
+        baseIntelligence * (0.3 + 0.02 * itemLevel),
       );
     },
     onHitEffect: { id: "POISON", duration: 2, chance: 1 },
@@ -144,12 +155,12 @@ export const ITEMS = {
     name: "Croc de Limier",
     type: ITEM_TYPES.WEAPON,
     description:
-      "+5 Dextérité (+1 / Niv). Convertit 15% (+1% / Niveau) de la Dextérité de base en force bonus. 40% chance d'appliquer 3 saignements",
+      "+5 Dextérité (+1 / Niv). Convertit 24% (+1% / Niveau) de la Dextérité de base en force bonus. 40% chance d'appliquer 3 saignements",
     applyFlat: (stats, itemLevel) => {
       stats.dexterity += 5 + 1 * (itemLevel - 1);
     },
     applyMult: (stats, itemLevel) => {
-      const conversionRatio = 0.15 + 0.01 * (itemLevel - 1);
+      const conversionRatio = 0.24 + 0.01 * (itemLevel - 1);
       stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
@@ -189,9 +200,23 @@ export const ITEMS = {
       stats.intelligence += 4 + 1 * (itemLevel - 1);
     },
     applyMult: (stats, itemLevel) => {
+      /*
+       * La conversion part de l'Intelligence INVESTIE, pas de l'effective.
+       *
+       * Elle lisait stats.intelligence, que ce meme objet venait d'augmenter
+       * quinze lignes plus haut — et que tout autre objet d'intelligence
+       * nourrissait aussi. La boucle rendait le build intelligence nettement
+       * superieur en debut de partie : a 48 points investis il obtenait 42 de
+       * Force sans un seul point depense dedans, soit 87% de ce qu'un build
+       * force tire de 48 points, et les degats magiques par-dessus.
+       *
+       * Les armes de dexterite et le Gourdin Lourd lisent deja la base : c'est
+       * la regle du projet, ces deux-la y echappaient.
+       */
       const conversionRatio = 0.2 + 0.02 * (itemLevel - 1);
-      stats.strength += Math.floor(stats.intelligence * conversionRatio);
-      stats.splashDamage += Math.floor(stats.intelligence * conversionRatio);
+      const baseIntelligence = gameState.stats.intelligence || 0;
+      stats.strength += Math.floor(baseIntelligence * conversionRatio);
+      stats.splashDamage += Math.floor(baseIntelligence * conversionRatio);
     },
   },
   styptic_boluses: {
@@ -330,8 +355,18 @@ export const ITEMS = {
       stats.intelligence *= 1.1;
     },
     applyMult: (stats, itemLevel) => {
+      /*
+       * Conversion depuis l'Intelligence INVESTIE.
+       *
+       * Elle lisait l'effective, que le +10% de cet objet venait d'appliquer
+       * et que chaque piece d'intelligence nourrissait. C'etait l'arme la plus
+       * forte du debut de partie et de loin : a 48 points d'intelligence elle
+       * rendait 42 de Force sans un point investi dedans, contre 48 pour un
+       * build force qui y consacre tout — plus les degats magiques par-dessus.
+       */
+      const baseIntelligence = gameState.stats.intelligence || 0;
       const conversion = Math.floor(
-        (0.5 + 0.02 * (itemLevel - 1)) * stats.intelligence,
+        (0.5 + 0.02 * (itemLevel - 1)) * baseIntelligence,
       );
       stats.strength += conversion;
     },
@@ -775,7 +810,9 @@ export const ITEMS = {
       "Int +15%. +60% de votre intelligenc en force. Vous drainez la vie des ennemis. Vous soigne de 10% de votre Intelligence totale à chaque coup. (+3% / Niveau).",
     applyMult: (stats, itemLevel) => {
       stats.intelligence = Math.floor(stats.intelligence * 1.15);
-      stats.strength += Math.floor(stats.intelligence * 0.6);
+      // Depuis l'Intelligence INVESTIE : cet objet vient d'appliquer +15%
+      // a l'effective, convertir dessus empilait deux multiplicateurs.
+      stats.strength += Math.floor((gameState.stats.intelligence || 0) * 0.6);
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (!itemLevel) return;
@@ -863,8 +900,10 @@ export const ITEMS = {
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.15;
       stats.percentDamagePenetration += 0.2 + 0.01 * itemLevel;
+      // Depuis l'Intelligence INVESTIE : cet objet vient d'appliquer +15%
+      // a l'effective, convertir dessus empilait deux multiplicateurs.
       stats.strength += Math.floor(
-        stats.intelligence * (0.2 + 0.01 * itemLevel),
+        (gameState.stats.intelligence || 0) * (0.2 + 0.01 * itemLevel),
       );
     },
   },
@@ -1180,7 +1219,9 @@ export const ITEMS = {
       "Intelligence +15%. Convertit 70% de l'Int en Force. Fracassement : Vos attaques contre un ennemi déjà gelé ignorent 50% de son Armure. 40% de chance d'appliquer 2 Gelures.",
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.15;
-      stats.strength += Math.floor(stats.intelligence * 0.7);
+      // Depuis l'Intelligence INVESTIE : cet objet vient d'appliquer +15%
+      // a l'effective, convertir dessus empilait deux multiplicateurs.
+      stats.strength += Math.floor((gameState.stats.intelligence || 0) * 0.7);
     },
     onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.4 },
     funcOnHit: (stats, targetEffects, itemLevel) => {
