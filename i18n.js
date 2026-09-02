@@ -27,7 +27,7 @@ import { BLESSINGS, PREP_CONSUMABLES, EVENT_DEFS } from "./systems.js";
 import { BIOME_TRAITS } from "./biome-traits.js";
 import { TRIALS, REBIRTH_NODES } from "./rebirth.js";
 import { gameState } from "./state.js";
-import { EN } from "./locales/en.js";
+import { EN, EN_UI } from "./locales/en.js";
 
 const CLE_STOCKAGE = "eldenchill.locale";
 
@@ -146,6 +146,70 @@ export const rafraichirNomsSauvegardes = () => {
   return corriges;
 };
 
+/*
+ * Interface : on remplace par APPARIEMENT DU TEXTE, pas par position.
+ *
+ * Les cles du HTML sont positionnelles (ui.html.42) parce qu'un libelle n'a pas
+ * d'identifiant naturel. S'en servir a l'execution serait fragile : deplacer un
+ * bloc dans index.html decalerait toutes les cles suivantes et traduirait les
+ * boutons les uns par les autres, sans la moindre erreur visible.
+ *
+ * On construit donc une table francais -> anglais et on remplace les noeuds de
+ * texte dont le contenu correspond exactement. Un libelle non traduit reste en
+ * francais, ce qui est le bon comportement de repli.
+ *
+ * Deux libelles francais identiques donnent la meme traduction : c'est voulu,
+ * et c'est le cas de "Vide", "Options" ou "Butin", repetes dans plusieurs
+ * ecrans.
+ */
+/**
+ * Traduit les libelles statiques d'index.html.
+ *
+ * @param {Record<string,string>} paires francais -> anglais
+ */
+export const traduireInterface = (paires) => {
+  if (!paires || !Object.keys(paires).length) return 0;
+  let remplaces = 0;
+
+  // Noeuds de texte : on ne descend pas dans les balises de script et de style.
+  const parcours = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (noeud) => {
+        const parent = noeud.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        const balise = parent.tagName;
+        if (balise === "SCRIPT" || balise === "STYLE") return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    },
+  );
+
+  const aTraiter = [];
+  while (parcours.nextNode()) aTraiter.push(parcours.currentNode);
+  for (const noeud of aTraiter) {
+    const texte = noeud.nodeValue.trim();
+    const traduction = paires[texte];
+    if (!traduction) continue;
+    // On preserve les espaces qui entourent le texte dans le HTML.
+    noeud.nodeValue = noeud.nodeValue.replace(texte, traduction);
+    remplaces += 1;
+  }
+
+  // Attributs visibles.
+  for (const attribut of ["title", "aria-label", "placeholder"]) {
+    for (const element of document.querySelectorAll(`[${attribut}]`)) {
+      const traduction = paires[element.getAttribute(attribut).trim()];
+      if (!traduction) continue;
+      element.setAttribute(attribut, traduction);
+      remplaces += 1;
+    }
+  }
+
+  return remplaces;
+};
+
 /**
  * Applique la langue choisie. A appeler AVANT tout rendu.
  *
@@ -153,6 +217,9 @@ export const rafraichirNomsSauvegardes = () => {
  */
 export const applyLocale = () => {
   const langue = getLocale();
-  if (langue !== "fr") appliquerCatalogue(EN);
+  if (langue !== "fr") {
+    appliquerCatalogue(EN);
+    traduireInterface(EN_UI);
+  }
   return { langue, appliquees, orphelines };
 };

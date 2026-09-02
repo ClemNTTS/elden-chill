@@ -54,5 +54,25 @@ for (const [prefixe, entrees] of Object.entries(parPrefixe)) {
 }
 
 sortie += `};${NL}`;
+
+/*
+ * Table francais -> anglais pour les libelles du HTML.
+ *
+ * Les cles d'interface sont positionnelles (ui.html.42) : s'en servir a
+ * l'execution serait fragile, deplacer un bloc dans index.html decalerait tout.
+ * On appare donc par le TEXTE. Cette table est generee a partir des deux
+ * catalogues, elle ne peut donc pas se desynchroniser.
+ */
+const FR = JSON.parse(readFileSync("locales/fr.json", "utf8"));
+const paires = {};
+for (const [cle, anglais] of Object.entries(catalogue)) {
+  if (!cle.startsWith("ui.")) continue;
+  const francais = FR[cle];
+  if (francais) paires[francais] = anglais;
+}
+
+sortie += `${NL}/* Libelles statiques du HTML, apparies par leur texte francais. */${NL}`;
+sortie += `export const EN_UI = ${JSON.stringify(paires, null, 2)};${NL}`;
+
 writeFileSync("locales/en.js", sortie, "utf8");
 console.log(`locales/en.js regenere : ${Object.keys(catalogue).length} entrees.`);
