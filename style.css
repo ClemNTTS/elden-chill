@@ -1902,14 +1902,10 @@ button:disabled {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   position: sticky;
-  /*
-   * Collee en HAUT, plus en bas.
-   *
-   * Elle etait epinglee au-dessus de la barre d'actions, donc sous le journal
-   * de combat : on lisait les messages avant de voir les combattants. Les
-   * sprites passent devant, et le journal defile dessous.
-   */
-  top: 8px;
+  /* Empilement : la barre d'actions est le plancher, la zone de combat se cale
+     juste au-dessus. Sans ce decalage le bouton "Se replier" recouvrait les
+     combattants. */
+  bottom: calc(var(--combat-actions-height, 68px) + 10px);
   z-index: 3;
   padding: 16px 18px;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
@@ -3460,26 +3456,22 @@ button:disabled {
   white-space: nowrap;
 }
 
-/*
- * L'intention, sur UNE ligne, presente dans les deux lanes.
- *
- * Elle tenait sur deux lignes et n'existait que cote ennemi : sa lane comptait
- * cinq rangees contre trois pour le joueur, et les deux barres de vie ne
- * s'alignaient plus. La rangee est desormais reservee des deux cotes — vide
- * chez le joueur, qui n'a pas d'intention a annoncer — pour que les lanes
- * restent des miroirs.
- */
+/* L'intention, sous le nom de la creature qu'elle concerne. */
 .combat-lane__intent {
   margin: 6px 0 0;
-  /* Hauteur FIXE, pas un min-height : une ligne vide et une ligne remplie ne
-     se mesuraient pas pareil, et les deux barres de vie finissaient a deux
-     pixels d ecart. */
-  height: 1.2rem;
-  line-height: 1.2rem;
   font-family: var(--header-font);
   font-size: 0.84rem;
   letter-spacing: 0.02em;
   color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-lane__intent-hint {
+  margin: 1px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-soft);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -3492,4 +3484,5 @@ button:disabled {
 
 @media (max-width: 640px) {
   .combat-lane__intent { font-size: 0.78rem; }
+  .combat-lane__intent-hint { font-size: 0.68rem; }
 }

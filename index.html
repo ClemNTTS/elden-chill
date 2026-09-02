@@ -570,6 +570,8 @@
             <p id="stepper-text">Progression : 0 / 10</p>
           </div>
 
+          <div class="battle-log-frame battle-panel">
+            <div id="action-log"></div>
           </div>
 
           <div id="combat-zone" class="battle-panel">
@@ -595,9 +597,6 @@
                      bloc de combat collant recouvrait a moitie. -->
                 <p class="combat-lane__name" id="player-lane-name">Sans-eclat</p>
                 <p class="combat-lane__meta" id="player-lane-meta">FOR 0 · VIG 0 · ARM 0</p>
-                <!-- Rangee vide, en miroir de l'intention ennemie : sans elle
-                     les deux barres de vie ne sont pas a la meme hauteur. -->
-                <p class="combat-lane__intent" id="player-lane-intent"></p>
                 <div class="hp-bar-bg">
                   <div id="player-hp-fill" class="hp-fill"></div>
                   <span id="player-hp-text" class="hp-text">0 / 0</span>
@@ -619,6 +618,7 @@
                      que le titre tronque. Elle se lit maintenant sous le nom de
                      la creature qu'elle concerne. -->
                 <p class="combat-lane__intent" id="enemy-intent-label">Analyse en cours</p>
+                <p class="combat-lane__intent-hint" id="enemy-intent-hint">La menace se met en place.</p>
                 <div class="hp-bar-bg">
                   <div id="enemy-hp-fill" class="hp-fill"></div>
                   <span id="enemy-hp-text" class="hp-text">0 / 0</span>
@@ -628,8 +628,6 @@
             </div>
           </div>
 
-          <div class="battle-log-frame battle-panel">
-            <div id="action-log"></div>
           <div id="combat-actions" class="biome-actions-bottom">
             <div class="biome-bottom-left">
               <button class="safe-btn" onclick="toggleView('camp')">Se replier au camp</button>
