@@ -1071,16 +1071,18 @@ const renderEnemyEmblem = (emblem) => {
 let combatZoneObserver = null;
 
 /*
- * Trois elements sont epingles en bas de l'ecran de combat et doivent
- * s'empiler sans se recouvrir : la barre d'actions (le plancher), la zone de
- * combat au-dessus, puis le bouton de cendre. Chacun a besoin de la hauteur de
- * celui d'en dessous, mesuree ici plutot que fixee en dur — les sprites et le
- * repli sur petite largeur la font varier.
+ * DEUX elements sont epingles en bas de l'ecran de combat : la barre
+ * d'actions, qui fait plancher, et la zone de combat juste au-dessus. Cette
+ * derniere a besoin de la hauteur de la premiere, mesuree ici plutot que fixee
+ * en dur — le repli sur petite largeur la fait varier.
+ *
+ * Il y en avait trois : le bouton de cendre formait un etage supplementaire,
+ * cale sur --combat-zone-height. Chaque etage dependant du precedent, un
+ * changement de gabarit d'ennemi decalait toute la pile et le bouton retombait
+ * sur les combattants. La cendre est passee dans la barre d'actions, et
+ * --combat-zone-height n'a plus de lecteur.
  */
-const STICKY_HEIGHTS = [
-  ["combat-zone", "--combat-zone-height"],
-  ["combat-actions", "--combat-actions-height"],
-];
+const STICKY_HEIGHTS = [["combat-actions", "--combat-actions-height"]];
 
 const watchCombatZoneHeight = () => {
   if (combatZoneObserver) return;
@@ -2295,38 +2297,49 @@ const ensureBattleIntelStrip = () => {
   let strip = document.getElementById("battle-intel-strip");
   if (strip) return strip;
 
-  const combatHud = document.getElementById("combat-hud");
-  if (!combatHud) return null;
+  // Ancre sur la barre de progression : le HUD sur lequel ce bandeau se posait
+  // a ete fusionne dans le bloc de combat.
+  const ancre = document.getElementById("dungeon-stepper-container");
+  if (!ancre) return null;
 
   strip = document.createElement("div");
   strip.id = "battle-intel-strip";
   strip.className = "battle-intel-strip";
-  combatHud.insertAdjacentElement("afterend", strip);
+  ancre.insertAdjacentElement("afterend", strip);
   return strip;
 };
 
 const updateCombatPresentation = () => {
-  const playerCard = document.getElementById("player-combat-card");
-  const enemyCard = document.getElementById("enemy-combat-card");
+  const playerName = document.getElementById("player-lane-name");
+  const playerMeta = document.getElementById("player-lane-meta");
+  const enemyName = document.getElementById("enemy-name");
+  const enemyMeta = document.getElementById("enemy-lane-meta");
   const battleMeta = document.getElementById("battle-meta");
   const battleHint = document.getElementById("battle-hint");
-  if (!playerCard || !enemyCard || !battleMeta || !battleHint) return;
+  if (!playerName || !enemyName || !battleMeta || !battleHint) return;
 
   const eff = getEffectiveStats();
   const currentBiome = BIOMES[gameState.world.currentBiome];
-  const currentEnemy = runtimeState.currentEnemyGroup?.[0];
+  /*
+   * Le premier ennemi VIVANT, comme le sprite et la barre de vie.
+   *
+   * En lisant currentEnemyGroup[0] la carte annonçait le nom d'une creature
+   * deja morte pendant que le sprite montrait la suivante.
+   */
+  const groupe = runtimeState.currentEnemyGroup || [];
+  const currentEnemy = groupe.find((e) => e.hp > 0) || groupe[0];
   const intelStrip = ensureBattleIntelStrip();
   const progress = gameState.world.progress || 0;
   const total = currentBiome?.length || 0;
 
-  playerCard.querySelector(".combat-card__name").innerText = "Sans-eclat";
-  playerCard.querySelector(".combat-card__sub").innerText =
-    `FOR ${eff.strength} · VIG ${eff.vigor} · ARM ${eff.armor}`;
+  playerName.innerText = "Sans-eclat";
+  if (playerMeta) {
+    playerMeta.innerText = `FOR ${eff.strength} · VIG ${eff.vigor} · ARM ${eff.armor}`;
+  }
 
   if (!currentEnemy) {
-    enemyCard.querySelector(".combat-card__name").innerText = "Aucune menace";
-    enemyCard.querySelector(".combat-card__sub").innerText =
-      "Le champ de bataille se calme.";
+    enemyName.innerText = "Aucune menace";
+    if (enemyMeta) enemyMeta.innerText = "Le champ de bataille se calme.";
     battleMeta.innerText = currentBiome?.name || "Camp";
     battleHint.innerText =
       "Le prochain affrontement commencera a la rencontre suivante.";
@@ -2349,7 +2362,7 @@ const updateCombatPresentation = () => {
     return;
   }
 
-  const enemyCount = runtimeState.currentEnemyGroup.length;
+  const enemyCount = groupe.length;
   const prefix = currentEnemy.isBoss
     ? "Boss"
     : currentEnemy.isRare
@@ -2358,9 +2371,11 @@ const updateCombatPresentation = () => {
         ? `Groupe x${enemyCount}`
         : "Standard";
 
-  enemyCard.querySelector(".combat-card__name").innerText = currentEnemy.name;
-  enemyCard.querySelector(".combat-card__sub").innerText =
-    `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+  enemyName.innerText = currentEnemy.name;
+  if (enemyMeta) {
+    enemyMeta.innerText =
+      `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+  }
   battleMeta.innerText = `${currentBiome?.name || "Expedition"} · ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
 
   if (currentEnemy.isBoss) {
@@ -2394,11 +2409,31 @@ const updateCombatPresentation = () => {
 
 const updateEnemyIntentDisplay = () => {
   const label = document.getElementById("enemy-intent-label");
-  const hint = document.getElementById("enemy-intent-hint");
-  const panel = document.getElementById("battle-intent-panel");
-  if (!label || !hint || !panel) return;
+  if (!label) return;
+  // La severite se pose desormais sur la lane de l'ennemi : le panneau dedie
+  // a ete fusionne dedans.
+  const panel = label.closest(".combat-lane") || label;
 
-  const enemy = runtimeState.currentEnemyGroup[0];
+  const groupe = runtimeState.currentEnemyGroup || [];
+  const enemy = groupe.find((e) => e.hp > 0) || groupe[0];
+
+  /*
+   * Plus personne en face : on efface la ligne.
+   *
+   * Elle gardait sinon la derniere intention affichee, et la lane annonçait
+   * "Aucune menace" tout en promettant une "Attaque directe · Elite".
+   */
+  if (!enemy || enemy.hp <= 0) {
+    panel.classList.remove(
+      "intent-boss",
+      "intent-elite",
+      "intent-heavy",
+      "intent-normal",
+    );
+    label.innerText = "";
+    return;
+  }
+
   const intent = runtimeState.enemyIntent || buildEnemyIntent(enemy);
   panel.classList.remove(
     "intent-boss",
@@ -2410,13 +2445,18 @@ const updateEnemyIntentDisplay = () => {
   if (!intent) {
     panel.classList.add("intent-normal");
     label.innerText = "Analyse en cours";
-    hint.innerText = "Le biome se met en place.";
     return;
   }
 
   panel.classList.add(`intent-${intent.severity || "normal"}`);
-  label.innerText = intent.label;
-  hint.innerText = [
+  /*
+   * Intitule et precisions sur UNE ligne.
+   *
+   * Ils occupaient deux lignes, ce qui donnait cinq rangees a la lane de
+   * l'ennemi contre trois au joueur : les barres de vie ne s'alignaient plus.
+   */
+  label.innerText = [
+    intent.label,
     intent.targetHint,
     intent.hazard ? HAZARD_LABELS[intent.hazard] : null,
   ]
@@ -2656,13 +2696,14 @@ window.primeAsh = () => {
 };
 
 export const updateAshButton = () => {
-  const container = document.getElementById("ash-container");
+  // Le bouton vit dans la barre d'actions : on masque le bouton lui-meme, il
+  // n'a plus de conteneur dedie.
   const ashBtn = document.getElementById("ash-button");
   const ash = ASHES_OF_WAR[gameState.equippedAsh];
-  if (!container || !ashBtn) return;
+  if (!ashBtn) return;
 
   if (ash && gameState.world.isExploring) {
-    container.classList.remove("is-hidden");
+    ashBtn.classList.remove("is-hidden");
     document.getElementById("ash-name").innerText = ash.name;
     document.getElementById("ash-uses").innerText = runtimeState.ashUsesLeft;
     ashBtn.disabled = runtimeState.ashUsesLeft <= 0 || runtimeState.ashIsPrimed;
@@ -2675,7 +2716,7 @@ export const updateAshButton = () => {
     return;
   }
 
-  container.classList.add("is-hidden");
+  ashBtn.classList.add("is-hidden");
   ashBtn.classList.remove("ash-primed");
 };
 
@@ -2890,21 +2931,32 @@ export const updateHealthBars = () => {
     playerPercent,
   )}%`;
   document.getElementById("player-hp-text").innerText = `${formatNumber(
-    Math.floor(runtimeState.playerCurrentHp),
+    Math.max(0, Math.floor(runtimeState.playerCurrentHp)),
   )} / ${formatNumber(playerMaxHp)}`;
 
   const enemyBar = document.getElementById("enemy-hp-fill");
   const enemyText = document.getElementById("enemy-hp-text");
-  if (
-    runtimeState.currentEnemyGroup &&
-    runtimeState.currentEnemyGroup.length > 0
-  ) {
-    const firstEnemy = runtimeState.currentEnemyGroup[0];
-    const enemyPercent = (firstEnemy.hp / firstEnemy.maxHp) * 100;
+  const groupe = runtimeState.currentEnemyGroup || [];
+  /*
+   * La barre suit le meme ennemi que le sprite : le premier VIVANT.
+   *
+   * Elle lisait currentEnemyGroup[0] alors que mountCombatEnemy monte le
+   * premier ennemi encore debout. Des la premiere mort d'un groupe, l'image et
+   * la barre parlaient donc de deux creatures differentes — le sprite montrait
+   * le loup suivant, la barre affichait le precedent a zero.
+   */
+  const cible = groupe.find((e) => e.hp > 0) || groupe[0];
+  if (cible) {
+    const enemyPercent = (cible.hp / cible.maxHp) * 100;
     enemyBar.style.width = `${Math.max(0, enemyPercent)}%`;
+    // Les points de vie sont bornes a zero A L'AFFICHAGE.
+    //
+    // La largeur de barre etait deja clampee, pas le texte : un coup a 7399
+    // sur un ennemi a 10 points affichait "-7389 / 10" le temps d'une frame.
+    // Avec une arme un peu forte, chaque mise a mort passe par la.
     enemyText.innerText = `${formatNumber(
-      Math.floor(firstEnemy.hp),
-    )} / ${formatNumber(firstEnemy.maxHp)}`;
+      Math.max(0, Math.floor(cible.hp)),
+    )} / ${formatNumber(cible.maxHp)}`;
   } else {
     enemyBar.style.width = "0%";
     enemyText.innerText = "0 / 0";
