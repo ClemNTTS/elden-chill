@@ -328,6 +328,14 @@ export const PREPARATION_UNLOCKS = {
   castle_sol: { blessingId: "grace_of_vigil" },
   leyndell_ash: { blessingId: "grace_of_sovereign" },
   jarburg: { blessingId: "grace_of_avarice" },
+
+  /*
+   * La Benediction des Runes etait acquise des la premiere seconde de jeu, et
+   * +18% de runes sur toute la partie est le bonus economique le plus fort du
+   * jeu. Elle se gagne desormais au Palais de Mohgwyn, tardif et optionnel,
+   * ce qui la rend coherente avec ce qu'elle apporte.
+   */
+  mohgwyn_palace: { blessingId: "grace_of_runes" },
   shaded_castle: { consumableId: "purge_draught" },
   volcano_manor: { consumableId: "rune_censer" },
   rykard_lair: { consumableId: "ember_ward" },
@@ -377,6 +385,46 @@ const getLockedPreparationIds = (type) => {
   return Object.keys(defs).filter((id) => !unlocked.has(id));
 };
 
+/*
+ * Chance qu'un evenement genereux lache VRAIMENT une preparation.
+ *
+ * L'autel et la caravane en donnaient une a chaque declenchement. Les
+ * evenements sortent a 22% par pas de progression, et a Stormhill l'autel pese
+ * la moitie du tirage : environ un pas sur neuf. On rassemblait donc les dix
+ * benedictions en farmant le chapitre II.
+ */
+const PREPARATION_DROP_CHANCE = 0.3;
+
+/**
+ * Tire une preparation encore verrouillee, parmi celles que le joueur POUVAIT
+ * deja gagner.
+ *
+ * Le tirage etait fait sur l'ensemble du jeu, donc la Benediction du Souverain
+ * de Leyndell pouvait tomber a Stormhill. On restreint aux entrees dont le
+ * biome source est deja debloque : l'evenement devient une seconde chance sur
+ * une recompense a portee, et non un raccourci vers la fin du jeu.
+ *
+ * Une entree sans biome source reste eligible : elle n'est rattachee a aucune
+ * progression, rien ne serait saute en la donnant.
+ */
+const rollPreparationReward = (type) => {
+  if (Math.random() >= PREPARATION_DROP_CHANCE) return null;
+
+  const cle = type === "blessing" ? "blessingId" : "consumableId";
+  const atteignables = new Set(gameState.world?.unlockedBiomes || []);
+  const source = {};
+  for (const [biomeId, reward] of Object.entries(PREPARATION_UNLOCKS)) {
+    if (reward[cle]) source[reward[cle]] = biomeId;
+  }
+
+  const candidats = getLockedPreparationIds(type).filter((id) => {
+    const biomeId = source[id];
+    return !biomeId || atteignables.has(biomeId);
+  });
+  if (!candidats.length) return null;
+  return candidats[Math.floor(Math.random() * candidats.length)];
+};
+
 export const EVENT_DEFS = {
   caravane_perdue: {
     id: "caravane_perdue",
@@ -385,7 +433,7 @@ export const EVENT_DEFS = {
     weight: 4,
     resolve: (biomeId) => {
       const runeGain = Math.max(60, Math.floor(gameState.stats.level * 38 + 120));
-      const lockedConsumables = getLockedPreparationIds("consumable");
+      const recompense = rollPreparationReward("consumable");
       gameState.runes.carried += runeGain;
       registerRunBuff({
         id: "caravan_supplies",
@@ -396,12 +444,8 @@ export const EVENT_DEFS = {
       const text = `Vous fouillez une caravane abandonnée et sécurisez ${runeGain} runes ainsi que des réserves pour la suite.`;
       addJournalEntry("event", "Caravane perdue", text, biomeId);
       let unlockText = "";
-      if (lockedConsumables.length) {
-        const rewardId =
-          lockedConsumables[Math.floor(Math.random() * lockedConsumables.length)];
-        if (unlockConsumable(rewardId, biomeId)) {
-          unlockText = ` Vous mettez aussi la main sur ${PREP_CONSUMABLES[rewardId].name}.`;
-        }
+      if (recompense && unlockConsumable(recompense, biomeId)) {
+        unlockText = ` Vous mettez aussi la main sur ${PREP_CONSUMABLES[recompense].name}.`;
       }
       return {
         log: `Une caravane perdue vous offre ${runeGain} runes et des provisions précieuses.${unlockText}`,
@@ -432,7 +476,7 @@ export const EVENT_DEFS = {
     kind: "altar",
     weight: 3,
     resolve: (biomeId) => {
-      const lockedBlessings = getLockedPreparationIds("blessing");
+      const recompense = rollPreparationReward("blessing");
       gameState.playerEffects = [];
       registerRunBuff({
         id: `altar_${biomeId}`,
@@ -448,12 +492,8 @@ export const EVENT_DEFS = {
         biomeId,
       );
       let unlockText = "";
-      if (lockedBlessings.length) {
-        const rewardId =
-          lockedBlessings[Math.floor(Math.random() * lockedBlessings.length)];
-        if (unlockBlessing(rewardId, biomeId)) {
-          unlockText = ` ${BLESSINGS[rewardId].name} rejoint désormais votre préparation.`;
-        }
+      if (recompense && unlockBlessing(recompense, biomeId)) {
+        unlockText = ` ${BLESSINGS[recompense].name} rejoint désormais votre préparation.`;
       }
       return {
         log: `Un autel oublié dissipe vos maux et bénit votre route.${unlockText}`,
@@ -533,8 +573,14 @@ export const EVENT_DEFS = {
 export const BIOME_EVENTS = {
   limgrave_west: ["caravane_perdue", "choix_route"],
   limgrave_east: ["patrouille_rare", "choix_route"],
-  stormhill: ["patrouille_rare", "autel"],
-  caelid_swamp: ["piege", "autel", "choix_route"],
+  /*
+   * "stormhill" et "caelid_swamp" n'existent pas dans BIOMES : ces deux
+   * entrees ne se sont jamais declenchees. Remappees sur les identifiants
+   * reels — Valorage est bien la region de Stormhill, et le marais de Caelid
+   * correspond au Sud de Caelid.
+   */
+  limgrave_north: ["patrouille_rare", "autel"],
+  caelid_south: ["piege", "autel", "choix_route"],
   nokron: ["autel", "patrouille_rare"],
   ainsel_river: ["choix_route", "caravane_perdue"],
   deeproot_depths: ["autel", "piege"],

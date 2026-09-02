@@ -481,6 +481,16 @@ window.setStopAfterCycle = (value) => {
   saveGame();
 };
 
+/*
+ * Les deux boutons du pas. On repart de l'etat, pas de la valeur affichee dans
+ * le champ : le joueur peut avoir tape quelque chose sans valider, et un pas
+ * doit rester previsible.
+ */
+window.nudgeStopCycle = (delta) => {
+  const courant = gameState.automation?.stopAfterCycle || 0;
+  window.setStopAfterCycle(courant + delta);
+};
+
 const updateAutomationDisplay = () => {
   const auto = gameState.automation || {};
   const btn = document.getElementById("btn-auto-restart");

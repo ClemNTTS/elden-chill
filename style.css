@@ -3007,6 +3007,14 @@ button:disabled {
   cursor: default;
 }
 
+/* Les deux lignes de critique vivent dans .crit-points, un bloc simple, et non
+   dans le conteneur flex a gap 12px qui espace les statistiques principales :
+   sans cette regle elles se touchent. On reprend la meme valeur pour que les
+   six lignes du panneau respirent pareil. */
+.crit-points .stat-line + .stat-line {
+  margin-top: 12px;
+}
+
 .crit-points__super {
   margin: 10px 0 0;
   font-size: 0.8rem;
@@ -3194,15 +3202,60 @@ button:disabled {
   color: var(--text-soft);
 }
 
+/* Les fleches natives du champ nombre jurent avec le reste : minuscules,
+   dessinees par le navigateur, differentes sur chaque plateforme. On les
+   supprime au profit de deux boutons qui reprennent la grammaire des boutons
+   d'amelioration. */
 .automation-cycle input {
-  width: 58px;
-  padding: 5px 6px;
+  width: 46px;
+  padding: 5px 4px;
   font-size: 0.78rem;
   text-align: center;
+  border: none;
+  background: none;
+  color: var(--text);
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.automation-cycle input::-webkit-outer-spin-button,
+.automation-cycle input::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* La bordure passe sur l'ensemble : le champ et ses deux boutons forment un
+   seul objet, pas trois elements poses cote a cote. */
+.cycle-stepper {
+  display: inline-flex;
+  align-items: stretch;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm, 6px);
   background: var(--surface-strong);
+  overflow: hidden;
+}
+
+.cycle-stepper__btn {
+  width: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--surface-strong) 70%, var(--border));
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.cycle-stepper__btn:hover {
+  background: var(--accent-soft);
   color: var(--text);
+}
+
+.cycle-stepper__btn:active {
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface-strong));
 }
 
 /* Arbre de renaissance. Meme grammaire visuelle que les epreuves : ce sont

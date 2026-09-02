@@ -69,10 +69,17 @@ export const DEFAULT_PLAYER_PROFILE = {
     selectedBiomeId: "limgrave_west",
   },
   preparation: {
-    selectedBlessingId: "grace_of_runes",
+    /*
+     * Aucune benediction au depart.
+     *
+     * La Benediction des Runes etait donnee d'emblee, alors que ses +18% de
+     * gains sont le plus gros bonus economique du jeu. La premiere se gagne
+     * maintenant au Lac de Limgrave, et celle des Runes au Palais de Mohgwyn.
+     */
+    selectedBlessingId: null,
     selectedConsumableId: "rare_tracker",
     activeRunBuffs: [],
-    unlockedBlessings: ["grace_of_runes"],
+    unlockedBlessings: [],
     unlockedConsumables: ["rare_tracker"],
   },
   journal: {
