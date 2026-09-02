@@ -1,32 +1,15 @@
-// Surcouche anglaise. FICHIER GENERE — ne pas modifier a la main.
-//
-// Source : locales/en.json, regenere par tools/build-locale.mjs.
-//
-// Les cles ont la forme `prefixe.identifiant.champ` et viennent de
-// tools/extract-strings.mjs. Le francais n'a pas de catalogue : les fichiers
-// de donnees SONT la version francaise. Voir i18n.js.
-//
-// tools/audit-traduction.mjs signale les cles manquantes, orphelines ou
-// restees identiques au francais.
-
-export const EN = {
-
-  /* --- Objets (6) --- */
+{
   "item.fists.name": "Fists",
   "item.fists.description": "+5 Strength",
   "item.rune_fragment.name": "Rune Fragment",
   "item.rune_fragment.description": "Very pretty, not very useful: +1 Intelligence.",
   "item.iron_sword.name": "Iron Sword",
   "item.iron_sword.description": "+5 Strength <em style='color: grey;'>(+ 0.5 / Lv)</em>",
-
-
-  /* --- Monstres (2) --- */
   "monster.soldier1.name": "Godrick Soldier",
   "monster.wolf1.name": "Starving Wolf",
-
-
-  /* --- Biomes (50) --- */
   "biome.limgrave_west.name": "West Limgrave",
+  "ash.beginer_tarnished_heal.name": "Tarnished's Mend",
+  "blessing.grace_of_frost.name": "Grace of Frost",
   "biome.limgrave_east.name": "East Limgrave",
   "biome.limgrave_north.name": "Stormhill",
   "biome.limgrave_lake.name": "Agheel Lake",
@@ -76,10 +59,49 @@ export const EN = {
   "biome.bestial_sanctum.name": "Bestial Sanctum",
   "biome.jarburg.name": "Jarburg",
   "biome.evergaol_champions.name": "Champions' Evergaol",
-
-
-  /* --- Cendres de guerre (36) --- */
-  "ash.beginer_tarnished_heal.name": "Tarnished's Mend",
+  "trial.trial_watcher.name": "The Nameless Watcher",
+  "trial.trial_twin.name": "The Shadow Twins",
+  "trial.trial_hollow.name": "The Hollow Crown",
+  "trial.trial_first.name": "The First Tarnished",
+  "rebirth.runes.name": "Rune Inheritance",
+  "rebirth.runes.detail": "+10% rune gain per rank.",
+  "rebirth.will.name": "Will",
+  "rebirth.will.detail": "+5 to the level cap per rank.",
+  "rebirth.blood.name": "Hardened Blood",
+  "rebirth.blood.detail": "+4% effective Vigor per rank.",
+  "rebirth.grace.name": "Lingering Grace",
+  "rebirth.grace.detail": "+1 Ash of War charge per rank.",
+  "rebirth.tracker.name": "Tracker's Instinct",
+  "rebirth.tracker.detail": "+12% rare encounter chance per rank.",
+  "event.caravane_perdue.title": "Lost Caravan",
+  "event.patrouille_rare.title": "Rare Patrol",
+  "event.autel.title": "Forgotten Altar",
+  "event.piege.title": "Field Trap",
+  "event.choix_route.title": "Fork in the Road",
+  "event.marchand_errant.title": "Wandering Merchant",
+  "event.veine_de_runes.title": "Rune Vein",
+  "event.echo_de_grace.title": "Echo of Grace",
+  "event.brume_epaisse.title": "Heavy Mist",
+  "event.carcasse_de_dragon.title": "Dragon Carcass",
+  "event.chant_de_folie.title": "Song of Madness",
+  "consumable.rare_tracker.name": "Tracker's Flask",
+  "consumable.rare_tracker.description": "Rare encounters become more likely in the next biome.",
+  "consumable.rare_tracker.detailedDescription": "Multiplies the chance of meeting a rare elite by 1.8 during the next expedition.",
+  "consumable.boss_ward.name": "Sentinel Resin",
+  "consumable.boss_ward.description": "Blunts the damage spikes of bosses during the expedition.",
+  "consumable.boss_ward.detailedDescription": "Reduces damage taken from bosses by 12% during the next expedition.",
+  "consumable.relic_lens.name": "Relic Lens",
+  "consumable.relic_lens.description": "Improves the odds of rare, legendary and relic loot.",
+  "consumable.relic_lens.detailedDescription": "Adds +30% weighting to higher rarities in the loot rolls of the next expedition.",
+  "consumable.ember_ward.name": "Ember-Warding Salve",
+  "consumable.ember_ward.description": "Smothers the embers and flames of the biome.",
+  "consumable.ember_ward.detailedDescription": "Reduces damage taken from bosses by 10% during the next expedition and grants +20 Armor.",
+  "consumable.rune_censer.name": "Rune Censer",
+  "consumable.rune_censer.description": "Smokes the runes out of the dead.",
+  "consumable.rune_censer.detailedDescription": "+45% rune gain during the next expedition.",
+  "consumable.purge_draught.name": "Purging Draught",
+  "consumable.purge_draught.description": "For the places where the air itself is an affliction.",
+  "consumable.purge_draught.detailedDescription": "+6 to every resistance during the next expedition.",
   "ash.beginer_tarnished_heal.description": "Restores 5 HP per level (max: 250 HP). +1 use if you have felled a troll.",
   "ash.storm_stomp.name": "Storm Stomp",
   "ash.storm_stomp.description": "Slightly raises your damage and staggers the enemy on the next blow.",
@@ -115,10 +137,6 @@ export const EN = {
   "ash.destined_cut.description": "Applies 6 stacks of Death Blight. At twelve, the target loses a quarter of its maximum health.",
   "ash.golden_vow.name": "Golden Vow",
   "ash.golden_vow.description": "The oath of the Order: +40% damage on your next attack, and 60 Armor restored.",
-
-
-  /* --- Benedictions (30) --- */
-  "blessing.grace_of_frost.name": "Grace of Frost",
   "blessing.grace_of_mire.name": "Grace of the Mire",
   "blessing.grace_of_mire.description": "Blunts the poison and rot of the biome. Made for tainted ground.",
   "blessing.grace_of_mire.detailedDescription": "+3 Poison Resistance, +4 Rot Resistance, +20 effective Armor during the expedition.",
@@ -148,64 +166,6 @@ export const EN = {
   "blessing.grace_of_avarice.name": "Grace of Avarice",
   "blessing.grace_of_avarice.description": "For harvesting, not for surviving.",
   "blessing.grace_of_avarice.detailedDescription": "+35% rune gain, but -15% effective Armor during the expedition.",
-
-
-  /* --- Epreuves (4) --- */
-  "trial.trial_watcher.name": "The Nameless Watcher",
-  "trial.trial_twin.name": "The Shadow Twins",
-  "trial.trial_hollow.name": "The Hollow Crown",
-  "trial.trial_first.name": "The First Tarnished",
-
-
-  /* --- Noeuds de renaissance (10) --- */
-  "rebirth.runes.name": "Rune Inheritance",
-  "rebirth.runes.detail": "+10% rune gain per rank.",
-  "rebirth.will.name": "Will",
-  "rebirth.will.detail": "+5 to the level cap per rank.",
-  "rebirth.blood.name": "Hardened Blood",
-  "rebirth.blood.detail": "+4% effective Vigor per rank.",
-  "rebirth.grace.name": "Lingering Grace",
-  "rebirth.grace.detail": "+1 Ash of War charge per rank.",
-  "rebirth.tracker.name": "Tracker's Instinct",
-  "rebirth.tracker.detail": "+12% rare encounter chance per rank.",
-
-
-  /* --- Evenements (11) --- */
-  "event.caravane_perdue.title": "Lost Caravan",
-  "event.patrouille_rare.title": "Rare Patrol",
-  "event.autel.title": "Forgotten Altar",
-  "event.piege.title": "Field Trap",
-  "event.choix_route.title": "Fork in the Road",
-  "event.marchand_errant.title": "Wandering Merchant",
-  "event.veine_de_runes.title": "Rune Vein",
-  "event.echo_de_grace.title": "Echo of Grace",
-  "event.brume_epaisse.title": "Heavy Mist",
-  "event.carcasse_de_dragon.title": "Dragon Carcass",
-  "event.chant_de_folie.title": "Song of Madness",
-
-
-  /* --- Consommables de preparation (18) --- */
-  "consumable.rare_tracker.name": "Tracker's Flask",
-  "consumable.rare_tracker.description": "Rare encounters become more likely in the next biome.",
-  "consumable.rare_tracker.detailedDescription": "Multiplies the chance of meeting a rare elite by 1.8 during the next expedition.",
-  "consumable.boss_ward.name": "Sentinel Resin",
-  "consumable.boss_ward.description": "Blunts the damage spikes of bosses during the expedition.",
-  "consumable.boss_ward.detailedDescription": "Reduces damage taken from bosses by 12% during the next expedition.",
-  "consumable.relic_lens.name": "Relic Lens",
-  "consumable.relic_lens.description": "Improves the odds of rare, legendary and relic loot.",
-  "consumable.relic_lens.detailedDescription": "Adds +30% weighting to higher rarities in the loot rolls of the next expedition.",
-  "consumable.ember_ward.name": "Ember-Warding Salve",
-  "consumable.ember_ward.description": "Smothers the embers and flames of the biome.",
-  "consumable.ember_ward.detailedDescription": "Reduces damage taken from bosses by 10% during the next expedition and grants +20 Armor.",
-  "consumable.rune_censer.name": "Rune Censer",
-  "consumable.rune_censer.description": "Smokes the runes out of the dead.",
-  "consumable.rune_censer.detailedDescription": "+45% rune gain during the next expedition.",
-  "consumable.purge_draught.name": "Purging Draught",
-  "consumable.purge_draught.description": "For the places where the air itself is an affliction.",
-  "consumable.purge_draught.detailedDescription": "+6 to every resistance during the next expedition.",
-
-
-  /* --- Traits de biome (28) --- */
   "trait.festival.name": "Bloody Festival",
   "trait.festival.detail": "The locals work themselves up: every enemy gains 8% attack each turn, with no ceiling. Long fights turn lethal.",
   "trait.toxic_mist.name": "Toxic Mist",
@@ -233,5 +193,5 @@ export const EN = {
   "trait.jar_luck.name": "Jar Luck",
   "trait.jar_luck.detail": "The jars are hollow and full of runes: enemies have only 40% of their health, but pay four times over.",
   "trait.gauntlet.name": "Champions' Gauntlet",
-  "trait.gauntlet.detail": "Four champions follow one another without pause: no healing between fights, and every step is a boss.",
-};
+  "trait.gauntlet.detail": "Four champions follow one another without pause: no healing between fights, and every step is a boss."
+}
