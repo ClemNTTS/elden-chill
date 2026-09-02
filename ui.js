@@ -14,12 +14,18 @@ const campSongs = [
   "./assets/music/camp_song_2.mp3",
   "./assets/music/camp_song_3.mp3",
   "./assets/music/camp_song_4.mp3",
+  "./assets/music/camp_song_5.mp3",
+  "./assets/music/camp_song_6.mp3",
+  "./assets/music/camp_song_7.mp3",
 ];
 const dungeonSongs = [
   "./assets/music/dungeon_song_1.mp3",
   "./assets/music/dungeon_song_2.mp3",
   "./assets/music/dungeon_song_3.mp3",
   "./assets/music/dungeon_song_4.mp3",
+  "./assets/music/dungeon_song_5.mp3",
+  "./assets/music/dungeon_song_6.mp3",
+  "./assets/music/dungeon_song_7.mp3",
 ];
 
 /*
