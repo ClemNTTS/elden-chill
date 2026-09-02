@@ -224,6 +224,7 @@ function playDungeonMusic() {
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
+import { LANGUES, getLocale } from "./i18n.js";
 import { getBiomeTrait } from "./biome-traits.js";
 import {
   POINTS_PER_REBIRTH,
@@ -3549,6 +3550,21 @@ export const setAudioListener = () => {
   // Precharge les bruitages de combat : sans ca le premier coup est muet, le
   // temps que le navigateur telecharge le fichier.
   primeSfx();
+
+  /*
+   * Le selecteur de langue est rempli depuis LANGUES, pas ecrit dans le HTML :
+   * ajouter une langue ne doit demander qu'une entree dans i18n.js.
+   */
+  const selecteurLangue = document.getElementById("select-locale");
+  if (selecteurLangue && !selecteurLangue.options.length) {
+    for (const [code, libelle] of Object.entries(LANGUES)) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.innerText = libelle;
+      selecteurLangue.appendChild(option);
+    }
+    selecteurLangue.value = getLocale();
+  }
 
   refreshNarratorButton();
 

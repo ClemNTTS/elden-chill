@@ -511,6 +511,20 @@
                 </div>
 
                 <div class="camp-panel">
+                  <h3>Langue / Language</h3>
+                  <div class="option-row">
+                    <label for="select-locale">Langue du jeu</label>
+                    <!-- Le titre du panneau est bilingue a dessein : un joueur
+                         anglophone doit pouvoir trouver ce reglage sans
+                         comprendre le reste de la page. -->
+                    <select id="select-locale" onchange="setGameLocale(this.value)"></select>
+                  </div>
+                  <p class="option-hint" id="locale-hint">
+                    Changer de langue recharge la page. La progression est sauvegardée avant.
+                  </p>
+                </div>
+
+                <div class="camp-panel">
                   <h3>Audio</h3>
                   <div class="option-row">
                     <label for="music-volume">Volume musique</label>

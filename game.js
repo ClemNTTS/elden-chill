@@ -1,5 +1,10 @@
 // Main entry point for the game
 import { BIOMES } from "./biome.js";
+import {
+  applyLocale,
+  rafraichirNomsSauvegardes,
+  setLocale as setGameLocale,
+} from "./i18n.js";
 import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
 import { loadGame, saveGame } from "./save.js";
@@ -224,6 +229,7 @@ window.hideTooltip = hideTooltip;
 window.equipAsh = equipAsh;
 window.toggleRealTimeStats = toggleRealTimeStats;
 window.joinDiscord = joinDiscord;
+window.setGameLocale = setGameLocale;
 window.toggleNarrator = toggleNarrator;
 
 // --- Game Initialization ---
@@ -352,7 +358,20 @@ const reportSaveLoad = (report) => {
 window.onload = () => {
   if (handleAutoRefresh()) return;
 
+  /*
+   * La langue s'applique AVANT tout le reste.
+   *
+   * applyLocale() ecrase les champs textuels des tables de donnees ; tout
+   * rendu anterieur afficherait le francais puis changerait sous les yeux du
+   * joueur. Le choix est lu dans localStorage, pas dans la sauvegarde, donc
+   * disponible avant loadGame().
+   */
+  applyLocale();
+
   const report = loadGame();
+  // La sauvegarde recopie le nom des objets ramasses : on les realigne sur la
+  // langue courante, sinon une partie commencee en francais garde ses noms.
+  rafraichirNomsSauvegardes();
 
   createFireParticles();
   initCampParallax();
