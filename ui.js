@@ -765,9 +765,31 @@ const mountCombatEnemy = async () => {
   const canvas = document.getElementById("enemy-sprite");
   if (!canvas) return;
 
-  const enemy = runtimeState.currentEnemyGroup?.find((e) => e.hp > 0)
-    || runtimeState.currentEnemyGroup?.[0];
-  if (!enemy?.id) return;
+  /*
+   * On ne monte que sur un ennemi VIVANT.
+   *
+   * L'ancien code retombait sur currentEnemyGroup[0] quand plus personne
+   * n'avait de points de vie. Juste apres la mort d'un boss, ce repli
+   * remontait le boss mort — puis la creature suivante arrivait et supplantait
+   * ce montage en cours. Comme la planche d'un boss fait 96px et n'est teintee
+   * qu'a sa premiere apparition, c'est le montage le plus lent du jeu : la
+   * fenetre de course s'ouvrait la, et nulle part ailleurs.
+   *
+   * Quand tout le groupe est a terre on garde simplement l'animateur en place,
+   * qui joue deja son animation de mort. Rien a remonter.
+   */
+  const enemy = runtimeState.currentEnemyGroup?.find((e) => e.hp > 0);
+  if (!enemy?.id) {
+    // Aucun animateur encore monte : on prend la premiere creature du groupe
+    // pour ne pas laisser le cadre vide au tout premier affichage.
+    const fallback = enemyAnimator ? null : runtimeState.currentEnemyGroup?.[0];
+    if (!fallback?.id) return;
+    return mountCombatEnemyFor(canvas, fallback);
+  }
+  return mountCombatEnemyFor(canvas, enemy);
+};
+
+const mountCombatEnemyFor = async (canvas, enemy) => {
 
   const visual = getMonsterVisual(enemy.id);
   const key = `${enemy.id}:${visual.archetype}:${visual.tint}:${visual.scale}`;
@@ -816,8 +838,34 @@ const mountCombatEnemy = async () => {
     console.warn("[combat] montage du monstre impossible :", error);
   }
 
-  // Un montage plus recent a pris la main pendant l'attente.
-  if (token !== enemyMountToken) return;
+  /*
+   * Un montage plus recent a pris la main pendant l'attente.
+   *
+   * Il faut DETRUIRE l'animateur qu'on vient de creer, pas seulement sortir :
+   * mountMonster l'a deja demarre, et plus personne ne detient sa reference.
+   * Sans ce destroy il continue de peindre #enemy-sprite indefiniment, et
+   * chaque montage supplante en laisse un de plus. Deux animateurs sur le meme
+   * canvas se relaient d'une frame a l'autre : c'est exactement le
+   * scintillement entre deux creatures.
+   *
+   * Les boss declenchent le probleme parce qu'ils enchainent deux changements
+   * de cle rapproches — le boss mort, puis la creature suivante — et que leur
+   * planche de 96px met plus longtemps a se teinter, ce qui elargit la fenetre
+   * de course.
+   */
+  /*
+   * Un montage plus recent a pris la main pendant l'attente.
+   *
+   * Il faut DETRUIRE l'animateur qu'on vient de creer, pas seulement sortir :
+   * mountMonster l'a deja demarre et plus personne ne detient sa reference.
+   * Sans ce destroy il peint #enemy-sprite indefiniment, et deux animateurs
+   * sur le meme canvas se relaient d'une frame a l'autre — c'est exactement le
+   * scintillement entre deux creatures.
+   */
+  if (token !== enemyMountToken) {
+    animator?.destroy();
+    return;
+  }
 
   if (!animator) {
     // On libere la cle pour que le prochain rafraichissement retente.
