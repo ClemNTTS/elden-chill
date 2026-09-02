@@ -1176,6 +1176,53 @@ suspension has cost a debugging session; see the sprite-flicker note.
 "Bifurcation", not "Route choice": the game draws at random. A real choice
 would need to pause the expedition, which breaks auto-run.
 
+## Measuring instruments lie more often than the game does
+
+Four separate audits gave confident wrong answers this session. The pattern is
+always the same: **a probe that does not resemble a real character, or a model
+that ignores a whole mechanic.**
+
+`audit-weapons.mjs` reported 6 "useless" weapons. All six were its own fault:
+
+- it gave the probe **no base crit**, so weapons gated on crit never activated
+  (Twin Blades);
+- it only used **pure builds**, so weapons needing two stats never activated
+  (Zamor Curved Sword wants 15 STR *and* 18 DEX);
+- it measured **strength only**, so intelligence weapons whose whole output is
+  magic scored zero (Azula's Black Censer);
+- it modelled **no target armour**, so a weapon whose entire point is
+  penetration scored zero (Frost Hatchet).
+
+After fixing all four, no weapon is genuinely dead. The two still listed are
+percentage-scaling weapons judged at level 5 against fists at level 10; both
+overtake fists from level 6.
+
+`audit-orphelins.mjs` reported 4 unreachable biomes and 3 unplaced monsters.
+The biomes are the Trials, opened by rebirth rather than by `unlocks`; the
+monsters are `companion` entries, spawned alongside a host. Both were the
+tool's blind spots. Nothing in the game is unreachable.
+
+### The simulator equipped for the wrong fight
+
+`equipBest` scored candidates against the **boss's armour** but **with the
+group multiplier**, while `ttkBoss` correctly ignores it — a boss is alone, so
+splash has nobody else to hit. The optimiser therefore overvalued area damage
+and equipped group-clearing gear right before the fight that gates progress.
+
+Giving the Sage of Caelid Robe its missing level scaling was enough to spring
+that trap: the intelligence build went from 891 to 942 cycles. A regression of
+the *model*, not of the game — bisected commit by commit, then file by file,
+then down to the single changed line.
+
+The score is now the geometric mean of damage against groups and against the
+boss: one loadout has to serve both, which is what a player actually carries.
+
+**With that fixed, the standings change:** dexterity 737, vigour 747, force
+809, intelligence 884, trihybrid 935. Intelligence is 20% behind the best pure
+build, not 8.8% ahead of the pack as the broken model suggested. Its magic term
+is linear in intelligence, so it fades over a full run — the same conclusion
+reached earlier from a different broken tool, now supported by a sound one.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

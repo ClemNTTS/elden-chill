@@ -231,7 +231,23 @@ const lootPoolFor = (cleared) => {
  * approchee ne les aurait vus. Deux passes, pour laisser un set se declarer
  * une fois sa premiere piece portee.
  */
-const equipBest = (pool, refArmor, groupe = 1.3) => {
+/*
+ * L'equipement est choisi pour le biome ENTIER, pas pour un seul type de
+ * rencontre.
+ *
+ * L'ancienne version scorait contre l'armure du boss mais AVEC le
+ * multiplicateur de groupe, alors que ttkBoss l'ignore a juste titre : un boss
+ * est seul, les degats de zone n'ont personne d'autre a frapper. L'optimiseur
+ * surevaluait donc le splash et equipait des pieces de nettoyage de groupe
+ * juste avant le combat qui bloque la progression. Rendre son scaling a la
+ * Robe du Sage de Caelid a suffi a declencher ce piege et a faire passer le
+ * build intelligence de 891 a 942 cycles — une regression du modele, pas du
+ * jeu.
+ *
+ * Le score combine desormais les deux rencontres par moyenne geometrique :
+ * une piece doit servir aux groupes ET au boss.
+ */
+const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) => {
   const slots = { weapon: "Arme", armor: "Armure", accessory: "Accessoire" };
   gameState.equipped = { weapon: null, armor: null, accessory: null };
   gameState.inventory = pool.map((id) => ({ id, name: id, level: 8, count: 0 }));
@@ -245,8 +261,10 @@ const equipBest = (pool, refArmor, groupe = 1.3) => {
         gameState.equipped[slot] = id;
         let eff;
         try { eff = getEffectiveStats(); } catch { continue; }
+        const contreGroupes = playerDamagePerTurn(eff, refArmor, groupe);
+        const contreBoss = playerDamagePerTurn(eff, bossArmor);
         const score =
-          playerDamagePerTurn(eff, refArmor, groupe) *
+          Math.sqrt(Math.max(0, contreGroupes) * Math.max(0, contreBoss)) *
           Math.sqrt(Math.max(1, getHealth(eff.vigor)));
         if (score > bestScore) { bestScore = score; best = id; }
       }
@@ -305,7 +323,7 @@ const run = (buildKey) => {
     while (cycles < CYCLES_MAX) {
       while (level < MAX_LEVEL && cumulativeCost(level + 1) <= runes) level += 1;
       applyBuild(build, level);
-      if (pool.length) equipBest(pool, boss.armor || 100, groupe);
+      if (pool.length) equipBest(pool, stdArmor, groupe, boss.armor || 100);
       eff = getEffectiveStats();
       maxHp = getHealth(eff.vigor);
 

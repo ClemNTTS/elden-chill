@@ -30,7 +30,16 @@ for (const [id, ash] of Object.entries(ASHES_OF_WAR)) {
   noter(id, ash.name || id, getAshIcon(id));
 }
 
-const doublons = [...parCellule].filter(([, l]) => l.length > 1);
+/*
+ * Partage assume : les poings n'ont pas d'arme et reutilisent volontairement le
+ * gantelet de la Manche Forgee. Sans cette exception l'outil sort toujours en
+ * echec, et un vrai doublon passerait inapercu au milieu du bruit.
+ */
+const PARTAGES_ASSUMES = new Set(["accessories:0,1"]);
+
+const doublons = [...parCellule].filter(
+  ([cle, l]) => l.length > 1 && !PARTAGES_ASSUMES.has(cle),
+);
 console.log(`${parCellule.size} cellules utilisees, ${doublons.length} partagee(s).` + NL);
 for (const [cle, liste] of doublons) {
   console.log(`  ${cle}`);
