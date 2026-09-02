@@ -15,6 +15,76 @@
 //   node tools/audit-descriptions.mjs --tout   (affiche aussi les cas douteux)
 
 import { readFileSync, readdirSync } from "fs";
+import { mountDomStub } from "./headless-stub.mjs";
+
+/*
+ * L'heuristique purement textuelle ne suffit plus.
+ *
+ * Les descriptions annoncent la valeur AU NIVEAU 1 — "+34 Armure" pour
+ * `30 + itemLevel * 4`. Ce 34 est calcule, jamais ecrit, donc la recherche de
+ * litteraux le declarait absent : 68 faux positifs d'un coup, et un outil
+ * devenu inutilisable.
+ *
+ * On evalue donc chaque objet aux niveaux 1 et 10 et on ajoute les valeurs
+ * obtenues a l'ensemble des nombres consideres comme presents.
+ */
+mountDomStub();
+await import("../game.js");
+const { ITEMS } = await import("../item.js");
+const { gameState, getEffectiveStats } = await import("../state.js");
+const { DEFAULT_PLAYER_PROFILE } = await import("../shared/player-profile.js");
+
+gameState.stats = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats));
+gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+gameState.inventory = [];
+gameState.equipped = { weapon: null, armor: null, accessory: null };
+Object.assign(gameState.stats, {
+  level: 100, vigor: 60, strength: 60, dexterity: 60, intelligence: 60,
+  critChance: 0.3, critDamage: 2,
+});
+const CLES = Object.keys(getEffectiveStats());
+const RESIST = ["poison", "putrefaction", "gel", "saignement", "folie", "sommeil",
+                "mortdombre", "feu", "foudre", "sacre", "magie"];
+
+/** Valeurs numeriques que l'objet produit reellement, aux niveaux 1 et 10. */
+const valeursProduites = (id) => {
+  const item = ITEMS[id];
+  const out = new Set();
+  if (!item) return out;
+  for (const niveau of [1, 10]) {
+    const resistances = {};
+    for (const r of RESIST) resistances[r] = 20;
+    const cible = { resistances };
+    for (const k of CLES) if (k !== "resistances") cible[k] = 1000;
+    cible.critChance = 0.5;
+    cible.critDamage = 2;
+    cible.attacksPerTurn = 1;
+    const avant = { ...cible, resistances: { ...resistances } };
+    for (const fn of ["applyFlat", "applyMult"]) {
+      try { item[fn]?.(cible, niveau); } catch { /* contexte */ }
+    }
+    for (const k of Object.keys(cible)) {
+      if (k === "resistances") continue;
+      const delta = cible[k] - (avant[k] ?? 0);
+      for (const v of [cible[k], delta, Math.abs(delta)]) {
+        if (typeof v === "number" && Number.isFinite(v)) {
+          out.add(Math.round(v * 10000) / 10000);
+          out.add(Math.round(v));
+        }
+      }
+    }
+    for (const r of RESIST) {
+      out.add(cible.resistances[r] - avant.resistances[r]);
+    }
+    // Les taux annonces en pourcentage : un delta de 0.055 se lit "5,5%".
+    for (const k of ["critChance", "critDamage", "percentDamagePenetration",
+                     "bossMitigation", "runeGainMult", "dodgeChance"]) {
+      const delta = (cible[k] ?? 0) - (avant[k] ?? 0);
+      out.add(Math.round(delta * 10000) / 10000);
+    }
+  }
+  return out;
+};
 
 const files = ["item.js", ...readdirSync("items").map((f) => `items/${f}`)];
 const showAll = process.argv.includes("--tout");
@@ -71,6 +141,8 @@ for (const file of files) {
 
     const said = numbersInText(text);
     const done = numbersInCode(code);
+    // Les valeurs calculees comptent comme presentes.
+    for (const v of valeursProduites(entry[1])) done.add(v);
 
     // On ignore les nombres trop courants pour signifier quoi que ce soit.
     const bruit = new Set([0, 1, 2, 3, 10, 100]);

@@ -1046,6 +1046,78 @@ All 48 gaps are content added for the complete version — 14 weapons, 14
 armours, 14 accessories, 6 ashes — and every one sits 8 to 17 biomes from the
 start. `tools/audit-icones.mjs` lists them sorted by how early they appear.
 
+## Four requirements per item — `tools/audit-items-complet.mjs`
+
+Every item must have an icon, a description that states its numbers, level
+scaling unless `isAlwaysMax`, and an effect the engine actually reads.
+
+**Describe the value AT LEVEL 1**, not the literal in the code. `30 + itemLevel
+* 4` is announced as "+34 Armure (+4 / Niv)". Announcing "+30" would be wrong:
+that value never occurs at any level.
+
+`isAlwaysMax: true` is the codebase's own answer to "an item without scaling".
+An item carrying it is always at max level and has nothing to vary; anything
+else that ignores `itemLevel` silently wastes the player's upgrade runes.
+
+### The audit lied to me four times before it was usable
+
+Each false positive taught the same lesson — a probe must resemble a real
+character:
+
+- probing with **stats at zero** made every conversion return 0 at both levels:
+  44 items looked unscaled;
+- starting from **armour 10** hid a +0.5%/level scaling inside `Math.floor`;
+- several items require a minimum of **base crit** to activate, so their branch
+  never ran;
+- **resistances at zero** did the same to items that sum resistances.
+
+Then the comparison approach itself failed: scaling often lives behind a
+`Math.random()` that does not fire during a probe, or behind a cap already
+reached. The check is now **static** — does the item body mention `itemLevel`
+at all? No false positives, and it is certain.
+
+`audit-descriptions.mjs` had the mirror problem: it searched for literals, so
+the level-1 values above looked absent and it reported 68 false positives. It
+now evaluates each item at levels 1 and 10 and treats the produced values as
+present. Strong suspicions: 20 -> 1.
+
+### Fictional effects found
+
+- **Marionette Mask** wrote `stats.dodgeChance` and announced +5% dodge, but
+  nothing read the key — player dodge came only from
+  `gameState.stats.dexterity / 400`. The stat is now real and capped together
+  with the dexterity share at 50%.
+- **Giant-breaker Maul** ran `stats.attacksPerTurn = Math.max(1,
+  stats.attacksPerTurn)`, a no-op, while promising a slower cadence. The malus
+  is now applied.
+- **Godslayer Greatsword** claimed to eat a share of a boss's maximum HP; it
+  only applies Burn. **Scarlet Bloom Charm** claimed to extend afflictions; it
+  does not. **Wayfarer Talisman** promised rarer loot; it only gives runes.
+  Descriptions corrected to what the code does.
+- **Jarburg Charm** announced +40% runes and gives 43% at level 1.
+
+One key is exempt: `customStunChance` is not an engine stat but the Nokron
+Flaming Dagger writes it and reads it back itself.
+
+## Item icons
+
+All 147 items and 18 ashes have a cell. The 48 that were missing came from the
+complete-version content; every one was found in the existing sheets, so **no
+SVG fallback was needed**.
+
+The accessory sheet was full (42 of 48 cells, the last 6 empty) and is
+regenerated at 8x7 by `tools/build_accessory_atlas.py`. Its rendering depends
+only on the shape/palette pair, so two accessories sharing that pair produce
+the **same image** — five collisions on the first attempt.
+
+`tools/audit-icones.mjs` finds missing cells; `tools/audit-icones-doublons.mjs`
+finds shared or empty ones, which the first cannot see. Choosing cells by eye
+put two items on cells already taken. One share is deliberate and predates
+this: fists reuse the gauntlet.
+
+Known limitation: the armour sheet holds only chest pieces, so the Serpent King
+Crown and the Haligtree Crest Shield display as breastplates.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

@@ -39,16 +39,26 @@ const RESISTANCES = new Set([
 ]);
 
 /*
- * Objets sans scaling ASSUME. Toute autre absence de scaling est signalee :
- * un objet dont le niveau ne change rien rend les runes d'amelioration
- * inutiles, sans que rien ne le dise au joueur.
+ * Objets sans scaling ASSUME.
+ *
+ * Le jeu a deja son propre marqueur : isAlwaysMax. Un objet ainsi marque est
+ * toujours a son niveau maximum, il n'a donc rien a faire varier. Ne restent
+ * a signaler que les objets ameliorables dont le niveau ne change rien : leurs
+ * runes d'amelioration sont perdues sans que rien ne le dise au joueur.
  */
-const SANS_SCALING = new Set(["fists"]);
+const sansScalingAssume = (id, item) => id === "fists" || item.isAlwaysMax === true;
 
 /** Enregistre les cles ecrites par applyFlat / applyMult. */
 const sonde = () => {
   const ecrites = new Set();
-  const resistances = new Proxy({}, {
+  /*
+   * Resistances non nulles : plusieurs objets somment les resistances puis
+   * convertissent le total. A zero, la conversion rendait 0 aux deux niveaux
+   * et l'objet paraissait sans scaling. Troisieme source de faux positifs.
+   */
+  const base = {};
+  for (const r of RESISTANCES) base[r] = 20;
+  const resistances = new Proxy(base, {
     get: (t, k) => (typeof k === "symbol" ? undefined : (t[k] ?? 0)),
     set: (t, k, v) => { ecrites.add(`resistances.${String(k)}`); t[k] = v; return true; },
   });
@@ -117,21 +127,43 @@ for (const [id, item] of Object.entries(ITEMS)) {
   const haut = cles(item, 10);
 
   // 4. Effet reel : toute cle ecrite doit exister dans le moteur.
+  /*
+   * Exception : une cle peut servir de variable de travail a l'objet lui-meme.
+   * La Dague Enflammee de Nokron ecrit stats.customStunChance dans applyMult
+   * puis la relit dans son funcOnHit. Le moteur ne la connait pas, mais
+   * l'effet fonctionne — ce n'est pas une promesse en l'air.
+   */
+  const CLES_DE_TRAVAIL = new Set(["customStunChance"]);
   const inconnues = [...bas.ecrites, ...haut.ecrites].filter((k) => {
     if (k.startsWith("resistances.")) return !RESISTANCES.has(k.slice(12));
+    if (CLES_DE_TRAVAIL.has(k)) return false;
     return !CLES_MOTEUR.has(k);
   });
   if (inconnues.length) {
     problemes.fictif.push({ id, nom, cles: [...new Set(inconnues)] });
   }
 
-  // 3. Scaling : le niveau doit changer une valeur.
+  /*
+   * 3. Scaling : controle STATIQUE.
+   *
+   * Comparer les valeurs a deux niveaux ne marche pas. Le scaling vit souvent
+   * derriere un Math.random(), qui ne se declenche pas pendant la sonde, ou
+   * derriere un plafond deja atteint. Ces deux cas produisaient des faux
+   * positifs impossibles a distinguer d'une vraie absence de scaling.
+   *
+   * On regarde donc si le corps de l'objet mentionne itemLevel ailleurs que
+   * dans la signature des fonctions. Sans une seule mention, le niveau ne peut
+   * rien changer — c'est certain, et sans faux positif.
+   */
   const aDesEffets = item.applyFlat || item.applyMult || item.funcOnHit;
-  if (aDesEffets && !SANS_SCALING.has(id)) {
-    const identique =
-      JSON.stringify(bas.valeurs) === JSON.stringify(haut.valeurs) &&
-      bas.surCible === haut.surCible;
-    if (identique) problemes.scaling.push({ id, nom });
+  if (aDesEffets && !sansScalingAssume(id, item)) {
+    const corps = ["applyFlat", "applyMult", "funcOnHit", "funcOnBeingHit",
+                   "passiveStatusReduction"]
+      .map((fn) => (typeof item[fn] === "function" ? item[fn].toString() : ""))
+      .join(";")
+      // On retire les listes de parametres : "(stats, itemLevel) =>" ne compte pas.
+      .replace(/\([^)]*\)\s*=>/g, "()=>");
+    if (!/itemLevel/.test(corps)) problemes.scaling.push({ id, nom });
   }
 
   // 2. Description muette alors que le code manipule des nombres.

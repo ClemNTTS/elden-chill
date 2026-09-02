@@ -26,7 +26,7 @@ export const ITEMS = {
   rune_fragment: {
     name: "Fragment de Runes",
     type: ITEM_TYPES.ACCESSORY,
-    description: "C'es super joli mais pas très utile ...",
+    description: "C'est très joli, mais pas très utile : +1 Intelligence.",
     isAlwaysMax: true,
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 1;
@@ -747,11 +747,14 @@ export const ITEMS = {
     name: "Robe du Sage de Caélid",
     type: ITEM_TYPES.ARMOR,
     description:
-      "Intelligence +20%. Réduit votre Vigueur de 15% mais convertit 50% de l'Int en Dégâts de zone.",
+      "Intelligence +20%. Réduit votre Vigueur de 15%. Convertit 52% de votre " +
+      "Intelligence en Dégâts de zone <em style='color: grey;'>(+2% / Niv)</em>.",
     applyMult: (stats, itemLevel) => {
       stats.intelligence *= 1.2;
       stats.vigor *= 0.85;
-      stats.splashDamage += Math.floor(stats.intelligence * 0.5);
+      stats.splashDamage += Math.floor(
+        stats.intelligence * (0.5 + itemLevel * 0.02),
+      );
     },
   },
 
@@ -1133,14 +1136,14 @@ export const ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     set: "EXECUTIONER",
     description:
-      "Force +10%. Si l'ennemi a moins de 30% de PV, vos chances de critique augmentent de 35%.",
+      "Force +10%. Sous 30% des PV de l'ennemi, +36% de Chance de Critique <em style='color: grey;'>(+1% / Niv)</em>.",
     applyMult: (stats, itemLevel) => {
       stats.strength *= 1.1;
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       const target = runtimeState.currentEnemyGroup[0];
       if (target && target.hp / target.maxHp < 0.3) {
-        stats.critChance += 0.35;
+        stats.critChance += 0.35 + itemLevel * 0.01;
       }
     },
   },
