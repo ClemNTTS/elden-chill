@@ -26,6 +26,7 @@ import {
   triggerShake,
   updateCycleDisplay,
   updateHealthBars,
+  showEventBanner,
   updateStepper,
   updateUI,
 } from "./ui.js";
@@ -521,6 +522,12 @@ export function nextEncounter(sessionId) {
 
     if (eventResult?.log) {
       ActionLog(eventResult.log, "log-event");
+      // Le journal seul ne suffisait pas : la banniere rend l'evenement visible.
+      showEventBanner({
+        title: eventDef?.title,
+        kind: eventDef?.kind,
+        text: eventResult.log,
+      });
     }
 
     if (eventResult?.applyHazard) {

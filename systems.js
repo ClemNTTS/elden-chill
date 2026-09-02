@@ -1,6 +1,12 @@
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
-import { gameState, getEffectiveStats, runtimeState } from "./state.js";
+import {
+  gameState,
+  getEffectiveStats,
+  getHealth,
+  healPlayer,
+  runtimeState,
+} from "./state.js";
 import { BIOME_GUIDE } from "./world-map.js";
 
 export const ITEM_RARITIES = {
@@ -525,7 +531,13 @@ export const EVENT_DEFS = {
   },
   choix_route: {
     id: "choix_route",
-    title: "Choix de route",
+    /*
+     * "Bifurcation" et non "Choix de route" : le joueur ne choisit pas, le
+     * jeu tire au sort entre les deux routes. Un vrai choix demanderait de
+     * mettre l'expedition en attente, ce qui casserait l'expedition
+     * automatique. Le titre dit donc ce qui se passe vraiment.
+     */
+    title: "Bifurcation",
     kind: "route",
     weight: 5,
     resolve: (biomeId) => {
@@ -569,6 +581,166 @@ export const EVENT_DEFS = {
     },
   },
 };
+
+/*
+ * Evenements ajoutes pour etoffer la feature.
+ *
+ * Contrainte : ne poser que des cles que getRunModifier sait lire. Une cle
+ * inventee ne provoque aucune erreur et ne fait rien — quatre promesses
+ * decoratives ont deja ete trouvees ainsi. Le jeu de cles utilisable est
+ * armorBonus, armorMult, dodgeMult, lootChanceMult, lootRarityBoost, noHeal,
+ * rareChanceMult, resistBonus, runeGainMult, extraHazardPressure et
+ * bossMitigation.
+ */
+Object.assign(EVENT_DEFS, {
+  marchand_errant: {
+    id: "marchand_errant",
+    title: "Marchand errant",
+    kind: "marchand",
+    weight: 3,
+    resolve: (biomeId) => {
+      const runes = Math.max(80, Math.floor(gameState.stats.level * 26 + 90));
+      gameState.runes.carried += runes;
+      registerRunBuff({
+        id: "marchand_errant",
+        label: "Bourse du marchand",
+        kind: "loot",
+        runeGainMult: 0.15,
+      });
+      addJournalEntry(
+        "event",
+        "Marchand errant",
+        "Un colporteur rachete ce que vous ne portiez plus et vous indique les bonnes poches.",
+        biomeId,
+      );
+      return {
+        log: `Un marchand errant vous achete votre surplus : +${runes} runes, et +15% de runes pour la sortie.`,
+      };
+    },
+  },
+
+  veine_de_runes: {
+    id: "veine_de_runes",
+    title: "Veine de runes",
+    kind: "runes",
+    weight: 2,
+    resolve: (biomeId) => {
+      const runes = Math.max(150, Math.floor(gameState.stats.level * 55 + 200));
+      gameState.runes.carried += runes;
+      addJournalEntry(
+        "event",
+        "Veine de runes",
+        "Une veine affleure sous la mousse. Elle ne durera pas.",
+        biomeId,
+      );
+      return { log: `Une veine de runes affleure : +${runes} runes.` };
+    },
+  },
+
+  echo_de_grace: {
+    id: "echo_de_grace",
+    title: "Echo de grace",
+    kind: "heal",
+    weight: 3,
+    resolve: (biomeId) => {
+      const eff = getEffectiveStats();
+      const maxHp = getHealth(eff.vigor);
+      const soigne = healPlayer(Math.floor(maxHp * 0.35), maxHp);
+      gameState.playerEffects = [];
+      addJournalEntry(
+        "event",
+        "Echo de grace",
+        "Une grace eteinte garde assez de chaleur pour recoudre une plaie.",
+        biomeId,
+      );
+      // healPlayer renvoie 0 quand le soin est scelle par un trait de biome :
+      // on le dit plutot que d'annoncer un soin qui n'a pas eu lieu.
+      return {
+        log: soigne > 0
+          ? `Un echo de grace vous rend ${soigne} PV et dissipe vos maux.`
+          : "Un echo de grace dissipe vos maux, mais la zone refuse les soins.",
+      };
+    },
+  },
+
+  brume_epaisse: {
+    id: "brume_epaisse",
+    title: "Brume epaisse",
+    kind: "brume",
+    weight: 3,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "brume_epaisse",
+        label: "Brume epaisse",
+        kind: "route",
+        dodgeMult: 0.6,
+        lootRarityBoost: 0.25,
+        rareChanceMult: 1.2,
+      });
+      addJournalEntry(
+        "event",
+        "Brume epaisse",
+        "On ne voit plus arriver les coups, mais on trebuche sur ce que les autres ont laisse.",
+        biomeId,
+      );
+      return {
+        log: "Une brume epaisse tombe : esquive reduite de 40%, mais butin plus rare et plus riche.",
+      };
+    },
+  },
+
+  carcasse_de_dragon: {
+    id: "carcasse_de_dragon",
+    title: "Carcasse de dragon",
+    kind: "altar",
+    weight: 2,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "carcasse_de_dragon",
+        label: "Ecailles arrachees",
+        kind: "defense",
+        armorBonus: 35,
+        resistBonus: 3,
+        bossMitigation: 0.06,
+      });
+      addJournalEntry(
+        "event",
+        "Carcasse de dragon",
+        "Assez d'ecailles tiennent encore pour s'en faire un plastron de fortune.",
+        biomeId,
+      );
+      return {
+        log: "Vous arrachez des ecailles a une carcasse : +35 armure, +3 resistances, -6% de degats de boss.",
+      };
+    },
+  },
+
+  chant_de_folie: {
+    id: "chant_de_folie",
+    title: "Chant de folie",
+    kind: "hazard",
+    weight: 2,
+    resolve: (biomeId) => {
+      registerRunBuff({
+        id: "chant_de_folie",
+        label: "Chant de folie",
+        kind: "hazard",
+        armorMult: 0.85,
+        runeGainMult: 0.3,
+        extraHazardPressure: 1,
+      });
+      addJournalEntry(
+        "event",
+        "Chant de folie",
+        "Quelque chose chante sous la pierre. On avance moins prudemment.",
+        biomeId,
+      );
+      return {
+        log: "Un chant monte de la pierre : -15% d'armure et le danger vous gagne plus vite, mais +30% de runes.",
+      };
+    },
+  },
+});
 
 export const BIOME_EVENTS = {
   limgrave_west: ["caravane_perdue", "choix_route"],
@@ -705,8 +877,49 @@ export const applyPreparationStats = (stats) => {
   });
 };
 
+/*
+ * Pool universel : ces trois-la peuvent survenir partout.
+ *
+ * Sans lui, 38 biomes sur 50 ne declenchaient jamais rien — la table
+ * BIOME_EVENTS etait ecrite a la main et n'avait jamais suivi l'ajout de
+ * contenu. Une liste explicite reste prioritaire quand elle existe : elle
+ * exprime une intention pour ce biome precis.
+ */
+const POOL_UNIVERSEL = ["caravane_perdue", "marchand_errant", "veine_de_runes"];
+
+/** Evenement supplementaire attache a chaque danger declare par le biome. */
+const EVENT_PAR_DANGER = {
+  poison: "piege",
+  putrefaction: "piege",
+  gel: "brume_epaisse",
+  folie: "chant_de_folie",
+  saignement: "patrouille_rare",
+};
+
+/**
+ * Pool d'un biome : sa liste explicite si elle existe, sinon un pool derive de
+ * ses dangers. Un biome garde ainsi une couleur propre sans qu'il faille
+ * ecrire une ligne par zone.
+ */
+export const getBiomeEventPool = (biomeId) => {
+  const explicite = BIOME_EVENTS[biomeId];
+  if (explicite?.length) return explicite;
+
+  const pool = [...POOL_UNIVERSEL];
+  const dangers = getBiomeHazards(biomeId);
+  for (const danger of dangers) {
+    const id = EVENT_PAR_DANGER[danger];
+    if (id && !pool.includes(id)) pool.push(id);
+  }
+  // Une zone sans danger declare est une zone de passage : on y trouve des
+  // choses plutot que des ennuis.
+  if (!dangers.length) pool.push("echo_de_grace", "choix_route");
+  else pool.push("echo_de_grace", "carcasse_de_dragon");
+  return pool;
+};
+
 export const getWeightedBiomeEvent = (biomeId) => {
-  const eventIds = BIOME_EVENTS[biomeId] || [];
+  const eventIds = getBiomeEventPool(biomeId);
   const weighted = eventIds
     .map((id) => EVENT_DEFS[id])
     .filter(Boolean);

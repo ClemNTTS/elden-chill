@@ -1091,6 +1091,79 @@ const watchCombatZoneHeight = () => {
   publish();
 };
 
+/*
+ * Banniere d'evenement.
+ *
+ * Les evenements ne produisaient qu'une ligne de journal, perdue dans le flot
+ * des coups : le joueur ne les remarquait pas. La banniere reste cinq secondes
+ * au-dessus de la zone de combat, avec une barre de teinte qui dit tout de
+ * suite s'il s'agit d'une aubaine ou d'une tuile.
+ *
+ * Elle n'attend aucun clic et n'en capte aucun : l'expedition automatique doit
+ * pouvoir tourner sans personne devant l'ecran.
+ */
+const TON_PAR_GENRE = {
+  caravane: "gain",
+  loot: "gain",
+  marchand: "gain",
+  runes: "gain",
+  altar: "grace",
+  blessing: "grace",
+  heal: "grace",
+  trap: "danger",
+  // Le genre de la patrouille rare est "ambush" et non "rare" : sans cette
+  // ligne elle tombait dans le repli bleu, alors que c'est une menace.
+  ambush: "danger",
+  hazard: "danger",
+  route: "route",
+  brume: "route",
+};
+
+let masqueBanniereId = null;
+
+export const showEventBanner = ({ title, kind, text }) => {
+  const banniere = document.getElementById("event-banner");
+  if (!banniere) return;
+
+  document.getElementById("event-banner-title").innerText = title || "Evenement";
+  document.getElementById("event-banner-text").innerText = text || "";
+  banniere.dataset.tone = TON_PAR_GENRE[kind] || "route";
+
+  // On repart de zero : un evenement qui en chasse un autre doit rejouer
+  // l'apparition, pas heriter du minuteur precedent.
+  clearTimeout(masqueBanniereId);
+  banniere.hidden = false;
+  /*
+   * Un reflow force, et surtout PAS requestAnimationFrame.
+   *
+   * La transition a besoin que le navigateur ait calcule l'etat de depart
+   * avant qu'on ajoute la classe, sinon elle ne se declenche pas. La premiere
+   * version passait par rAF — qui est SUSPENDU quand l'onglet est en arriere-
+   * plan. La banniere etait alors preparee, jamais revelee, puis masquee cinq
+   * secondes plus tard : un joueur revenant sur l'onglet n'avait rien vu.
+   *
+   * Lire offsetWidth force le calcul immediatement, quel que soit l'etat de
+   * l'onglet.
+   */
+  void banniere.offsetWidth;
+  banniere.classList.add("is-visible");
+  playSfx("event");
+
+  masqueBanniereId = setTimeout(() => {
+    banniere.classList.remove("is-visible");
+    setTimeout(() => { banniere.hidden = true; }, 300);
+  }, 5000);
+};
+
+/** Efface la banniere sans attendre, au retour au camp. */
+export const clearEventBanner = () => {
+  const banniere = document.getElementById("event-banner");
+  if (!banniere) return;
+  clearTimeout(masqueBanniereId);
+  banniere.classList.remove("is-visible");
+  banniere.hidden = true;
+};
+
 /** Appele a chaque rafraichissement des barres de vie. */
 export const syncCombatSprites = () => {
   watchCombatZoneHeight();
@@ -2728,6 +2801,7 @@ export const toggleView = (view) => {
     if (scene) scene.classList.add("hidden");
     playDungeonMusic();
   } else {
+    clearEventBanner();
     clearRunBuffs();
     runtimeState.enemyIntent = null;
     gameState.runes.banked += gameState.runes.carried;

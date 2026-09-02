@@ -1129,6 +1129,53 @@ the metal and read as a hole; the shield's tree canopy, placed high, merged
 with the already-light top of the shield. Both were fixed by moving the accent,
 not by changing colours.
 
+## Events: coverage, visibility, and four decorative promises
+
+`registerRunBuff` accepts any object. An invented key raises nothing and does
+nothing — the same trap as the fictional item stats.
+`tools/audit-runbuffs.mjs` compares what events, biome traits and consumables
+write against what the engine reads. It found four dead keys:
+
+- `extraHazardPressure` — the Greedy Route promised "riskier but richer" and
+  had only upside. It now adds a per-turn chance of taking a stack of the
+  biome's dominant hazard, capped at 30%.
+- `noRetreat` — the trait is printed on the biome sheet and the player could
+  still retreat. `toggleView` now refuses and says so.
+- `lootChanceMult` — there was no drop chance to multiply: loot always falls at
+  the end of a biome, and `getWeightedDrop` picks *which*, not *whether*. The
+  key now grants extra rolls: 2.2 reads as two guaranteed items plus a 20%
+  chance of a third.
+- `bossMitigation` — Sentinel Resin (-12%) and Ember Salve (-10%) wrote it into
+  a run buff, but `combat.js` reads only `eff.bossMitigation`, fed by vigour and
+  items. `getEffectiveStats` now sums run buffs too.
+
+The usable key set is: `armorBonus`, `armorMult`, `bossMitigation`,
+`dodgeMult`, `extraHazardPressure`, `lootChanceMult`, `lootRarityBoost`,
+`noHeal`, `noRetreat`, `rareChanceMult`, `resistBonus`, `runeGainMult`.
+
+### Coverage is derived, not hand-written
+
+`BIOME_EVENTS` was a hand-kept table that never followed the content: 38 of 50
+biomes fired nothing. `getBiomeEventPool` falls back to a universal pool plus
+one event per declared hazard, so every biome has something. An explicit list
+still wins where it exists — it expresses an intention for that zone.
+
+### The banner, and why it must not use rAF
+
+Events produced only a log line, lost in the flow of combat blows. A banner now
+sits over the combat zone for five seconds with a tone bar saying at a glance
+whether it is a windfall or a blow. It takes no click and captures none:
+automated expeditions have to run with nobody watching.
+
+Revealing it uses a **forced reflow** (`void el.offsetWidth`), never
+`requestAnimationFrame`. rAF is suspended in a background tab, so the first
+version prepared the banner, never revealed it, and hid it five seconds later —
+a player returning to the tab had seen nothing. This is the second time rAF
+suspension has cost a debugging session; see the sprite-flicker note.
+
+"Bifurcation", not "Route choice": the game draws at random. A real choice
+would need to pause the expedition, which breaks auto-run.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

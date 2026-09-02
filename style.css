@@ -3346,3 +3346,80 @@ button:disabled {
   line-height: 1.45;
   color: var(--text-soft);
 }
+
+/* ------------------------------------------------------------------ */
+/* Banniere d'evenement                                               */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Les evenements ne s'annonçaient que par une ligne dans le journal de
+ * combat, noyee dans le flot des coups : le joueur ne les voyait pas passer.
+ * La banniere se pose au-dessus de la zone de combat, reste cinq secondes et
+ * disparait. Elle ne capte jamais le clic — l'expedition automatique doit
+ * continuer sans intervention.
+ */
+.event-banner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  z-index: 6;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: min(420px, calc(100% - 24px));
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-strong) 92%, var(--accent));
+  box-shadow: 0 10px 26px rgb(0 0 0 / 45%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.event-banner.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Barre de teinte a gauche : elle dit d'un coup d'oeil si c'est une aubaine
+   ou une tuile, avant meme d'avoir lu le texte. */
+.event-banner__kind {
+  flex: 0 0 4px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.event-banner[data-tone="gain"] .event-banner__kind { background: #2ecc71; }
+.event-banner[data-tone="danger"] .event-banner__kind { background: #e74c3c; }
+.event-banner[data-tone="grace"] .event-banner__kind { background: #f1c40f; }
+.event-banner[data-tone="route"] .event-banner__kind { background: #54a0d4; }
+
+.event-banner__body {
+  min-width: 0;
+}
+
+.event-banner__title {
+  margin: 0 0 2px;
+  font-family: var(--header-font);
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+
+.event-banner__text {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .event-banner {
+    top: 6px;
+    padding: 8px 10px;
+  }
+  .event-banner__title { font-size: 0.84rem; }
+  .event-banner__text { font-size: 0.72rem; }
+}
