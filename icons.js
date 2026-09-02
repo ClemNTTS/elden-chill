@@ -27,6 +27,14 @@ export const ATLASES = {
   accessories: { src: "assets/sprites/atlas/accessories.png", cols: 8, rows: 7 },
   ui: { src: "assets/sprites/atlas/ui.png", cols: 6, rows: 3 },
   emblems: { src: "assets/sprites/atlas/emblems.png", cols: 6, rows: 2 },
+  /*
+   * Pieces d'armure que le pack ne couvre pas. Sa planche ne contient QUE
+   * des torses : une couronne et un ecu s'y affichaient en plastron.
+   * Generee par tools/build_armour_extras_atlas.py, dans le meme pipeline
+   * pixel art que les accessoires — pas un SVG, qui serait la seule image
+   * lisse au milieu de 164 icones.
+   */
+  armourExtras: { src: "assets/sprites/atlas/armour-extras.png", cols: 2, rows: 1 },
 };
 
 /**
@@ -114,7 +122,7 @@ const ARMOUR_CELLS = {
   beast_hide_cloak: [2, 0],
   shaded_pauldron: [3, 2],
   serpent_scale_mail: [4, 17],
-  serpent_king_crown: [6, 17],
+  serpent_king_crown: [0, 0, "armourExtras"],
   sealed_plate: [2, 8],
   jar_lid_shield: [3, 11],
   night_cloak: [3, 4],
@@ -122,7 +130,7 @@ const ARMOUR_CELLS = {
   black_beast_mantle: [4, 2],
   ancient_dragon_scale: [4, 13],
   all_knowing_helm: [5, 15],
-  haligtree_crest_shield: [7, 17],
+  haligtree_crest_shield: [1, 0, "armourExtras"],
   elden_remembrance_plate: [8, 15],
   leather_vest: [0, 0],
   hunter_cap: [4, 1],
@@ -333,7 +341,8 @@ export const getItemIcon = (itemId, level = 1) => {
   if (item.type === ITEM_TYPES.ARMOR) {
     const cell = ARMOUR_CELLS[itemId];
     if (!cell) return null;
-    return { atlas: "armours", col: cell[0], row: cell[1] };
+    // Un troisieme element nomme une autre planche que celle du pack.
+    return { atlas: cell[2] || "armours", col: cell[0], row: cell[1] };
   }
 
   const cell = ACCESSORY_CELLS[itemId];

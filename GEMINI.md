@@ -1115,8 +1115,19 @@ finds shared or empty ones, which the first cannot see. Choosing cells by eye
 put two items on cells already taken. One share is deliberate and predates
 this: fists reuse the gauntlet.
 
-Known limitation: the armour sheet holds only chest pieces, so the Serpent King
-Crown and the Haligtree Crest Shield display as breastplates.
+The armour sheet holds only chest pieces, so the Serpent King Crown and the
+Haligtree Crest Shield were showing as breastplates. They now come from
+`armour-extras.png`, drawn with the same `pixelart.py` pipeline as the
+accessories rather than as SVG: an SVG would be the only smooth image among 164
+pixel-art icons, and would need its own render path. An `ARMOUR_CELLS` entry may
+carry a third element naming another sheet.
+
+Drawing 16x16 shapes against `render_cell` has one trap worth knowing: it
+shades by VERTICAL POSITION, lightening the accent in the top third and
+darkening it below. A gem placed low in the crown's band came out darker than
+the metal and read as a hole; the shield's tree canopy, placed high, merged
+with the already-light top of the shield. Both were fixed by moving the accent,
+not by changing colours.
 
 ## Key Functions & Logic
 
