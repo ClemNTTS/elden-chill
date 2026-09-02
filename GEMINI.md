@@ -941,6 +941,52 @@ and the last one played never heads the next bag.
 Files live in `assets/music/`. Adding one is a single line in `campSongs` or
 `dungeonSongs` — no naming convention to respect.
 
+## Per-track gain (`TRACK_GAIN` in `ui.js`)
+
+Generated tracks came back spanning 5.1 dB — from -12.9 dBFS RMS
+(`camp_song_7`) to -18.0 (`dungeon_song_4`). The volume slider writes the same
+value to both `Audio` elements, so every camp/expedition switch jumped.
+
+`applyTrackVolume()` multiplies the master volume by a per-track gain. Two
+things constrain the table:
+
+- **`HTMLMediaElement.volume` throws above 1**, so gains can only attenuate.
+  There is no boosting a quiet track without Web Audio and a `GainNode`, which
+  is not worth the rewiring here.
+- The target is therefore **-16 dBFS with a clamp at 1**. Tracks already below
+  the target keep gain 1 and sit up to 2 dB under it, which is inaudible.
+  Aligning everything on the quietest track would have closed the gap
+  completely but cost 5 dB of headroom across the whole game.
+
+Residual spread: **2.0 dB**. A track missing from the table plays at full gain,
+so adding music without measuring is safe.
+
+Recalibrate with `tools/mesure-volume.js` — a console snippet, not a Node
+script: decoding mp3 outside a browser needs ffmpeg, which this machine lacks.
+It prints the `TRACK_GAIN` block ready to paste.
+
+The volume is read from `gameState` on every call rather than cached in a
+module variable: `playCampMusic()` fires at load, before the options slider is
+initialised, and two sources of truth drift apart.
+
+## The narrator button
+
+`toggleNarrator()` in the Audio panel of the options. Three things it has to
+get right:
+
+- **One narrator at a time.** A single `narratorAudio` element, plus a
+  `narratorPlaying` flag; `playCampMusic()` and `playDungeonMusic()` return
+  early while it is set, so entering an expedition mid-narration does not stack
+  music over the voice.
+- **Resume in the right section.** `endNarrator()` reads `currentSection`, not
+  wherever playback started — the player may have left camp during the 1 min 47.
+  Verified: start in camp, leave on expedition, and the dungeon track is what
+  comes back.
+- **A second press stops it.** Nearly two minutes is too long to be stuck in.
+
+`onerror` routes to `endNarrator` as well, so a missing file leaves the game
+with music rather than silence.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

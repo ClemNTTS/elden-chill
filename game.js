@@ -28,6 +28,7 @@ import {
   toggleView,
   updateUI,
   playCampMusic,
+  toggleNarrator,
   setAudioListener,
   toggleRealTimeStats,
 } from "./ui.js";
@@ -223,6 +224,7 @@ window.hideTooltip = hideTooltip;
 window.equipAsh = equipAsh;
 window.toggleRealTimeStats = toggleRealTimeStats;
 window.joinDiscord = joinDiscord;
+window.toggleNarrator = toggleNarrator;
 
 // --- Game Initialization ---
 

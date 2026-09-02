@@ -28,6 +28,59 @@ const dungeonSongs = [
   "./assets/music/dungeon_song_7.mp3",
 ];
 
+const NARRATOR_TRACK = "./assets/music/narrator-song.mp3";
+
+/*
+ * Gain par piste, pour egaliser le volume percu.
+ *
+ * Les morceaux generes sortent a des niveaux qui varient de 5 dB : passer de
+ * dungeon_song_4 a camp_song_7 faisait un bond audible, le curseur appliquant
+ * la meme valeur aux deux elements Audio.
+ *
+ * Mesure au Web Audio sur les 90 premieres secondes de chaque piste (voir
+ * tools/mesure-volume.js), cible -16 dBFS RMS.
+ *
+ * La valeur est BORNEE A 1 : HTMLMediaElement.volume refuse tout ce qui
+ * depasse, on ne peut donc qu'attenuer. Les pistes deja plus basses que la
+ * cible gardent 1 et restent au plus 2 dB en dessous, ce qui ne s'entend
+ * pas. L'alternative — aligner tout sur la piste la plus faible — corrigeait
+ * l'ecart en entier mais coutait 5 dB de marge sur l'ensemble du jeu.
+ *
+ * Une piste absente de la table joue a plein gain : ajouter un morceau sans
+ * le mesurer reste sans risque.
+ */
+const TRACK_GAIN = {
+  "camp_song_1.mp3": 1,
+  "camp_song_2.mp3": 0.89,
+  "camp_song_3.mp3": 0.94,
+  "camp_song_4.mp3": 1,
+  "camp_song_5.mp3": 0.85,
+  "camp_song_6.mp3": 0.90,
+  "camp_song_7.mp3": 0.70,
+  "dungeon_song_1.mp3": 1,
+  "dungeon_song_2.mp3": 1,
+  "dungeon_song_3.mp3": 1,
+  "dungeon_song_4.mp3": 1,
+  "dungeon_song_5.mp3": 0.87,
+  "dungeon_song_6.mp3": 1,
+  "dungeon_song_7.mp3": 0.93,
+  "narrator-song.mp3": 1,
+};
+
+/*
+ * Le volume est relu dans gameState a chaque fois, plutot que garde dans une
+ * variable de module : playCampMusic() part au chargement, avant que le
+ * curseur des options ne soit initialise, et deux sources de verite finissent
+ * toujours par se desynchroniser.
+ */
+const getMusicVolume = () => gameState.save?.audioVolume ?? 0.3;
+
+/** Applique volume maitre x gain de la piste chargee dans l'element. */
+const applyTrackVolume = (audio) => {
+  const file = (audio.src || "").split("/").pop();
+  audio.volume = Math.min(1, getMusicVolume() * (TRACK_GAIN[file] ?? 1));
+};
+
 /*
  * Sac melange, plutot qu'un tirage independant a chaque fois.
  *
@@ -80,11 +133,13 @@ let currentSection = null;
 
 function playNextCampSong() {
   campAudio.src = nextCampSong();
+  applyTrackVolume(campAudio);
   campAudio.play().catch(() => {});
 }
 
 function playNextDungeonSong() {
   dungeonAudio.src = nextDungeonSong();
+  applyTrackVolume(dungeonAudio);
   dungeonAudio.play().catch(() => {});
 }
 
@@ -97,10 +152,64 @@ export function playCampMusic() {
     currentSection = "camp";
     campAudio.src = nextCampSong();
   }
+  applyTrackVolume(campAudio);
+  // Le narrateur a la priorite : on ne lui passe pas la musique par-dessus.
+  if (narratorPlaying) return;
   // La lecture automatique est refusee tant que le joueur n'a rien clique :
   // le morceau reste choisi et partira au premier appel autorise.
   campAudio.play().catch(() => {});
 }
+
+/*
+ * La chanson du narrateur, declenchee depuis les options.
+ *
+ * Trois choses a tenir :
+ *   - lecture unique. Sans le drapeau, chaque clic empilait un narrateur de
+ *     plus et ils se parlaient dessus ;
+ *   - la musique de fond se met en pause et REPREND a la fin, dans la section
+ *     ou le joueur se trouve — pas forcement celle du depart, il a pu partir
+ *     en expedition entre-temps ;
+ *   - un second clic interrompt. Le morceau fait pres de deux minutes : rester
+ *     coince dessus serait penible.
+ */
+const narratorAudio = new Audio();
+let narratorPlaying = false;
+
+const refreshNarratorButton = () => {
+  const btn = document.getElementById("btn-narrator");
+  if (!btn) return;
+  btn.innerText = narratorPlaying
+    ? "Faire taire le narrateur"
+    : "Ecouter le narrateur";
+  btn.classList.toggle("is-active", narratorPlaying);
+};
+
+/** Rend la main a la musique de fond. */
+const endNarrator = () => {
+  narratorPlaying = false;
+  if (currentSection === "dungeon") dungeonAudio.play().catch(() => {});
+  else playCampMusic();
+  refreshNarratorButton();
+};
+
+export const toggleNarrator = () => {
+  if (narratorPlaying) {
+    narratorAudio.pause();
+    endNarrator();
+    return;
+  }
+  narratorPlaying = true;
+  campAudio.pause();
+  dungeonAudio.pause();
+  if (!narratorAudio.src) narratorAudio.src = NARRATOR_TRACK;
+  applyTrackVolume(narratorAudio);
+  narratorAudio.currentTime = 0;
+  narratorAudio.onended = endNarrator;
+  // Fichier absent ou lecture refusee : on ne laisse pas le jeu muet.
+  narratorAudio.onerror = endNarrator;
+  narratorAudio.play().catch(endNarrator);
+  refreshNarratorButton();
+};
 
 function playDungeonMusic() {
   campAudio.pause();
@@ -108,6 +217,8 @@ function playDungeonMusic() {
     currentSection = "dungeon";
     dungeonAudio.src = nextDungeonSong();
   }
+  applyTrackVolume(dungeonAudio);
+  if (narratorPlaying) return;
   dungeonAudio.play().catch(() => {});
 }
 
@@ -3260,23 +3371,24 @@ export const setAudioListener = () => {
   // temps que le navigateur telecharge le fichier.
   primeSfx();
 
+  refreshNarratorButton();
+
   const volumeSlider = document.getElementById("music-volume");
 
   if (volumeSlider) {
     const currentVolume = gameState.save?.audioVolume ?? 0.3;
     volumeSlider.value = currentVolume;
 
-    campAudio.volume = currentVolume;
-    dungeonAudio.volume = currentVolume;
+    // Le gain de la piste s'applique par-dessus le volume maitre : on passe
+    // par applyTrackVolume plutot que d'ecrire .volume directement.
+    [campAudio, dungeonAudio, narratorAudio].forEach(applyTrackVolume);
 
     volumeSlider.oninput = (e) => {
       const volume = parseFloat(e.target.value);
 
-      campAudio.volume = volume;
-      dungeonAudio.volume = volume;
-
       if (!gameState.save) gameState.save = {};
       gameState.save.audioVolume = volume;
+      [campAudio, dungeonAudio, narratorAudio].forEach(applyTrackVolume);
 
       saveGame();
     };
