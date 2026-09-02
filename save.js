@@ -1,6 +1,7 @@
 import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 import { CRIT_BASE, syncCritStats } from "./crit.js";
 import { getMaxLevel } from "./rebirth.js";
+import { BIOMES } from "./biome.js";
 import {
   CAMP_SCREEN_IDS,
   LOCAL_PREFS_KEY,
@@ -255,8 +256,49 @@ const migrateCritToSkillPoints = (profile) => {
   return profile;
 };
 
+/*
+ * Sauvegardes d'avant le plafond de progression.
+ *
+ * Elles n'ont pas de world.defeatedBosses. Sans reconstruction, un joueur
+ * niveau 180 se retrouverait sous un plafond de 20 : il ne PERDRAIT pas ses
+ * niveaux, mais ne pourrait plus jamais en gagner, ce qui est pire qu'une
+ * remise a zero parce que rien ne l'explique.
+ *
+ * On reconstruit depuis les biomes debloques : un biome dont au moins un
+ * `unlocks` est ouvert a forcement vu son boss tomber, puisque c'est la
+ * victoire qui debloque la suite. La derniere zone atteinte n'est pas comptee,
+ * ce qui est le bon sens : son boss est peut-etre encore debout.
+ */
+const reconstruireBossVaincus = (profile) => {
+  if (Array.isArray(profile?.world?.defeatedBosses)) return profile;
+  const ouverts = new Set(profile?.world?.unlockedBiomes || []);
+  const vaincus = [];
+  for (const id of ouverts) {
+    const suite = BIOMES[id]?.unlocks || [];
+    if (suite.some((suivant) => ouverts.has(suivant))) vaincus.push(id);
+  }
+  profile.world = profile.world || {};
+  profile.world.defeatedBosses = vaincus;
+  /*
+   * On ne redescend jamais un personnage sous son niveau acquis.
+   *
+   * Un joueur qui avait farme jusqu'au niveau 200 dans les premieres zones ne
+   * perdrait pas ses niveaux — le plafond n'empeche que d'en GAGNER — mais il
+   * lirait "Niveau 200/105", ce qui n'a aucun sens. Son niveau du jour devient
+   * donc son plancher. La regle ne s'applique qu'aux sauvegardes d'avant : une
+   * partie neuve part de 25.
+   */
+  profile.world.legacyLevelFloor = profile.stats?.level || 0;
+  console.info(
+    `[save] plafond de progression reconstruit : ${vaincus.length} boss deduits des biomes debloques`,
+  );
+  return profile;
+};
+
 const hydrate = (profile) => {
-  const withOfflineTime = applyOfflineTimeProgress(migrateCritToSkillPoints(profile));
+  const withOfflineTime = applyOfflineTimeProgress(
+    reconstruireBossVaincus(migrateCritToSkillPoints(profile)),
+  );
   ensureSaveIdentity(withOfflineTime);
 
   // Une sauvegarde prise en pleine expedition restaure isExploring a true,

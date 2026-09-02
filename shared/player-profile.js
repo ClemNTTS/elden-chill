@@ -58,6 +58,15 @@ export const DEFAULT_PLAYER_PROFILE = {
     activeBiomeHazards: [],
     activeTraits: [],
     lastEventProgress: -1,
+    /*
+     * Biomes dont le boss est tombe. Sert de cle au plafond de niveau : sans
+     * lui, on pouvait laisser tourner le jeu dans la premiere zone et arriver
+     * au niveau 220 sans jamais avoir reflechi a un build.
+     */
+    defeatedBosses: [],
+    // Zero pour une partie neuve : seules les sauvegardes d'avant le plafond
+    // en heritent une valeur, pour ne pas afficher un niveau au-dessus du cap.
+    legacyLevelFloor: 0,
   },
   playerEffects: [],
   ennemyEffects: [],

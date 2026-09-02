@@ -138,8 +138,91 @@ export const resetRebirthTree = () => {
 export const getRebirthCount = () => getRebirth().count;
 
 /** Niveau maximum courant : le plafond de base plus le gain des renaissances. */
+/*
+ * Boss de la trame principale : le plus court chemin du depart au Trone.
+ *
+ * La liste est ecrite en dur plutot que derivee de BIOMES, pour ne pas faire
+ * dependre rebirth.js du module des biomes — il n'importe aujourd'hui que
+ * l'etat. Elle correspond exactement au parcours minimal de 18 zones.
+ *
+ * Les biomes optionnels ne relevent PAS le plafond : ils donnent du butin. Le
+ * niveau se merite en avançant dans l'histoire.
+ */
+export const MAIN_BOSS_BIOMES = [
+  "limgrave_west",
+  "limgrave_north",
+  "enter_stormwind_castle",
+  "stormwind_castle",
+  "liurnia_south",
+  "liurnia_east",
+  "raya_lucaria_academy",
+  "altus_plateau",
+  "mount_gelmir",
+  "volcano_manor",
+  "rykard_lair",
+  "leyndell_royal",
+  "forbidden_land",
+  "mountaintops",
+  "crumbling_farum_azula",
+  "farum_azula_deep",
+  "leyndell_ash",
+  "erdtree_throne",
+];
+
+/*
+ * Niveau maximum avant d'avoir battu le moindre boss principal.
+ *
+ * Assez pour se construire un premier build, trop peu pour tenir la zone
+ * suivante : c'est tout l'interet du plafond.
+ */
+export const LEVEL_CAP_BASE = 25;
+
+/*
+ * Niveaux gagnes par boss principal abattu.
+ *
+ * Calibre contre le simulateur : en dessous de 20, le plafond ajoute des murs
+ * qui n'existaient pas et rend la trame infinissable — a 12 par boss, le Trone
+ * d'Elden lui-meme devenait imprenable. A 20, le nombre de murs est exactement
+ * celui du jeu sans plafond, tout en bloquant a 25 le joueur qui laisserait
+ * tourner la premiere zone.
+ *
+ * Le plafond atteint 220 apres dix boss sur dix-huit : le dernier tiers est
+ * donc libre, ce qui est voulu. L'exploit vise etait le farm passif en zone
+ * de depart, pas la progression de fin de partie.
+ */
+export const LEVEL_PER_MAIN_BOSS = 20;
+
+export const getDefeatedBosses = () => gameState.world?.defeatedBosses || [];
+
+export const getMainBossesDefeated = () => {
+  const vaincus = new Set(getDefeatedBosses());
+  return MAIN_BOSS_BIOMES.filter((id) => vaincus.has(id)).length;
+};
+
+/** Prochain boss principal a abattre, ou null si la trame est finie. */
+export const getNextMainBoss = () => {
+  const vaincus = new Set(getDefeatedBosses());
+  return MAIN_BOSS_BIOMES.find((id) => !vaincus.has(id)) || null;
+};
+
+/**
+ * Plafond apporte par la progression seule, renaissance exclue.
+ *
+ * 18 boss a 12 niveaux depassent MAX_LEVEL avant le dernier : c'est voulu, le
+ * plafond ne doit pas etre le mur qui empeche de finir la trame.
+ */
+export const getProgressionCap = () =>
+  Math.min(
+    MAX_LEVEL,
+    Math.max(
+      LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * getMainBossesDefeated(),
+      // Plancher des sauvegardes d'avant le plafond : voir save.js.
+      gameState.world?.legacyLevelFloor || 0,
+    ),
+  );
+
 export const getMaxLevel = () =>
-  MAX_LEVEL + REBIRTH_LEVEL_BONUS * getRebirthCount() + getNodeValue("will");
+  getProgressionCap() + REBIRTH_LEVEL_BONUS * getRebirthCount() + getNodeValue("will");
 
 /** Bonus de runes permanent, a ajouter aux stats effectives. */
 export const getRebirthRuneBonus = () =>
@@ -269,6 +352,9 @@ export const performRebirth = () => {
   gameState.inventory = [{ id: "fists", name: "poings", level: 10, count: 0 }];
 
   gameState.world.unlockedBiomes = ["limgrave_west"];
+  // Le plafond de niveau repart de zero avec la trame : une renaissance
+  // recommence l'histoire, les niveaux se remeritent.
+  gameState.world.defeatedBosses = [];
   gameState.world.currentBiome = "limgrave_west";
   gameState.world.progress = 0;
   gameState.world.isExploring = false;

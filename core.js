@@ -2,6 +2,8 @@ import { ASHES_OF_WAR } from "./ashes.js";
 import { playSfx } from "./sfx.js";
 import { getTraitRunBuffs } from "./biome-traits.js";
 import {
+  MAIN_BOSS_BIOMES,
+  getProgressionCap,
   getRebirthAshBonus,
   getRebirthRareMult,
   getTrialByBiome,
@@ -249,6 +251,24 @@ export const handleDrops = (sessionId) => {
   runtimeState.defeatedEnemies.forEach((enemy) => {
     if (enemy.isBoss) {
       wasABossEncounter = true;
+      /*
+       * On note le biome, pas le boss : c'est le biome qui figure dans la
+       * liste des boss principaux, et deux zones peuvent partager un modele
+       * de creature.
+       */
+      const zone = gameState.world.currentBiome;
+      if (!gameState.world.defeatedBosses) gameState.world.defeatedBosses = [];
+      if (zone && !gameState.world.defeatedBosses.includes(zone)) {
+        gameState.world.defeatedBosses.push(zone);
+        // getProgressionCap() relit la liste qu'on vient d'etendre, donc la
+        // valeur annoncee est deja la nouvelle.
+        if (MAIN_BOSS_BIOMES.includes(zone)) {
+          ActionLog(
+            `Le chemin s'ouvre : niveau maximum porte a ${getProgressionCap()}.`,
+            "log-crit",
+          );
+        }
+      }
     }
     const runesAwarded = Math.floor(enemy.runes * intBonus) || 1;
     gameState.runes.carried += Math.floor(runesAwarded);

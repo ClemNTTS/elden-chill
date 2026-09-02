@@ -236,7 +236,9 @@ import {
   getRebirthPointsSpent,
   getRebirthPointsTotal,
   canRebirth,
+  LEVEL_PER_MAIN_BOSS,
   getMaxLevel,
+  getNextMainBoss,
   getRebirthCount,
   getRebirthRuneBonus,
   isTrialCleared,
@@ -524,9 +526,22 @@ const updateStatDisplay = () => {
   if (levelCapBanner) {
     levelCapBanner.classList.add("is-visible");
     levelCapBanner.classList.toggle("is-maxed", remainingLevels === 0);
+    /*
+     * Le plafond doit dire D'OU il vient et COMMENT le lever.
+     *
+     * Il depend maintenant des boss de la trame abattus. Un joueur bloque sans
+     * explication conclurait a un bug, ou pire, farmerait pour rien : c'est
+     * exactement le genre de regle invisible qu'on a deja corrigee ailleurs.
+     */
+    const prochain = getNextMainBoss();
+    const nomProchain = prochain ? BIOMES[prochain]?.name || prochain : null;
+    const commentLever = nomProchain
+      ? ` Abattez le boss de ${nomProchain} pour gagner ${LEVEL_PER_MAIN_BOSS} niveaux.`
+      : " Montez une Renaissance ou investissez dans Volonte pour aller plus loin.";
+
     levelCapBanner.innerText =
       remainingLevels === 0
-        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}). Les attributs sont bloques pour cette version.`
+        ? `Niveau maximum atteint (${currentLevel}/${maxLevel}).${commentLever}`
         : `Niveau ${currentLevel}/${maxLevel} · ${remainingLevels} amelioration(s) restante(s) avant le cap.`;
   }
 

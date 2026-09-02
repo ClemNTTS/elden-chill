@@ -197,6 +197,23 @@ const cumulativeCost = (() => {
 
 const MAX_LEVEL = 220;
 
+/*
+ * Plafond de progression : le niveau se merite en abattant les boss de la
+ * trame. Sans lui, le simulateur farme jusqu'a 220 des la premiere zone —
+ * exactement ce que le plafond existe pour empecher, et exactement ce qui
+ * rendait ses verdicts optimistes sur le debut de partie.
+ *
+ * On relit les constantes du jeu plutot que de les recopier : une valeur
+ * dupliquee finit toujours par diverger.
+ */
+const { MAIN_BOSS_BIOMES, LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS } =
+  await import("../rebirth.js");
+const capPour = (clears) => {
+  const vaincus = new Set(clears);
+  const n = MAIN_BOSS_BIOMES.filter((id) => vaincus.has(id)).length;
+  return Math.min(MAX_LEVEL, LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * n);
+};
+
 /* ------------------------------------------------------------------ */
 /* Rapport                                                            */
 /* ------------------------------------------------------------------ */
@@ -321,7 +338,8 @@ const run = (buildKey) => {
 
     // On farme jusqu'a pouvoir battre le boss, ou jusqu'a declarer le mur.
     while (cycles < CYCLES_MAX) {
-      while (level < MAX_LEVEL && cumulativeCost(level + 1) <= runes) level += 1;
+      const plafond = capPour(cleared);
+      while (level < plafond && cumulativeCost(level + 1) <= runes) level += 1;
       applyBuild(build, level);
       if (pool.length) equipBest(pool, stdArmor, groupe, boss.armor || 100);
       eff = getEffectiveStats();
@@ -333,7 +351,8 @@ const run = (buildKey) => {
       margeBoss = maxHp / Math.max(1, enemyDamagePerTurn(eff, boss, armorMult)) / ttkBoss;
 
       if (margeBoss >= MARGE_JOUABLE && margeStd >= 1) break;
-      if (level >= MAX_LEVEL && cycles > 3) break; // plus rien a gagner
+      // Plafond atteint : farmer davantage ne rapporte plus un seul niveau.
+      if (level >= plafond && cycles > 3) break;
 
       // Un cycle de farm : les paliers standard, sans le boss.
       runes += Math.floor((biome.length - 1) * stdRunes * (1 + (eff.runeGainMult || 0) + runeMult));

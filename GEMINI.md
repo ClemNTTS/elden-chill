@@ -1223,6 +1223,55 @@ build, not 8.8% ahead of the pack as the broken model suggested. Its magic term
 is linear in intelligence, so it fades over a full run — the same conclusion
 reached earlier from a different broken tool, now supported by a sound one.
 
+## The level cap is earned, not farmed
+
+Leaving the game running in the first zone used to reach level 220: runes accrue
+forever and nothing gated the climb. The cap now comes from the **main story
+bosses** — the 18 biomes on the shortest path to the Elden Throne, listed in
+`MAIN_BOSS_BIOMES`. Optional biomes give loot, never levels.
+
+`LEVEL_CAP_BASE = 25`, `LEVEL_PER_MAIN_BOSS = 20`, so the ceiling runs
+25 → 45 → 65 → … → 220 after ten of the eighteen. The last third is
+deliberately free: the exploit being closed is passive farming in the starting
+zone, not endgame progression.
+
+**Both numbers are calibrated against the simulator, and the first attempt made
+the game unfinishable.** At 12 levels per boss the run showed 17–27 walls
+including the Elden Throne itself. From 20 upward the wall count stops moving
+and matches the uncapped game exactly — the cap binds early and releases before
+it can block anyone.
+
+Two things that made this safe to ship:
+
+- **The cap explains itself.** Both the build banner and the blocked-upgrade
+  message name the next boss and what beating it is worth. A ceiling with no
+  stated cause reads as a bug, and the player farms for nothing.
+- **Old saves are grandfathered.** They have no `defeatedBosses`, so it is
+  rebuilt from `unlockedBiomes` — a biome whose `unlocks` are open has had its
+  boss killed, since victory is what opens them. And `legacyLevelFloor` pins the
+  cap at the character's current level, so nobody reads "Niveau 200/105".
+  Levels were never at risk (the cap only blocks *gaining*), but the display
+  would have been nonsense.
+
+Rebirth clears `defeatedBosses` along with `unlockedBiomes`: a new run re-earns
+its ceiling.
+
+## Why the magic curve was NOT changed
+
+The plan was to make `getMagicDamage` super-linear, since the corrected
+simulator put intelligence 20% behind. Measured per biome, the gap is
+**entirely in the first third** — 517 cycles against dexterity's 421, while the
+last thirds tie at 49 and 48. Three early biomes hitting the 60-cycle cap
+account for the whole difference.
+
+An exponent cannot fix that, and the calibration proved it: every setting that
+improved the whole-run number did so by making intelligence *stronger early*,
+which is the opposite of what the game felt like. Calibrating on invested
+intelligence was also wrong — items push the effective value well past the
+crossover, so the "weaker early" curve landed 15% stronger at level 24.
+
+Reverted to linear. The real work is those three biomes, not the formula.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.
