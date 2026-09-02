@@ -1299,6 +1299,52 @@ armour too low to survive `Math.floor`, no base crit, resistances at zero, no
 afflictions. **Whenever a tool here reports something surprising, suspect the
 probe before the game.**
 
+## The combat screen: one place per fighter
+
+Everything describing a fighter — sprite, name, stats, HP bar, and for the
+enemy its intent — now lives in its own lane inside the pinned combat block.
+
+It used to be spread over three blocks stacked above it: `#combat-hud` (two
+cards with name and stats), `#battle-intent-panel`, and a duplicate name label
+inside the lane itself. Since the combat block is **sticky at the bottom of the
+viewport**, it covered them: the player card read "FOR 506 · VIG 465 · ARM 2"
+with the end cut off, and the intent panel showed only a clipped title.
+
+### The sticky stack went from three layers to two
+
+The ash button had its own sticky layer, positioned with
+`bottom: calc(--combat-actions-height + --combat-zone-height + 22px)`. Every
+layer depended on the height of the one below, published by a `ResizeObserver`.
+A boss is taller than a soldier, so the combat zone changed height mid-run and
+the button landed on the fighters.
+
+The ash button is now an ordinary utility in the bottom bar. Two layers remain —
+action bar, then combat block — and `--combat-zone-height` has no reader left.
+
+`.biome-bottom-left` had **no CSS rule at all**: a plain block div, so its
+buttons stacked. Adding the ash button there took the bar from 68px to 122px
+and ate the bottom of the screen. It is a flex row now, with `width: auto` on
+its buttons — `.safe-btn` stretches to full width otherwise, which pushed the
+second button onto its own line.
+
+### Two display bugs found while reorganising
+
+- **HP text was never clamped.** The bar width used `Math.max(0, …)`, the text
+  did not: a 7399-damage hit on a 10 HP enemy printed `-7389 / 10` for a frame.
+  With any decent weapon, every kill goes through that.
+- **The HP bar and the name followed `currentEnemyGroup[0]`** while the sprite
+  follows the first *living* enemy. From the first death in a pack, the picture
+  and the bar described different creatures. My own sprite fix introduced that
+  split; all three now use the same rule.
+
+### Layout cannot be measured in a collapsed pane
+
+`window.innerWidth` reads **0** when the Browser pane is collapsed, so
+`max-width: 640px` matches, every element reports width 0, and the numbers are
+nonsense — one reading claimed the action bar was 385px tall. Set an explicit
+viewport with `resize_window` before trusting any layout measurement. This is
+the same family as rAF being suspended in a hidden pane.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

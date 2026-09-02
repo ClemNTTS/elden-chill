@@ -570,35 +570,8 @@
             <p id="stepper-text">Progression : 0 / 10</p>
           </div>
 
-          <div id="combat-hud">
-            <div id="player-combat-card" class="combat-card ally">
-              <p class="combat-card__eyebrow">Joueur</p>
-              <h3 class="combat-card__name">Sans-eclat</h3>
-              <p class="combat-card__sub">FOR 0 · VIG 0 · ARM 0</p>
-            </div>
-            <div id="enemy-combat-card" class="combat-card enemy">
-              <p class="combat-card__eyebrow">Menace</p>
-              <h3 class="combat-card__name">Ennemi</h3>
-              <p class="combat-card__sub">Analyse en cours</p>
-            </div>
-          </div>
-
-          <div id="battle-intent-panel" class="battle-panel battle-intent-panel">
-            <div class="battle-intent-copy">
-              <p class="combat-card__eyebrow">Intention ennemie</p>
-              <h3 id="enemy-intent-label">Analyse en cours</h3>
-              <p id="enemy-intent-hint">La menace se met en place.</p>
-            </div>
-          </div>
-
           <div class="battle-log-frame battle-panel">
             <div id="action-log"></div>
-          </div>
-
-          <div id="ash-container" class="ash-container">
-            <button id="ash-button" onclick="primeAsh()">
-              Utiliser Cendre : <span id="ash-name">---</span> (<span id="ash-uses">0</span>)
-            </button>
           </div>
 
           <div id="combat-zone" class="battle-panel">
@@ -619,7 +592,11 @@
                 <canvas id="player-sprite" class="fighter-sprite" aria-hidden="true"></canvas>
               </div>
               <div class="hp-container">
-                <span>Joueur</span>
+                <!-- Nom et statistiques au meme endroit que le sprite et la
+                     barre de vie. Ils vivaient dans une carte separee, que le
+                     bloc de combat collant recouvrait a moitie. -->
+                <p class="combat-lane__name" id="player-lane-name">Sans-eclat</p>
+                <p class="combat-lane__meta" id="player-lane-meta">FOR 0 · VIG 0 · ARM 0</p>
                 <div class="hp-bar-bg">
                   <div id="player-hp-fill" class="hp-fill"></div>
                   <span id="player-hp-text" class="hp-text">0 / 0</span>
@@ -634,7 +611,14 @@
                 <div id="enemy-emblem" class="fighter-emblem" aria-hidden="true"></div>
               </div>
               <div class="hp-container">
-                <span id="enemy-name">Ennemi</span>
+                <p class="combat-lane__name" id="enemy-name">Aucune menace</p>
+                <p class="combat-lane__meta" id="enemy-lane-meta">Le champ de bataille se calme.</p>
+                <!-- L'intention ennemie occupait un panneau a part, que le bloc
+                     de combat collant recouvrait entierement : on n'en lisait
+                     que le titre tronque. Elle se lit maintenant sous le nom de
+                     la creature qu'elle concerne. -->
+                <p class="combat-lane__intent" id="enemy-intent-label">Analyse en cours</p>
+                <p class="combat-lane__intent-hint" id="enemy-intent-hint">La menace se met en place.</p>
                 <div class="hp-bar-bg">
                   <div id="enemy-hp-fill" class="hp-fill"></div>
                   <span id="enemy-hp-text" class="hp-text">0 / 0</span>
@@ -647,6 +631,13 @@
           <div id="combat-actions" class="biome-actions-bottom">
             <div class="biome-bottom-left">
               <button class="safe-btn" onclick="toggleView('camp')">Se replier au camp</button>
+              <!-- La cendre avait sa propre couche collante, calee sur la
+                   hauteur de la zone de combat. Elle retombait sur les
+                   combattants des que cette hauteur changeait. Elle est
+                   maintenant un utilitaire parmi les autres. -->
+              <button id="ash-button" onclick="primeAsh()">
+                Cendre : <span id="ash-name">---</span> (<span id="ash-uses">0</span>)
+              </button>
             </div>
             <div class="automation-controls">
               <button id="btn-auto-restart" onclick="toggleAutoRestart()" title="Relance l'expedition dans le meme biome apres une mort">

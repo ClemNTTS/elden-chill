@@ -1897,7 +1897,6 @@ button:disabled {
   background: var(--danger);
 }
 
-#combat-hud,
 #combat-zone {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2087,22 +2086,19 @@ button:disabled {
   border-color: color-mix(in srgb, var(--accent) 48%, var(--border-strong));
 }
 
-.ash-container {
-  position: sticky;
-  /* Cale au-dessus de la zone de combat, dont la hauteur est mesuree par
-     ui.js. C'etait 118px en dur : l'ajout des sprites a rendu la zone plus
-     haute et le bouton retombait par-dessus les combattants. */
-  bottom: calc(
-    var(--combat-actions-height, 68px) + var(--combat-zone-height, 118px) + 22px
-  );
-  z-index: 4;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none;
-  margin-top: -6px;
-}
-
-.ash-container.is-hidden {
+/*
+ * Le bouton de cendre n'a plus de couche collante.
+ *
+ * Il en avait une, calee sur la hauteur de la zone de combat via une variable
+ * publiee par un ResizeObserver. Le pilage faisait donc TROIS etages — cendre,
+ * combattants, barre d'actions — chacun dependant de la hauteur du precedent.
+ * Des que la zone changeait de gabarit, un boss etant plus grand qu'un soldat,
+ * le bouton retombait sur les combattants et sur la carte d'ennemi.
+ *
+ * Il est desormais un utilitaire parmi les autres dans la barre du bas, ce qui
+ * ramene le pilage a deux etages.
+ */
+#ash-button.is-hidden {
   display: none;
 }
 
@@ -2603,38 +2599,8 @@ button:disabled {
   background: color-mix(in srgb, var(--surface-subtle) 82%, var(--accent) 18%);
 }
 
-.battle-intent-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.battle-intent-copy h3,
-.battle-intent-copy p {
-  margin: 0;
-}
-
-.battle-intent-copy p {
-  color: var(--text-soft);
-}
-
-.intent-normal {
-  border-color: var(--border);
-}
-
-.intent-heavy {
-  border-color: #b87c39;
-}
-
-.intent-elite {
-  border-color: #7d8fd7;
-}
-
-.intent-boss {
-  border-color: #8e4d3c;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #8e4d3c 45%, transparent);
-}
+/* Les regles du panneau d'intention supprime vivaient ici. La severite se
+   lit desormais sur .combat-lane__intent, en bas de ce fichier. */
 
 .journal-panel {
   display: grid;
@@ -2772,7 +2738,6 @@ button:disabled {
   .build-grid,
   .codex-grid,
   .options-grid,
-  #combat-hud,
   #combat-zone,
   .hero-stats__head,
   .hub-focus-card__stats {
@@ -2786,10 +2751,6 @@ button:disabled {
     bottom: auto;
   }
 
-  .ash-container {
-    position: static;
-    margin-top: 10px;
-  }
 
   #ash-button {
     width: 100%;
@@ -3422,4 +3383,106 @@ button:disabled {
   }
   .event-banner__title { font-size: 0.84rem; }
   .event-banner__text { font-size: 0.72rem; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Identite d'un combattant, sous son sprite                          */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Nom et statistiques vivaient dans une carte separee, au-dessus du bloc de
+ * combat. Comme ce bloc est colle en bas d'ecran, il recouvrait la carte a
+ * moitie : on lisait "FOR 506 · VIG 465 · ARM 2" avec la fin coupee. Tout ce
+ * qui decrit un combattant tient maintenant dans sa lane, avec son sprite et
+ * sa barre de vie.
+ */
+.combat-lane__name {
+  margin: 0;
+  font-family: var(--header-font);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  color: var(--text);
+  /* Un nom de boss ne doit pas pousser la barre de vie hors du cadre. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-lane__meta {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  color: var(--text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La barre de vie reprend l'espace laisse par l'ancien libelle. */
+.hp-container {
+  gap: 6px;
+}
+
+@media (max-width: 640px) {
+  .combat-lane__name { font-size: 0.9rem; }
+  .combat-lane__meta { font-size: 0.7rem; }
+}
+
+/*
+ * Le groupe de gauche de la barre d'actions.
+ *
+ * Il n'avait aucune regle : un div en bloc, donc ses boutons s'empilaient. En y
+ * ajoutant la cendre, la barre est passee de 68 a 122 pixels de haut et a
+ * mange le bas de l'ecran de combat.
+ */
+.biome-bottom-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /*
+   * Pas de flex-wrap ici, et une largeur automatique sur les boutons.
+   *
+   * .safe-btn s'etire sur toute la largeur disponible : avec un wrap, il
+   * poussait la cendre a la ligne suivante et la barre passait de 68 a 132
+   * pixels de haut, mangeant le bas de l'ecran de combat.
+   */
+  flex-wrap: nowrap;
+}
+
+.biome-bottom-left > button {
+  width: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* L'intention, sous le nom de la creature qu'elle concerne. */
+.combat-lane__intent {
+  margin: 6px 0 0;
+  font-family: var(--header-font);
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-lane__intent-hint {
+  margin: 1px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La severite teinte le libelle : c'est le seul mot a lire en urgence. */
+.combat-lane.intent-boss .combat-lane__intent { color: #e74c3c; }
+.combat-lane.intent-elite .combat-lane__intent { color: #f1c40f; }
+.combat-lane.intent-heavy .combat-lane__intent { color: #e67e22; }
+
+@media (max-width: 640px) {
+  .combat-lane__intent { font-size: 0.78rem; }
+  .combat-lane__intent-hint { font-size: 0.68rem; }
 }
