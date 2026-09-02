@@ -22,34 +22,64 @@ const dungeonSongs = [
   "./assets/dungeon_song_4.mp3",
 ];
 
-let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
-let currentDungeonSongIndex = 0;
+/*
+ * Sac melange, plutot qu'un tirage independant a chaque fois.
+ *
+ * Un tirage pur rejoue souvent le meme morceau et en oublie d'autres pendant
+ * longtemps. Le sac garantit que TOUS les morceaux passent avant qu'un seul
+ * revienne. On evite seulement que le dernier joue ne ressorte en tete du sac
+ * suivant, ce qui donnerait deux fois le meme d'affilee.
+ *
+ * Pour ajouter un morceau : deposer le fichier dans assets/ et ajouter une
+ * ligne dans campSongs ou dungeonSongs. Rien d'autre a toucher.
+ */
+const makePlaylist = (files) => {
+  let bag = [];
+  let last = null;
+  const refill = () => {
+    bag = files.slice();
+    for (let i = bag.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    if (bag.length > 1 && bag[0] === last) bag.push(bag.shift());
+  };
+  return () => {
+    if (!bag.length) refill();
+    last = bag.shift();
+    return last;
+  };
+};
+
+const nextCampSong = makePlaylist(campSongs);
+const nextDungeonSong = makePlaylist(dungeonSongs);
 
 const campAudio = new Audio();
 const dungeonAudio = new Audio();
 
-function getRandomIndex(array, currentIndex) {
-  if (array.length <= 1) return 0;
-  let newIndex;
-  do {
-    newIndex = Math.floor(Math.random() * array.length);
-  } while (newIndex === currentIndex);
-  return newIndex;
-}
+/*
+ * Section en cours, "camp" ou "dungeon".
+ *
+ * L'ancien code ne changeait de morceau que sur l'evenement `ended`. Comme une
+ * expedition dure bien moins longtemps qu'un morceau, `ended` ne se declenchait
+ * pratiquement jamais : on reentendait indefiniment le meme. Et l'index du
+ * donjon partait de 0 en dur, donc toute exploration commencait sur
+ * dungeon_song_1.
+ *
+ * On tire desormais un nouveau morceau a chaque ENTREE dans une section. Pas a
+ * chaque appel : playCampMusic() est rappelee a chaque changement d'onglet, et
+ * relancer la musique a ce moment-la la couperait sans arret.
+ */
+let currentSection = null;
 
 function playNextCampSong() {
-  currentCampSongIndex = getRandomIndex(campSongs, currentCampSongIndex);
-  campAudio.src = campSongs[currentCampSongIndex];
-  campAudio.play();
+  campAudio.src = nextCampSong();
+  campAudio.play().catch(() => {});
 }
 
 function playNextDungeonSong() {
-  currentDungeonSongIndex = getRandomIndex(
-    dungeonSongs,
-    currentDungeonSongIndex,
-  );
-  dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
-  dungeonAudio.play();
+  dungeonAudio.src = nextDungeonSong();
+  dungeonAudio.play().catch(() => {});
 }
 
 campAudio.addEventListener("ended", playNextCampSong);
@@ -57,23 +87,22 @@ dungeonAudio.addEventListener("ended", playNextDungeonSong);
 
 export function playCampMusic() {
   dungeonAudio.pause();
-  // Check if the src is already set to avoid reloading
-  if (!campAudio.src.endsWith(campSongs[currentCampSongIndex])) {
-    campAudio.src = campSongs[currentCampSongIndex];
+  if (currentSection !== "camp" || !campAudio.src) {
+    currentSection = "camp";
+    campAudio.src = nextCampSong();
   }
-  campAudio.play().catch((e) => {
-    /* Autoplay was prevented */
-  });
+  // La lecture automatique est refusee tant que le joueur n'a rien clique :
+  // le morceau reste choisi et partira au premier appel autorise.
+  campAudio.play().catch(() => {});
 }
 
 function playDungeonMusic() {
   campAudio.pause();
-  if (!dungeonAudio.src.endsWith(dungeonSongs[currentDungeonSongIndex])) {
-    dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  if (currentSection !== "dungeon" || !dungeonAudio.src) {
+    currentSection = "dungeon";
+    dungeonAudio.src = nextDungeonSong();
   }
-  dungeonAudio.play().catch((e) => {
-    /* Autoplay was prevented */
-  });
+  dungeonAudio.play().catch(() => {});
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
