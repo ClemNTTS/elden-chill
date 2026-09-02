@@ -811,9 +811,13 @@ export const combatLoop = (sessionId) => {
 
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
+            // Dexterite investie + esquive apportee par les objets, plafonnees
+            // ensemble a 50%.
             const dodgeChance =
-              Math.min(0.5, gameState.stats.dexterity / 400) *
-              getRunModifier("dodgeMult", 1);
+              Math.min(
+                0.5,
+                gameState.stats.dexterity / 400 + (eff.dodgeChance || 0),
+              ) * getRunModifier("dodgeMult", 1);
 
             const playerIsStunned = gameState.playerEffects.some(
               (e) => e.id === "STUN",

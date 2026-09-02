@@ -24,7 +24,7 @@ export const ATLASES = {
   weaponsGold: { src: "assets/sprites/atlas/weapons-gold.png", cols: 24, rows: 20 },
   armours: { src: "assets/sprites/atlas/armours.png", cols: 9, rows: 19 },
   books: { src: "assets/sprites/atlas/books.png", cols: 14, rows: 12 },
-  accessories: { src: "assets/sprites/atlas/accessories.png", cols: 8, rows: 6 },
+  accessories: { src: "assets/sprites/atlas/accessories.png", cols: 8, rows: 7 },
   ui: { src: "assets/sprites/atlas/ui.png", cols: 6, rows: 3 },
   emblems: { src: "assets/sprites/atlas/emblems.png", cols: 6, rows: 2 },
 };
@@ -48,6 +48,22 @@ const weaponAtlasForLevel = (level) =>
 /* ------------------------------------------------------------------ */
 
 const WEAPON_CELLS = {
+  /* Contenu tardif. Cellule choisie dans la colonne de la famille : faux en 15-16,
+     grandes epees en 7-8, hallebardes en 16, fouets en 20, marteaux en 22. */
+  celebrant_sickle: [15, 13],
+  bestial_sanction: [13, 4],
+  briar_greatsword: [8, 3],
+  magma_whip: [20, 12],
+  godslayer_greatsword: [7, 4],
+  gargoyle_halberd: [16, 4],
+  warrior_jar_shard: [1, 6],
+  eochaid_dancing_blade: [5, 6],
+  zamor_ice_curved: [12, 5],
+  blade_of_destined_death: [10, 6],
+  dragon_halberd_ancient: [16, 5],
+  ozz_grimoire: [17, 4],
+  cleanrot_spear: [16, 7],
+  radagon_hammer: [22, 12],
   iron_sword: [3, 2],
   keen_dagger: [6, 12],
   heavy_club: [3, 11],
@@ -91,6 +107,23 @@ const WEAPON_CELLS = {
 /* ------------------------------------------------------------------ */
 
 const ARMOUR_CELLS = {
+  /* Contenu tardif. Les lignes de la planche vont par paires de teinte : cuir 0-1,
+     sombre 2-3, nuit 4-5, acier 8-10, terre cuite 11-12, givre 13-14, or 15-16,
+     jade 17-18. */
+  festival_garb: [3, 15],
+  beast_hide_cloak: [2, 0],
+  shaded_pauldron: [3, 2],
+  serpent_scale_mail: [4, 17],
+  serpent_king_crown: [6, 17],
+  sealed_plate: [2, 8],
+  jar_lid_shield: [3, 11],
+  night_cloak: [3, 4],
+  giant_crusher_plate: [0, 9],
+  black_beast_mantle: [4, 2],
+  ancient_dragon_scale: [4, 13],
+  all_knowing_helm: [5, 15],
+  haligtree_crest_shield: [7, 17],
+  elden_remembrance_plate: [8, 15],
   leather_vest: [0, 0],
   hunter_cap: [4, 1],
   styptic_boluses: [6, 1],
@@ -128,6 +161,21 @@ const ARMOUR_CELLS = {
 /* ------------------------------------------------------------------ */
 
 const ACCESSORY_CELLS = {
+  /* Contenu tardif de la version complete, planche etendue a 7 lignes. */
+  madding_charm: [2, 5],
+  deathroot_charm: [3, 5],
+  briar_thorn_seal: [4, 5],
+  manor_contract_seal: [5, 5],
+  blasphemous_chalice: [6, 5],
+  tower_seal_ring: [7, 5],
+  jar_luck_charm: [0, 6],
+  starlight_shard: [1, 6],
+  zamor_ice_seal: [2, 6],
+  destined_death_rune: [3, 6],
+  lansseax_glaive_ring: [4, 6],
+  ashen_capital_seal: [5, 6],
+  scarlet_bloom_charm: [6, 6],
+  golden_order_seal: [7, 6],
   rune_fragment: [0, 0],
   crimson_amber: [1, 0],
   scholars_ring: [2, 0],
@@ -185,6 +233,13 @@ const FISTS_ICON = { atlas: "accessories", cell: [0, 1] };
 /* ------------------------------------------------------------------ */
 
 const ASH_CELLS = {
+  /* Contenu tardif. La colonne donne la couleur de la gemme, la ligne la reliure. */
+  madding_toll: [6, 9],
+  briar_riposte: [3, 8],
+  magma_eruption: [4, 10],
+  sleep_pot: [11, 4],
+  destined_cut: [1, 10],
+  golden_vow: [6, 11],
   beginer_tarnished_heal: [8, 0],
   storm_stomp: [10, 2],
   bloody_slash: [3, 4],

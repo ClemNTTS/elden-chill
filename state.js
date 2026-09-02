@@ -147,6 +147,15 @@ export function getEffectiveStats() {
     // Multiplicateur des soins RECUS. Lu par healPlayer, seul point de passage
     // des soins du joueur, donc un objet qui le modifie agit partout.
     healReceivedMult: 1,
+    /*
+     * Esquive apportee par les OBJETS, en plus de celle de la dexterite.
+     *
+     * Le Masque de Soldat Marionnette ecrivait deja stats.dodgeChance et
+     * annoncait +5% d'esquive, mais rien ne lisait cette cle : l'effet etait
+     * purement decoratif. combat.js l'additionne desormais a la part venant
+     * de la dexterite, sous le meme plafond de 50%.
+     */
+    dodgeChance: 0,
     bossMitigation: 0,
     resistances: {
       poison: 0,

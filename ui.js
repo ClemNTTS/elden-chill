@@ -2631,8 +2631,9 @@ export const updateRealTimeStatsDisplay = () => {
   const container = document.getElementById("real-time-content");
 
   // Calcul des stats spÃ©cifiques
+  // Meme formule que combat.js, objets compris.
   const dodgeChance = Math.floor(
-    Math.min(0.5, gameState.stats.dexterity / 400) * 100,
+    Math.min(0.5, gameState.stats.dexterity / 400 + (eff.dodgeChance || 0)) * 100,
   );
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
