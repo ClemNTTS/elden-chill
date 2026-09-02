@@ -85,6 +85,21 @@ const sonde = () => {
  * niveaux et l'objet paraissait sans scaling. Premiere version de cet outil :
  * 44 faux positifs. On sonde avec un personnage reellement developpe.
  */
+/*
+ * Le personnage sonde porte des afflictions.
+ *
+ * Plusieurs objets ne donnent quelque chose QUE si le joueur est afflige — le
+ * Grelot affolant lit ses cumuls de Folie, l'Idole du crepuscule compte les
+ * statuts actifs. Sans afflictions ils rendaient zero a tous les niveaux et
+ * passaient pour inertes. Quatrieme source de faux positifs de cet outil, et
+ * toujours la meme cause : une sonde qui ne ressemble pas a un vrai joueur.
+ */
+gameState.playerEffects = [
+  { id: "MADNESS", stacks: 4, duration: 3 },
+  { id: "POISON", duration: 3 },
+  { id: "FROSTBITE", stacks: 3, duration: 3 },
+];
+
 Object.assign(gameState.stats, {
   level: 100, vigor: 60, strength: 60, dexterity: 60, intelligence: 60,
   // Plusieurs objets exigent un minimum de critique de BASE pour s'activer :
@@ -112,7 +127,7 @@ const cles = (item, niveau) => {
   };
 };
 
-const problemes = { icone: [], description: [], scaling: [], fictif: [] };
+const problemes = { icone: [], description: [], scaling: [], fictif: [], inerteNiv1: [] };
 
 for (const [id, item] of Object.entries(ITEMS)) {
   if (!item.type) continue;
@@ -166,6 +181,24 @@ for (const [id, item] of Object.entries(ITEMS)) {
     if (!/itemLevel/.test(corps)) problemes.scaling.push({ id, nom });
   }
 
+  /*
+   * 5. Objet INERTE au niveau 1.
+   *
+   * Un bonus ecrit `(1 + 0.035 * (itemLevel - 1))` vaut exactement 1 au
+   * niveau 1 : l'objet fraichement ramasse n'apporte rien, alors que sa
+   * description annonce "+3,5% par niveau" — ce qu'on lit comme 3,5% tout de
+   * suite. L'Epee Brulante et l'Epee Courbe de Zamor tombaient au premier et
+   * au deuxieme biome dans cet etat.
+   *
+   * On compare l'objet a l'absence d'objet, au niveau 1.
+   */
+  if (aDesEffets && !sansScalingAssume(id, item)) {
+    const vide = cles({}, 1);
+    const inerte = JSON.stringify(bas.valeurs) === JSON.stringify(vide.valeurs)
+      && bas.surCible === vide.surCible;
+    if (inerte) problemes.inerteNiv1.push({ id, nom });
+  }
+
   // 2. Description muette alors que le code manipule des nombres.
   if (desc && aDesEffets && !/\d/.test(desc)) {
     problemes.description.push({ id, nom, raison: "aucun chiffre annonce" });
@@ -178,6 +211,7 @@ const titres = {
   description: "Description absente ou muette",
   scaling: "Le niveau de l'objet ne change RIEN",
   fictif: "Effet FICTIF : ecrit une statistique que le moteur ne lit pas",
+  inerteNiv1: "N'apporte RIEN au niveau 1 (bonus calcule sur itemLevel - 1)",
 };
 for (const [cle, liste] of Object.entries(problemes)) {
   console.log(`${titres[cle].padEnd(58)} ${String(liste.length).padStart(3)}`);

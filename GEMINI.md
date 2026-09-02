@@ -1272,6 +1272,33 @@ crossover, so the "weaker early" curve landed 15% stronger at level 24.
 
 Reverted to linear. The real work is those three biomes, not the formula.
 
+## `itemLevel - 1` makes an item worthless the moment it drops
+
+`stats.strength * (1 + 0.035 * (itemLevel - 1))` is exactly 1 at level 1. The
+item gives **nothing at all** when found, while its description says "+3.5%
+Force / Niv" — which any player reads as 3.5% right away.
+
+Two starting weapons shipped like that: the Burning Sword (Necrolimbe Lake, one
+biome from the start) and the Zamor Curved Sword (Weeping Peninsula, two
+biomes). Both were strictly worse than bare fists, which give a flat +5.
+
+Both now use `itemLevel`. Use `itemLevel - 1` only where an item is *meant* to
+be inert until upgraded, and say so in its description.
+
+`audit-items-complet.mjs` gained a fifth check for this: it compares the item
+against **no item at all** at level 1. If they match, the item is inert.
+
+That check immediately produced two more false positives, from the same root
+cause as every other one in this project: the probe was not a plausible
+character. The Madding Charm reads the player's Madness stacks, the Rotting
+Dusk Idol counts active statuses — with no afflictions on the probe they
+returned zero at every level. The probe now carries three afflictions.
+
+Running total of false positives traced to an unrealistic probe: stats at zero,
+armour too low to survive `Math.floor`, no base crit, resistances at zero, no
+afflictions. **Whenever a tool here reports something surprising, suspect the
+probe before the game.**
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

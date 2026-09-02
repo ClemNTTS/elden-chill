@@ -313,12 +313,20 @@ export const ITEMS = {
     name: "Épée Brûlante",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Attaques avec 30% de chance d'infliger 2 Brûlures. +3.5% Force et +2% d'Armure / Niv",
+      "+3,5% de Force et +2% d'Armure par niveau, des le niveau 1. " +
+      "30% de chance d'infliger 2 Brûlure.",
     applyMult: (stats, itemLevel) => {
-      stats.strength = Math.floor(
-        stats.strength * (1 + 0.035 * (itemLevel - 1)),
-      );
-      stats.armor = Math.floor(stats.armor * (1 + 0.02 * (itemLevel - 1)));
+      /*
+       * itemLevel, et non (itemLevel - 1).
+       *
+       * Avec le decalage, le multiplicateur valait exactement 1 au niveau 1 :
+       * l'epee fraichement ramassee n'apportait RIEN, ni force ni armure, et
+       * restait en retrait sur les poings jusqu'au niveau 6. Sa description
+       * annonçait pourtant "+3.5% Force / Niv", ce qu'un joueur lit comme
+       * 3,5% des le premier niveau.
+       */
+      stats.strength = Math.floor(stats.strength * (1 + 0.035 * itemLevel));
+      stats.armor = Math.floor(stats.armor * (1 + 0.02 * itemLevel));
     },
     onHitEffect: { id: "BURN", duration: 2, chance: 0.3 },
   },
@@ -328,19 +336,21 @@ export const ITEMS = {
     name: "Épée Courbe de Zamor",
     type: ITEM_TYPES.WEAPON,
     description:
-      "Requiert 15 de Force et 18 de Dextérité de base pour être utilisé. +1% de Force et +2% de Dextérité par Niveau. Convertit 2,5% de la dextérité de base en Force par Niveau. 25% de chance d'infliger 3 Gelures.",
+      "Requiert 15 de Force et 18 de Dextérité investies. " +
+      "+1% de Force et +2% de Dextérité par niveau, des le niveau 1. " +
+      "Convertit 2,5% par niveau de votre Dextérité investie en Force. " +
+      "25% de chance d'infliger 3 Gelure.",
     applyMult: (stats, itemLevel) => {
       const baseStr = gameState.stats.strength || 0;
       const baseDex = gameState.stats.dexterity || 0;
       if (baseStr >= 15 && baseDex >= 18) {
-        stats.strength = Math.floor(
-          stats.strength * (1 + 0.01 * (itemLevel - 1)),
-        );
-        stats.dexterity = Math.floor(
-          stats.dexterity * (1 + 0.02 * (itemLevel - 1)),
-        );
-        const ratio = 0.025 * (itemLevel - 1);
-        stats.strength += Math.floor(ratio * (gameState.stats.dexterity || 0));
+        // itemLevel et non (itemLevel - 1) : voir l'Epee Brulante. Ici le
+        // decalage annulait aussi la conversion, donc l'arme ne rattrapait les
+        // poings qu'au niveau 7 alors qu'elle tombe au deuxieme biome.
+        stats.strength = Math.floor(stats.strength * (1 + 0.01 * itemLevel));
+        stats.dexterity = Math.floor(stats.dexterity * (1 + 0.02 * itemLevel));
+        const ratio = 0.025 * itemLevel;
+        stats.strength += Math.floor(ratio * baseDex);
       }
     },
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
