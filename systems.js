@@ -272,7 +272,7 @@ export const PREP_CONSUMABLES = {
     name: "Onguent anti-braise",
     description: "Etouffe les braises et les flammes du biome.",
     detailedDescription:
-      "Reduit de 25% les degats recus pendant la prochaine expedition et donne +20 d'armure.",
+      "Reduit de 10% les degats recus des boss pendant la prochaine expedition et donne +20 d'armure.",
     onRunStart: () =>
       registerRunBuff({
         id: "ember_ward",

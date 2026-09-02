@@ -182,12 +182,45 @@ export const applyTraitsToEnemy = (enemy) => {
  * Tick de debut de tour. Renvoie les messages a journaliser.
  * Ne fait rien hors expedition, ce qui evite d'empoisonner le joueur au camp.
  */
+/** Affliction correspondant a chaque danger declare par un biome. */
+const AFFLICTION_DU_DANGER = {
+  poison: "POISON",
+  putrefaction: "SCARLET_ROT",
+  gel: "FROSTBITE",
+  folie: "MADNESS",
+  saignement: "BLEED",
+};
+
 export const tickBiomeTraits = (playerMaxHp) => {
   if (!gameState.world.isExploring) return [];
   const enemies = runtimeState.currentEnemyGroup || [];
-  return getActiveTraits().flatMap(
+  const messages = getActiveTraits().flatMap(
     (trait) => trait.onTurn?.({ enemies, playerMaxHp }) || [],
   );
+
+  /*
+   * extraHazardPressure : le risque promis par la Route d'avidite.
+   *
+   * L'evenement posait cette cle et annonçait "plus risquee, mais plus riche".
+   * Rien ne la lisait : la route n'avait que des avantages. Elle ajoute
+   * desormais, chaque tour, une chance d'encaisser un cumul du danger dominant
+   * du biome. Sans danger declare, la route est simplement sans risque
+   * supplementaire — ce qui est coherent avec une zone qui n'en a pas.
+   */
+  const pression = (gameState.preparation?.activeRunBuffs || []).reduce(
+    (total, buff) => total + (buff.extraHazardPressure || 0),
+    0,
+  );
+  if (pression > 0) {
+    const danger = (gameState.world.activeBiomeHazards || [])[0];
+    const affliction = AFFLICTION_DU_DANGER[danger];
+    if (affliction && Math.random() < Math.min(0.3, pression * 0.08)) {
+      applyEffect(gameState.playerEffects, affliction, 1);
+      messages.push("La route d'avidite vous expose : le danger vous gagne.");
+    }
+  }
+
+  return messages;
 };
 
 /** Modificateurs a verser dans activeRunBuffs au depart de l'expedition. */

@@ -387,17 +387,35 @@ export const handleVictory = (sessionId) => {
         return !inventoryItem || inventoryItem.level < 10;
       });
 
-      const rolled =
-        eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
+      /*
+       * lootChanceMult donne des TIRAGES supplementaires.
+       *
+       * Le trait "Offrande bestiale" annonçait +120% de chance de butin et
+       * posait lootChanceMult: 2.2, que rien ne lisait. Il n'y avait de toute
+       * facon aucune chance a multiplier : le butin tombe systematiquement a
+       * la fin d'un biome, getWeightedDrop choisit lequel et non si.
+       *
+       * 2.2 se lit donc : deux objets garantis, plus 20% de chance d'un
+       * troisieme.
+       */
+      const tirages = Math.max(1, getRunModifier("lootChanceMult", 1));
+      const garantis = Math.floor(tirages);
+      const total = garantis + (Math.random() < tirages - garantis ? 1 : 0);
 
-      if (rolled?.ashId) {
-        gameState.ashesOfWarOwned.push(rolled.ashId);
-        ActionLog(
-          `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
-          "log-crit",
-        );
-      } else {
-        dropItem(rolled?.id || "rune_fragment");
+      for (let n = 0; n < total; n += 1) {
+        const rolled =
+          eligibleLoot.length > 0 ? getWeightedDrop(eligibleLoot) : null;
+        if (rolled?.ashId) {
+          if (!gameState.ashesOfWarOwned.includes(rolled.ashId)) {
+            gameState.ashesOfWarOwned.push(rolled.ashId);
+            ActionLog(
+              `CENDRE DE GUERRE OBTENUE : ${ASHES_OF_WAR[rolled.ashId].name} !`,
+              "log-crit",
+            );
+          }
+        } else {
+          dropItem(rolled?.id || "rune_fragment");
+        }
       }
       saveGame();
     }

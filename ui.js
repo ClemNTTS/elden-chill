@@ -306,6 +306,7 @@ import {
   HAZARD_LABELS,
   buildEnemyIntent,
   clearRunBuffs,
+  getRunModifier,
   describeHazards,
   getCodexBiomeInfo,
   getItemRarity,
@@ -2692,6 +2693,25 @@ export const updateUI = () => {
 };
 
 export const toggleView = (view) => {
+  /*
+   * "Nulle part ou fuir" bloque enfin le repli.
+   *
+   * Le trait posait runBuff: { noRetreat: 1 } et l'affichait sur la fiche de
+   * biome, mais aucune ligne ne lisait cette cle : le joueur pouvait se replier
+   * d'une zone qui lui annonçait le contraire.
+   */
+  if (
+    view !== "biome" &&
+    gameState.world.isExploring &&
+    getRunModifier("noRetreat", 0) > 0
+  ) {
+    ActionLog(
+      "Il n'y a plus de route derriere vous. Le repli est impossible ici.",
+      "log-event",
+    );
+    return;
+  }
+
   const camp = document.getElementById("camp-view");
   const biome = document.getElementById("biome-view");
   const particles = document.getElementById("fire-particles");
