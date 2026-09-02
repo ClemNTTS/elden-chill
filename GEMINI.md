@@ -894,6 +894,53 @@ height of the one below it, published by the `ResizeObserver` in
 Hard-coding any of these heights breaks the stack as soon as the sprites or a
 narrow layout change a row's height.
 
+## The sprite flicker: the rAF loop re-armed itself
+
+`SpriteAnimator.start()` used to end its tick with an unconditional
+`this.rafId = requestAnimationFrame(tick)`, placed right after `this.step()`.
+
+`step()` calls `stop()` when a non-looping animation ends, and the end of an
+animation runs `onAnimationEnd`, which can reach game code and go as far as
+`destroy()` — all synchronously, inside `tick`. So the cancellation was undone
+in the same frame. A **destroyed animator kept ticking**, and `draw()` had no
+`destroyed` guard, so it repainted the canvas forever. Two animators on
+`#enemy-sprite` then alternate frame by frame: that is the flicker.
+
+It is **not** boss-specific. Any non-looping animation — hurt, attack, death —
+opens the door. I wasted two rounds hunting a boss-only race because the first
+report happened to involve a boss.
+
+`tick` now checks `destroyed` and a new `running` flag before re-arming, and
+`draw()` bails out on a destroyed animator.
+
+`tools/test-animator-loop.mjs` covers the four cases and **fails on the old
+code** with `draw() sur un animateur DETRUIT` — always check a regression test
+fails before trusting it.
+
+### Do not measure animation in the driven browser
+
+`requestAnimationFrame` is suspended while the Browser pane is hidden. Every
+pixel-sampling probe I ran there reported "no flicker" because the loop was
+frozen, not because the bug was gone. Drive the frames by hand in Node instead,
+as that test does.
+
+## Music: a shuffle bag, and a new track per section entry
+
+Only the `ended` event used to advance the track. An expedition is far shorter
+than a track, so `ended` almost never fired and the same song replayed forever.
+The dungeon index also started at a hard-coded `0`, so every exploration opened
+on `dungeon_song_1`.
+
+A new track is drawn on each **entry** into a section, not on each call:
+`playCampMusic()` is re-called on every tab switch, and re-starting playback
+there would cut the music constantly. A `currentSection` flag separates the two.
+
+The draw goes through a shuffle bag, so every track plays before any repeats,
+and the last one played never heads the next bag.
+
+Files live in `assets/music/`. Adding one is a single line in `campSongs` or
+`dungeonSongs` — no naming convention to respect.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

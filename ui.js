@@ -10,16 +10,16 @@ if (wikiBtn) {
 
 // Audio management
 const campSongs = [
-  "./assets/camp_song_1.mp3",
-  "./assets/camp_song_2.mp3",
-  "./assets/camp_song_3.mp3",
-  "./assets/camp_song_4.mp3",
+  "./assets/music/camp_song_1.mp3",
+  "./assets/music/camp_song_2.mp3",
+  "./assets/music/camp_song_3.mp3",
+  "./assets/music/camp_song_4.mp3",
 ];
 const dungeonSongs = [
-  "./assets/dungeon_song_1.mp3",
-  "./assets/dungeon_song_2.mp3",
-  "./assets/dungeon_song_3.mp3",
-  "./assets/dungeon_song_4.mp3",
+  "./assets/music/dungeon_song_1.mp3",
+  "./assets/music/dungeon_song_2.mp3",
+  "./assets/music/dungeon_song_3.mp3",
+  "./assets/music/dungeon_song_4.mp3",
 ];
 
 /*

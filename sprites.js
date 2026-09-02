@@ -408,6 +408,7 @@ export class SpriteAnimator {
     this.elapsed = 0;
     this.lastTime = 0;
     this.rafId = null;
+    this.running = false;
     this.visible = true;
     this.onAnimationEnd = null;
     // play() est asynchrone : sans ce drapeau, un chargement encore en vol
@@ -465,15 +466,44 @@ export class SpriteAnimator {
     if (this.destroyed) return;
     if (this.rafId != null || !this.image || !this.visible) return;
     this.lastTime = 0;
+    this.running = true;
+    /*
+     * `tick` doit verifier qu'il a encore le droit de tourner AVANT de se
+     * reprogrammer.
+     *
+     * L'ancienne version faisait `this.rafId = requestAnimationFrame(tick)`
+     * sans condition, juste apres this.step(). Or step() appelle stop() quand
+     * une animation non bouclee se termine, et la fin d'animation declenche du
+     * code de jeu qui peut aller jusqu'a destroy() — le tout de facon
+     * synchrone, a l'interieur de tick. L'annulation etait donc defaite dans
+     * la meme frame : un animateur detruit continuait de tourner, et comme
+     * draw() n'avait pas de garde il repeignait le canvas indefiniment.
+     *
+     * Deux animateurs sur #enemy-sprite se relaient alors d'une frame a
+     * l'autre : c'est le scintillement entre deux creatures. Rien de propre au
+     * boss, contrairement a ce que j'avais suppose — n'importe quelle
+     * animation non bouclee (coup recu, attaque, mort) ouvre la porte.
+     */
     const tick = (time) => {
+      if (this.destroyed || !this.running) {
+        this.rafId = null;
+        return;
+      }
       if (this.lastTime) this.step(time - this.lastTime);
       this.lastTime = time;
+      if (this.destroyed || !this.running) {
+        this.rafId = null;
+        return;
+      }
       this.rafId = requestAnimationFrame(tick);
     };
     this.rafId = requestAnimationFrame(tick);
   }
 
   stop() {
+    // Le drapeau est pose meme si aucune frame n'est en vol : c'est lui que
+    // tick relit pour savoir s'il doit se reprogrammer.
+    this.running = false;
     if (this.rafId == null) return;
     cancelAnimationFrame(this.rafId);
     this.rafId = null;
@@ -510,6 +540,9 @@ export class SpriteAnimator {
   }
 
   draw() {
+    // Ceinture et bretelles : un animateur detruit ne touche plus au canvas,
+    // meme si un appel a draw() lui parvient encore par un chemin oublie.
+    if (this.destroyed) return;
     if (!this.image || !this.animation) return;
     const { cell, scale } = this;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
