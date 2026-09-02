@@ -574,8 +574,11 @@ it from a pure stat tier. Three hooks only, so combat stays readable:
 New modifier keys read by the engine: `noHeal`, `dodgeMult`, `armorMult`,
 `noRetreat`, `lootChanceMult`.
 
-A trait **must** declare `name` and `detail` — the biome sheet shows them. An
-undescribed trait is a hidden rule, i.e. an unfair surprise.
+A trait **must** declare `name` and `detail`, and `renderBiomeDetail` shows
+them on the zone sheet as a `.biome-trait` card. That rendering was missing for
+a while: all 14 traits had descriptions, this file claimed the sheet displayed
+them, and nothing did. Players met the rule by suffering it. A rule you cannot
+read before departing is a bad surprise, not a mechanic.
 
 ### Statuses
 
@@ -890,6 +893,99 @@ height of the one below it, published by the `ResizeObserver` in
 
 Hard-coding any of these heights breaks the stack as soon as the sprites or a
 narrow layout change a row's height.
+
+## The sprite flicker: the rAF loop re-armed itself
+
+`SpriteAnimator.start()` used to end its tick with an unconditional
+`this.rafId = requestAnimationFrame(tick)`, placed right after `this.step()`.
+
+`step()` calls `stop()` when a non-looping animation ends, and the end of an
+animation runs `onAnimationEnd`, which can reach game code and go as far as
+`destroy()` — all synchronously, inside `tick`. So the cancellation was undone
+in the same frame. A **destroyed animator kept ticking**, and `draw()` had no
+`destroyed` guard, so it repainted the canvas forever. Two animators on
+`#enemy-sprite` then alternate frame by frame: that is the flicker.
+
+It is **not** boss-specific. Any non-looping animation — hurt, attack, death —
+opens the door. I wasted two rounds hunting a boss-only race because the first
+report happened to involve a boss.
+
+`tick` now checks `destroyed` and a new `running` flag before re-arming, and
+`draw()` bails out on a destroyed animator.
+
+`tools/test-animator-loop.mjs` covers the four cases and **fails on the old
+code** with `draw() sur un animateur DETRUIT` — always check a regression test
+fails before trusting it.
+
+### Do not measure animation in the driven browser
+
+`requestAnimationFrame` is suspended while the Browser pane is hidden. Every
+pixel-sampling probe I ran there reported "no flicker" because the loop was
+frozen, not because the bug was gone. Drive the frames by hand in Node instead,
+as that test does.
+
+## Music: a shuffle bag, and a new track per section entry
+
+Only the `ended` event used to advance the track. An expedition is far shorter
+than a track, so `ended` almost never fired and the same song replayed forever.
+The dungeon index also started at a hard-coded `0`, so every exploration opened
+on `dungeon_song_1`.
+
+A new track is drawn on each **entry** into a section, not on each call:
+`playCampMusic()` is re-called on every tab switch, and re-starting playback
+there would cut the music constantly. A `currentSection` flag separates the two.
+
+The draw goes through a shuffle bag, so every track plays before any repeats,
+and the last one played never heads the next bag.
+
+Files live in `assets/music/`. Adding one is a single line in `campSongs` or
+`dungeonSongs` — no naming convention to respect.
+
+## Per-track gain (`TRACK_GAIN` in `ui.js`)
+
+Generated tracks came back spanning 5.1 dB — from -12.9 dBFS RMS
+(`camp_song_7`) to -18.0 (`dungeon_song_4`). The volume slider writes the same
+value to both `Audio` elements, so every camp/expedition switch jumped.
+
+`applyTrackVolume()` multiplies the master volume by a per-track gain. Two
+things constrain the table:
+
+- **`HTMLMediaElement.volume` throws above 1**, so gains can only attenuate.
+  There is no boosting a quiet track without Web Audio and a `GainNode`, which
+  is not worth the rewiring here.
+- The target is therefore **-16 dBFS with a clamp at 1**. Tracks already below
+  the target keep gain 1 and sit up to 2 dB under it, which is inaudible.
+  Aligning everything on the quietest track would have closed the gap
+  completely but cost 5 dB of headroom across the whole game.
+
+Residual spread: **2.0 dB**. A track missing from the table plays at full gain,
+so adding music without measuring is safe.
+
+Recalibrate with `tools/mesure-volume.js` — a console snippet, not a Node
+script: decoding mp3 outside a browser needs ffmpeg, which this machine lacks.
+It prints the `TRACK_GAIN` block ready to paste.
+
+The volume is read from `gameState` on every call rather than cached in a
+module variable: `playCampMusic()` fires at load, before the options slider is
+initialised, and two sources of truth drift apart.
+
+## The narrator button
+
+`toggleNarrator()` in the Audio panel of the options. Three things it has to
+get right:
+
+- **One narrator at a time.** A single `narratorAudio` element, plus a
+  `narratorPlaying` flag; `playCampMusic()` and `playDungeonMusic()` return
+  early while it is set, so entering an expedition mid-narration does not stack
+  music over the voice.
+- **Resume in the right section.** `endNarrator()` reads `currentSection`, not
+  wherever playback started — the player may have left camp during the 1 min 47.
+  Verified: start in camp, leave on expedition, and the dungeon track is what
+  comes back.
+- **A second press stops it.** Nearly two minutes is too long to be stuck in.
+
+`onerror` routes to `endNarrator` as well, so a missing file leaves the game
+with music rather than silence.
 
 ## Key Functions & Logic
 

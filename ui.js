@@ -10,46 +10,137 @@ if (wikiBtn) {
 
 // Audio management
 const campSongs = [
-  "./assets/camp_song_1.mp3",
-  "./assets/camp_song_2.mp3",
-  "./assets/camp_song_3.mp3",
-  "./assets/camp_song_4.mp3",
+  "./assets/music/camp_song_1.mp3",
+  "./assets/music/camp_song_2.mp3",
+  "./assets/music/camp_song_3.mp3",
+  "./assets/music/camp_song_4.mp3",
+  "./assets/music/camp_song_5.mp3",
+  "./assets/music/camp_song_6.mp3",
+  "./assets/music/camp_song_7.mp3",
 ];
 const dungeonSongs = [
-  "./assets/dungeon_song_1.mp3",
-  "./assets/dungeon_song_2.mp3",
-  "./assets/dungeon_song_3.mp3",
-  "./assets/dungeon_song_4.mp3",
+  "./assets/music/dungeon_song_1.mp3",
+  "./assets/music/dungeon_song_2.mp3",
+  "./assets/music/dungeon_song_3.mp3",
+  "./assets/music/dungeon_song_4.mp3",
+  "./assets/music/dungeon_song_5.mp3",
+  "./assets/music/dungeon_song_6.mp3",
+  "./assets/music/dungeon_song_7.mp3",
 ];
 
-let currentCampSongIndex = Math.floor(Math.random() * campSongs.length);
-let currentDungeonSongIndex = 0;
+const NARRATOR_TRACK = "./assets/music/narrator-song.mp3";
+
+/*
+ * Gain par piste, pour egaliser le volume percu.
+ *
+ * Les morceaux generes sortent a des niveaux qui varient de 5 dB : passer de
+ * dungeon_song_4 a camp_song_7 faisait un bond audible, le curseur appliquant
+ * la meme valeur aux deux elements Audio.
+ *
+ * Mesure au Web Audio sur les 90 premieres secondes de chaque piste (voir
+ * tools/mesure-volume.js), cible -16 dBFS RMS.
+ *
+ * La valeur est BORNEE A 1 : HTMLMediaElement.volume refuse tout ce qui
+ * depasse, on ne peut donc qu'attenuer. Les pistes deja plus basses que la
+ * cible gardent 1 et restent au plus 2 dB en dessous, ce qui ne s'entend
+ * pas. L'alternative — aligner tout sur la piste la plus faible — corrigeait
+ * l'ecart en entier mais coutait 5 dB de marge sur l'ensemble du jeu.
+ *
+ * Une piste absente de la table joue a plein gain : ajouter un morceau sans
+ * le mesurer reste sans risque.
+ */
+const TRACK_GAIN = {
+  "camp_song_1.mp3": 1,
+  "camp_song_2.mp3": 0.89,
+  "camp_song_3.mp3": 0.94,
+  "camp_song_4.mp3": 1,
+  "camp_song_5.mp3": 0.85,
+  "camp_song_6.mp3": 0.90,
+  "camp_song_7.mp3": 0.70,
+  "dungeon_song_1.mp3": 1,
+  "dungeon_song_2.mp3": 1,
+  "dungeon_song_3.mp3": 1,
+  "dungeon_song_4.mp3": 1,
+  "dungeon_song_5.mp3": 0.87,
+  "dungeon_song_6.mp3": 1,
+  "dungeon_song_7.mp3": 0.93,
+  "narrator-song.mp3": 1,
+};
+
+/*
+ * Le volume est relu dans gameState a chaque fois, plutot que garde dans une
+ * variable de module : playCampMusic() part au chargement, avant que le
+ * curseur des options ne soit initialise, et deux sources de verite finissent
+ * toujours par se desynchroniser.
+ */
+const getMusicVolume = () => gameState.save?.audioVolume ?? 0.3;
+
+/** Applique volume maitre x gain de la piste chargee dans l'element. */
+const applyTrackVolume = (audio) => {
+  const file = (audio.src || "").split("/").pop();
+  audio.volume = Math.min(1, getMusicVolume() * (TRACK_GAIN[file] ?? 1));
+};
+
+/*
+ * Sac melange, plutot qu'un tirage independant a chaque fois.
+ *
+ * Un tirage pur rejoue souvent le meme morceau et en oublie d'autres pendant
+ * longtemps. Le sac garantit que TOUS les morceaux passent avant qu'un seul
+ * revienne. On evite seulement que le dernier joue ne ressorte en tete du sac
+ * suivant, ce qui donnerait deux fois le meme d'affilee.
+ *
+ * Pour ajouter un morceau : deposer le fichier dans assets/ et ajouter une
+ * ligne dans campSongs ou dungeonSongs. Rien d'autre a toucher.
+ */
+const makePlaylist = (files) => {
+  let bag = [];
+  let last = null;
+  const refill = () => {
+    bag = files.slice();
+    for (let i = bag.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    if (bag.length > 1 && bag[0] === last) bag.push(bag.shift());
+  };
+  return () => {
+    if (!bag.length) refill();
+    last = bag.shift();
+    return last;
+  };
+};
+
+const nextCampSong = makePlaylist(campSongs);
+const nextDungeonSong = makePlaylist(dungeonSongs);
 
 const campAudio = new Audio();
 const dungeonAudio = new Audio();
 
-function getRandomIndex(array, currentIndex) {
-  if (array.length <= 1) return 0;
-  let newIndex;
-  do {
-    newIndex = Math.floor(Math.random() * array.length);
-  } while (newIndex === currentIndex);
-  return newIndex;
-}
+/*
+ * Section en cours, "camp" ou "dungeon".
+ *
+ * L'ancien code ne changeait de morceau que sur l'evenement `ended`. Comme une
+ * expedition dure bien moins longtemps qu'un morceau, `ended` ne se declenchait
+ * pratiquement jamais : on reentendait indefiniment le meme. Et l'index du
+ * donjon partait de 0 en dur, donc toute exploration commencait sur
+ * dungeon_song_1.
+ *
+ * On tire desormais un nouveau morceau a chaque ENTREE dans une section. Pas a
+ * chaque appel : playCampMusic() est rappelee a chaque changement d'onglet, et
+ * relancer la musique a ce moment-la la couperait sans arret.
+ */
+let currentSection = null;
 
 function playNextCampSong() {
-  currentCampSongIndex = getRandomIndex(campSongs, currentCampSongIndex);
-  campAudio.src = campSongs[currentCampSongIndex];
-  campAudio.play();
+  campAudio.src = nextCampSong();
+  applyTrackVolume(campAudio);
+  campAudio.play().catch(() => {});
 }
 
 function playNextDungeonSong() {
-  currentDungeonSongIndex = getRandomIndex(
-    dungeonSongs,
-    currentDungeonSongIndex,
-  );
-  dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
-  dungeonAudio.play();
+  dungeonAudio.src = nextDungeonSong();
+  applyTrackVolume(dungeonAudio);
+  dungeonAudio.play().catch(() => {});
 }
 
 campAudio.addEventListener("ended", playNextCampSong);
@@ -57,27 +148,83 @@ dungeonAudio.addEventListener("ended", playNextDungeonSong);
 
 export function playCampMusic() {
   dungeonAudio.pause();
-  // Check if the src is already set to avoid reloading
-  if (!campAudio.src.endsWith(campSongs[currentCampSongIndex])) {
-    campAudio.src = campSongs[currentCampSongIndex];
+  if (currentSection !== "camp" || !campAudio.src) {
+    currentSection = "camp";
+    campAudio.src = nextCampSong();
   }
-  campAudio.play().catch((e) => {
-    /* Autoplay was prevented */
-  });
+  applyTrackVolume(campAudio);
+  // Le narrateur a la priorite : on ne lui passe pas la musique par-dessus.
+  if (narratorPlaying) return;
+  // La lecture automatique est refusee tant que le joueur n'a rien clique :
+  // le morceau reste choisi et partira au premier appel autorise.
+  campAudio.play().catch(() => {});
 }
+
+/*
+ * La chanson du narrateur, declenchee depuis les options.
+ *
+ * Trois choses a tenir :
+ *   - lecture unique. Sans le drapeau, chaque clic empilait un narrateur de
+ *     plus et ils se parlaient dessus ;
+ *   - la musique de fond se met en pause et REPREND a la fin, dans la section
+ *     ou le joueur se trouve — pas forcement celle du depart, il a pu partir
+ *     en expedition entre-temps ;
+ *   - un second clic interrompt. Le morceau fait pres de deux minutes : rester
+ *     coince dessus serait penible.
+ */
+const narratorAudio = new Audio();
+let narratorPlaying = false;
+
+const refreshNarratorButton = () => {
+  const btn = document.getElementById("btn-narrator");
+  if (!btn) return;
+  btn.innerText = narratorPlaying
+    ? "Faire taire le narrateur"
+    : "Ecouter le narrateur";
+  btn.classList.toggle("is-active", narratorPlaying);
+};
+
+/** Rend la main a la musique de fond. */
+const endNarrator = () => {
+  narratorPlaying = false;
+  if (currentSection === "dungeon") dungeonAudio.play().catch(() => {});
+  else playCampMusic();
+  refreshNarratorButton();
+};
+
+export const toggleNarrator = () => {
+  if (narratorPlaying) {
+    narratorAudio.pause();
+    endNarrator();
+    return;
+  }
+  narratorPlaying = true;
+  campAudio.pause();
+  dungeonAudio.pause();
+  if (!narratorAudio.src) narratorAudio.src = NARRATOR_TRACK;
+  applyTrackVolume(narratorAudio);
+  narratorAudio.currentTime = 0;
+  narratorAudio.onended = endNarrator;
+  // Fichier absent ou lecture refusee : on ne laisse pas le jeu muet.
+  narratorAudio.onerror = endNarrator;
+  narratorAudio.play().catch(endNarrator);
+  refreshNarratorButton();
+};
 
 function playDungeonMusic() {
   campAudio.pause();
-  if (!dungeonAudio.src.endsWith(dungeonSongs[currentDungeonSongIndex])) {
-    dungeonAudio.src = dungeonSongs[currentDungeonSongIndex];
+  if (currentSection !== "dungeon" || !dungeonAudio.src) {
+    currentSection = "dungeon";
+    dungeonAudio.src = nextDungeonSong();
   }
-  dungeonAudio.play().catch((e) => {
-    /* Autoplay was prevented */
-  });
+  applyTrackVolume(dungeonAudio);
+  if (narratorPlaying) return;
+  dungeonAudio.play().catch(() => {});
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
 import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
+import { getBiomeTrait } from "./biome-traits.js";
 import {
   POINTS_PER_REBIRTH,
   REBIRTH_LEVEL_BONUS,
@@ -764,9 +911,31 @@ const mountCombatEnemy = async () => {
   const canvas = document.getElementById("enemy-sprite");
   if (!canvas) return;
 
-  const enemy = runtimeState.currentEnemyGroup?.find((e) => e.hp > 0)
-    || runtimeState.currentEnemyGroup?.[0];
-  if (!enemy?.id) return;
+  /*
+   * On ne monte que sur un ennemi VIVANT.
+   *
+   * L'ancien code retombait sur currentEnemyGroup[0] quand plus personne
+   * n'avait de points de vie. Juste apres la mort d'un boss, ce repli
+   * remontait le boss mort — puis la creature suivante arrivait et supplantait
+   * ce montage en cours. Comme la planche d'un boss fait 96px et n'est teintee
+   * qu'a sa premiere apparition, c'est le montage le plus lent du jeu : la
+   * fenetre de course s'ouvrait la, et nulle part ailleurs.
+   *
+   * Quand tout le groupe est a terre on garde simplement l'animateur en place,
+   * qui joue deja son animation de mort. Rien a remonter.
+   */
+  const enemy = runtimeState.currentEnemyGroup?.find((e) => e.hp > 0);
+  if (!enemy?.id) {
+    // Aucun animateur encore monte : on prend la premiere creature du groupe
+    // pour ne pas laisser le cadre vide au tout premier affichage.
+    const fallback = enemyAnimator ? null : runtimeState.currentEnemyGroup?.[0];
+    if (!fallback?.id) return;
+    return mountCombatEnemyFor(canvas, fallback);
+  }
+  return mountCombatEnemyFor(canvas, enemy);
+};
+
+const mountCombatEnemyFor = async (canvas, enemy) => {
 
   const visual = getMonsterVisual(enemy.id);
   const key = `${enemy.id}:${visual.archetype}:${visual.tint}:${visual.scale}`;
@@ -815,8 +984,34 @@ const mountCombatEnemy = async () => {
     console.warn("[combat] montage du monstre impossible :", error);
   }
 
-  // Un montage plus recent a pris la main pendant l'attente.
-  if (token !== enemyMountToken) return;
+  /*
+   * Un montage plus recent a pris la main pendant l'attente.
+   *
+   * Il faut DETRUIRE l'animateur qu'on vient de creer, pas seulement sortir :
+   * mountMonster l'a deja demarre, et plus personne ne detient sa reference.
+   * Sans ce destroy il continue de peindre #enemy-sprite indefiniment, et
+   * chaque montage supplante en laisse un de plus. Deux animateurs sur le meme
+   * canvas se relaient d'une frame a l'autre : c'est exactement le
+   * scintillement entre deux creatures.
+   *
+   * Les boss declenchent le probleme parce qu'ils enchainent deux changements
+   * de cle rapproches — le boss mort, puis la creature suivante — et que leur
+   * planche de 96px met plus longtemps a se teinter, ce qui elargit la fenetre
+   * de course.
+   */
+  /*
+   * Un montage plus recent a pris la main pendant l'attente.
+   *
+   * Il faut DETRUIRE l'animateur qu'on vient de creer, pas seulement sortir :
+   * mountMonster l'a deja demarre et plus personne ne detient sa reference.
+   * Sans ce destroy il peint #enemy-sprite indefiniment, et deux animateurs
+   * sur le meme canvas se relaient d'une frame a l'autre — c'est exactement le
+   * scintillement entre deux creatures.
+   */
+  if (token !== enemyMountToken) {
+    animator?.destroy();
+    return;
+  }
 
   if (!animator) {
     // On libere la cle pour que le prochain rafraichissement retente.
@@ -1663,6 +1858,12 @@ const renderWorldMap = (visibleIds) => {
   map.innerHTML = "";
 };
 
+/*
+ * Les traits sont affiches ici, et c'est indispensable : un trait modifie les
+ * regles pendant toute l'expedition (soins coupes, esquive annulee, ennemis qui
+ * s'emballent). Une regle qu'on subit sans pouvoir la lire avant de partir est
+ * une mauvaise surprise, pas une mecanique.
+ */
 const renderBiomeDetail = (biomeId) => {
   const card = document.getElementById("biome-detail-card");
   if (!card || !biomeId) return;
@@ -1670,6 +1871,7 @@ const renderBiomeDetail = (biomeId) => {
   const biome = BIOMES[biomeId];
   const guide = BIOME_GUIDE[biomeId];
   const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
+  const traits = (BIOMES[biomeId]?.traits || []).map(getBiomeTrait).filter(Boolean);
   const lootPreview = (LOOT_TABLES[biomeId] || [])
     .map((loot) => ITEMS[loot.id]?.name)
     .filter(Boolean)
@@ -1726,6 +1928,16 @@ const renderBiomeDetail = (biomeId) => {
         <strong>${nextBiomes.join(", ") || "Cul-de-sac rentable"}</strong>
       </div>
     </div>
+    ${traits
+      .map(
+        (t) => `
+      <div class="biome-trait">
+        <span class="biome-trait__label">Regle de la zone</span>
+        <strong>${t.name}</strong>
+        <p>${t.detail}</p>
+      </div>`,
+      )
+      .join("")}
     <div class="biome-detail-actions">
       <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
         ${isUnlocked ? "Explorer cette zone" : "Zone pas encore debloquee"}
@@ -3159,23 +3371,24 @@ export const setAudioListener = () => {
   // temps que le navigateur telecharge le fichier.
   primeSfx();
 
+  refreshNarratorButton();
+
   const volumeSlider = document.getElementById("music-volume");
 
   if (volumeSlider) {
     const currentVolume = gameState.save?.audioVolume ?? 0.3;
     volumeSlider.value = currentVolume;
 
-    campAudio.volume = currentVolume;
-    dungeonAudio.volume = currentVolume;
+    // Le gain de la piste s'applique par-dessus le volume maitre : on passe
+    // par applyTrackVolume plutot que d'ecrire .volume directement.
+    [campAudio, dungeonAudio, narratorAudio].forEach(applyTrackVolume);
 
     volumeSlider.oninput = (e) => {
       const volume = parseFloat(e.target.value);
 
-      campAudio.volume = volume;
-      dungeonAudio.volume = volume;
-
       if (!gameState.save) gameState.save = {};
       gameState.save.audioVolume = volume;
+      [campAudio, dungeonAudio, narratorAudio].forEach(applyTrackVolume);
 
       saveGame();
     };
