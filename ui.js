@@ -2993,6 +2993,13 @@ const getProjectedEffectiveStats = (item) => {
 
   applyItemBonus("applyMult");
 
+  // Garder l'aperçu d'équipement aligné avec getEffectiveStats() : la
+  // vigueur de base procure toujours de la mitigation contre les boss, quel
+  // que soit l'objet simulé.
+  effStats.bossMitigation =
+    (effStats.bossMitigation || 0) +
+    Math.min(0.25, (gameState.stats.vigor || 0) / 900);
+
   [
     "strength",
     "vigor",
