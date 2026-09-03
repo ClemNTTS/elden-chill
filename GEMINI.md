@@ -1387,6 +1387,44 @@ Nothing in the audit suite covers them, and no earlier session exercised them.
 Worth remembering when judging what "verified" means: the audits check content
 and balance, never the destructive buttons.
 
+## `maxRareSpawns` absent = rares muets, en silence
+
+`core.js` decide l'apparition d'un rare avec `biome.maxRareSpawns || 0`. Un
+biome qui declare des `rareMonsters` mais **oublie** le champ ne fait donc
+jamais apparaitre aucun rare — pas d'erreur, rien dans le journal. Le contenu
+est ecrit, reference, et injouable.
+
+Deux biomes etaient dans ce cas, dont le **Chateau du Lion Rouge**. Radahn
+arrivait sur un joueur prive du butin de son propre chateau : 2500 runes par
+elite, la panoplie du Bourreau, et le Cri des Astres — seule entree du jeu
+sans aucune autre source. D'ou le retour de terrain "la panoplie Carienne est
+la seule des deux jouable a ce stade".
+
+`tools/audit-rares-muets.mjs` surveille ca. Un `maxRareSpawns: 0` explicite est
+respecte : le Sanctuaire Bestial le veut.
+
+## Le simulateur ne peut PAS fixer les niveaux recommandes
+
+Tentation naturelle : recaler `recommendedLevel` sur les niveaux d'arrivee du
+simulateur. Deux verifications l'ont interdit.
+
+D'abord, `CYCLES_MAX = 60` censurait la mesure. Le simulateur declarait le
+Chateau du Lion Rouge "MUR" pour les cinq archetypes, au niveau 81-84 — mais
+il ne perdait pas contre Radahn : il **arretait de farmer avant d'avoir le
+niveau**. Un joueur reel l'a battu au niveau 126. Le plafond est desormais
+reglable (`--cycles=400`) et le defaut de 60 est documente comme un signal de
+rythme, pas une limite de jeu.
+
+Ensuite, meme a 400 cycles il reste 12 a 21 murs. Le simulateur ne modelise ni
+les cendres, ni les benedictions, ni les effets a l'impact, ni les afflictions,
+ni les phases de boss — exactement ce qui porte la fin de partie. Sa
+pessimisme est structurel.
+
+Le recalage produisait 15 biomes a "220-226" alors que le plafond de niveau est
+220. Une bande au-dessus du plafond est une sortie absurde : c'est le signe que
+la mesure ne mesurait pas ce qu'on croyait. **Ne pas graver l'aveuglement de
+l'outil dans le jeu.** La seule source fiable reste une partie reellement jouee.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

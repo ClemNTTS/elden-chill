@@ -13,6 +13,7 @@ export const LOOT_TABLES = {
     Tier 1 -> 2 Biomes
   ============================*/
   limgrave_east: [
+    { ashId: "bloody_slash", chance: 0.2 },   // Entaille Sanglante : ~6 runs
     { id: "bloodhound_fang", chance: 0.4 },
     { id: "leather_vest", chance: 0.2 },
     { id: "kama", chance: 0.4 },
@@ -36,11 +37,13 @@ export const LOOT_TABLES = {
     Tier 3
   ============================*/
   weeping_peninsula: [
+    { ashId: "great_shield", chance: 0.2 },   // Rempart Inebranlable : ~6 runs
     { id: "zamor_curved_sword", chance: 0.5 },
     { id: "radagon_scarseal", chance: 0.5 },
   ],
 
   enter_stormwind_castle: [
+    { ashId: "storm_stomp", chance: 0.2 },   // Pietinement Tempetueux : ~6 runs
     { id: "twin_blade", chance: 0.5 },
     { id: "forged_grip", chance: 0.5 },
   ],
@@ -472,6 +475,8 @@ export const BIOMES = {
     name: "Tertre Draconique",
     monsters: ["giant_dog", "radahn_soldier"],
     rareMonsters: ["rotten_marionetist"],
+    // Meme oubli qu'au Chateau du Lion Rouge.
+    maxRareSpawns: 2,
     boss: "ekzykes",
     length: 6,
     unlocks: null,
@@ -481,6 +486,12 @@ export const BIOMES = {
     name: "Château du Lion Rouge",
     monsters: ["radahn_soldier"],
     rareMonsters: ["winged_paladin"],
+    // Sans ce champ, core.js lit `maxRareSpawns || 0` et le Paladin
+    // Aile n'apparaissait JAMAIS : ni ses 2500 runes, ni la panoplie du
+    // Bourreau, ni le Cri des Astres, seule entree du jeu qui n'avait
+    // aucune autre source. Radahn arrivait donc sur un joueur prive du
+    // butin de son propre chateau.
+    maxRareSpawns: 2,
     boss: "radahn",
     length: 8,
     // unlocks: null,

@@ -298,7 +298,24 @@ const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) => {
  * tomber.
  */
 const MARGE_JOUABLE = 2.0;
-const CYCLES_MAX = 60;
+/*
+ * Plafond de farm, reglable — et il FAUT le regler pour mesurer.
+ *
+ * A 60 cycles, le simulateur declarait le Chateau du Lion Rouge "MUR" pour les
+ * cinq archetypes, au niveau 81-84. Un joueur reel a battu Radahn au niveau
+ * 126 : le simulateur ne perdait pas contre le boss, il s'arretait de farmer
+ * avant d'avoir le niveau. La mesure etait censuree, et batir les niveaux
+ * recommandes dessus revenait a graver cette censure dans le jeu.
+ *
+ * 60 reste le defaut : a cette valeur, "MUR" se lit "demande plus de 60 cycles",
+ * ce qui est le signal de rythme qu'on veut au quotidien. Pour mesurer le
+ * niveau REELLEMENT necessaire, il faut lever le plafond :
+ *
+ *   node tools/simulate-balance.mjs --cycles=400
+ */
+const CYCLES_MAX = Number(
+  process.argv.find((x) => x.startsWith("--cycles="))?.split("=")[1] || 60,
+);
 
 const run = (buildKey) => {
   const build = BUILDS[buildKey];
