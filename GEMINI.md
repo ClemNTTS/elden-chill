@@ -1345,6 +1345,48 @@ nonsense — one reading claimed the action bar was 385px tall. Set an explicit
 viewport with `resize_window` before trusting any layout measurement. This is
 the same family as rAF being suspended in a hidden pane.
 
+## `beforeunload` undid the reset
+
+`resetGame()` cleared localStorage and then called `location.reload()`. The
+reload fires `beforeunload`, whose handler calls `saveGame()` — which wrote the
+still-in-memory `gameState` straight back. **The reset button erased nothing.**
+Measured: level 137 and 424,242 runes survived it intact.
+
+`suspendreSauvegarde()` sets a module flag that `saveGame()` checks first, and
+`resetGame()` raises it before clearing. A flag beats removing the
+`beforeunload` listener because it blocks EVERY write path, including the
+30-second interval and any added later without thinking about this.
+
+I had actually seen this earlier in the session — clearing localStorage in a
+console probe and watching the save come back — and dismissed it as a test
+artefact. It was the bug.
+
+## Import/export existed and no button called it
+
+`exportSaveString()` and `importSaveString()` had been in `save.js` for a long
+time, and they work: round-trip verified, and a bogus string is rejected with
+`{ok: false, reason: "MALFORMED"}`. **Nothing in the UI ever called them.** The
+feature was one hundred percent written and zero percent reachable.
+
+They now sit in an Options panel with a textarea rather than a file download:
+that works everywhere including mobile, and the player sees what they copy.
+
+`openSave()` has six distinct failure reasons — EMPTY, MALFORMED,
+UNSUPPORTED_VERSION, TAMPERED, CORRUPT_PAYLOAD, INCOMPATIBLE_VERSION — and each
+gets its own sentence. A raw code helps nobody: "TAMPERED" does not tell a
+player their code was truncated while copying, which is by far the commonest
+cause.
+
+An import reloads the page, for the same reason a language switch does: several
+views are built once at load, so the screen would keep showing the old save in
+places.
+
+### Both were reachable only through the UI, and neither had ever been tested
+
+Nothing in the audit suite covers them, and no earlier session exercised them.
+Worth remembering when judging what "verified" means: the audits check content
+and balance, never the destructive buttons.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

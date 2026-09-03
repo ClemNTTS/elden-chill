@@ -3488,3 +3488,30 @@ button:disabled {
 @media (max-width: 640px) {
   .combat-lane__intent { font-size: 0.78rem; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Transfert de sauvegarde                                            */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Le code scelle fait pres de 3000 signes : il faut pouvoir le selectionner
+ * d'un coup, mais pas qu'il mange l'ecran. Trois lignes et un defilement.
+ */
+.save-transfer {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--surface-strong);
+  color: var(--text-soft);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  resize: vertical;
+  /* Un code sur une seule ligne ne doit pas elargir le panneau. */
+  word-break: break-all;
+}
+
+#save-transfer-status.is-ok { color: #2ecc71; }
+#save-transfer-status.is-error { color: #e74c3c; }
