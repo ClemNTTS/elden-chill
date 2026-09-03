@@ -165,7 +165,7 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLASPHEMY",
     description:
-      "Vol de vie : chaque coup porte vous rend 1% de vos points de vie maximum.",
+      "Vol de vie : chaque coup porte vous rend 1% <em style='color: grey;'>(+0.1% / Niv)</em> de vos points de vie maximum.",
     // funcOnHit et funcOnBeingHit sont les deux seuls crochets de combat que le
     // moteur appelle sur un objet. Le soin passe par healPlayer, donc il est
     // bien annule dans les biomes qui scellent les soins.

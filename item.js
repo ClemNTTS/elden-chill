@@ -614,7 +614,6 @@ export const ITEMS = {
   godrick_great_rune: {
     name: "Rune Majeure de Godrick",
     type: ITEM_TYPES.ACCESSORY,
-    isAlwaysMax: true,
     description:
       "Une rune restaurant le pouvoir de la lignée dorée. +15% d'intelligence (+1.5% / Niv). Vous donne 10% d'étourdire l'ennemi pendant 1 tour (+1 de durée quand la rune atteint le niveau 10)",
 
