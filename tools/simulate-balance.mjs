@@ -53,7 +53,7 @@ const { getBiomeTrait } = await import("../biome-traits.js");
 
 /** Parcours en largeur depuis le premier biome : l'ordre ou un joueur les
  *  rencontre reellement, y compris les embranchements. */
-const progressionOrder = () => {
+export const progressionOrder = () => {
   const seen = new Set(["limgrave_west"]);
   const order = ["limgrave_west"];
   const queue = ["limgrave_west"];
@@ -84,7 +84,7 @@ const progressionOrder = () => {
  * gagne. On teste les voies que le jeu pretend offrir — si l'une d'elles
  * s'effondre, c'est une promesse non tenue.
  */
-const BUILDS = {
+export const BUILDS = {
   force: { label: "Force pure", weights: { strength: 0.7, vigor: 0.3 } },
   dex: { label: "Dexterite", weights: { dexterity: 0.7, vigor: 0.3 } },
   int: { label: "Intelligence", weights: { intelligence: 0.7, vigor: 0.3 } },
@@ -122,7 +122,7 @@ const avgGroupSize = (monster) => {
  * Comme le splash s'applique par attaque dans combat.js, il remultiplie aussi
  * la dexterite : c'est un canal de couplage a part entiere.
  */
-const playerDamagePerTurn = (eff, targetArmor, groupSize = 1) => {
+export const playerDamagePerTurn = (eff, targetArmor, groupSize = 1) => {
   // Meme plancher que combat.js : la penetration ne peut pas descendre
   // l'armure sous 25% de sa valeur d'origine.
   const armor = clamp1(
@@ -150,7 +150,7 @@ const playerDamagePerTurn = (eff, targetArmor, groupSize = 1) => {
 };
 
 /** Degats moyens recus par tour de la part d'un monstre. */
-const enemyDamagePerTurn = (eff, monster, armorMult = 1) => {
+export const enemyDamagePerTurn = (eff, monster, armorMult = 1) => {
   const armor = clamp1((eff.armor ?? 100) * armorMult);
   let perHit = Math.floor(monster.atk * (100 / armor));
   // Mitigation des boss, comme combat.js : plafonnee a 45%.
@@ -166,7 +166,7 @@ const enemyDamagePerTurn = (eff, monster, armorMult = 1) => {
 /* Progression                                                        */
 /* ------------------------------------------------------------------ */
 
-const applyBuild = (build, level) => {
+export const applyBuild = (build, level) => {
   const s = gameState.stats;
   s.vigor = s.strength = s.dexterity = s.intelligence = 0;
   for (const [stat, share] of Object.entries(build.weights)) {
@@ -226,7 +226,7 @@ const fmt = (n) =>
 /* ------------------------------------------------------------------ */
 
 /** Objets qu'un joueur a pu ramasser dans les biomes deja nettoyes. */
-const lootPoolFor = (cleared) => {
+export const lootPoolFor = (cleared) => {
   const pool = new Set();
   for (const id of cleared) {
     for (const entry of LOOT_TABLES[id] || []) if (entry.id) pool.add(entry.id);
@@ -264,7 +264,7 @@ const lootPoolFor = (cleared) => {
  * Le score combine desormais les deux rencontres par moyenne geometrique :
  * une piece doit servir aux groupes ET au boss.
  */
-const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) => {
+export const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) => {
   const slots = { weapon: "Arme", armor: "Armure", accessory: "Accessoire" };
   gameState.equipped = { weapon: null, armor: null, accessory: null };
   gameState.inventory = pool.map((id) => ({ id, name: id, level: 8, count: 0 }));
@@ -409,11 +409,18 @@ const verdict = (m) => {
 };
 
 const NL = String.fromCharCode(10);
+/*
+ * Ce fichier est aussi importE comme bibliotheque (banc d'essai des boss). Sans
+ * cette garde, un simple import relançait la simulation complete des cinq
+ * archetypes avant de rendre la main.
+ */
+const lanceDirectement = (process.argv[1] || "").includes("simulate-balance");
+
 const args = process.argv.slice(2);
 const only = args.find((x) => x.startsWith("--build="))?.split("=")[1];
 const keys = only ? [only] : Object.keys(BUILDS);
 
-for (const key of keys) {
+if (lanceDirectement) for (const key of keys) {
   const { build, rows } = run(key);
   console.log(NL + "=".repeat(100));
   console.log(build.label.toUpperCase());

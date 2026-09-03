@@ -1425,6 +1425,36 @@ Le recalage produisait 15 biomes a "220-226" alors que le plafond de niveau est
 la mesure ne mesurait pas ce qu'on croyait. **Ne pas graver l'aveuglement de
 l'outil dans le jeu.** La seule source fiable reste une partie reellement jouee.
 
+## `splashDamage` ne fait rien sur AUCUN monstre
+
+42 monstres declarent `specificStats.splashDamage`, Radahn a 100. La valeur
+n'est jamais appliquee : quand l'ennemi attaque, `combat.js` passe
+`targetGroup: null`, et `performAttack` n'applique le splash que
+`if (splash > 0 && targetGroup?.length > 1)`. Le splash est une mecanique du
+JOUEUR contre un groupe, jamais l'inverse.
+
+Meme classe de bug que les statistiques fictives des objets, mais cote
+monstres — et personne ne l'avait cherchee la. Une premiere version de
+`courbe-boss.mjs` comptait ce splash et annonçait Radahn a "degats x3.0" depuis
+Siofra ; la vraie valeur est x2.0.
+
+## Calibrer un modele sur une partie reelle
+
+Six niveaux releves par un joueur (premier boss 9, Margit 17, Darriwil 20,
+Godrick 38, Rennala 82, Radahn 126) ont servi a calibrer `banc-boss.mjs`, qui
+balaie le niveau jusqu'a la victoire avec un equipement impose.
+
+Resultat : la colonne "survie" (marge 1.0) colle aux releves a quelques niveaux
+pres, et cinq des six releves tombent dans la bande [survie, confort]. C'est ce
+qui a permis de recaler 25 bandes sur mesure plutot qu'au jugement.
+
+**Ne jamais ecrire une bande qu'on n'a pas mesuree.** Trois tentatives de
+rattrapage pour les biomes hors de portee du banc ont ete jetees : decalage
+cumulatif (dix biomes ecrases a 220), non-regression (quatorze bandes
+identiques a "160-200"), et ne rien ecrire (un decrochage de 88 niveaux entre
+Nokron et Ainsel). Ce qui a tenu : extrapoler par le rapport MEDIAN mesure
+(x1.60), et l'annoncer comme une extrapolation dans le rapport de l'outil.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.
