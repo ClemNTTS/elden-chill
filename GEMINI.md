@@ -1481,6 +1481,35 @@ droite qu'il recalcule ensuite sur les valeurs reduites, donc la droite descend
 a chaque passe. La deuxieme ne rabotait plus que 5 a 15% sans corriger
 d'aberration.
 
+## Un facteur dix dans UN objet tuait la diversite des builds
+
+Retour de terrain : "en Intelligence je me suis senti oblige de suivre les
+panoplies, peu de place a la creativite". Mesure a la sortie de l'Academie :
+seulement 4 combinaisons sur 7854 a moins de 10% du sommet, et l'Intelligence
+etait le seul archetype ou une panoplie battait toute combinaison libre.
+
+Cause unique. `raya_lucaria_robe` annonce "+1% /Niv" et appliquait
+`1.1 + 0.1 * itemLevel` — dix fois trop. Au niveau 6 : +70% d'intelligence ET
++70% de vigueur. La vigueur profitant a tous, cette armure etait la meilleure
+des CINQ archetypes, avec 24% d'avance sur la suivante en Intelligence.
+
+Apres correction : 27 combinaisons a moins de 10% (x6.7), 348 a moins de 20%
+(x4.5), et la meilleure combinaison libre rejoint la meilleure panoplie a 0.3%
+pres. L'emplacement armure passe d'un monopole a quatre choix separes par 6%.
+
+Le manque de diversite n'etait pas un manque de contenu : 57 objets sont
+joignables a ce stade. `tools/audit-echelle.mjs` compare desormais le gain par
+niveau ANNONCE au gain CODE sur les 69 objets a effet multiplicatif — un
+facteur dix ne se voit pas en lisant, il se voit en comparant.
+
+## Le pool "joignable a ce stade" ne se calcule pas sur le graphe
+
+Premiere version de `audit-diversite.mjs` : parcours en largeur du graphe de
+deblocage, arrete au biome vise. Les autres branches filaient devant, et le
+pool contenait l'epee de Radahn, Nokron et Ainsel — tous posterieurs a
+l'Academie. Le bon critere est le niveau recommande : un joueur au niveau N a
+plausiblement nettoye les biomes dont la bande commence en dessous.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.
