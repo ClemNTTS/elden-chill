@@ -614,7 +614,6 @@ export const ITEMS = {
   godrick_great_rune: {
     name: "Rune Majeure de Godrick",
     type: ITEM_TYPES.ACCESSORY,
-    isAlwaysMax: true,
     description:
       "Une rune restaurant le pouvoir de la lignée dorée. +15% d'intelligence (+1.5% / Niv). Vous donne 10% d'étourdire l'ennemi pendant 1 tour (+1 de durée quand la rune atteint le niveau 10)",
 
@@ -928,8 +927,12 @@ export const ITEMS = {
     description:
       "Intelligence +10% (+1% /Niv) et Vigueur +10% (+1% /Niv). Réduit les dégâts de Poison et de Brûlure.",
     applyMult: (stats, itemLevel) => {
-      stats.intelligence *= 1.1 + 0.1 * itemLevel;
-      stats.vigor *= 1.1 + 0.1 * itemLevel;
+      // 0.01 et non 0.1 : la description annonce "+1% /Niv". Avec le facteur
+      // dix, la robe donnait +70% d'intelligence ET +70% de vigueur au niveau
+      // 6, et devenait la meilleure armure des cinq archetypes — la vigueur
+      // profitant a tout le monde. Un seul objet ecrasait l'emplacement.
+      stats.intelligence *= 1.1 + 0.01 * itemLevel;
+      stats.vigor *= 1.1 + 0.01 * itemLevel;
     },
     passiveStatusReduction: (playerEffects, itemLevel) => {
       playerEffects.forEach((eff) => {

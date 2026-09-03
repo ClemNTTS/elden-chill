@@ -1387,6 +1387,129 @@ Nothing in the audit suite covers them, and no earlier session exercised them.
 Worth remembering when judging what "verified" means: the audits check content
 and balance, never the destructive buttons.
 
+## `maxRareSpawns` absent = rares muets, en silence
+
+`core.js` decide l'apparition d'un rare avec `biome.maxRareSpawns || 0`. Un
+biome qui declare des `rareMonsters` mais **oublie** le champ ne fait donc
+jamais apparaitre aucun rare — pas d'erreur, rien dans le journal. Le contenu
+est ecrit, reference, et injouable.
+
+Deux biomes etaient dans ce cas, dont le **Chateau du Lion Rouge**. Radahn
+arrivait sur un joueur prive du butin de son propre chateau : 2500 runes par
+elite, la panoplie du Bourreau, et le Cri des Astres — seule entree du jeu
+sans aucune autre source. D'ou le retour de terrain "la panoplie Carienne est
+la seule des deux jouable a ce stade".
+
+`tools/audit-rares-muets.mjs` surveille ca. Un `maxRareSpawns: 0` explicite est
+respecte : le Sanctuaire Bestial le veut.
+
+## Le simulateur ne peut PAS fixer les niveaux recommandes
+
+Tentation naturelle : recaler `recommendedLevel` sur les niveaux d'arrivee du
+simulateur. Deux verifications l'ont interdit.
+
+D'abord, `CYCLES_MAX = 60` censurait la mesure. Le simulateur declarait le
+Chateau du Lion Rouge "MUR" pour les cinq archetypes, au niveau 81-84 — mais
+il ne perdait pas contre Radahn : il **arretait de farmer avant d'avoir le
+niveau**. Un joueur reel l'a battu au niveau 126. Le plafond est desormais
+reglable (`--cycles=400`) et le defaut de 60 est documente comme un signal de
+rythme, pas une limite de jeu.
+
+Ensuite, meme a 400 cycles il reste 12 a 21 murs. Le simulateur ne modelise ni
+les cendres, ni les benedictions, ni les effets a l'impact, ni les afflictions,
+ni les phases de boss — exactement ce qui porte la fin de partie. Sa
+pessimisme est structurel.
+
+Le recalage produisait 15 biomes a "220-226" alors que le plafond de niveau est
+220. Une bande au-dessus du plafond est une sortie absurde : c'est le signe que
+la mesure ne mesurait pas ce qu'on croyait. **Ne pas graver l'aveuglement de
+l'outil dans le jeu.** La seule source fiable reste une partie reellement jouee.
+
+## `splashDamage` ne fait rien sur AUCUN monstre
+
+42 monstres declarent `specificStats.splashDamage`, Radahn a 100. La valeur
+n'est jamais appliquee : quand l'ennemi attaque, `combat.js` passe
+`targetGroup: null`, et `performAttack` n'applique le splash que
+`if (splash > 0 && targetGroup?.length > 1)`. Le splash est une mecanique du
+JOUEUR contre un groupe, jamais l'inverse.
+
+Meme classe de bug que les statistiques fictives des objets, mais cote
+monstres — et personne ne l'avait cherchee la. Une premiere version de
+`courbe-boss.mjs` comptait ce splash et annonçait Radahn a "degats x3.0" depuis
+Siofra ; la vraie valeur est x2.0.
+
+## Calibrer un modele sur une partie reelle
+
+Six niveaux releves par un joueur (premier boss 9, Margit 17, Darriwil 20,
+Godrick 38, Rennala 82, Radahn 126) ont servi a calibrer `banc-boss.mjs`, qui
+balaie le niveau jusqu'a la victoire avec un equipement impose.
+
+Resultat : la colonne "survie" (marge 1.0) colle aux releves a quelques niveaux
+pres, et cinq des six releves tombent dans la bande [survie, confort]. C'est ce
+qui a permis de recaler 25 bandes sur mesure plutot qu'au jugement.
+
+**Ne jamais ecrire une bande qu'on n'a pas mesuree.** Trois tentatives de
+rattrapage pour les biomes hors de portee du banc ont ete jetees : decalage
+cumulatif (dix biomes ecrases a 220), non-regression (quatorze bandes
+identiques a "160-200"), et ne rien ecrire (un decrochage de 88 niveaux entre
+Nokron et Ainsel). Ce qui a tenu : extrapoler par le rapport MEDIAN mesure
+(x1.60), et l'annoncer comme une extrapolation dans le rapport de l'outil.
+
+## Le parent du GRAPHE n'est pas le predecesseur en DIFFICULTE
+
+Premiere tentative de lissage des boss : plafonner le bond entre un boss et
+celui du biome qui le debloque. Faux. Caelid s'ouvre depuis Necrolimbe Est mais
+se joue trente niveaux plus tard : le "bond" de PV x6.2 est legitime. La
+correction cascadait et amputait Ekzykes de 79%.
+
+Le bon referentiel est le niveau recommande. La puissance des boss suit une
+exponentielle nette :
+
+  log(PV)     = 5.81 + 0.0245 x niveau    R2 = 0.93
+  log(degats) = 3.34 + 0.0146 x niveau    R2 = 0.82
+
+Un R2 de 0.93 dit que la courbe existe et que les murs en sont des ecarts. Dix
+boss sur 46 sortaient de la tolerance x1.6 ; les autres etaient conformes.
+
+**Radahn n'en faisait pas partie.** Une fois sa bande corrigee de 55-68 a
+117-150, ses statistiques sont normales pour ce niveau — legerement SOUS la
+courbe en PV. Le mur etait dans l'etiquette, pas dans le boss. Verifier le
+referentiel avant de nerfer quoi que ce soit.
+
+`tools/lisse-boss.mjs` ne doit etre applique QU'UNE FOIS : il reduit vers une
+droite qu'il recalcule ensuite sur les valeurs reduites, donc la droite descend
+a chaque passe. La deuxieme ne rabotait plus que 5 a 15% sans corriger
+d'aberration.
+
+## Un facteur dix dans UN objet tuait la diversite des builds
+
+Retour de terrain : "en Intelligence je me suis senti oblige de suivre les
+panoplies, peu de place a la creativite". Mesure a la sortie de l'Academie :
+seulement 4 combinaisons sur 7854 a moins de 10% du sommet, et l'Intelligence
+etait le seul archetype ou une panoplie battait toute combinaison libre.
+
+Cause unique. `raya_lucaria_robe` annonce "+1% /Niv" et appliquait
+`1.1 + 0.1 * itemLevel` — dix fois trop. Au niveau 6 : +70% d'intelligence ET
++70% de vigueur. La vigueur profitant a tous, cette armure etait la meilleure
+des CINQ archetypes, avec 24% d'avance sur la suivante en Intelligence.
+
+Apres correction : 27 combinaisons a moins de 10% (x6.7), 348 a moins de 20%
+(x4.5), et la meilleure combinaison libre rejoint la meilleure panoplie a 0.3%
+pres. L'emplacement armure passe d'un monopole a quatre choix separes par 6%.
+
+Le manque de diversite n'etait pas un manque de contenu : 57 objets sont
+joignables a ce stade. `tools/audit-echelle.mjs` compare desormais le gain par
+niveau ANNONCE au gain CODE sur les 69 objets a effet multiplicatif — un
+facteur dix ne se voit pas en lisant, il se voit en comparant.
+
+## Le pool "joignable a ce stade" ne se calcule pas sur le graphe
+
+Premiere version de `audit-diversite.mjs` : parcours en largeur du graphe de
+deblocage, arrete au biome vise. Les autres branches filaient devant, et le
+pool contenait l'epee de Radahn, Nokron et Ainsel — tous posterieurs a
+l'Academie. Le bon critere est le niveau recommande : un joueur au niveau N a
+plausiblement nettoye les biomes dont la bande commence en dessous.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.

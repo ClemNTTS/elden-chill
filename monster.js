@@ -436,7 +436,7 @@ export const MONSTERS = {
 
   godrick: {
     name: "Godrick le Greffé",
-    hp: 1100,
+    hp: 920,
     atk: 38,
     runes: 5000,
     armor: 125,
@@ -740,7 +740,7 @@ export const MONSTERS = {
     thresholdForPhase2: 0.5,
     flavorTextPhase2:
       "Loretta prépare son arc de pierre d'éclat... Le grand arc de Loretta !",
-    specificStats: { attacksPerTurn: 1, splashDamage: 40 }, // Dégâts de zone en P2
+    specificStats: { attacksPerTurn: 1 }, // Dégâts de zone en P2
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
   },
 
@@ -819,7 +819,7 @@ export const MONSTERS = {
     runes: 55000,
     isBoss: true,
     armor: 220,
-    specificStats: { attacksPerTurn: 2, splashDamage: 100 },
+    specificStats: { attacksPerTurn: 2 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
     flavorTextPhase2: "Radahn disparaît dans le ciel... UNE MÉTÉORE APPROCHE !",
@@ -1029,7 +1029,7 @@ export const MONSTERS = {
 
   mimic_tear_boss: {
     name: "Larme Imitatrice",
-    hp: 10500,
+    hp: 9453,
     atk: 100,
     runes: 45000,
     isBoss: true,
@@ -1098,7 +1098,7 @@ export const MONSTERS = {
     runes: 8600,
     armor: 165,
     isRare: true,
-    specificStats: { attacksPerTurn: 1, splashDamage: 40 },
+    specificStats: { attacksPerTurn: 1 },
     drops: [
       { id: "ainsel_shard_spear", chance: 0.7 },
       { id: "ainsel_starmap", chance: 0.45 },
@@ -1118,12 +1118,12 @@ export const MONSTERS = {
 
   dragonkin_ainsel: {
     name: "Soldat Draconide d'Ainsel",
-    hp: 15300,
-    atk: 222,
+    hp: 7197,
+    atk: 103,
     runes: 68000,
     isBoss: true,
     armor: 240,
-    specificStats: { attacksPerTurn: 2, splashDamage: 80 },
+    specificStats: { attacksPerTurn: 2 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
     flavorTextPhase2:
@@ -1185,8 +1185,8 @@ export const MONSTERS = {
 
   fia_champion_echo: {
     name: "Reflet du Champion de Fia",
-    hp: 17500,
-    atk: 225,
+    hp: 7753,
+    atk: 108,
     runes: 72000,
     isBoss: true,
     armor: 260,
@@ -1253,7 +1253,7 @@ export const MONSTERS = {
     runes: 11000,
     armor: 180,
     isRare: true,
-    specificStats: { attacksPerTurn: 2, splashDamage: 60 },
+    specificStats: { attacksPerTurn: 2 },
     drops: [
       { id: "rotbloom_mail", chance: 0.7 },
       { id: "rotbloom_blade", chance: 0.45 },
@@ -1263,12 +1263,12 @@ export const MONSTERS = {
 
   astel_bud: {
     name: "Bourgeon d'Astel",
-    hp: 20500,
-    atk: 285,
+    hp: 10700,
+    atk: 130,
     runes: 86000,
     isBoss: true,
     armor: 230,
-    specificStats: { attacksPerTurn: 2, splashDamage: 120, critChance: 0.12 },
+    specificStats: { attacksPerTurn: 2, critChance: 0.12 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
     flavorTextPhase2:

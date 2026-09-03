@@ -806,7 +806,7 @@ const updateInventoryEquippedDisplay = () => {
           ${iconMarkup(null, { scale: 3, frame: "item-icon" })}
           <span class="inventory-equipped-label">${label}</span>
           <strong class="inventory-equipped-name">${emptyLabel}</strong>
-          <span class="inventory-equipped-meta">A selectionner dans Build</span>
+          <span class="inventory-equipped-meta">A choisir ci-dessous</span>
         `;
       }
     } else {
@@ -2720,9 +2720,29 @@ export const updateAshButton = () => {
   ashBtn.classList.remove("ash-primed");
 };
 
-const updateAshesDisplay = () => {
-  const container = document.getElementById("ashes-list");
-  if (!container || gameState.ashesOfWarOwned.length === 0) return;
+/*
+ * Une seule liste de cendres, rendue a deux endroits.
+ *
+ * La liste ne vivait que dans l'onglet Build. L'inventaire affichait une carte
+ * morte de la cendre equipee, portant la mention "A selectionner dans Build" :
+ * arme, armure et accessoire s'equipent depuis l'inventaire, la cendre etait
+ * le seul emplacement a ne pas repondre au clic.
+ *
+ * Le rendu est partage plutot que duplique : deux copies auraient diverge des
+ * la premiere evolution du bouton.
+ */
+const CONTENEURS_CENDRES = ["ashes-list", "inventory-ashes-list"];
+
+const peindreCendres = (container) => {
+  /*
+   * L'ancienne version sortait avant de vider le conteneur quand le joueur ne
+   * possedait aucune cendre. Le texte d'attente restait donc affiche — correct
+   * par accident au premier rendu, faux des qu'une cendre etait perdue.
+   */
+  if (gameState.ashesOfWarOwned.length === 0) {
+    container.textContent = "Aucune cendre de guerre possedee";
+    return;
+  }
 
   container.innerHTML = "";
 
@@ -2732,6 +2752,7 @@ const updateAshesDisplay = () => {
 
     const btn = document.createElement("button");
     btn.className = `ash-item ${isEquipped ? "active-ash" : ""}`;
+    btn.setAttribute("aria-pressed", isEquipped ? "true" : "false");
     btn.innerHTML = `
       <strong>${data.name}</strong><br>
       <small>${data.maxUses} utilisations</small>
@@ -2743,6 +2764,13 @@ const updateAshesDisplay = () => {
     btn.onmouseleave = () => hideTooltip();
     container.appendChild(btn);
   });
+};
+
+const updateAshesDisplay = () => {
+  for (const id of CONTENEURS_CENDRES) {
+    const container = document.getElementById(id);
+    if (container) peindreCendres(container);
+  }
 };
 
 let showRealTime = false;
