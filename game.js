@@ -2,7 +2,12 @@
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
-import { loadGame, saveGame } from "./save.js";
+import {
+  exportSaveString,
+  importSaveString,
+  loadGame,
+  saveGame,
+} from "./save.js";
 import {
   equipAsh,
   equipItem,
@@ -366,6 +371,125 @@ window.onload = () => {
   };
   window.addEventListener("click", startAudioOnInteraction);
 };
+
+/* ------------------------------------------------------------------ */
+/* Transfert manuel de sauvegarde                                     */
+/* ------------------------------------------------------------------ */
+
+/*
+ * exportSaveString() et importSaveString() existaient dans save.js depuis
+ * longtemps, testees et fonctionnelles — mais AUCUN bouton ne les appelait.
+ * La fonctionnalite etait ecrite a cent pour cent et joignable a zero.
+ */
+
+const champTransfert = () => document.getElementById("save-transfer");
+
+/** Affiche un retour lisible sous les deux boutons. */
+const direTransfert = (message, ok) => {
+  const ligne = document.getElementById("save-transfer-status");
+  if (!ligne) return;
+  ligne.innerText = message;
+  ligne.classList.toggle("is-ok", ok === true);
+  ligne.classList.toggle("is-error", ok === false);
+};
+
+/*
+ * Chaque cause d'echec de openSave() a sa phrase.
+ *
+ * Un code de raison brut n'aide personne : "TAMPERED" ne dit pas au joueur que
+ * son code a ete tronque au copier-coller, ce qui est de loin le cas le plus
+ * frequent.
+ */
+const RAISONS_IMPORT = {
+  EMPTY: "Le champ est vide : collez d'abord un code de sauvegarde.",
+  MALFORMED:
+    "Ce n'est pas un code de sauvegarde valide. Verifiez qu'il a ete copie en entier.",
+  UNSUPPORTED_VERSION:
+    "Ce code vient d'une version du jeu trop ancienne pour etre relue.",
+  TAMPERED:
+    "Le sceau ne correspond pas. Le code a probablement ete tronque ou modifie.",
+  CORRUPT_PAYLOAD: "Le contenu du code est illisible.",
+  INCOMPATIBLE_VERSION:
+    "Cette sauvegarde vient d'une version incompatible du jeu.",
+};
+
+const exportSave = () => {
+  const champ = champTransfert();
+  if (!champ) return;
+  const code = exportSaveString();
+  champ.value = code;
+  champ.select();
+
+  // Le presse-papiers peut etre refuse (contexte non securise, permission) :
+  // le code reste selectionne dans le champ, donc copiable a la main.
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard
+      .writeText(code)
+      .then(() =>
+        direTransfert(
+          `Sauvegarde exportee (${code.length} signes) et copiee dans le presse-papiers.`,
+          true,
+        ),
+      )
+      .catch(() =>
+        direTransfert(
+          `Sauvegarde exportee (${code.length} signes). Le code est selectionne : copiez-le.`,
+          true,
+        ),
+      );
+    return;
+  }
+  direTransfert(
+    `Sauvegarde exportee (${code.length} signes). Le code est selectionne : copiez-le.`,
+    true,
+  );
+};
+
+const importSave = () => {
+  const champ = champTransfert();
+  if (!champ) return;
+  const code = champ.value.trim();
+  if (!code) {
+    direTransfert(RAISONS_IMPORT.EMPTY, false);
+    return;
+  }
+
+  // Un import ecrase la partie en cours : on demande confirmation, comme la
+  // reinitialisation.
+  if (
+    !confirm(
+      "Importer cette sauvegarde remplacera definitivement votre partie en cours. Continuer ?",
+    )
+  ) {
+    return;
+  }
+
+  const resultat = importSaveString(code);
+  if (!resultat.ok) {
+    direTransfert(
+      RAISONS_IMPORT[resultat.reason] ||
+        `Import impossible (${resultat.reason}).`,
+      false,
+    );
+    return;
+  }
+
+  /*
+   * On recharge apres un import reussi.
+   *
+   * hydrate() remplace bien l'etat, mais plusieurs vues ne sont construites
+   * qu'au chargement : sans rechargement, l'ecran continuerait d'afficher
+   * l'ancienne partie par endroits. Meme raisonnement que pour la langue.
+   *
+   * importSaveString a deja ecrit la nouvelle sauvegarde, donc le
+   * beforeunload qui suit reecrit le meme etat : rien a suspendre ici.
+   */
+  direTransfert("Sauvegarde importee. Rechargement...", true);
+  window.setTimeout(() => window.location.reload(), 600);
+};
+
+window.exportSave = exportSave;
+window.importSave = importSave;
 
 window.addEventListener("beforeunload", () => {
   saveGame("beforeunload");

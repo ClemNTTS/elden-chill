@@ -362,7 +362,28 @@ export const clearQuarantinedSave = () =>
 /* Ecriture                                                           */
 /* ------------------------------------------------------------------ */
 
+/*
+ * Verrou de sauvegarde.
+ *
+ * La reinitialisation effacait bien le stockage, puis appelait
+ * location.reload() — qui declenche beforeunload, lequel appelle saveGame() et
+ * reecrit l'etat encore en memoire. La sauvegarde revenait donc intacte : le
+ * bouton n'effacait rien du tout. L'intervalle de 30 secondes pouvait faire la
+ * meme chose.
+ *
+ * Un drapeau unique vaut mieux que retirer le gestionnaire beforeunload : il
+ * bloque TOUS les chemins d'ecriture, y compris ceux qu'on ajouterait plus
+ * tard sans y penser.
+ */
+let sauvegardeSuspendue = false;
+
+/** Interdit toute ecriture jusqu'au rechargement de la page. */
+export const suspendreSauvegarde = () => {
+  sauvegardeSuspendue = true;
+};
+
 export const saveGame = (reason = "autosave") => {
+  if (sauvegardeSuspendue) return false;
   try {
     if (!gameState.save) gameState.save = {};
     ensureSaveIdentity(gameState);

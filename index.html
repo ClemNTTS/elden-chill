@@ -533,6 +533,28 @@
                   </div>
                 </div>
 
+                <div class="camp-panel">
+                  <h3>Sauvegarde manuelle</h3>
+                  <p class="option-hint">
+                    Exporter produit un code a coller ailleurs. Importer remplace la partie en cours.
+                  </p>
+                  <div class="button-stack">
+                    <button onclick="exportSave()">Exporter ma sauvegarde</button>
+                    <button onclick="importSave()">Importer une sauvegarde</button>
+                  </div>
+                  <!-- Un champ de texte plutot qu'un telechargement : ca marche
+                       partout, y compris sur mobile, et le joueur voit ce qu'il
+                       copie. -->
+                  <textarea
+                    id="save-transfer"
+                    class="save-transfer"
+                    rows="3"
+                    spellcheck="false"
+                    placeholder="Le code de sauvegarde apparait ici. Collez-en un pour l'importer."
+                  ></textarea>
+                  <p class="option-hint" id="save-transfer-status" role="status" aria-live="polite"></p>
+                </div>
+
                 <div class="camp-panel danger-panel">
                   <h3>Zone de sans retour</h3>
                   <div class="button-stack" id="danger-option-zone">

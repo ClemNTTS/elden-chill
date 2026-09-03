@@ -1,5 +1,9 @@
 import { gameState, runtimeState } from "./state.js";
-import { clearSaveStorage, saveGame } from "./save.js";
+import {
+  clearSaveStorage,
+  saveGame,
+  suspendreSauvegarde,
+} from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
 import { BIOMES } from "./biome.js";
@@ -315,6 +319,14 @@ export const resetGame = () => {
       "Etes-vous sur de vouloir tout effacer ? Votre progression sera perdue a jamais.",
     )
   ) {
+    /*
+     * L'ordre compte, et le verrou est indispensable.
+     *
+     * location.reload() declenche beforeunload, qui appelle saveGame() et
+     * reecrivait l'etat encore en memoire juste apres l'effacement. La
+     * progression revenait intacte — le bouton ne servait a rien.
+     */
+    suspendreSauvegarde();
     clearSaveStorage();
     location.reload();
   }
