@@ -1455,6 +1455,32 @@ identiques a "160-200"), et ne rien ecrire (un decrochage de 88 niveaux entre
 Nokron et Ainsel). Ce qui a tenu : extrapoler par le rapport MEDIAN mesure
 (x1.60), et l'annoncer comme une extrapolation dans le rapport de l'outil.
 
+## Le parent du GRAPHE n'est pas le predecesseur en DIFFICULTE
+
+Premiere tentative de lissage des boss : plafonner le bond entre un boss et
+celui du biome qui le debloque. Faux. Caelid s'ouvre depuis Necrolimbe Est mais
+se joue trente niveaux plus tard : le "bond" de PV x6.2 est legitime. La
+correction cascadait et amputait Ekzykes de 79%.
+
+Le bon referentiel est le niveau recommande. La puissance des boss suit une
+exponentielle nette :
+
+  log(PV)     = 5.81 + 0.0245 x niveau    R2 = 0.93
+  log(degats) = 3.34 + 0.0146 x niveau    R2 = 0.82
+
+Un R2 de 0.93 dit que la courbe existe et que les murs en sont des ecarts. Dix
+boss sur 46 sortaient de la tolerance x1.6 ; les autres etaient conformes.
+
+**Radahn n'en faisait pas partie.** Une fois sa bande corrigee de 55-68 a
+117-150, ses statistiques sont normales pour ce niveau — legerement SOUS la
+courbe en PV. Le mur etait dans l'etiquette, pas dans le boss. Verifier le
+referentiel avant de nerfer quoi que ce soit.
+
+`tools/lisse-boss.mjs` ne doit etre applique QU'UNE FOIS : il reduit vers une
+droite qu'il recalcule ensuite sur les valeurs reduites, donc la droite descend
+a chaque passe. La deuxieme ne rabotait plus que 5 a 15% sans corriger
+d'aberration.
+
 ## Key Functions & Logic
 
 *   `updateUI()` — `ui.js`, central refresh of every visual element from `gameState`.
