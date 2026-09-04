@@ -24,7 +24,9 @@ Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez
     Ce butin forme cinq panoplies, une par archétype de build (force, dextérité,
     intelligence, vigueur, afflictions). Les contrats visent la panoplie qui
     correspond à votre build et proposent en priorité les pièces qui vous
-    manquent : un set se complète en trois contrats, pas en trente.
+    manquent : un set se complète en trois contrats, pas en trente. Ces pièces
+    arrivent **directement à leur valeur finale** — elles n'ont pas de niveau à
+    monter, parce qu'il aurait fallu des centaines de contrats pour y parvenir.
 *   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
 *   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
 *   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.

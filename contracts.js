@@ -166,10 +166,24 @@ export const calculerRecompense = (
 ) => {
   const reglages = REGLAGES_RARETE[rarete] || REGLAGES_RARETE[RARETES.COMMUNE];
   const niveau = Math.max(1, Math.floor(niveauJoueur) || 1);
+  const objet = reglages.donneObjet ? objetExclusif : null;
+
+  /*
+   * Compensation quand aucun objet n'est disponible.
+   *
+   * Les pieces de contrat sont `isAlwaysMax` : une copie n'apporte rien, donc
+   * le tirage ne propose jamais une piece deja possedee. Un joueur qui a tout
+   * ramasse verrait alors ses contrats rares et legendaires payer exactement
+   * comme des communs — la rarete deviendrait un mot vide.
+   *
+   * Sa part d'objet est donc rendue en runes, au double du gain de base : ce
+   * n'est pas equivalent a une piece exclusive, mais ce n'est pas rien.
+   */
+  const compense = reglages.donneObjet && !objet;
 
   return {
-    runes: Math.floor(reglages.runesParNiveauJoueur * niveau),
-    objet: reglages.donneObjet ? objetExclusif : null,
+    runes: Math.floor(reglages.runesParNiveauJoueur * niveau * (compense ? 3 : 1)),
+    objet,
     niveau: reglages.donneNiveau ? 1 : 0,
   };
 };

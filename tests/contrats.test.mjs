@@ -221,10 +221,15 @@ test("une panoplie complete reste dans une fourchette raisonnable", async () => 
 
     const equipe = mesurer(equipement, [
       { id: "fists", name: "poings", level: 10, count: 0 },
+      /*
+       * Niveau 10 : c'est le SEUL niveau auquel ces pieces existent. Elles
+       * sont toutes `isAlwaysMax` et arrivent directement a leur valeur
+       * finale. Mesurer a 1 testerait un etat que le jeu ne produit jamais.
+       */
       ...pieces.map((id) => ({
         id,
         name: CONTRACT_ITEMS[id].name,
-        level: 1,
+        level: 10,
         count: 0,
       })),
     ]);
@@ -252,6 +257,209 @@ test("une panoplie complete reste dans une fourchette raisonnable", async () => 
     assert.ok(
       equipe[cleArchetype] > nu[cleArchetype],
       `${setId} n'ameliore pas ${cleArchetype}, sa raison d'etre`,
+    );
+  }
+
+  gameState.stats = { ...statsDeBase };
+});
+
+test("toute piece de contrat est isAlwaysMax et sans scaling par niveau", async () => {
+  /*
+   * Sans cela, le butin exclusif serait inatteignable a sa vraie valeur.
+   *
+   * Le jeu monte un objet de niveau avec des copies, et il en faut
+   * `count >= level` a chaque palier : de 1 a 10, 45 copies. Seuls les contrats
+   * rares et legendaires donnent un objet (38% des tirages), repartis sur trois
+   * pieces — de l'ordre de 350 contrats pour amener UNE piece au maximum.
+   *
+   * Une piece de contrat qui naitrait au niveau 1 avec un scaling resterait
+   * donc eternellement a sa valeur la plus faible, et un contrat legendaire
+   * paierait moins qu'un objet ramasse sur un monstre.
+   */
+  const { CONTRACT_ITEMS } = await import("../items/contracts.js");
+  const source = await import("node:fs").then((fs) =>
+    fs.readFileSync(new URL("../items/contracts.js", import.meta.url), "utf8"),
+  );
+
+  for (const [id, objet] of Object.entries(CONTRACT_ITEMS)) {
+    assert.equal(objet.isAlwaysMax, true, `${id} doit etre isAlwaysMax`);
+    assert.ok(
+      !/\(\+[^)]*\/ Niv\)/.test(objet.description || ""),
+      `${id} : la description annonce encore un scaling par niveau`,
+    );
+  }
+
+  assert.ok(
+    !source.includes("itemLevel"),
+    "une piece de contrat lit encore itemLevel : elle n'a pas de niveau a lire",
+  );
+});
+
+test("une piece deja possedee n'est jamais reproposee", async () => {
+  // Une copie n'ajoute rien a un objet isAlwaysMax. L'offrir en recompense
+  // d'un contrat legendaire serait pire que de ne rien offrir.
+  const { gameState } = await import("../state.js");
+  const { proposerContrat, getContratActif } = await import("../actions.js");
+  const { CONTRACT_ITEM_IDS } = await import("../constants.js");
+
+  gameState.world.unlockedBiomes = ["limgrave_west"];
+  gameState.stats = { ...gameState.stats, level: 30, strength: 50 };
+  gameState.equipped = { weapon: null, armor: null, accessory: null };
+  gameState.inventory = [
+    { id: "fists", name: "poings", level: 10, count: 0 },
+    ...CONTRACT_ITEM_IDS.map((id) => ({ id, name: id, level: 10, count: 0 })),
+  ];
+  gameState.contracts = { actif: null, completed: 0, total: 0 };
+
+  for (let i = 0; i < 30; i++) {
+    proposerContrat("limgrave_west");
+    const contrat = getContratActif();
+    assert.equal(
+      contrat.recompense.objet,
+      null,
+      "tout est deja possede : aucun objet ne doit etre promis",
+    );
+  }
+});
+
+test("la part d'objet est rendue en runes quand le pool est vide", () => {
+  // Sinon un joueur qui a tout ramasse verrait ses contrats legendaires payer
+  // comme des communs, et la rarete deviendrait un mot vide.
+  const avecObjet = c.calculerRecompense(c.RARETES.LEGENDAIRE, 40, "oath_blade");
+  const sansObjet = c.calculerRecompense(c.RARETES.LEGENDAIRE, 40, null);
+
+  assert.equal(avecObjet.objet, "oath_blade");
+  assert.equal(sansObjet.objet, null);
+  assert.ok(
+    sansObjet.runes > avecObjet.runes,
+    `sans objet, les runes doivent compenser (${sansObjet.runes} vs ${avecObjet.runes})`,
+  );
+
+  // Une commune ne promet pas d'objet : elle ne doit donc rien compenser.
+  assert.equal(
+    c.calculerRecompense(c.RARETES.COMMUNE, 40, null).runes,
+    c.calculerRecompense(c.RARETES.COMMUNE, 40, "oath_blade").runes,
+  );
+});
+
+test("chaque panoplie domine sur SA statistique, et pas sur celle des autres", async () => {
+  /*
+   * Le garde-fou de fourchette ne suffit pas.
+   *
+   * Il avait laisse passer un vrai desequilibre : la panoplie VIGUEUR montait a
+   * x2.14 en Force, contre x2.23 pour la panoplie FORCE, tout en offrant pres
+   * du triple d'armure et +92% de soins recus. Aucun ratio ne depassait le
+   * plafond, mais le set tank dominait le set de degats sur son propre terrain
+   * — et le choix d'archetype n'avait plus d'objet.
+   *
+   * On verifie donc l'identite de chaque panoplie : celle d'un archetype doit
+   * etre la meilleure sur la statistique qui la definit.
+   */
+  const { gameState, getEffectiveStats } = await import("../state.js");
+  const { SETS_PAR_ARCHETYPE, CONTRACT_ITEMS, piecesDuSet } = await import(
+    "../items/contracts.js"
+  );
+
+  const statsDeBase = {
+    level: 60,
+    strength: 100,
+    dexterity: 100,
+    intelligence: 100,
+    vigor: 100,
+    armor: 100,
+    splashDamage: 0,
+    critChance: 0.05,
+    critDamage: 1.5,
+    critRanks: { chance: 0, damage: 0 },
+    flatDamagePenetration: 0,
+    percentDamagePenetration: 0,
+    runesSpent: 0,
+  };
+
+  const mesures = {};
+  for (const [, setId] of Object.entries(SETS_PAR_ARCHETYPE)) {
+    const pieces = piecesDuSet(setId);
+    const equipement = { weapon: null, armor: null, accessory: null };
+    for (const id of pieces) {
+      const type = CONTRACT_ITEMS[id].type;
+      equipement[
+        type === "Arme" ? "weapon" : type === "Armure" ? "armor" : "accessory"
+      ] = id;
+    }
+    gameState.stats = { ...statsDeBase };
+    gameState.preparation = { activeRunBuffs: [] };
+    gameState.inventory = [
+      { id: "fists", name: "poings", level: 10, count: 0 },
+      ...pieces.map((id) => ({ id, name: id, level: 10, count: 0 })),
+    ];
+    gameState.equipped = equipement;
+    mesures[setId] = getEffectiveStats();
+  }
+
+  /*
+   * La panoplie `setId` doit dominer sur `cle` AVEC UNE MARGE.
+   *
+   * La domination stricte ne suffit pas : dans le cas qui a motive ce test, la
+   * panoplie VIGUEUR atteignait 96% de la Force de la panoplie FORCE. Elle ne
+   * la depassait donc pas, et un test d'inegalite simple passait — alors qu'un
+   * set qui offre 96% des degats du specialiste ET le triple de son armure
+   * rend l'autre inutile.
+   *
+   * 25% de marge : assez pour qu'un specialiste reste identifiable, assez
+   * large pour ne pas se declencher sur un ajustement mineur.
+   */
+  const MARGE = 1.25;
+  const doitDominer = (setId, cle) => {
+    for (const [autre, stats] of Object.entries(mesures)) {
+      if (autre === setId) continue;
+      const rapport = mesures[setId][cle] / (stats[cle] || 0.0001);
+      assert.ok(
+        rapport >= MARGE,
+        `${setId} ne domine pas assez ${autre} sur ${cle} : ${mesures[setId][cle]} contre ${stats[cle]} (rapport ${rapport.toFixed(2)}, minimum ${MARGE})`,
+      );
+    }
+  };
+
+  doitDominer("OATHBOUND", "strength");
+  doitDominer("MOURNER", "armor");
+  doitDominer("ARCHIVIST", "splashDamage");
+  doitDominer("BOUNTY_HUNTER", "critChance");
+
+  /*
+   * SENTENCE ne se mesure pas en statistiques.
+   *
+   * Sa penetration d'armure est elevee, mais ce n'est qu'un moyen : le moteur
+   * convertit deja la Force en penetration (strength / 1.3), si bien que la
+   * panoplie FORCE en obtient presque autant sans en faire son sujet. Tester
+   * cette cle reviendrait a exiger que SENTENCE batte OATHBOUND sur un terrain
+   * qui n'est pas le sien.
+   *
+   * Son identite, ce sont les afflictions. On compte donc combien chaque
+   * panoplie en applique sur un coup, tirages forces au succes.
+   */
+  const compterAfflictions = (setId) =>
+    piecesDuSet(setId).reduce((total, id) => {
+      /*
+       * Comptage statique sur le corps de funcOnHit plutot qu'execution.
+       *
+       * Executer ces fonctions ferait remonter applyEffect jusqu'aux
+       * resistances, donc aux statistiques effectives et a l'etat de combat :
+       * le test dependrait alors du moteur entier pour compter des lignes.
+       */
+      const corps = CONTRACT_ITEMS[id].funcOnHit?.toString() || "";
+      return total + (corps.match(/applyEffect\(/g) || []).length;
+    }, 0);
+
+  const afflictionsSentence = compterAfflictions("SENTENCE");
+  assert.ok(
+    afflictionsSentence >= 2,
+    `SENTENCE doit appliquer plusieurs afflictions par coup, il en applique ${afflictionsSentence}`,
+  );
+  for (const setId of Object.values(SETS_PAR_ARCHETYPE)) {
+    if (setId === "SENTENCE") continue;
+    assert.ok(
+      afflictionsSentence > compterAfflictions(setId),
+      `${setId} applique autant d'afflictions que SENTENCE, dont c'est la raison d'etre`,
     );
   }
 

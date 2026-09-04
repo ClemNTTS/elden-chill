@@ -395,16 +395,25 @@ const archetypeDominant = () => {
  * sa panoplie peut en viser une seconde, ou monter le niveau des pieces
  * acquises grace aux copies.
  */
+const possede = (id) => gameState.inventory.some((entree) => entree.id === id);
+
 const poolRecompense = () => {
   const setVise = SETS_PAR_ARCHETYPE[archetypeDominant()];
-  const pieces = piecesDuSet(setVise);
-  const manquantes = pieces.filter(
-    (id) => !gameState.inventory.some((entree) => entree.id === id),
-  );
+  const manquantesDuSet = piecesDuSet(setVise).filter((id) => !possede(id));
+  if (manquantesDuSet.length > 0) return manquantesDuSet;
 
-  if (manquantes.length > 0) return manquantes;
-  if (pieces.length > 0) return pieces;
-  return CONTRACT_ITEM_IDS;
+  /*
+   * Le set vise est complet : on ouvre aux autres panoplies.
+   *
+   * On ne propose JAMAIS une piece deja possedee. Les pieces de contrat sont
+   * `isAlwaysMax` — une copie n'ajoute pas un niveau, elle n'ajoute rien du
+   * tout. Offrir un doublon en recompense d'un contrat legendaire serait pire
+   * que de ne rien offrir, puisque le joueur aurait vu la promesse s'afficher.
+   *
+   * Quand tout est ramasse, le pool est vide et calculerRecompense convertit la
+   * part d'objet en runes.
+   */
+  return CONTRACT_ITEM_IDS.filter((id) => !possede(id));
 };
 
 /**
@@ -466,21 +475,20 @@ export const reclamerContrat = () => {
     ActionLog(`Contrat honore : +${runes} runes.`, "log-runes");
   }
 
-  if (objet && ITEMS[objet]) {
-    const existant = gameState.inventory.find((entree) => entree.id === objet);
-    if (existant) {
-      // Deja possede : une copie fait monter le niveau, comme tout le reste.
-      existant.count = (existant.count || 0) + 1;
-      ActionLog(`Contrat honore : copie de ${ITEMS[objet].name}.`, "log-crit");
-    } else {
-      gameState.inventory.push({
-        id: objet,
-        name: ITEMS[objet].name,
-        level: ITEMS[objet].isAlwaysMax ? 10 : 1,
-        count: 0,
-      });
-      ActionLog(`OBJET UNIQUE OBTENU : ${ITEMS[objet].name} !`, "log-crit");
-    }
+  /*
+   * Le pool ne propose jamais une piece deja possedee (voir poolRecompense),
+   * mais une sauvegarde ancienne ou retouchee peut en porter une. On ne cree
+   * pas de doublon : les pieces de contrat sont `isAlwaysMax`, une copie
+   * n'apporterait rien et encombrerait l'inventaire.
+   */
+  if (objet && ITEMS[objet] && !possede(objet)) {
+    gameState.inventory.push({
+      id: objet,
+      name: ITEMS[objet].name,
+      level: ITEMS[objet].isAlwaysMax ? 10 : 1,
+      count: 0,
+    });
+    ActionLog(`OBJET UNIQUE OBTENU : ${ITEMS[objet].name} !`, "log-crit");
   }
 
   if (niveau > 0) {
