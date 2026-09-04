@@ -105,6 +105,18 @@
                     <div class="slot" id="slot-ash">Vide</div>
                   </div>
                 </div>
+
+                <!--
+                  Panoplies enregistrees.
+                  Rendu par ui.js : le contenu depend de ce qui est enregistre.
+                -->
+                <div class="loadouts">
+                  <div class="loadouts__head">
+                    <span class="loadouts__title">Panoplies</span>
+                    <span class="loadouts__hint">Enregistrez un build, rechargez-le d'un geste.</span>
+                  </div>
+                  <div id="loadouts-list" class="loadouts__list"></div>
+                </div>
               </div>
 
               <div class="camp-panel hub-actions-panel">
@@ -598,6 +610,19 @@
             <span id="current-biome-text">Necrolimbe</span>
             <span id="cycle-count"></span>
           </h2>
+
+          <!--
+            Bandeau de Ferveur. Masque au rang 0 : tant que rien n'est en jeu,
+            il n'a rien a dire et ne doit pas manger de hauteur, surtout sur
+            telephone ou l'ecran de combat est deja dense.
+          -->
+          <div id="ferveur-banner" class="ferveur-banner is-hidden">
+            <span class="ferveur-banner__rank" id="ferveur-rank">Ferveur 0</span>
+            <span class="ferveur-banner__bank" id="ferveur-bank">0</span>
+            <span class="ferveur-banner__hint" id="ferveur-hint">
+              en jeu — perdu a la mort, encaisse au repli
+            </span>
+          </div>
 
           <div id="dungeon-stepper-container">
             <div id="stepper-track">

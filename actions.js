@@ -6,6 +6,14 @@ import {
 } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import { ActionLog } from "./ui-action-log.js";
+import {
+  NOM_PANOPLIE_MAX,
+  capturerPanoplie,
+  normaliserPanoplies,
+  panoplieVide,
+  resoudrePanoplie,
+} from "./loadouts.js";
 import { BIOMES } from "./biome.js";
 import { startExploration } from "./core.js";
 import {
@@ -307,6 +315,104 @@ export const equipItem = (itemId) => {
 
   runtimeState.filterChanged = true;
   saveGame("equip_item");
+  updateUI();
+};
+
+/* ------------------------------------------------------------------ */
+/* Panoplies enregistrees                                             */
+/* ------------------------------------------------------------------ */
+
+/** Liste normalisee, toujours de NB_PANOPLIES entrees. */
+export const getPanoplies = () => {
+  gameState.loadouts = normaliserPanoplies(gameState.loadouts);
+  return gameState.loadouts;
+};
+
+const possedeObjet = (id) =>
+  id === "fists" || gameState.inventory.some((entree) => entree.id === id);
+
+const possedeCendre = (id) => (gameState.ashesOfWarOwned || []).includes(id);
+
+/** Enregistre l'equipement courant dans l'emplacement donne. */
+export const enregistrerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  if (!panoplies[index]) return;
+
+  const ancien = panoplies[index];
+  if (
+    !ancien.vide &&
+    !confirm(`Remplacer "${ancien.nom}" par votre equipement actuel ?`)
+  ) {
+    return;
+  }
+
+  // Le nom choisi survit a l'ecrasement : on remplace le contenu, pas
+  // l'etiquette que le joueur a posee dessus.
+  panoplies[index] = capturerPanoplie(gameState, ancien.nom);
+  saveGame("save_loadout");
+  updateUI();
+};
+
+/**
+ * Recharge une panoplie.
+ *
+ * Les pieces manquantes sont ignorees et signalees : une panoplie enregistree
+ * avant une renaissance reference des objets que le joueur n'a plus.
+ */
+export const chargerPanoplie = (index) => {
+  const panoplie = getPanoplies()[index];
+  if (!panoplie || panoplie.vide) return;
+
+  const { applicable, manquants } = resoudrePanoplie(
+    panoplie,
+    possedeObjet,
+    possedeCendre,
+  );
+
+  gameState.equipped.weapon = applicable.weapon;
+  gameState.equipped.armor = applicable.armor;
+  gameState.equipped.accessory = applicable.accessory;
+  gameState.equippedAsh = applicable.ash;
+
+  runtimeState.filterChanged = true;
+  saveGame("load_loadout");
+  updateUI();
+
+  if (manquants.length > 0) {
+    ActionLog(
+      `${panoplie.nom} : ${manquants.length} piece(s) introuvable(s), emplacement laisse vide.`,
+      "log-event",
+    );
+  }
+};
+
+/** Renomme un emplacement. */
+export const renommerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  const panoplie = panoplies[index];
+  if (!panoplie) return;
+
+  const saisi = prompt(
+    `Nom de la panoplie (${NOM_PANOPLIE_MAX} signes maximum) :`,
+    panoplie.nom,
+  );
+  if (saisi === null) return;
+
+  const propre = saisi.trim().slice(0, NOM_PANOPLIE_MAX);
+  panoplie.nom = propre || `Panoplie ${index + 1}`;
+  saveGame("rename_loadout");
+  updateUI();
+};
+
+/** Vide un emplacement. */
+export const effacerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  const panoplie = panoplies[index];
+  if (!panoplie || panoplie.vide) return;
+  if (!confirm(`Effacer la panoplie "${panoplie.nom}" ?`)) return;
+
+  panoplies[index] = panoplieVide(index);
+  saveGame("clear_loadout");
   updateUI();
 };
 

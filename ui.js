@@ -271,8 +271,20 @@ import {
   equipItem,
   selectBlessing,
   selectPreparationConsumable,
+  chargerPanoplie,
+  effacerPanoplie,
+  enregistrerPanoplie,
+  getPanoplies,
+  renommerPanoplie,
 } from "./actions.js";
-import { startExploration } from "./core.js";
+import { panoplieEstActive } from "./loadouts.js";
+import { encaisserFerveur, startExploration } from "./core.js";
+import {
+  FERVEUR_RANG_MAX,
+  getFerveurMultDanger,
+  getFerveurMultRunes,
+  getFerveurRang,
+} from "./escalation.js";
 import { saveGame } from "./save.js";
 import { checkForUpdate } from "./version-check.js";
 import {
@@ -456,6 +468,81 @@ export const formatNumber = (num) => {
   return num.toString();
 };
 
+/*
+ * Panoplies enregistrees.
+ *
+ * Trois cartes. Une panoplie remplie montre son nom, ses pieces et deux
+ * actions ; un emplacement vide ne montre qu'un bouton d'enregistrement, pour
+ * qu'un joueur qui n'utilise pas la fonction ne paie pas trois cartes de
+ * hauteur — la contrainte vient du telephone, ou l'ecran de build est deja
+ * long.
+ */
+const updateLoadoutsDisplay = () => {
+  const liste = document.getElementById("loadouts-list");
+  if (!liste) return;
+
+  const panoplies = getPanoplies();
+  liste.innerHTML = "";
+
+  panoplies.forEach((panoplie, index) => {
+    const carte = document.createElement("div");
+    carte.className = "loadout";
+    const active = panoplieEstActive(panoplie, gameState);
+    if (panoplie.vide) carte.classList.add("is-empty");
+    if (active) carte.classList.add("is-active");
+
+    if (panoplie.vide) {
+      carte.innerHTML = `
+        <button type="button" class="loadout__save-empty" data-index="${index}">
+          + Enregistrer le build actuel
+        </button>
+      `;
+    } else {
+      const pieces = ["weapon", "armor", "accessory"]
+        .map((cle) => panoplie[cle])
+        .filter(Boolean)
+        .map((id) => ITEMS[id]?.name || id);
+      if (panoplie.ash) {
+        pieces.push(ASHES_OF_WAR[panoplie.ash]?.name || panoplie.ash);
+      }
+
+      carte.innerHTML = `
+        <div class="loadout__head">
+          <strong class="loadout__name">${echapperHtml(panoplie.nom)}</strong>
+          ${active ? '<span class="loadout__badge">Equipee</span>' : ""}
+        </div>
+        <p class="loadout__pieces">${
+          pieces.length
+            ? echapperHtml(pieces.join(" · "))
+            : "<em>Aucune piece</em>"
+        }</p>
+        <div class="loadout__actions">
+          <button type="button" class="loadout__load" data-index="${index}" ${
+            active ? "disabled" : ""
+          }>Equiper</button>
+          <button type="button" class="loadout__save" data-index="${index}" title="Remplacer par l'equipement actuel">Ecraser</button>
+          <button type="button" class="loadout__rename" data-index="${index}" title="Renommer">Renommer</button>
+          <button type="button" class="loadout__clear" data-index="${index}" title="Effacer">Effacer</button>
+        </div>
+      `;
+    }
+
+    liste.appendChild(carte);
+  });
+
+  // Delegation : les cartes sont reconstruites a chaque rendu, un ecouteur par
+  // bouton fuirait a chaque passage.
+  liste.onclick = (e) => {
+    const btn = e.target.closest("button[data-index]");
+    if (!btn) return;
+    const index = Number(btn.dataset.index);
+    if (btn.classList.contains("loadout__load")) chargerPanoplie(index);
+    else if (btn.classList.contains("loadout__rename")) renommerPanoplie(index);
+    else if (btn.classList.contains("loadout__clear")) effacerPanoplie(index);
+    else enregistrerPanoplie(index);
+  };
+};
+
 export const updateCycleDisplay = () => {
   const el = document.getElementById("cycle-count");
   if (!el) return;
@@ -465,6 +552,44 @@ export const updateCycleDisplay = () => {
   } else {
     el.innerText = "";
   }
+  updateFerveurDisplay();
+};
+
+/*
+ * Bandeau de Ferveur.
+ *
+ * Il affiche la seule chose que le joueur doit peser pour decider de se
+ * replier : combien est en jeu, et ce qu'il en coute de continuer. Le rang
+ * seul ne suffirait pas — c'est le montant de la reserve qui rend la decision
+ * concrete.
+ */
+export const updateFerveurDisplay = () => {
+  const banner = document.getElementById("ferveur-banner");
+  if (!banner) return;
+
+  const cycles = runtimeState.currentLoopCount || 0;
+  const rang = getFerveurRang(cycles);
+  const reserve = Math.floor(runtimeState.ferveurBank || 0);
+
+  if (rang <= 0 && reserve <= 0) {
+    banner.classList.add("is-hidden");
+    return;
+  }
+  banner.classList.remove("is-hidden");
+
+  const prime = Math.round((getFerveurMultRunes(cycles) - 1) * 100);
+  const danger = Math.round((getFerveurMultDanger(cycles) - 1) * 100);
+
+  const rankEl = document.getElementById("ferveur-rank");
+  if (rankEl) {
+    rankEl.innerText = `Ferveur ${rang} · +${prime}% prime · +${danger}% menace`;
+  }
+  const bankEl = document.getElementById("ferveur-bank");
+  if (bankEl) bankEl.innerText = formatNumber(reserve);
+
+  // Au-dela du plafond de prime, seule la menace continue de monter : il faut
+  // que cela se voie sans lire les chiffres.
+  banner.classList.toggle("is-overheated", rang >= FERVEUR_RANG_MAX);
 };
 
 const updateRuneDisplay = () => {
@@ -2545,10 +2670,23 @@ const updateInventoryDisplay = () => {
 
   // 3. On utilise sortedInventory au lieu de gameState.inventory pour l'affichage
   sortedInventory.forEach((item) => {
+    const itemData = ITEMS[item.id];
+    /*
+     * Une entree dont l'identifiant n'existe plus dans ITEMS faisait planter
+     * tout l'affichage de l'inventaire sur `itemData.type`, et avec lui le
+     * reste de updateUI().
+     *
+     * Le cas se produit sans tricherie : un objet retire du jeu entre deux
+     * versions reste dans les sauvegardes existantes. La normalisation de
+     * shared/player-profile.js valide la FORME des identifiants, pas leur
+     * existence — elle ne peut pas importer item.js sans cycle. On ignore donc
+     * l'entree ici plutot que d'emporter l'ecran avec elle.
+     */
+    if (!itemData) return;
+
     const itemDiv = document.createElement("div");
     itemDiv.className = "inventory-item";
 
-    const itemData = ITEMS[item.id];
     const slotKey = typeToSlotKey[itemData.type];
 
     if (slotKey) {
@@ -2784,6 +2922,7 @@ export const updateUI = () => {
   updateScreenState();
   updateNavState();
   updateRuneDisplay();
+  updateLoadoutsDisplay();
   updateStatDisplay();
   updateEquipmentDisplay();
   updateInventoryEquippedDisplay();
@@ -2841,6 +2980,14 @@ export const toggleView = (view) => {
     clearEventBanner();
     clearRunBuffs();
     runtimeState.enemyIntent = null;
+    /*
+     * Repli VOLONTAIRE : c'est le seul moment ou la reserve de Ferveur est
+     * mise a l'abri. Le versement precede l'encaissement des runes portees
+     * pour que le journal se lise dans l'ordre du geste. Voir escalation.js.
+     */
+    if (gameState.world.isExploring) {
+      encaisserFerveur("Repli au camp");
+    }
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
     const layout = ensureBattleLogLayout();

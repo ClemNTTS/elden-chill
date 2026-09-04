@@ -48,6 +48,7 @@ export const DEFAULT_PLAYER_PROFILE = {
     accessory: null,
   },
   inventory: [{ id: "fists", name: "poings", level: 10, count: 0 }],
+  loadouts: [],
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -280,6 +281,12 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.codex = { ...base.codex, ...toObject(data.codex) };
   base.save = { ...base.save, ...toObject(data.save) };
   base.order = toArray(data.order, []);
+  /*
+   * Panoplies enregistrees. La normalisation fine vit dans loadouts.js — ce
+   * module doit rester sans dependance — on se contente ici de garantir un
+   * tableau.
+   */
+  base.loadouts = toArray(data.loadouts, []);
 
   base.world.unlockedBiomes = toArray(
     base.world.unlockedBiomes,
