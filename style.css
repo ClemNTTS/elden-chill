@@ -3489,6 +3489,37 @@ button:disabled {
   .combat-lane__intent { font-size: 0.78rem; }
 }
 
+/*
+ * Barre d'actions de combat en etroit.
+ *
+ * `.biome-bottom-left` est en `nowrap` avec des boutons en `flex: 0 0 auto`,
+ * et `#ash-button` porte un `min-width: 220px`. "Se replier au camp" et la
+ * cendre reunis depassent donc 375 pixels : le bouton de cendre sortait du
+ * cadre par la droite.
+ *
+ * Le `nowrap` protegeait la mise en page epinglee du bureau, ou une barre plus
+ * haute mangeait le bas de l'ecran de combat. En dessous de 1080px,
+ * `#combat-zone` repasse en `position: relative` : l'empilement ne coute plus
+ * rien, on peut donc rendre la barre a la ligne.
+ */
+@media (max-width: 640px) {
+  .biome-bottom-left {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .biome-bottom-left > button {
+    flex: 1 1 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  #ash-button {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* Transfert de sauvegarde                                            */
 /* ------------------------------------------------------------------ */

@@ -52,17 +52,14 @@ export const investCritPoint = (track, count = 1) => {
 
 /** Rend tous les points critiques. Gratuit : ils viennent du niveau. */
 export const respecCritPoints = () => {
-  const resume = [
-    `Renaitre pour la ${next}e fois ?`,
-    "",
-    "Vous perdez : niveau, statistiques, points critiques, runes, inventaire,",
-    "equipement et biomes debloques.",
-    "Vous gardez : codex, cendres de guerre, benedictions et atouts.",
-    "",
-    `Gain permanent : +${Math.round(REBIRTH_RUNE_BONUS * 100)}% de gain de runes`,
-    `et +${REBIRTH_LEVEL_BONUS} au niveau maximum.`,
-  ].join(String.fromCharCode(10));
-  if (!confirm(resume)) {
+  // Le texte de confirmation de la renaissance avait ete copie ici par
+  // erreur : il lisait un `next` qui n'existe pas dans cette portee, et
+  // l'exception levee empechait toute reinitialisation.
+  if (
+    !confirm(
+      "Reinitialiser vos points de critique ? Tous les points vous seront rendus.",
+    )
+  ) {
     return;
   }
   resetCritRanks();

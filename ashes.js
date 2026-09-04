@@ -42,11 +42,20 @@ export const ASHES_OF_WAR = {
   bloody_slash: {
     name: "Entaille Sanglante",
     description:
-      "Sacrifie 5% de vos PV max pour infliger d'énormes dégâts (x2.5) et 3 saignements.",
+      "Sacrifie 5% de vos PV actuels pour infliger d'énormes dégâts (x2.5) et 3 saignements.",
     maxUses: 3,
     effect: (stats, enemy) => {
-      runtimeState.playerCurrentHp -= getHealth(
-        getEffectiveStats().vigor * 0.05,
+      // 5% des PV ACTUELS, pas des PV max : le cout suit l'etat reel du
+      // joueur et ne peut jamais l'achever.
+      //
+      // L'ancienne ligne passait le 0.05 a getHealth() au lieu de l'appliquer
+      // a son resultat : getHealth(vigor * 0.05) renvoyait le plancher de
+      // 300 PV plus une poignee de points, soit un cout fixe bien superieur
+      // aux 5% annonces en debut de partie.
+      const cost = Math.floor(runtimeState.playerCurrentHp * 0.05);
+      runtimeState.playerCurrentHp = Math.max(
+        1,
+        runtimeState.playerCurrentHp - cost,
       );
       return {
         damageMult: 2.5,
@@ -123,7 +132,10 @@ export const ASHES_OF_WAR = {
       "Applique la putrefaction au prochain coup et renforce legerement votre penetration.",
     maxUses: 3,
     effect: () => {
-      runtimeState.nextAtkMultBonus = Math.max(runtimeState.nextAtkMultBonus, 1.25);
+      runtimeState.nextAtkMultBonus = Math.max(
+        runtimeState.nextAtkMultBonus,
+        1.25,
+      );
       return {
         status: { id: "SCARLET_ROT", duration: 2 },
         msg: "Le voile putride murmure et rend votre arme corruptrice.",
@@ -161,7 +173,10 @@ export const ASHES_OF_WAR = {
     maxUses: 3,
     effect: () => {
       runtimeState.playerArmorDebuff -= 30;
-      const healAmount = Math.min(180, getHealth(getEffectiveStats().vigor) * 0.08);
+      const healAmount = Math.min(
+        180,
+        getHealth(getEffectiveStats().vigor) * 0.08,
+      );
       healPlayer(healAmount, getHealth(getEffectiveStats().vigor));
       return {
         msg: `Les racines referment vos plaies (+${Math.floor(healAmount)} PV).`,
@@ -195,7 +210,10 @@ export const ASHES_OF_WAR = {
     effect: (stats) => {
       // Exprime en multiplicateur plutot qu'en degats fixes : le moteur ne lit
       // que damageMult, et un rapport armure/force reste lisible.
-      const ratio = Math.max(1.2, Math.min(4, (stats.armor || 100) / Math.max(1, stats.strength) * 2));
+      const ratio = Math.max(
+        1.2,
+        Math.min(4, ((stats.armor || 100) / Math.max(1, stats.strength)) * 2),
+      );
       applyEffect(gameState.ennemyEffects, "THORNS", 3);
       return {
         damageMult: ratio,
