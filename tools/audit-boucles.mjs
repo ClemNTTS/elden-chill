@@ -17,7 +17,7 @@
 //
 //   node tools/audit-boucles.mjs
 
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const fichiers = ["item.js", ...readdirSync("items").map((f) => `items/${f}`)];
 const STATS = ["strength", "dexterity", "intelligence", "vigor"];
@@ -63,7 +63,8 @@ if (!suspects.length) {
   console.log("Aucune conversion ne lit la statistique effective.");
 } else {
   console.log(
-    `${suspects.length} conversion(s) lisent la statistique EFFECTIVE au lieu de la base.` + NL,
+    `${suspects.length} conversion(s) lisent la statistique EFFECTIVE au lieu de la base.` +
+      NL,
   );
   const parSource = {};
   for (const s of suspects) (parSource[s.source] ||= []).push(s);

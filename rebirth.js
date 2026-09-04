@@ -7,8 +7,8 @@
 // progression que l'on peut affronter avant de renaitre, sans butin, pour
 // l'exploit seul.
 
-import { gameState, runtimeState } from "./state.js";
 import { MAX_LEVEL } from "./shared/player-profile.js";
+import { gameState, runtimeState } from "./state.js";
 
 /*
  * Biome dont la victoire ouvre la renaissance.
@@ -78,7 +78,7 @@ export const REBIRTH_NODES = [
 ];
 
 const EMPTY_TREE = () =>
-  REBIRTH_NODES.reduce((acc, node) => ({ ...acc, [node.id]: 0 }), {});
+  Object.fromEntries(REBIRTH_NODES.map((node) => [node.id, 0]));
 
 export const getRebirth = () => {
   if (!gameState.rebirth || typeof gameState.rebirth !== "object") {
@@ -92,7 +92,8 @@ export const getRebirth = () => {
   const r = gameState.rebirth;
   if (!Number.isFinite(r.count)) r.count = 0;
   if (typeof r.finalCleared !== "boolean") r.finalCleared = false;
-  if (!r.trialsCleared || typeof r.trialsCleared !== "object") r.trialsCleared = {};
+  if (!r.trialsCleared || typeof r.trialsCleared !== "object")
+    r.trialsCleared = {};
   if (!r.tree || typeof r.tree !== "object") r.tree = EMPTY_TREE();
   REBIRTH_NODES.forEach((node) => {
     const v = Math.floor(Number(r.tree[node.id]) || 0);
@@ -222,7 +223,9 @@ export const getProgressionCap = () =>
   );
 
 export const getMaxLevel = () =>
-  getProgressionCap() + REBIRTH_LEVEL_BONUS * getRebirthCount() + getNodeValue("will");
+  getProgressionCap() +
+  REBIRTH_LEVEL_BONUS * getRebirthCount() +
+  getNodeValue("will");
 
 /** Bonus de runes permanent, a ajouter aux stats effectives. */
 export const getRebirthRuneBonus = () =>
@@ -282,7 +285,8 @@ export const TRIALS = [
   },
 ];
 
-export const isTrialCleared = (trialId) => !!getRebirth().trialsCleared[trialId];
+export const isTrialCleared = (trialId) =>
+  !!getRebirth().trialsCleared[trialId];
 
 export const getTrialByBiome = (biomeId) =>
   TRIALS.find((t) => t.biomeId === biomeId) || null;

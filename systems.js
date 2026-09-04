@@ -1,4 +1,5 @@
 import { BIOMES } from "./biome.js";
+import { HAZARD_LABELS, ITEM_RARITIES } from "./constants.js";
 import { ITEMS } from "./item.js";
 import {
   gameState,
@@ -8,7 +9,6 @@ import {
   runtimeState,
 } from "./state.js";
 import { BIOME_GUIDE } from "./world-map.js";
-import { HAZARD_LABELS, ITEM_RARITIES } from "./constants.js";
 
 /* Reexport : ces tables ont demenage dans constants.js pour rompre le cycle
  * item.js -> items/*.js -> systems.js -> item.js. */
@@ -32,7 +32,12 @@ export const registerRunBuff = (buff) => {
   return buff;
 };
 
-const buildJournalEntry = (kind, title, text, biomeId = gameState.world.currentBiome) => ({
+const buildJournalEntry = (
+  kind,
+  title,
+  text,
+  biomeId = gameState.world.currentBiome,
+) => ({
   id: `journal_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
   runId: runtimeState.currentCombatSession,
   biomeId,
@@ -42,7 +47,12 @@ const buildJournalEntry = (kind, title, text, biomeId = gameState.world.currentB
   timestamp: Date.now(),
 });
 
-export const addJournalEntry = (kind, title, text, biomeId = gameState.world.currentBiome) => {
+export const addJournalEntry = (
+  kind,
+  title,
+  text,
+  biomeId = gameState.world.currentBiome,
+) => {
   if (!gameState.journal) {
     gameState.journal = { filter: "all", biomeFilter: "all", entries: [] };
   }
@@ -60,7 +70,10 @@ export const clearRunJournal = () => {
   );
 };
 
-export const markCodexMonsterSeen = (monsterId, biomeId = gameState.world.currentBiome) => {
+export const markCodexMonsterSeen = (
+  monsterId,
+  biomeId = gameState.world.currentBiome,
+) => {
   if (!monsterId) return;
   if (!gameState.codex) return;
   gameState.codex.monstersSeen[monsterId] = {
@@ -69,7 +82,10 @@ export const markCodexMonsterSeen = (monsterId, biomeId = gameState.world.curren
   };
 };
 
-export const markCodexBossSeen = (monsterId, biomeId = gameState.world.currentBiome) => {
+export const markCodexBossSeen = (
+  monsterId,
+  biomeId = gameState.world.currentBiome,
+) => {
   if (!monsterId) return;
   if (!gameState.codex) return;
   gameState.codex.bossesSeen[monsterId] = {
@@ -92,7 +108,10 @@ export const markCodexBiomeCleared = (biomeId) => {
   };
 };
 
-export const markCodexEventSeen = (eventId, biomeId = gameState.world.currentBiome) => {
+export const markCodexEventSeen = (
+  eventId,
+  biomeId = gameState.world.currentBiome,
+) => {
   if (!eventId || !gameState.codex) return;
   gameState.codex.eventsSeen[eventId] = {
     biomeId,
@@ -104,7 +123,8 @@ export const BLESSINGS = {
   grace_of_mire: {
     id: "grace_of_mire",
     name: "Bénédiction des Marais",
-    description: "Réduit le poison et la putréfaction du biome. Idéal pour les terres corrompues.",
+    description:
+      "Réduit le poison et la putréfaction du biome. Idéal pour les terres corrompues.",
     detailedDescription:
       "+3 Résistance Poison, +4 Résistance Putréfaction, +20 Armure effective pendant l'expédition.",
     applyToStats: (stats) => {
@@ -225,7 +245,8 @@ export const PREP_CONSUMABLES = {
   rare_tracker: {
     id: "rare_tracker",
     name: "Fiole du pisteur",
-    description: "Les rencontres rares deviennent plus probables dans le prochain biome.",
+    description:
+      "Les rencontres rares deviennent plus probables dans le prochain biome.",
     detailedDescription:
       "Multiplie par 1.8 les chances de rencontrer une élite rare pendant la prochaine expédition.",
     onRunStart: () =>
@@ -347,7 +368,10 @@ const unlockPreparationEntry = (collectionKey, entryId) => {
   return true;
 };
 
-export const unlockBlessing = (blessingId, sourceBiomeId = gameState.world.currentBiome) => {
+export const unlockBlessing = (
+  blessingId,
+  sourceBiomeId = gameState.world.currentBiome,
+) => {
   const didUnlock = unlockPreparationEntry("unlockedBlessings", blessingId);
   if (!didUnlock) return false;
   addJournalEntry(
@@ -376,8 +400,7 @@ export const unlockConsumable = (
 
 const getLockedPreparationIds = (type) => {
   const defs = type === "blessing" ? BLESSINGS : PREP_CONSUMABLES;
-  const key =
-    type === "blessing" ? "unlockedBlessings" : "unlockedConsumables";
+  const key = type === "blessing" ? "unlockedBlessings" : "unlockedConsumables";
   const unlocked = new Set(gameState.preparation?.[key] || []);
   return Object.keys(defs).filter((id) => !unlocked.has(id));
 };
@@ -429,7 +452,10 @@ export const EVENT_DEFS = {
     kind: "caravane",
     weight: 4,
     resolve: (biomeId) => {
-      const runeGain = Math.max(60, Math.floor(gameState.stats.level * 38 + 120));
+      const runeGain = Math.max(
+        60,
+        Math.floor(gameState.stats.level * 38 + 120),
+      );
       const recompense = rollPreparationReward("consumable");
       gameState.runes.carried += runeGain;
       registerRunBuff({
@@ -505,8 +531,14 @@ export const EVENT_DEFS = {
     resolve: (biomeId) => {
       const hazards = getBiomeHazards(biomeId);
       const dominant = hazards[0] || "poison";
-      const damage = Math.max(12, Math.floor(getEffectiveStats().vigor * 0.6) + 18);
-      runtimeState.playerCurrentHp = Math.max(1, runtimeState.playerCurrentHp - damage);
+      const damage = Math.max(
+        12,
+        Math.floor(getEffectiveStats().vigor * 0.6) + 18,
+      );
+      runtimeState.playerCurrentHp = Math.max(
+        1,
+        runtimeState.playerCurrentHp - damage,
+      );
       addJournalEntry(
         "event",
         "Piège de terrain",
@@ -647,9 +679,10 @@ Object.assign(EVENT_DEFS, {
       // healPlayer renvoie 0 quand le soin est scelle par un trait de biome :
       // on le dit plutot que d'annoncer un soin qui n'a pas eu lieu.
       return {
-        log: soigne > 0
-          ? `Un echo de grace vous rend ${soigne} PV et dissipe vos maux.`
-          : "Un echo de grace dissipe vos maux, mais la zone refuse les soins.",
+        log:
+          soigne > 0
+            ? `Un echo de grace vous rend ${soigne} PV et dissipe vos maux.`
+            : "Un echo de grace dissipe vos maux, mais la zone refuse les soins.",
       };
     },
   },
@@ -793,10 +826,7 @@ export const adjustStatusApplication = (effectId, baseValue, targetEffects) => {
 export const getRunModifier = (key, defaultValue = 0) => {
   const buffs = gameState.preparation?.activeRunBuffs || [];
   if (defaultValue === 1) {
-    return buffs.reduce(
-      (value, buff) => value * (buff[key] || 1),
-      1,
-    );
+    return buffs.reduce((value, buff) => value * (buff[key] || 1), 1);
   }
 
   return buffs.reduce((value, buff) => value + (buff[key] || 0), defaultValue);
@@ -825,7 +855,8 @@ export const applyPreparationLoadout = () => {
   clearRunBuffs();
 
   const blessing = BLESSINGS[gameState.preparation?.selectedBlessingId];
-  const consumable = PREP_CONSUMABLES[gameState.preparation?.selectedConsumableId];
+  const consumable =
+    PREP_CONSUMABLES[gameState.preparation?.selectedConsumableId];
 
   if (blessing) {
     registerRunBuff({
@@ -911,13 +942,14 @@ export const getBiomeEventPool = (biomeId) => {
 
 export const getWeightedBiomeEvent = (biomeId) => {
   const eventIds = getBiomeEventPool(biomeId);
-  const weighted = eventIds
-    .map((id) => EVENT_DEFS[id])
-    .filter(Boolean);
+  const weighted = eventIds.map((id) => EVENT_DEFS[id]).filter(Boolean);
 
   if (!weighted.length) return null;
 
-  const total = weighted.reduce((sum, eventDef) => sum + (eventDef.weight || 1), 0);
+  const total = weighted.reduce(
+    (sum, eventDef) => sum + (eventDef.weight || 1),
+    0,
+  );
   let roll = Math.random() * total;
 
   for (const eventDef of weighted) {
@@ -975,19 +1007,22 @@ export const buildEnemyIntent = (enemy) => {
   const attacksPerTurn =
     enemy.specificStats?.attacksPerTurn || enemy.attacksPerTurn || 1;
   const onHitEffect = enemy.onHitEffect?.id;
-  const severity =
-    enemy.isBoss
-      ? "boss"
-      : enemy.isRare
-        ? "elite"
-        : attacksPerTurn >= 3 || (enemy.atk || 0) >= 180
-          ? "heavy"
-          : "normal";
+  const severity = enemy.isBoss
+    ? "boss"
+    : enemy.isRare
+      ? "elite"
+      : attacksPerTurn >= 3 || (enemy.atk || 0) >= 180
+        ? "heavy"
+        : "normal";
 
   let kind = "attaque";
   let label = attacksPerTurn > 1 ? "Rafale ennemie" : "Attaque directe";
 
-  if (enemy.hasSecondPhase && !enemy.isInSecondPhase && enemy.hp / enemy.maxHp <= 0.55) {
+  if (
+    enemy.hasSecondPhase &&
+    !enemy.isInSecondPhase &&
+    enemy.hp / enemy.maxHp <= 0.55
+  ) {
     kind = "phase";
     label = "Phase imminente";
   } else if (enemy.companion || enemy.groupCombinations) {

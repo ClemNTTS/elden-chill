@@ -10,9 +10,16 @@ const { BIOMES } = await import("../biome.js");
 const { MONSTERS } = await import("../monster.js");
 
 const order = (() => {
-  const seen = new Set(["limgrave_west"]), out = ["limgrave_west"], q = ["limgrave_west"];
-  while (q.length) for (const n of BIOMES[q.shift()]?.unlocks || [])
-    if (BIOMES[n] && !seen.has(n)) { seen.add(n); out.push(n); q.push(n); }
+  const seen = new Set(["limgrave_west"]);
+  const out = ["limgrave_west"];
+  const q = ["limgrave_west"];
+  while (q.length)
+    for (const n of BIOMES[q.shift()]?.unlocks || [])
+      if (BIOMES[n] && !seen.has(n)) {
+        seen.add(n);
+        out.push(n);
+        q.push(n);
+      }
   return out;
 })();
 
@@ -25,24 +32,42 @@ for (const id of order) {
   const boss = MONSTERS[b.boss];
   if (!std.length || !boss) continue;
   const avg = (a, f) => a.reduce((s, x) => s + f(x), 0) / a.length;
-  const sHp = avg(std, (m) => m.hp), sAtk = avg(std, (m) => m.atk);
+  const sHp = avg(std, (m) => m.hp);
+  const sAtk = avg(std, (m) => m.atk);
   rows.push({
-    id, nom: b.name, sHp, sAtk,
+    id,
+    nom: b.name,
+    sHp,
+    sAtk,
     rHp: rare.length ? avg(rare, (m) => m.hp) : null,
-    bHp: boss.hp, bAtk: boss.atk,
+    bHp: boss.hp,
+    bAtk: boss.atk,
     ratioBoss: boss.hp / sHp,
     ratioRare: rare.length ? avg(rare, (m) => m.hp) / sHp : null,
     ratioAtk: boss.atk / sAtk,
   });
 }
 
-const med = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+const med = (a) => {
+  const s = [...a].sort((x, y) => x - y);
+  return s[Math.floor(s.length / 2)];
+};
 const medBoss = med(rows.map((r) => r.ratioBoss));
 const medRare = med(rows.filter((r) => r.ratioRare).map((r) => r.ratioRare));
 const medAtk = med(rows.map((r) => r.ratioAtk));
 
-console.log(`Reference (mediane sur ${rows.length} biomes) : boss/std x${medBoss.toFixed(1)}  rare/std x${medRare.toFixed(2)}  atkBoss/atkStd x${medAtk.toFixed(2)}\n`);
-console.log("biome".padEnd(30) + "std".padStart(8) + "boss".padStart(9) + "boss/std".padStart(10) + "rare/std".padStart(10) + "atk b/s".padStart(9) + "  saut");
+console.log(
+  `Reference (mediane sur ${rows.length} biomes) : boss/std x${medBoss.toFixed(1)}  rare/std x${medRare.toFixed(2)}  atkBoss/atkStd x${medAtk.toFixed(2)}\n`,
+);
+console.log(
+  "biome".padEnd(30) +
+    "std".padStart(8) +
+    "boss".padStart(9) +
+    "boss/std".padStart(10) +
+    "rare/std".padStart(10) +
+    "atk b/s".padStart(9) +
+    "  saut",
+);
 let prev = null;
 const anomalies = [];
 for (const r of rows) {
@@ -55,13 +80,14 @@ for (const r of rows) {
   if (flags.length) anomalies.push([r.nom, flags.join(" + ")]);
   console.log(
     r.nom.slice(0, 29).padEnd(30) +
-    Math.round(r.sHp).toString().padStart(8) +
-    r.bHp.toString().padStart(9) +
-    ("x" + r.ratioBoss.toFixed(1)).padStart(10) +
-    (r.ratioRare ? "x" + r.ratioRare.toFixed(2) : "-").padStart(10) +
-    ("x" + r.ratioAtk.toFixed(2)).padStart(9) +
-    (saut ? "  x" + saut.toFixed(2) : "") +
-    (flags.length ? "   <<< " + flags.join(" + ") : ""));
+      Math.round(r.sHp).toString().padStart(8) +
+      r.bHp.toString().padStart(9) +
+      ("x" + r.ratioBoss.toFixed(1)).padStart(10) +
+      (r.ratioRare ? "x" + r.ratioRare.toFixed(2) : "-").padStart(10) +
+      ("x" + r.ratioAtk.toFixed(2)).padStart(9) +
+      (saut ? "  x" + saut.toFixed(2) : "") +
+      (flags.length ? "   <<< " + flags.join(" + ") : ""),
+  );
   prev = r.sHp;
 }
 console.log(`\n${anomalies.length} anomalie(s) :`);

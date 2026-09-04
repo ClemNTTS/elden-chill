@@ -1,8 +1,6 @@
-import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, getHealth, runtimeState,
-  healPlayer,
-} from "../state.js";
+import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
+import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
 
 export const DEPTHS = {
@@ -42,7 +40,10 @@ export const DEPTHS = {
     funcOnHit: (stats, targetEffects) => {
       if (targetEffects.some((effect) => effect.id === "FROSTBITE")) {
         applyEffect(targetEffects, "BURN", 1);
-        ActionLog("Carte Stellaire : la glace se fissure sous la chaleur astrale.", "log-status");
+        ActionLog(
+          "Carte Stellaire : la glace se fissure sous la chaleur astrale.",
+          "log-status",
+        );
       }
     },
   },
@@ -73,12 +74,19 @@ export const DEPTHS = {
       "Force +18%. Convertit 18% (+2% / niv) de la Vigueur totale en Force. Si vous avez des Épines, gagne +10% dégâts.",
     applyMult: (stats, itemLevel) => {
       stats.strength *= 1.18;
-      stats.strength += Math.floor(stats.vigor * (0.18 + 0.02 * (itemLevel - 1)));
+      stats.strength += Math.floor(
+        stats.vigor * (0.18 + 0.02 * (itemLevel - 1)),
+      );
     },
     funcOnHit: () => {
-      const hasThorns = gameState.playerEffects.some((effect) => effect.id === "THORNS");
+      const hasThorns = gameState.playerEffects.some(
+        (effect) => effect.id === "THORNS",
+      );
       if (hasThorns) {
-        runtimeState.nextAtkMultBonus = Math.max(runtimeState.nextAtkMultBonus, 1.1);
+        runtimeState.nextAtkMultBonus = Math.max(
+          runtimeState.nextAtkMultBonus,
+          1.1,
+        );
       }
     },
   },
@@ -124,7 +132,8 @@ export const DEPTHS = {
         getHealth(stats.vigor) * (armorBands * (0.01 + itemLevel * 0.001)),
       );
       const healed = healPlayer(heal, getHealth(stats.vigor));
-      if (healed > 0) ActionLog(`Écorce princière : +${healed} PV.`, "log-heal");
+      if (healed > 0)
+        ActionLog(`Écorce princière : +${healed} PV.`, "log-heal");
     },
   },
 
@@ -143,8 +152,15 @@ export const DEPTHS = {
     },
     onHitEffect: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
     funcOnHit: (stats, targetEffects) => {
-      if (targetEffects.some((effect) => ["SCARLET_ROT", "POISON", "BLEED"].includes(effect.id))) {
-        runtimeState.nextAtkMultBonus = Math.max(runtimeState.nextAtkMultBonus, 1.1);
+      if (
+        targetEffects.some((effect) =>
+          ["SCARLET_ROT", "POISON", "BLEED"].includes(effect.id),
+        )
+      ) {
+        runtimeState.nextAtkMultBonus = Math.max(
+          runtimeState.nextAtkMultBonus,
+          1.1,
+        );
       }
     },
   },
@@ -164,7 +180,10 @@ export const DEPTHS = {
     },
     passiveStatusReduction: (playerEffects) => {
       playerEffects.forEach((effect) => {
-        if (["SCARLET_ROT", "POISON", "BLEED", "BURN"].includes(effect.id) && Math.random() < 0.2) {
+        if (
+          ["SCARLET_ROT", "POISON", "BLEED", "BURN"].includes(effect.id) &&
+          Math.random() < 0.2
+        ) {
           if (typeof effect.duration === "number") {
             effect.duration = Math.max(0, effect.duration - 1);
           }

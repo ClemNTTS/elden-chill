@@ -32,7 +32,7 @@ for (const [biomeId, biome] of Object.entries(BIOMES)) {
     });
   }
   for (const r of rares) {
-    rarePeutApparaitre.set(r, (rarePeutApparaitre.get(r) || false) || autorise);
+    rarePeutApparaitre.set(r, rarePeutApparaitre.get(r) || false || autorise);
   }
 }
 

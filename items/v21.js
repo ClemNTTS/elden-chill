@@ -1,7 +1,7 @@
-import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, runtimeState } from "../state.js";
 import { ITEM_RARITIES } from "../constants.js";
+import { gameState, runtimeState } from "../state.js";
+import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
 
 export const V21_ITEMS = {
@@ -46,7 +46,10 @@ export const V21_ITEMS = {
       if (!bleed) return;
       const bonus = Math.max(3, Math.floor((stats.strength || 0) * 0.18));
       targetEffects.__executionBonus = bonus;
-      ActionLog(`Le sceau de l'exécuteur ouvre une fenêtre létale (+${bonus} dégâts).`, "log-crit");
+      ActionLog(
+        `Le sceau de l'exécuteur ouvre une fenêtre létale (+${bonus} dégâts).`,
+        "log-crit",
+      );
     },
   },
 
@@ -65,7 +68,10 @@ export const V21_ITEMS = {
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.22 + itemLevel * 0.01) {
         applyEffect(targetEffects, "BURN", 2);
-        ActionLog("La morsure draconique allume une foudre brûlante.", "log-status");
+        ActionLog(
+          "La morsure draconique allume une foudre brûlante.",
+          "log-status",
+        );
       }
     },
   },
@@ -93,7 +99,9 @@ export const V21_ITEMS = {
       stats.critChance += 0.05 + itemLevel * 0.005;
     },
     applyMult: (stats, itemLevel) => {
-      stats.splashDamage += Math.floor(stats.intelligence * (0.22 + itemLevel * 0.02));
+      stats.splashDamage += Math.floor(
+        stats.intelligence * (0.22 + itemLevel * 0.02),
+      );
     },
   },
 
@@ -156,7 +164,10 @@ export const V21_ITEMS = {
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.18 + itemLevel * 0.01) {
         applyEffect(targetEffects, "SCARLET_ROT", 2);
-        ActionLog("L'encens noir laisse une putréfaction rituelle.", "log-status");
+        ActionLog(
+          "L'encens noir laisse une putréfaction rituelle.",
+          "log-status",
+        );
       }
     },
   },
@@ -247,7 +258,10 @@ export const V21_ITEMS = {
         0.25,
         totalRes * (0.01 + itemLevel * 0.001),
       );
-      stats.critChance += Math.min(0.12, totalRes * (0.004 + itemLevel * 0.0004));
+      stats.critChance += Math.min(
+        0.12,
+        totalRes * (0.004 + itemLevel * 0.0004),
+      );
     },
   },
   talisman_wayfarer: {

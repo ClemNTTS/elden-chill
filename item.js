@@ -1,13 +1,11 @@
-import { applyEffect } from "./status-apply.js";
 import { ITEM_TYPES } from "./constants.js";
 import { DEPTHS } from "./items/depths.js";
+import { LANDS_ITEMS } from "./items/lands.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { V21_ITEMS } from "./items/v21.js";
-import { LANDS_ITEMS } from "./items/lands.js";
-import { gameState, getHealth, runtimeState,
-  healPlayer,
-} from "./state.js";
+import { gameState, getHealth, healPlayer, runtimeState } from "./state.js";
+import { applyEffect } from "./status-apply.js";
 import { ActionLog } from "./ui-action-log.js";
 
 export const ITEMS = {
@@ -142,9 +140,7 @@ export const ITEMS = {
       // Depuis l'Intelligence investie, pas l'effective : voir le Baton de
       // l'Astronome pour le detail de la boucle.
       const baseIntelligence = gameState.stats.intelligence || 0;
-      stats.strength += Math.floor(
-        baseIntelligence * (0.3 + 0.02 * itemLevel),
-      );
+      stats.strength += Math.floor(baseIntelligence * (0.3 + 0.02 * itemLevel));
     },
     onHitEffect: { id: "POISON", duration: 2, chance: 1 },
   },
@@ -161,7 +157,9 @@ export const ITEMS = {
     },
     applyMult: (stats, itemLevel) => {
       const conversionRatio = 0.24 + 0.01 * (itemLevel - 1);
-      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
+      stats.strength += Math.floor(
+        (gameState.stats.dexterity || 0) * conversionRatio,
+      );
     },
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.4 },
   },
@@ -280,7 +278,9 @@ export const ITEMS = {
       const baseDex = gameState.stats.dexterity || 0;
       if (baseDex >= 20) {
         const conversionRatio = 0.15 + 0.02 * itemLevel;
-        stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
+        stats.strength += Math.floor(
+          (gameState.stats.dexterity || 0) * conversionRatio,
+        );
       }
     },
     onHitEffect: { id: "STUN", duration: 2, chance: 0.1 },
@@ -304,7 +304,8 @@ export const ITEMS = {
         const maxHp = getHealth(stats.vigor);
 
         const healed = healPlayer(healAmount, maxHp);
-        if (healed > 0) ActionLog(`Vous vous soignez de ${healed} PV.`, "log-heal");
+        if (healed > 0)
+          ActionLog(`Vous vous soignez de ${healed} PV.`, "log-heal");
       }
     },
   },
@@ -623,19 +624,19 @@ export const ITEMS = {
       );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      let stun = Math.random() < 0.1;
+      const stun = Math.random() < 0.1;
       if (!stun) return;
 
       if (itemLevel >= 10 && stun) {
         applyEffect(targetEffects, "STUN", 2);
         ActionLog(
-          `Rune de Godrick : Ennemi étourdi pendant 2 tours !`,
+          "Rune de Godrick : Ennemi étourdi pendant 2 tours !",
           "log-status",
         );
       } else {
         applyEffect(targetEffects, "STUN", 1);
         ActionLog(
-          `Rune de Godrick : Ennemi étourdi pendant 1 tour !`,
+          "Rune de Godrick : Ennemi étourdi pendant 1 tour !",
           "log-status",
         );
       }
@@ -729,11 +730,16 @@ export const ITEMS = {
     },
     applyMult: (stats, itemLevel) => {
       const conversionRatio = 0.38;
-      stats.strength += Math.floor((gameState.stats.dexterity || 0) * conversionRatio);
+      stats.strength += Math.floor(
+        (gameState.stats.dexterity || 0) * conversionRatio,
+      );
     },
 
     funcOnHit: (stats, targetEffects, itemLevel) => {
-      if ( runtimeState.nextNbAtkBonus === 0 && Math.random() < 0.25 + 0.01 * itemLevel ) {
+      if (
+        runtimeState.nextNbAtkBonus === 0 &&
+        Math.random() < 0.25 + 0.01 * itemLevel
+      ) {
         runtimeState.nextNbAtkBonus++;
         ActionLog("Cimeterre : Attaque réflexe !", "log-status");
       }
@@ -1220,7 +1226,8 @@ export const ITEMS = {
         const heal = 5 + 2 * (itemLevel - 1);
         const maxHp = getHealth(stats.vigor);
         const healed = healPlayer(heal, maxHp);
-        if (healed > 0) ActionLog(`Sève de l'Arbre : +${healed} PV !`, "log-heal");
+        if (healed > 0)
+          ActionLog(`Sève de l'Arbre : +${healed} PV !`, "log-heal");
       }
     },
   },

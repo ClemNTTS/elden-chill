@@ -9,8 +9,8 @@ await import("../game.js");
 const { ITEMS } = await import("../item.js");
 const { ASHES_OF_WAR } = await import("../ashes.js");
 const { getItemIcon, getAshIcon, ATLASES } = await import("../icons.js");
-const { readFileSync } = await import("fs");
-const { execFileSync } = await import("child_process");
+const { readFileSync } = await import("node:fs");
+const { execFileSync } = await import("node:child_process");
 
 const NL = String.fromCharCode(10);
 const parCellule = new Map();
@@ -20,7 +20,9 @@ const noter = (id, nom, icone) => {
   // Les quatre planches d'armes partagent leurs coordonnees : une seule cle.
   const planche = icone.atlas.startsWith("weapons") ? "weapons" : icone.atlas;
   const cle = `${planche}:${icone.col},${icone.row}`;
-  (parCellule.get(cle) || parCellule.set(cle, []).get(cle)).push(`${nom} (${id})`);
+  (parCellule.get(cle) || parCellule.set(cle, []).get(cle)).push(
+    `${nom} (${id})`,
+  );
 };
 
 for (const [id, item] of Object.entries(ITEMS)) {
@@ -40,7 +42,9 @@ const PARTAGES_ASSUMES = new Set(["accessories:0,1"]);
 const doublons = [...parCellule].filter(
   ([cle, l]) => l.length > 1 && !PARTAGES_ASSUMES.has(cle),
 );
-console.log(`${parCellule.size} cellules utilisees, ${doublons.length} partagee(s).` + NL);
+console.log(
+  `${parCellule.size} cellules utilisees, ${doublons.length} partagee(s).` + NL,
+);
 for (const [cle, liste] of doublons) {
   console.log(`  ${cle}`);
   for (const n of liste) console.log(`     ${n}`);

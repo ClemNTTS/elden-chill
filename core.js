@@ -1,6 +1,8 @@
 import { ASHES_OF_WAR } from "./ashes.js";
-import { playSfx } from "./sfx.js";
 import { getTraitRunBuffs } from "./biome-traits.js";
+import { BIOMES, LOOT_TABLES } from "./biome.js";
+import { ITEMS } from "./item.js";
+import { MONSTERS } from "./monster.js";
 import {
   MAIN_BOSS_BIOMES,
   getProgressionCap,
@@ -10,29 +12,16 @@ import {
   markFinalBiomeCleared,
   markTrialCleared,
 } from "./rebirth.js";
-import { BIOMES, LOOT_TABLES } from "./biome.js";
-import { ITEMS } from "./item.js";
+import { saveGame } from "./save.js";
+import { playSfx } from "./sfx.js";
 import { devSpawnQueue, spawnMonster } from "./spawn.js";
 import {
+  INT_RUNE_CAP,
   gameState,
   getEffectiveStats,
-  INT_RUNE_CAP,
-  runtimeState,
   getHealth,
+  runtimeState,
 } from "./state.js";
-import { saveGame } from "./save.js";
-import {
-  ActionLog,
-  formatNumber,
-  toggleView,
-  triggerShake,
-  updateCycleDisplay,
-  updateHealthBars,
-  showEventBanner,
-  updateStepper,
-  updateUI,
-} from "./ui.js";
-import { MONSTERS } from "./monster.js";
 import {
   addJournalEntry,
   applyPreparationLoadout,
@@ -49,6 +38,17 @@ import {
   resolveBiomeEvent,
   syncCodexFromInventory,
 } from "./systems.js";
+import {
+  ActionLog,
+  formatNumber,
+  showEventBanner,
+  toggleView,
+  triggerShake,
+  updateCycleDisplay,
+  updateHealthBars,
+  updateStepper,
+  updateUI,
+} from "./ui.js";
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -86,7 +86,7 @@ function delayedSetTimeout(fn, ms) {
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
   if (!itemTemplate) return;
-  let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
+  const inventoryItem = gameState.inventory.find((item) => item.id === itemId);
 
   if (!inventoryItem) {
     gameState.inventory.push({
@@ -173,7 +173,7 @@ const MAX_AUTO_DEATHS = 5;
 
 export const handleDeath = () => {
   playSfx("death");
-  ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
+  ActionLog("Vous êtes mort. Les runes portées sont perdues ...");
   addJournalEntry(
     "checkpoint",
     "Expedition interrompue",
@@ -243,10 +243,12 @@ export const handleDeath = () => {
 export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus =
-    1 + Math.min(INT_RUNE_CAP, eff.intelligence / 100) + (eff.runeGainMult || 0);
+    1 +
+    Math.min(INT_RUNE_CAP, eff.intelligence / 100) +
+    (eff.runeGainMult || 0);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
-    ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
+    ActionLog("Vous avez triomphé ! Voici un détail des gains : ", "log-crit");
   }
   runtimeState.defeatedEnemies.forEach((enemy) => {
     if (enemy.isBoss) {
@@ -352,7 +354,9 @@ export const handleVictory = (sessionId) => {
       );
     }
 
-    const prepUnlocks = grantPreparationRewardForBiome(gameState.world.currentBiome);
+    const prepUnlocks = grantPreparationRewardForBiome(
+      gameState.world.currentBiome,
+    );
     if (prepUnlocks.length) {
       ActionLog(
         `Nouvelle preparation disponible : ${prepUnlocks.join(", ")}.`,
@@ -537,7 +541,10 @@ export function nextEncounter(sessionId) {
 
   if (canTriggerEvent) {
     const eventDef = getWeightedBiomeEvent(gameState.world.currentBiome);
-    const eventResult = resolveBiomeEvent(eventDef, gameState.world.currentBiome);
+    const eventResult = resolveBiomeEvent(
+      eventDef,
+      gameState.world.currentBiome,
+    );
     gameState.world.lastEventProgress = gameState.world.progress;
 
     if (eventResult?.log) {
@@ -569,7 +576,9 @@ export function nextEncounter(sessionId) {
 
     if (eventResult?.forceRare && biome.rareMonsters?.length) {
       const rareId =
-        biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
+        biome.rareMonsters[
+          Math.floor(Math.random() * biome.rareMonsters.length)
+        ];
       gameState.world.rareSpawnsCount++;
       spawnMonster(rareId, sessionId);
       return;
@@ -593,13 +602,12 @@ export function nextEncounter(sessionId) {
     gameState.world.rareSpawnsCount++;
     spawnMonster(rareId, sessionId);
     return;
-  } else {
-    spawnMonster(
-      biome.monsters[Math.floor(Math.random() * biome.monsters.length)],
-      sessionId,
-    );
-    return;
   }
+  spawnMonster(
+    biome.monsters[Math.floor(Math.random() * biome.monsters.length)],
+    sessionId,
+  );
+  return;
 }
 
 export const startExploration = (biomeId) => {

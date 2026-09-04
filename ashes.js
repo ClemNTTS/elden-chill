@@ -1,11 +1,11 @@
-import { applyEffect } from "./status-apply.js";
 import {
   gameState,
   getEffectiveStats,
   getHealth,
-  runtimeState,
   healPlayer,
+  runtimeState,
 } from "./state.js";
+import { applyEffect } from "./status-apply.js";
 
 export const ASHES_OF_WAR = {
   beginer_tarnished_heal: {

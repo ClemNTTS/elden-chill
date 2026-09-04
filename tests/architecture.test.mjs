@@ -1,3 +1,6 @@
+import assert from "node:assert/strict";
+import { readFileSync, readdirSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 /*
  * Garde-fous d'architecture.
  *
@@ -15,9 +18,6 @@
  * Ces tests echouent si un cycle revient.
  */
 import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -26,10 +26,26 @@ const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const modules = () => {
   const trouves = [];
   const parcourir = (dossier) => {
-    for (const entree of readdirSync(join(RACINE, dossier), { withFileTypes: true })) {
+    for (const entree of readdirSync(join(RACINE, dossier), {
+      withFileTypes: true,
+    })) {
       const chemin = dossier ? `${dossier}/${entree.name}` : entree.name;
       if (entree.isDirectory()) {
-        if (["tests", "tools", "assets", "docs", ".git", ".github", ".claude", ".agents", "tmp", "node_modules"].includes(entree.name)) continue;
+        if (
+          [
+            "tests",
+            "tools",
+            "assets",
+            "docs",
+            ".git",
+            ".github",
+            ".claude",
+            ".agents",
+            "tmp",
+            "node_modules",
+          ].includes(entree.name)
+        )
+          continue;
         parcourir(chemin);
       } else if (entree.name.endsWith(".js")) {
         trouves.push(chemin);
@@ -46,7 +62,10 @@ const graphe = () => {
   for (const fichier of modules()) {
     const source = readFileSync(join(RACINE, fichier), "utf8");
     const cibles = [...source.matchAll(/from\s+"(\.[^"]+)"/g)].map((m) =>
-      relative(RACINE, resolve(dirname(join(RACINE, fichier)), m[1])).replaceAll("\\", "/"),
+      relative(
+        RACINE,
+        resolve(dirname(join(RACINE, fichier)), m[1]),
+      ).replaceAll("\\", "/"),
     );
     g.set(fichier, cibles);
   }
@@ -88,7 +107,8 @@ const COUCHE_DONNEES = [
 ];
 
 const coucheDe = (module) => {
-  if (module.startsWith("shared/") || module.startsWith("items/")) return "donnees";
+  if (module.startsWith("shared/") || module.startsWith("items/"))
+    return "donnees";
   return COUCHE_DONNEES.includes(module) ? "donnees" : "runtime";
 };
 

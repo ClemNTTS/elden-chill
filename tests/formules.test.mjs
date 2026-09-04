@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 /*
  * Formules du moteur : PV, soins, esquive.
  *
@@ -6,7 +7,6 @@
  * silencieuse de l'equilibrage.
  */
 import test from "node:test";
-import assert from "node:assert/strict";
 import { etatNeuf, state } from "./aide.mjs";
 
 const { getHealth, healPlayer, runtimeState, gameState } = state;
@@ -60,7 +60,11 @@ test("un soin ne depasse jamais le plafond de PV", () => {
   runtimeState.playerCurrentHp = max - 10;
   const rendu = healPlayer(9999, max);
   assert.equal(runtimeState.playerCurrentHp, max);
-  assert.equal(rendu, 10, "le soin renvoye doit etre le soin REELLEMENT applique");
+  assert.equal(
+    rendu,
+    10,
+    "le soin renvoye doit etre le soin REELLEMENT applique",
+  );
 });
 
 test("un soin nul ou negatif ne fait rien", () => {
@@ -88,13 +92,24 @@ test("l'esquive est plafonnee a 50%", () => {
     etatNeuf({ stats: { dexterity } });
     const eff = state.getEffectiveStats();
     const esquive = eff.dodgeChance ?? Math.min(0.5, eff.dexterity / 400);
-    assert.ok(esquive <= 0.5 + 1e-9, `dexterite ${dexterity} : esquive ${esquive}`);
+    assert.ok(
+      esquive <= 0.5 + 1e-9,
+      `dexterite ${dexterity} : esquive ${esquive}`,
+    );
     assert.ok(esquive >= 0, `dexterite ${dexterity} : esquive negative`);
   }
 });
 
 test("les statistiques effectives restent finies sans equipement", () => {
-  etatNeuf({ stats: { level: 150, vigor: 60, strength: 60, dexterity: 60, intelligence: 60 } });
+  etatNeuf({
+    stats: {
+      level: 150,
+      vigor: 60,
+      strength: 60,
+      dexterity: 60,
+      intelligence: 60,
+    },
+  });
   const eff = state.getEffectiveStats();
   for (const [cle, valeur] of Object.entries(eff)) {
     if (typeof valeur === "number") {

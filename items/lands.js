@@ -11,10 +11,10 @@
 // jusqu'a +105 au chapitre X, dans le meme rapport que les points de vie des
 // monstres correspondants.
 
-import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
-import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
 import { ITEM_RARITIES } from "../constants.js";
+import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
+import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
 
 export const LANDS_ITEMS = {
@@ -106,7 +106,9 @@ export const LANDS_ITEMS = {
     description:
       "Convertit votre armure en represailles : +1 de Force par 10 d'armure, et jusqu'a 1 par 8 au niveau maximum.",
     applyMult: (stats, itemLevel) => {
-      stats.strength += Math.floor(stats.armor / (10 - Math.floor(itemLevel / 4)));
+      stats.strength += Math.floor(
+        stats.armor / (10 - Math.floor(itemLevel / 4)),
+      );
     },
   },
 
@@ -124,7 +126,9 @@ export const LANDS_ITEMS = {
       stats.strength += 21 + itemLevel * 3;
     },
     applyMult: (stats, itemLevel) => {
-      stats.splashDamage += Math.floor(stats.intelligence * (0.4 + 0.04 * itemLevel));
+      stats.splashDamage += Math.floor(
+        stats.intelligence * (0.4 + 0.04 * itemLevel),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.25 + 0.02 * itemLevel) {
@@ -173,7 +177,8 @@ export const LANDS_ITEMS = {
       const maxHp = getHealth(stats.vigor);
       const heal = Math.floor(maxHp * (0.01 + 0.001 * itemLevel));
       const healed = healPlayer(heal, maxHp);
-      if (healed > 0) ActionLog(`Le calice se remplit : +${healed} PV.`, "log-heal");
+      if (healed > 0)
+        ActionLog(`Le calice se remplit : +${healed} PV.`, "log-heal");
     },
     applyFlat: (stats, itemLevel) => {
       stats.vigor += 8 + itemLevel * 2;
@@ -293,7 +298,8 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
-    description: "+12 Intelligence (+2 / Niv). La lumiere des astres porte les sorts.",
+    description:
+      "+12 Intelligence (+2 / Niv). La lumiere des astres porte les sorts.",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 12 + itemLevel * 2;
     },
@@ -453,7 +459,9 @@ export const LANDS_ITEMS = {
       stats.strength += 14 + itemLevel * 2;
     },
     applyMult: (stats, itemLevel) => {
-      stats.splashDamage += Math.floor(stats.intelligence * (0.3 + 0.03 * itemLevel));
+      stats.splashDamage += Math.floor(
+        stats.intelligence * (0.3 + 0.03 * itemLevel),
+      );
     },
   },
   all_knowing_helm: {
@@ -624,7 +632,9 @@ export const LANDS_ITEMS = {
       "La foudre rouge suit vos coups. Convertit 22% de votre Force en " +
       "Dégâts de zone <em style='color: grey;'>(+2% / Niv)</em>.",
     applyMult: (stats, itemLevel) => {
-      stats.splashDamage += Math.floor(stats.strength * (0.2 + 0.02 * itemLevel));
+      stats.splashDamage += Math.floor(
+        stats.strength * (0.2 + 0.02 * itemLevel),
+      );
     },
   },
   ancient_dragon_scale: {

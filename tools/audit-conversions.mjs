@@ -10,7 +10,7 @@
 //
 //   node tools/audit-conversions.mjs
 
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const files = [
   "item.js",
@@ -46,11 +46,14 @@ for (const file of files) {
   let owner = "?";
   lines.forEach((line, index) => {
     const named =
-      line.match(/^\s{4}name:\s*"([^"]+)"/) || line.match(/^\s{2}([A-Z_]+):\s*\{/);
+      line.match(/^\s{4}name:\s*"([^"]+)"/) ||
+      line.match(/^\s{2}([A-Z_]+):\s*\{/);
     if (named) owner = named[1];
 
     for (const target of TARGETS) {
-      const assign = new RegExp("stats\\." + target + "\\s*(\\+=|\\*=|=)([^;]*)");
+      const assign = new RegExp(
+        "stats\\." + target + "\\s*(\\+=|\\*=|=)([^;]*)",
+      );
       const match = line.match(assign);
       if (!match) continue;
       const expression = match[2];
@@ -79,7 +82,9 @@ for (const [pair, list] of Object.entries(byPair).sort(
 )) {
   console.log(`${pair}   (${list.length})`);
   for (const c of list) {
-    console.log(`   ${String(c.owner).slice(0, 34).padEnd(36)} ${c.file}:${c.line}`);
+    console.log(
+      `   ${String(c.owner).slice(0, 34).padEnd(36)} ${c.file}:${c.line}`,
+    );
   }
   console.log();
 }

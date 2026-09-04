@@ -11,7 +11,7 @@
  *
  *   node tools/audit-echelle.mjs
  */
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const NL = String.fromCharCode(10);
 const fichiers = ["item.js", ...readdirSync("items").map((f) => "items/" + f)];
@@ -22,15 +22,19 @@ let examines = 0;
 for (const chemin of fichiers) {
   const src = readFileSync(chemin, "utf8");
   /* Chaque objet est un bloc de premier niveau. */
-  const re = /^  ([a-z0-9_]+): \{/gm;
+  const re = /^ {2}([a-z0-9_]+): \{/gm;
   let m;
   const positions = [];
   while ((m = re.exec(src))) positions.push({ id: m[1], i: m.index });
 
   for (let k = 0; k < positions.length; k += 1) {
     const { id, i } = positions[k];
-    const bloc = src.slice(i, k + 1 < positions.length ? positions[k + 1].i : src.length);
-    const desc = /description:\s*([\s\S]*?),\s*\n\s{4}[a-zA-Z]/.exec(bloc)?.[1] || "";
+    const bloc = src.slice(
+      i,
+      k + 1 < positions.length ? positions[k + 1].i : src.length,
+    );
+    const desc =
+      /description:\s*([\s\S]*?),\s*\n\s{4}[a-zA-Z]/.exec(bloc)?.[1] || "";
     /* Le gain par niveau annonce, sous ses deux formes courantes. */
     const annonce = /\+\s*([\d.]+)\s*%\s*(?:\/|par)\s*Niv/i.exec(desc);
     if (!annonce) continue;
@@ -38,7 +42,9 @@ for (const chemin of fichiers) {
     const attendu = Number(annonce[1]) / 100;
 
     /* Coefficients multiplicatifs de la forme `1.x + K * itemLevel`. */
-    const code = /\*=?\s*\(?\s*1\.\d+\s*\+\s*([\d.]+)\s*\*\s*itemLevel/.exec(bloc);
+    const code = /\*=?\s*\(?\s*1\.\d+\s*\+\s*([\d.]+)\s*\*\s*itemLevel/.exec(
+      bloc,
+    );
     if (!code) continue;
     const trouve = Number(code[1]);
     if (Math.abs(trouve - attendu) < 1e-9) continue;
@@ -52,16 +58,24 @@ for (const chemin of fichiers) {
   }
 }
 
-console.log("OBJETS DONT LE GAIN PAR NIVEAU CODE DIFFERE DE CELUI ANNONCE" + NL);
+console.log(
+  "OBJETS DONT LE GAIN PAR NIVEAU CODE DIFFERE DE CELUI ANNONCE" + NL,
+);
 if (!suspects.length) console.log("  aucun");
 suspects.sort((a, b) => b.facteur - a.facteur);
 for (const s of suspects) {
   console.log(
-    "  " + s.id.padEnd(28) +
-      "annonce " + s.annonce.padStart(6) +
-      "   code " + s.code.padStart(6) +
-      "   facteur x" + s.facteur.toFixed(0) +
-      "   (" + s.chemin + ")",
+    "  " +
+      s.id.padEnd(28) +
+      "annonce " +
+      s.annonce.padStart(6) +
+      "   code " +
+      s.code.padStart(6) +
+      "   facteur x" +
+      s.facteur.toFixed(0) +
+      "   (" +
+      s.chemin +
+      ")",
   );
 }
 console.log(NL + "objets a gain multiplicatif examines : " + examines);

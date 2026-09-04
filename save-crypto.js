@@ -125,7 +125,7 @@ const toHex = (bytes) =>
 const fromHex = (hex) => {
   const out = new Uint8Array(hex.length >> 1);
   for (let i = 0; i < out.length; i += 1) {
-    out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    out[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
   }
   return out;
 };
@@ -157,7 +157,10 @@ const FRAGMENTS = [
   0x5e1f9a3c, 0xc0ffee11, 0x1a7d40b6, 0x9b2c8e55, 0x3f70d1a8, 0x7c19e264,
 ];
 
-const PEPPER = [103, 114, 97, 99, 101, 45, 111, 102, 45, 116, 104, 101, 45, 101, 114, 100, 116, 114, 101, 101];
+const PEPPER = [
+  103, 114, 97, 99, 101, 45, 111, 102, 45, 116, 104, 101, 45, 101, 114, 100,
+  116, 114, 101, 101,
+];
 
 const deriveKey = (() => {
   let cached = null;
@@ -237,7 +240,10 @@ export const sealSave = (data) => {
 
   const cipherB64 = toBase64(cipher);
   const nonceHex = toHex(nonce);
-  const mac = hmacSha256(key, utf8Encode(`${ENVELOPE_VERSION}.${nonceHex}.${cipherB64}`));
+  const mac = hmacSha256(
+    key,
+    utf8Encode(`${ENVELOPE_VERSION}.${nonceHex}.${cipherB64}`),
+  );
 
   return toBase64(
     utf8Encode(
@@ -267,13 +273,21 @@ export const openSave = (encoded) => {
     return { ok: false, reason: "MALFORMED" };
   }
 
-  if (envelope?.v !== ENVELOPE_VERSION || !envelope.n || !envelope.d || !envelope.m) {
+  if (
+    envelope?.v !== ENVELOPE_VERSION ||
+    !envelope.n ||
+    !envelope.d ||
+    !envelope.m
+  ) {
     return { ok: false, reason: "UNSUPPORTED_VERSION" };
   }
 
   const key = deriveKey();
   const expected = toHex(
-    hmacSha256(key, utf8Encode(`${envelope.v}.${envelope.n}.${envelope.d}`)).subarray(0, 16),
+    hmacSha256(
+      key,
+      utf8Encode(`${envelope.v}.${envelope.n}.${envelope.d}`),
+    ).subarray(0, 16),
   );
 
   if (!timingSafeEqual(expected, envelope.m)) {
@@ -294,7 +308,8 @@ export const openSave = (encoded) => {
 const timingSafeEqual = (a, b) => {
   if (a.length !== b.length) return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < a.length; i += 1)
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
 };
 

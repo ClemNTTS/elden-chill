@@ -38,13 +38,19 @@ mountDomStub();
 // d'evaluation du navigateur et evite les zones mortes des cycles d'import.
 await import("../game.js");
 
-const { gameState, getEffectiveStats, getHealth, getMagicDamage } = await import("../state.js");
+const { gameState, getEffectiveStats, getHealth, getMagicDamage } =
+  await import("../state.js");
 const { BIOMES, LOOT_TABLES } = await import("../biome.js");
 const { ITEMS } = await import("../item.js");
 const { MONSTERS } = await import("../monster.js");
 const { getUpgradeCost } = await import("../actions.js");
-const { syncCritStats, getCritPointsTotal, CRIT_MAX_RANK, CRIT_PER_RANK, CRIT_BASE } =
-  await import("../crit.js");
+const {
+  syncCritStats,
+  getCritPointsTotal,
+  CRIT_MAX_RANK,
+  CRIT_PER_RANK,
+  CRIT_BASE,
+} = await import("../crit.js");
 const { getBiomeTrait } = await import("../biome-traits.js");
 
 /* ------------------------------------------------------------------ */
@@ -90,7 +96,12 @@ export const BUILDS = {
   int: { label: "Intelligence", weights: { intelligence: 0.7, vigor: 0.3 } },
   hybride: {
     label: "Trihybride",
-    weights: { strength: 0.24, dexterity: 0.23, intelligence: 0.23, vigor: 0.3 },
+    weights: {
+      strength: 0.24,
+      dexterity: 0.23,
+      intelligence: 0.23,
+      vigor: 0.3,
+    },
   },
   tank: { label: "Vigueur", weights: { strength: 0.3, vigor: 0.7 } },
 };
@@ -110,7 +121,10 @@ const avgGroupSize = (monster) => {
   const combos = monster?.groupCombinations;
   if (!combos?.length) return 1;
   const total = combos.reduce((s, c) => s + (c.chance || 0), 0) || 1;
-  return combos.reduce((s, c) => s + (c.size || 1) * ((c.chance || 0) / total), 0);
+  return combos.reduce(
+    (s, c) => s + (c.size || 1) * ((c.chance || 0) / total),
+    0,
+  );
 };
 
 /**
@@ -145,7 +159,8 @@ export const playerDamagePerTurn = (eff, targetArmor, groupSize = 1) => {
   const attacks = (eff.attacksPerTurn || 1) + (eff.extraAttackChance || 0);
   // Le splash ignore l'armure et frappe les membres du groupe autres que la
   // cible principale. Ramene par monstre pour rester comparable a un ttk.
-  const splash = Math.max(0, groupSize - 1) * Math.floor((eff.splashDamage || 0) * critMean);
+  const splash =
+    Math.max(0, groupSize - 1) * Math.floor((eff.splashDamage || 0) * critMean);
   return attacks * (physical + splash) + magic;
 };
 
@@ -189,7 +204,7 @@ const cumulativeCost = (() => {
     while (cache.length <= level) {
       const l = cache.length - 1;
       const x = Math.max((l - 11) * 0.02, 0);
-      cache.push(cache[l] + Math.floor((x + 0.1) * Math.pow(l + 81, 2) + 1));
+      cache.push(cache[l] + Math.floor((x + 0.1) * (l + 81) ** 2 + 1));
     }
     return cache[level];
   };
@@ -206,8 +221,9 @@ const MAX_LEVEL = 220;
  * On relit les constantes du jeu plutot que de les recopier : une valeur
  * dupliquee finit toujours par diverger.
  */
-const { MAIN_BOSS_BIOMES, LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS } =
-  await import("../rebirth.js");
+const { MAIN_BOSS_BIOMES, LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS } = await import(
+  "../rebirth.js"
+);
 const capPour = (clears) => {
   const vaincus = new Set(clears);
   const n = MAIN_BOSS_BIOMES.filter((id) => vaincus.has(id)).length;
@@ -219,7 +235,11 @@ const capPour = (clears) => {
 /* ------------------------------------------------------------------ */
 
 const fmt = (n) =>
-  n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? (n / 1e3).toFixed(1) + "k" : String(Math.round(n));
+  n >= 1e6
+    ? (n / 1e6).toFixed(1) + "M"
+    : n >= 1e3
+      ? (n / 1e3).toFixed(1) + "k"
+      : String(Math.round(n));
 
 /* ------------------------------------------------------------------ */
 /* Equipement                                                         */
@@ -264,10 +284,20 @@ export const lootPoolFor = (cleared) => {
  * Le score combine desormais les deux rencontres par moyenne geometrique :
  * une piece doit servir aux groupes ET au boss.
  */
-export const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) => {
+export const equipBest = (
+  pool,
+  refArmor,
+  groupe = 1.3,
+  bossArmor = refArmor,
+) => {
   const slots = { weapon: "Arme", armor: "Armure", accessory: "Accessoire" };
   gameState.equipped = { weapon: null, armor: null, accessory: null };
-  gameState.inventory = pool.map((id) => ({ id, name: id, level: 8, count: 0 }));
+  gameState.inventory = pool.map((id) => ({
+    id,
+    name: id,
+    level: 8,
+    count: 0,
+  }));
 
   for (let pass = 0; pass < 2; pass++) {
     for (const [slot, typeLabel] of Object.entries(slots)) {
@@ -277,13 +307,20 @@ export const equipBest = (pool, refArmor, groupe = 1.3, bossArmor = refArmor) =>
         if (id && ITEMS[id].type !== typeLabel) continue;
         gameState.equipped[slot] = id;
         let eff;
-        try { eff = getEffectiveStats(); } catch { continue; }
+        try {
+          eff = getEffectiveStats();
+        } catch {
+          continue;
+        }
         const contreGroupes = playerDamagePerTurn(eff, refArmor, groupe);
         const contreBoss = playerDamagePerTurn(eff, bossArmor);
         const score =
           Math.sqrt(Math.max(0, contreGroupes) * Math.max(0, contreBoss)) *
           Math.sqrt(Math.max(1, getHealth(eff.vigor)));
-        if (score > bestScore) { bestScore = score; best = id; }
+        if (score > bestScore) {
+          bestScore = score;
+          best = id;
+        }
       }
       gameState.equipped[slot] = best;
     }
@@ -333,8 +370,14 @@ const run = (buildKey) => {
     if (!std.length || !boss) continue;
 
     const traits = (biome.traits || []).map(getBiomeTrait).filter(Boolean);
-    const armorMult = traits.reduce((m, t) => m * (t.runBuff?.armorMult ?? 1), 1);
-    const runeMult = traits.reduce((m, t) => m + (t.runBuff?.runeGainMult ?? 0), 0);
+    const armorMult = traits.reduce(
+      (m, t) => m * (t.runBuff?.armorMult ?? 1),
+      1,
+    );
+    const runeMult = traits.reduce(
+      (m, t) => m + (t.runBuff?.runeGainMult ?? 0),
+      0,
+    );
     const sealed = traits.some((t) => t.runBuff?.noHeal);
 
     const avg = (f) => std.reduce((sum, m) => sum + f(m), 0) / std.length;
@@ -363,16 +406,28 @@ const run = (buildKey) => {
       maxHp = getHealth(eff.vigor);
 
       ttkStd = stdHp / Math.max(1, playerDamagePerTurn(eff, stdArmor, groupe));
-      ttkBoss = boss.hp / Math.max(1, playerDamagePerTurn(eff, boss.armor || 100));
-      margeStd = maxHp / Math.max(1, avg((m) => enemyDamagePerTurn(eff, m, armorMult))) / ttkStd;
-      margeBoss = maxHp / Math.max(1, enemyDamagePerTurn(eff, boss, armorMult)) / ttkBoss;
+      ttkBoss =
+        boss.hp / Math.max(1, playerDamagePerTurn(eff, boss.armor || 100));
+      margeStd =
+        maxHp /
+        Math.max(
+          1,
+          avg((m) => enemyDamagePerTurn(eff, m, armorMult)),
+        ) /
+        ttkStd;
+      margeBoss =
+        maxHp / Math.max(1, enemyDamagePerTurn(eff, boss, armorMult)) / ttkBoss;
 
       if (margeBoss >= MARGE_JOUABLE && margeStd >= 1) break;
       // Plafond atteint : farmer davantage ne rapporte plus un seul niveau.
       if (level >= plafond && cycles > 3) break;
 
       // Un cycle de farm : les paliers standard, sans le boss.
-      runes += Math.floor((biome.length - 1) * stdRunes * (1 + (eff.runeGainMult || 0) + runeMult));
+      runes += Math.floor(
+        (biome.length - 1) *
+          stdRunes *
+          (1 + (eff.runeGainMult || 0) + runeMult),
+      );
       cycles += 1;
     }
 
@@ -399,7 +454,7 @@ const run = (buildKey) => {
 };
 
 const verdict = (m) => {
-  if (!isFinite(m)) return "IMPOSSIBLE";
+  if (!Number.isFinite(m)) return "IMPOSSIBLE";
   if (m < 1) return "MUR";
   if (m < 2) return "tres dur";
   if (m < 4) return "tendu";
@@ -420,42 +475,54 @@ const args = process.argv.slice(2);
 const only = args.find((x) => x.startsWith("--build="))?.split("=")[1];
 const keys = only ? [only] : Object.keys(BUILDS);
 
-if (lanceDirectement) for (const key of keys) {
-  const { build, rows } = run(key);
-  console.log(NL + "=".repeat(100));
-  console.log(build.label.toUpperCase());
-  console.log("=".repeat(100));
-  console.log(
-    "biome".padEnd(30) +
-      "niv".padStart(5) +
-      "PV".padStart(8) +
-      "cycles".padStart(8) +
-      "t/std".padStart(8) +
-      "t/boss".padStart(9) +
-      "marge".padStart(8) +
-      "  verdict",
-  );
-  for (const r of rows) {
-    const m = Math.min(r.margeStd, r.margeBoss);
+if (lanceDirectement)
+  for (const key of keys) {
+    const { build, rows } = run(key);
+    console.log(NL + "=".repeat(100));
+    console.log(build.label.toUpperCase());
+    console.log("=".repeat(100));
     console.log(
-      r.nom.slice(0, 29).padEnd(30) +
-        String(r.level).padStart(5) +
-        fmt(r.maxHp).padStart(8) +
-        String(r.cycles).padStart(8) +
-        r.ttkStd.toFixed(1).padStart(8) +
-        r.ttkBoss.toFixed(1).padStart(9) +
-        m.toFixed(1).padStart(8) +
-        "  " + verdict(m) +
-        (r.sealed ? " [sans soin]" : ""),
+      "biome".padEnd(30) +
+        "niv".padStart(5) +
+        "PV".padStart(8) +
+        "cycles".padStart(8) +
+        "t/std".padStart(8) +
+        "t/boss".padStart(9) +
+        "marge".padStart(8) +
+        "  verdict",
+    );
+    for (const r of rows) {
+      const m = Math.min(r.margeStd, r.margeBoss);
+      console.log(
+        r.nom.slice(0, 29).padEnd(30) +
+          String(r.level).padStart(5) +
+          fmt(r.maxHp).padStart(8) +
+          String(r.cycles).padStart(8) +
+          r.ttkStd.toFixed(1).padStart(8) +
+          r.ttkBoss.toFixed(1).padStart(9) +
+          m.toFixed(1).padStart(8) +
+          "  " +
+          verdict(m) +
+          (r.sealed ? " [sans soin]" : ""),
+      );
+    }
+    const murs = rows.filter((r) => Math.min(r.margeStd, r.margeBoss) < 1);
+    const grind = rows.filter((r) => r.cycles >= 10);
+    const triviaux = rows.filter(
+      (r) => Math.min(r.margeStd, r.margeBoss) >= 40,
+    );
+    const total = rows.reduce((n, r) => n + r.cycles, 0);
+    console.log(
+      `${NL}  cycles de farm cumules : ${total}  (moyenne ${(total / rows.length).toFixed(1)} par biome)`,
+    );
+    console.log(
+      `  murs        : ${murs.length}${murs.length ? " -> " + murs.map((x) => x.nom).join(", ") : ""}`,
+    );
+    console.log(
+      `  grind >= 10 : ${grind.length}${grind.length ? " -> " + grind.map((x) => x.nom + "(" + x.cycles + ")").join(", ") : ""}`,
+    );
+    console.log(`  triviaux    : ${triviaux.length}`);
+    console.log(
+      `  niveau final : ${rows[rows.length - 1]?.level} / ${MAX_LEVEL}`,
     );
   }
-  const murs = rows.filter((r) => Math.min(r.margeStd, r.margeBoss) < 1);
-  const grind = rows.filter((r) => r.cycles >= 10);
-  const triviaux = rows.filter((r) => Math.min(r.margeStd, r.margeBoss) >= 40);
-  const total = rows.reduce((n, r) => n + r.cycles, 0);
-  console.log(`${NL}  cycles de farm cumules : ${total}  (moyenne ${(total / rows.length).toFixed(1)} par biome)`);
-  console.log(`  murs        : ${murs.length}${murs.length ? " -> " + murs.map((x) => x.nom).join(", ") : ""}`);
-  console.log(`  grind >= 10 : ${grind.length}${grind.length ? " -> " + grind.map((x) => x.nom + "(" + x.cycles + ")").join(", ") : ""}`);
-  console.log(`  triviaux    : ${triviaux.length}`);
-  console.log(`  niveau final : ${rows[rows.length - 1]?.level} / ${MAX_LEVEL}`);
-}

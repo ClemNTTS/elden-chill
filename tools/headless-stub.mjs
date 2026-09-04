@@ -15,13 +15,25 @@ const inertElement = new Proxy(
     get(target, key) {
       switch (key) {
         case "classList":
-          return { add: noop, remove: noop, toggle: noop, contains: () => false };
+          return {
+            add: noop,
+            remove: noop,
+            toggle: noop,
+            contains: () => false,
+          };
         case "style":
           return new Proxy({}, { get: () => noop, set: () => true });
         case "getContext":
           return () => new Proxy({}, { get: () => noop });
         case "getBoundingClientRect":
-          return () => ({ width: 0, height: 0, top: 0, bottom: 0, left: 0, right: 0 });
+          return () => ({
+            width: 0,
+            height: 0,
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+          });
         case "children":
         case "childNodes":
           return [];
@@ -47,7 +59,11 @@ export const mountDomStub = () => {
   globalThis.addEventListener = noop;
   globalThis.removeEventListener = noop;
   globalThis.setInterval = noop;
-  globalThis.matchMedia = () => ({ matches: false, addEventListener: noop, addListener: noop });
+  globalThis.matchMedia = () => ({
+    matches: false,
+    addEventListener: noop,
+    addListener: noop,
+  });
   // getComputedStyle manquait : updateUI() le lit, donc tout test qui touche
   // a l'interface jetait avant d'atteindre son assertion.
   globalThis.getComputedStyle = () =>
@@ -96,9 +112,14 @@ export const mountDomStub = () => {
     observe() {}
     disconnect() {}
   };
-  globalThis.location = { hostname: "localhost", href: "http://localhost/", reload: noop };
+  globalThis.location = {
+    hostname: "localhost",
+    href: "http://localhost/",
+    reload: noop,
+  };
   globalThis.alert = noop;
   globalThis.confirm = () => false;
-  globalThis.fetch = () => Promise.reject(new Error("reseau desactive en simulation"));
+  globalThis.fetch = () =>
+    Promise.reject(new Error("reseau desactive en simulation"));
   globalThis.cytoscape = () => inertElement;
 };

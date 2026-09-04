@@ -1,19 +1,17 @@
-import { gameState, runtimeState } from "./state.js";
-import {
-  clearSaveStorage,
-  saveGame,
-  suspendreSauvegarde,
-} from "./save.js";
-import { updateUI } from "./ui.js";
-import { ITEMS } from "./item.js";
 import { BIOMES } from "./biome.js";
 import { startExploration } from "./core.js";
 import {
+  getCritPointsAvailable,
+  resetCritRanks,
+  spendCritPoint,
+} from "./crit.js";
+import { ITEMS } from "./item.js";
+import {
+  LEVEL_PER_MAIN_BOSS,
   REBIRTH_LEVEL_BONUS,
   REBIRTH_RUNE_BONUS,
   TRIALS,
   canRebirth,
-  LEVEL_PER_MAIN_BOSS,
   getMaxLevel,
   getNextMainBoss,
   getRebirthCount,
@@ -21,12 +19,9 @@ import {
   performRebirth,
   resetRebirthTree,
 } from "./rebirth.js";
-import {
-  getCritPointsAvailable,
-  resetCritRanks,
-  spendCritPoint,
-
-} from "./crit.js";
+import { clearSaveStorage, saveGame, suspendreSauvegarde } from "./save.js";
+import { gameState, runtimeState } from "./state.js";
+import { updateUI } from "./ui.js";
 
 /*
  * Le critique n'est plus achetable avec des runes et ne consomme plus de
@@ -83,7 +78,11 @@ export const investRebirthNode = (nodeId) => {
 
 /** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
 export const respecRebirthTree = () => {
-  if (!confirm("Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.")) {
+  if (
+    !confirm(
+      "Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.",
+    )
+  ) {
     return;
   }
   resetRebirthTree();
@@ -102,7 +101,9 @@ export const startTrial = (trialId) => {
   const trial = TRIALS.find((t) => t.id === trialId);
   if (!trial || !canRebirth()) return;
   if (gameState.world.isExploring) {
-    alert("Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.");
+    alert(
+      "Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.",
+    );
     return;
   }
   startExploration(trial.biomeId);
@@ -166,7 +167,8 @@ export const selectPreparationConsumable = (consumableId) => {
     updateUI();
     return;
   }
-  if (!gameState.preparation.unlockedConsumables?.includes(consumableId)) return;
+  if (!gameState.preparation.unlockedConsumables?.includes(consumableId))
+    return;
   gameState.preparation.selectedConsumableId = consumableId;
   saveGame("select_consumable");
   updateUI();
@@ -174,25 +176,25 @@ export const selectPreparationConsumable = (consumableId) => {
 
 export const getUpgradeCost = (statName) => {
   const baseCost = upgradeCosts[statName] || 10;
-  let count = gameState.stats.level;
-  let x = Math.max((count - 11) * 0.02, 0);
-  return Math.floor(baseCost * ((x + 0.1) * Math.pow(count + 81, 2) + 1));
+  const count = gameState.stats.level;
+  const x = Math.max((count - 11) * 0.02, 0);
+  return Math.floor(baseCost * ((x + 0.1) * (count + 81) ** 2 + 1));
 };
 
 export const getMultiUpgradeCost = (statName, count) => {
   let totalCost = 0;
   for (let i = 0; i < count; i += 1) {
     const baseCost = upgradeCosts[statName] || 10;
-    let level = gameState.stats.level + i;
-    let x = Math.max((level - 11) * 0.02, 0);
-    totalCost += Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
+    const level = gameState.stats.level + i;
+    const x = Math.max((level - 11) * 0.02, 0);
+    totalCost += Math.floor(baseCost * ((x + 0.1) * (level + 81) ** 2 + 1));
   }
   return totalCost;
 };
 
 export const upgradeStat = (statName) => {
   if (!MAIN_STATS.has(statName)) return;
-  let cost = getUpgradeCost(statName);
+  const cost = getUpgradeCost(statName);
 
   if (gameState.stats.level >= getMaxLevel()) {
     alert(
@@ -223,7 +225,7 @@ export const upgradeStat = (statName) => {
 
 export const upgradeStatMultiple = (statName, count) => {
   if (!MAIN_STATS.has(statName)) return;
-  let totalCost = getMultiUpgradeCost(statName, count);
+  const totalCost = getMultiUpgradeCost(statName, count);
 
   if (gameState.stats.level + count > getMaxLevel()) {
     alert(

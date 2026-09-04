@@ -15,7 +15,9 @@ const { BIOMES, LOOT_TABLES } = await import("../biome.js");
 const { MONSTERS } = await import("../monster.js");
 const { ITEMS } = await import("../item.js");
 const { ASHES_OF_WAR } = await import("../ashes.js");
-const { BLESSINGS, PREP_CONSUMABLES, PREPARATION_UNLOCKS } = await import("../systems.js");
+const { BLESSINGS, PREP_CONSUMABLES, PREPARATION_UNLOCKS } = await import(
+  "../systems.js"
+);
 const { DEFAULT_PLAYER_PROFILE } = await import("../shared/player-profile.js");
 const { TRIALS } = await import("../rebirth.js");
 
@@ -43,7 +45,9 @@ for (const epreuve of TRIALS) {
   if (epreuve.biomeId) atteignables.add(epreuve.biomeId);
   if (BIOMES[epreuve.id]) atteignables.add(epreuve.id);
 }
-const biomesOrphelins = Object.keys(BIOMES).filter((id) => !atteignables.has(id));
+const biomesOrphelins = Object.keys(BIOMES).filter(
+  (id) => !atteignables.has(id),
+);
 
 /* ---- Monstres places quelque part ---- */
 const monstresUtilises = new Set();
@@ -73,7 +77,9 @@ while (ajout) {
     }
   }
 }
-const monstresOrphelins = Object.keys(MONSTERS).filter((id) => !monstresUtilises.has(id));
+const monstresOrphelins = Object.keys(MONSTERS).filter(
+  (id) => !monstresUtilises.has(id),
+);
 
 /* ---- Objets et cendres obtenables ---- */
 const objetsObtenables = new Set(
@@ -107,7 +113,9 @@ for (const biome of Object.values(BIOMES)) {
 const objetsOrphelins = Object.keys(ITEMS).filter(
   (id) => ITEMS[id].type && !objetsObtenables.has(id),
 );
-const cendresOrphelines = Object.keys(ASHES_OF_WAR).filter((id) => !cendresObtenables.has(id));
+const cendresOrphelines = Object.keys(ASHES_OF_WAR).filter(
+  (id) => !cendresObtenables.has(id),
+);
 
 /* ---- Preparations : chaque entree a-t-elle un biome source ? ---- */
 const sourcePrep = new Set();
@@ -115,39 +123,75 @@ for (const recompense of Object.values(PREPARATION_UNLOCKS)) {
   if (recompense.blessingId) sourcePrep.add(recompense.blessingId);
   if (recompense.consumableId) sourcePrep.add(recompense.consumableId);
 }
-for (const id of DEFAULT_PLAYER_PROFILE.preparation?.unlockedBlessings || []) sourcePrep.add(id);
-for (const id of DEFAULT_PLAYER_PROFILE.preparation?.unlockedConsumables || []) sourcePrep.add(id);
+for (const id of DEFAULT_PLAYER_PROFILE.preparation?.unlockedBlessings || [])
+  sourcePrep.add(id);
+for (const id of DEFAULT_PLAYER_PROFILE.preparation?.unlockedConsumables || [])
+  sourcePrep.add(id);
 const prepOrphelines = [
   ...Object.keys(BLESSINGS).filter((id) => !sourcePrep.has(id)),
   ...Object.keys(PREP_CONSUMABLES).filter((id) => !sourcePrep.has(id)),
 ];
 
 /* ---- Recompenses attachees a un biome inexistant ---- */
-const recompensesMortes = Object.keys(PREPARATION_UNLOCKS).filter((id) => !BIOMES[id]);
+const recompensesMortes = Object.keys(PREPARATION_UNLOCKS).filter(
+  (id) => !BIOMES[id],
+);
 const lootMort = Object.keys(LOOT_TABLES).filter((id) => !BIOMES[id]);
 
 const rapport = [
-  ["Biomes qu'aucun autre ne debloque", biomesOrphelins, Object.keys(BIOMES).length],
-  ["Monstres places dans aucune zone", monstresOrphelins, Object.keys(MONSTERS).length],
-  ["Objets qu'aucune source ne lache", objetsOrphelins, Object.keys(ITEMS).filter((i) => ITEMS[i].type).length],
+  [
+    "Biomes qu'aucun autre ne debloque",
+    biomesOrphelins,
+    Object.keys(BIOMES).length,
+  ],
+  [
+    "Monstres places dans aucune zone",
+    monstresOrphelins,
+    Object.keys(MONSTERS).length,
+  ],
+  [
+    "Objets qu'aucune source ne lache",
+    objetsOrphelins,
+    Object.keys(ITEMS).filter((i) => ITEMS[i].type).length,
+  ],
   ["Cendres sans source", cendresOrphelines, Object.keys(ASHES_OF_WAR).length],
-  ["Preparations sans biome source", prepOrphelines, Object.keys(BLESSINGS).length + Object.keys(PREP_CONSUMABLES).length],
-  ["Recompenses sur un biome inexistant", recompensesMortes, Object.keys(PREPARATION_UNLOCKS).length],
-  ["Tables de butin sur un biome inexistant", lootMort, Object.keys(LOOT_TABLES).length],
+  [
+    "Preparations sans biome source",
+    prepOrphelines,
+    Object.keys(BLESSINGS).length + Object.keys(PREP_CONSUMABLES).length,
+  ],
+  [
+    "Recompenses sur un biome inexistant",
+    recompensesMortes,
+    Object.keys(PREPARATION_UNLOCKS).length,
+  ],
+  [
+    "Tables de butin sur un biome inexistant",
+    lootMort,
+    Object.keys(LOOT_TABLES).length,
+  ],
 ];
 
 let total = 0;
 for (const [titre, liste, sur] of rapport) {
   total += liste.length;
-  console.log(`${titre.padEnd(44)} ${String(liste.length).padStart(3)} / ${sur}`);
+  console.log(
+    `${titre.padEnd(44)} ${String(liste.length).padStart(3)} / ${sur}`,
+  );
 }
 console.log(NL + `${total} element(s) inatteignable(s).` + NL);
 for (const [titre, liste] of rapport) {
   if (!liste.length) continue;
   console.log(`--- ${titre} ---`);
   for (const id of liste) {
-    const nom = BIOMES[id]?.name || MONSTERS[id]?.name || ITEMS[id]?.name
-      || ASHES_OF_WAR[id]?.name || BLESSINGS[id]?.name || PREP_CONSUMABLES[id]?.name || "";
+    const nom =
+      BIOMES[id]?.name ||
+      MONSTERS[id]?.name ||
+      ITEMS[id]?.name ||
+      ASHES_OF_WAR[id]?.name ||
+      BLESSINGS[id]?.name ||
+      PREP_CONSUMABLES[id]?.name ||
+      "";
     console.log(`  ${String(nom).slice(0, 36).padEnd(38)} ${id}`);
   }
   console.log("");

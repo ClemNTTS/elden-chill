@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 /*
  * Quand un joueur obtient-il REELLEMENT chaque cendre de guerre ?
  *
@@ -18,7 +19,6 @@
 import { BIOMES, LOOT_TABLES } from "../biome.js";
 import { MONSTERS } from "../monster.js";
 import { BIOME_GUIDE } from "../world-map.js";
-import { readFileSync } from "fs";
 
 /* Les noms des cendres se lisent au texte : ashes.js importe combat.js, qui
  * remonte jusqu'a game.js et son objet window. */
@@ -65,7 +65,7 @@ for (const [biomeId, biome] of Object.entries(BIOMES)) {
       ajouter(drop.ashId, {
         biome: biomeId,
         voie: `rare ${rareId}`,
-        parRun: 1 - Math.pow(1 - parApparition, apparitions),
+        parRun: 1 - (1 - parApparition) ** apparitions,
       });
     }
   }
@@ -79,7 +79,9 @@ const lignes = Object.keys(nomsCendres).map((ashId) => {
     niveau: BIOME_GUIDE[s.biome]?.recommendedLevel?.[0] ?? null,
   }));
   const plusTot = parBiome.length
-    ? parBiome.reduce((a, b) => ((a.niveau ?? 1e9) <= (b.niveau ?? 1e9) ? a : b))
+    ? parBiome.reduce((a, b) =>
+        (a.niveau ?? 1e9) <= (b.niveau ?? 1e9) ? a : b,
+      )
     : null;
   const meilleur = parBiome.length
     ? parBiome.reduce((a, b) => (a.parRun >= b.parRun ? a : b))
@@ -90,8 +92,10 @@ const lignes = Object.keys(nomsCendres).map((ashId) => {
     voie: plusTot?.voie ?? "—",
     parRun: plusTot?.parRun ?? 0,
     /* Esperance : nombre de fois qu'il faut terminer le biome. */
-    runs: plusTot?.parRun ? 1 / plusTot.parRun : Infinity,
-    meilleurRuns: meilleur?.parRun ? 1 / meilleur.parRun : Infinity,
+    runs: plusTot?.parRun ? 1 / plusTot.parRun : Number.POSITIVE_INFINITY,
+    meilleurRuns: meilleur?.parRun
+      ? 1 / meilleur.parRun
+      : Number.POSITIVE_INFINITY,
   };
 });
 
@@ -117,6 +121,8 @@ console.log("\ncendres : " + lignes.length);
 console.log("qui demandent plus de 20 runs du biome : " + lentes.length);
 for (const l of lentes) {
   console.log(
-    "  " + l.nom.padEnd(34) + (Number.isFinite(l.runs) ? l.runs.toFixed(0) + " runs" : "jamais"),
+    "  " +
+      l.nom.padEnd(34) +
+      (Number.isFinite(l.runs) ? l.runs.toFixed(0) + " runs" : "jamais"),
   );
 }

@@ -1,7 +1,7 @@
-import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
+import { BIOMES } from "./biome.js";
 import { CRIT_BASE, syncCritStats } from "./crit.js";
 import { getMaxLevel } from "./rebirth.js";
-import { BIOMES } from "./biome.js";
+import { decodeLegacySave, openSave, sealSave } from "./save-crypto.js";
 import {
   CAMP_SCREEN_IDS,
   LOCAL_PREFS_KEY,
@@ -10,7 +10,7 @@ import {
   isCompatibleSaveVersion,
   normalizePlayerProfile,
 } from "./shared/player-profile.js";
-import { decodeLegacySave, openSave, sealSave } from "./save-crypto.js";
+import { DEFAULT_GAME_STATE, gameState, setGameState } from "./state.js";
 
 export const SAVE_NAME = "eldenChillSave";
 export const SAVE_BACKUP_NAME = "eldenChillSaveBackup";
@@ -227,11 +227,15 @@ const migrateCritToSkillPoints = (profile) => {
 
   const chanceLevels = Math.max(
     0,
-    Math.round(((stats.critChance ?? CRIT_BASE.chance) - CRIT_BASE.chance) / 0.01),
+    Math.round(
+      ((stats.critChance ?? CRIT_BASE.chance) - CRIT_BASE.chance) / 0.01,
+    ),
   );
   const damageLevels = Math.max(
     0,
-    Math.round(((stats.critDamage ?? CRIT_BASE.damage) - CRIT_BASE.damage) / 0.1),
+    Math.round(
+      ((stats.critDamage ?? CRIT_BASE.damage) - CRIT_BASE.damage) / 0.1,
+    ),
   );
   const spent = chanceLevels + damageLevels;
 
@@ -313,7 +317,9 @@ const hydrate = (profile) => {
     withOfflineTime.playerEffects = [];
     withOfflineTime.ennemyEffects = [];
     withOfflineTime.ashesOfWaruses = {};
-    console.info("[save] expedition interrompue par un rechargement, retour au camp");
+    console.info(
+      "[save] expedition interrompue par un rechargement, retour au camp",
+    );
   }
 
   setGameState(withOfflineTime);

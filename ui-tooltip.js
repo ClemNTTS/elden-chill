@@ -1,3 +1,5 @@
+import { ASHES_OF_WAR } from "./ashes.js";
+import { HAZARD_LABELS, ITEM_SETS } from "./constants.js";
 /*
  * Panneau de description : contenu, positionnement et cablage des evenements.
  *
@@ -11,8 +13,6 @@
  * Tout passe maintenant par `attachTooltipEvents`, seul point d'entree.
  */
 import { ITEMS } from "./item.js";
-import { HAZARD_LABELS, ITEM_SETS } from "./constants.js";
-import { ASHES_OF_WAR } from "./ashes.js";
 import { gameState, getEffectiveStats } from "./state.js";
 import { applyPreparationStats, getItemRarity } from "./systems.js";
 
@@ -108,7 +108,7 @@ export const showTooltip = (e, item) => {
     setInfo += `<strong style="color:var(--hover-btn)">PANOPLIE : ${setDef.name} (${count}/3)</strong>`;
 
     Object.keys(setDef.bonuses).forEach((tier) => {
-      const isActive = count >= parseInt(tier);
+      const isActive = count >= Number.parseInt(tier);
       const color = isActive ? "#4dff4d" : "#777";
       const prefix = isActive ? "âœ…" : "ðŸ”’";
       const bonusDesc = setDef.bonuses[tier].desc; // Utilise la variable du set
@@ -143,7 +143,7 @@ const getProjectedEffectiveStats = (item) => {
     simulatedEquipped[slotKey] = item.id;
   }
 
-  let effStats = {
+  const effStats = {
     ...gameState.stats,
     attacksPerTurn: 1,
     runeGainMult: 0,
@@ -156,7 +156,7 @@ const getProjectedEffectiveStats = (item) => {
       const itemId = simulatedEquipped[equippedSlot];
       const itemData = ITEMS[itemId];
 
-      if (itemData && itemData[type]) {
+      if (itemData?.[type]) {
         const invItem = gameState.inventory.find(
           (inventoryItem) => inventoryItem.id === itemId,
         );
@@ -184,9 +184,9 @@ const getProjectedEffectiveStats = (item) => {
   Object.keys(setCounts).forEach((setName) => {
     const count = setCounts[setName];
     const setDef = ITEM_SETS[setName];
-    if (setDef && setDef.bonuses) {
+    if (setDef?.bonuses) {
       for (let i = 1; i <= count; i++) {
-        if (setDef.bonuses[i] && setDef.bonuses[i].effect) {
+        if (setDef.bonuses[i]?.effect) {
           setDef.bonuses[i].effect(effStats);
         }
       }
@@ -315,7 +315,7 @@ const showItemComparisonTooltip = (e, item) => {
     }
 
     Object.keys(setDef.bonuses).forEach((tier) => {
-      const isActive = projectedCount >= parseInt(tier, 10);
+      const isActive = projectedCount >= Number.parseInt(tier, 10);
       const prefix = isActive ? "[Actif]" : "[Verrouille]";
       const bonusDesc = setDef.bonuses[tier].desc;
       setInfo += `<br><span class="tooltip-set-bonus${isActive ? " is-active" : ""}">${prefix} [${tier} pcs] : ${bonusDesc}</span>`;
@@ -430,7 +430,6 @@ export const hideTooltip = () => {
   document.getElementById("tooltip").classList.add("tooltip-hidden");
 };
 
-
 /*
  * Filet de securite : sur mobile, le panneau restait affiche indefiniment.
  *
@@ -507,7 +506,6 @@ export const attachTooltipEvents = (element, itemOrId, isAsh = false) => {
   };
   element.onpointercancel = () => hideTooltip();
 };
-
 
 /* Exporte pour ui.js, qui le reexporte aux appelants historiques. */
 export { showItemComparisonTooltip };

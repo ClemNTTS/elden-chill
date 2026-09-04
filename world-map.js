@@ -343,7 +343,8 @@ export const BIOME_GUIDE = {
     y: 30,
     recommendedLevel: [147, 184],
     danger: "Eleve",
-    focus: "Un village en fete. Les tambours accelerent et ne s'arretent jamais.",
+    focus:
+      "Un village en fete. Les tambours accelerent et ne s'arretent jamais.",
     pathRole: "Detour d'Altus",
     hazards: ["folie"],
   },
@@ -464,7 +465,8 @@ export const BIOME_GUIDE = {
     y: 52,
     recommendedLevel: [172, 217],
     danger: "Eleve",
-    focus: "Gurranq echange des racines de mort contre du butin. Aucune elite ici.",
+    focus:
+      "Gurranq echange des racines de mort contre du butin. Aucune elite ici.",
     pathRole: "Zone de recolte",
     hazards: [],
   },
@@ -521,6 +523,6 @@ export function getBiomeDangerClass(biomeId) {
   return danger
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\p{Diacritic}/gu, "")
     .replace(/\s+/g, "-");
 }

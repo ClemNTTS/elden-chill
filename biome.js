@@ -13,7 +13,7 @@ export const LOOT_TABLES = {
     Tier 1 -> 2 Biomes
   ============================*/
   limgrave_east: [
-    { ashId: "bloody_slash", chance: 0.2 },   // Entaille Sanglante : ~6 runs
+    { ashId: "bloody_slash", chance: 0.2 }, // Entaille Sanglante : ~6 runs
     { id: "bloodhound_fang", chance: 0.4 },
     { id: "leather_vest", chance: 0.2 },
     { id: "kama", chance: 0.4 },
@@ -28,22 +28,17 @@ export const LOOT_TABLES = {
     { id: "burned_dragon_hearth", chance: 0.15 },
     { id: "burn_sword", chance: 0.5 },
   ],
-  caelid_west: [
-    { ashId: "great_shield", chance: 0.1 },
-    { id: "keen_dagger", chance: 0.6 },
-    { id: "leather_boots", chance: 0.3 },
-  ],
   /*===========================
     Tier 3
   ============================*/
   weeping_peninsula: [
-    { ashId: "great_shield", chance: 0.2 },   // Rempart Inebranlable : ~6 runs
+    { ashId: "great_shield", chance: 0.2 }, // Rempart Inebranlable : ~6 runs
     { id: "zamor_curved_sword", chance: 0.5 },
     { id: "radagon_scarseal", chance: 0.5 },
   ],
 
   enter_stormwind_castle: [
-    { ashId: "storm_stomp", chance: 0.2 },   // Pietinement Tempetueux : ~6 runs
+    { ashId: "storm_stomp", chance: 0.2 }, // Pietinement Tempetueux : ~6 runs
     { id: "twin_blade", chance: 0.5 },
     { id: "forged_grip", chance: 0.5 },
   ],
@@ -383,7 +378,6 @@ export const BIOMES = {
     monsters: ["rotten_stray", "kindred_of_rot"],
     boss: "commander_oneil_weak",
     length: 14,
-    unlocks: null,
     unlocks: ["caelid_south", "caelid_dragonbarrow"],
   },
 
@@ -443,7 +437,11 @@ export const BIOMES = {
   altus_plateau: {
     name: "Plateau d'Altus",
     monsters: ["leyndell_soldier", "altus_omen", "altus_praetor_guard"],
-    rareMonsters: ["tree_sentinel_altus", "wormface_altus", "altus_chariot_knight"],
+    rareMonsters: [
+      "tree_sentinel_altus",
+      "wormface_altus",
+      "altus_chariot_knight",
+    ],
     maxRareSpawns: 3,
     boss: "draconic_tree_sentinel",
     length: 15,
@@ -839,4 +837,3 @@ export const BIOMES = {
     traits: ["gauntlet"],
   },
 };
-

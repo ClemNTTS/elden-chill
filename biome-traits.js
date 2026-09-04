@@ -91,8 +91,7 @@ export const BIOME_TRAITS = {
 
   ember_field: {
     name: "Braises anciennes",
-    detail:
-      "Le sol couve encore : 2 tours de Brulure appliques a chaque tour.",
+    detail: "Le sol couve encore : 2 tours de Brulure appliques a chaque tour.",
     onTurn: () => {
       applyEffect(gameState.playerEffects, "BURN", 2);
       return [];

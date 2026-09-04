@@ -20,15 +20,24 @@ for (const [id, item] of Object.entries(ITEMS)) {
   const src = item.funcOnHit?.toString() || "";
   for (const aff of Object.keys(PROCS)) {
     if (!src.includes(aff)) continue;
-    const m = src.match(/Math\.random\(\) < ([0-9.]+) \+ ([0-9.]+) \* itemLevel/);
+    const m = src.match(
+      /Math\.random\(\) < ([0-9.]+) \+ ([0-9.]+) \* itemLevel/,
+    );
     const chance = m ? Math.min(1, +m[1] + +m[2] * 10) : 0.3;
     (sources[aff] ||= []).push({ id, nom: item.name, chance });
   }
 }
 
 const CIBLES = ["elden_beast", "hoarah_loux", "placidusax", "malenia_blade"];
-console.log("Degats par tour d'une affliction en % de PV max, a 6 attaques par tour :\n");
-console.log("boss".padEnd(30) + "PV".padStart(9) + "   gelure/tour".padStart(15) + "  fleau/tour".padStart(14));
+console.log(
+  "Degats par tour d'une affliction en % de PV max, a 6 attaques par tour :\n",
+);
+console.log(
+  "boss".padEnd(30) +
+    "PV".padStart(9) +
+    "   gelure/tour".padStart(15) +
+    "  fleau/tour".padStart(14),
+);
 for (const id of CIBLES) {
   const m = MONSTERS[id];
   if (!m) continue;
@@ -48,7 +57,11 @@ for (const id of CIBLES) {
   }
   console.log(ligne.join(""));
 }
-console.log("\nA comparer aux degats bruts d'un bon build : environ 700 par tour.\n");
+console.log(
+  "\nA comparer aux degats bruts d'un bon build : environ 700 par tour.\n",
+);
 for (const [aff, list] of Object.entries(sources)) {
-  console.log(`${aff} applique par : ${list.map((s) => `${s.nom} (${Math.round(s.chance * 100)}%)`).join(", ")}`);
+  console.log(
+    `${aff} applique par : ${list.map((s) => `${s.nom} (${Math.round(s.chance * 100)}%)`).join(", ")}`,
+  );
 }

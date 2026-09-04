@@ -37,7 +37,10 @@ export const LANDS_MONSTERS = {
       // premier est le bon reflexe, et c'est tout le propos du biome.
       enemy._beat = (enemy._beat || 0) + 1;
       if (enemy._beat % 2 === 1) {
-        return { msg: "Le tambour redouble : la danse s'emballe.", skipAttack: true };
+        return {
+          msg: "Le tambour redouble : la danse s'emballe.",
+          skipAttack: true,
+        };
       }
       return { dmgMult: 1.5, msg: "Le tambour frappe en mesure." };
     },
@@ -67,12 +70,16 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.32 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "L'apotre deroule son corps comme une lanière et cesse de viser.",
+    flavorTextPhase2:
+      "L'apotre deroule son corps comme une lanière et cesse de viser.",
     effectsPhase2: { id: "MADNESS", duration: 4, chance: 0.45 },
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.0, msg: "L'apotre s'etire sur toute la place et fauche." };
+        return {
+          dmgMult: 2.0,
+          msg: "L'apotre s'etire sur toute la place et fauche.",
+        };
       }
       return { msg: "L'apotre avance en glissant, faux basse." };
     },
@@ -114,9 +121,15 @@ export const LANDS_MONSTERS = {
       enemy._thorn = (enemy._thorn || 0) + 1;
       if (enemy._thorn % 3 === 0) {
         enemy.armor += 30;
-        return { msg: "Les ronces se referment sur son armure.", skipAttack: true };
+        return {
+          msg: "Les ronces se referment sur son armure.",
+          skipAttack: true,
+        };
       }
-      return { dmgMult: 1.35, msg: "Le rejeton fouette de ses lianes barbelees." };
+      return {
+        dmgMult: 1.35,
+        msg: "Le rejeton fouette de ses lianes barbelees.",
+      };
     },
   },
   elemer_briar: {
@@ -137,10 +150,16 @@ export const LANDS_MONSTERS = {
       // pour le joueur, mais le suivant fait mal.
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 1) {
-        return { msg: "Elemer disparait dans un tourbillon de ronces.", skipAttack: true };
+        return {
+          msg: "Elemer disparait dans un tourbillon de ronces.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 3 === 2) {
-        return { dmgMult: 2.2, msg: "Il reapparait derriere vous, lame en avant." };
+        return {
+          dmgMult: 2.2,
+          msg: "Il reapparait derriere vous, lame en avant.",
+        };
       }
       return { msg: "Elemer croise sa lame et la vôtre." };
     },
@@ -167,7 +186,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._grip = (enemy._grip || 0) + 1;
       if (enemy._grip % 4 === 0) {
-        return { dmgMult: 2.4, msg: "La Ravisseuse vous enserre et vous broie." };
+        return {
+          dmgMult: 2.4,
+          msg: "La Ravisseuse vous enserre et vous broie.",
+        };
       }
       return { msg: "La Ravisseuse tourne sur ses roues." };
     },
@@ -204,10 +226,16 @@ export const LANDS_MONSTERS = {
       // volontairement long pour recompenser les cendres a fenetre.
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 1 || enemy._p % 4 === 2) {
-        return { msg: "Le Noble se replie en boule et prend de la vitesse.", skipAttack: true };
+        return {
+          msg: "Le Noble se replie en boule et prend de la vitesse.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 4 === 3) {
-        return { dmgMult: 2.8, msg: "La masse du Noble s'abat de tout son poids." };
+        return {
+          dmgMult: 2.8,
+          msg: "La masse du Noble s'abat de tout son poids.",
+        };
       }
       return { msg: "Le Noble se redresse en soufflant." };
     },
@@ -269,7 +297,10 @@ export const LANDS_MONSTERS = {
         return { msg: `Le serpent devore un fidele et regagne ${heal} PV.` };
       }
       if (enemy._p % 4 === 2) {
-        return { dmgMult: 2.1, msg: "Une vague de magma remonte le long de la fosse." };
+        return {
+          dmgMult: 2.1,
+          msg: "Une vague de magma remonte le long de la fosse.",
+        };
       }
       return { msg: "Rykard fait tournoyer le Mangeur de Dieux." };
     },
@@ -325,7 +356,10 @@ export const LANDS_MONSTERS = {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 1) {
         enemy.armor += 45;
-        return { msg: "Le Gardien plante sa lance et se scelle.", skipAttack: true };
+        return {
+          msg: "Le Gardien plante sa lance et se scelle.",
+          skipAttack: true,
+        };
       }
       enemy.armor = Math.max(270, enemy.armor - 45);
       return { dmgMult: 1.7, msg: "Le Gardien libere une onde de sceau." };
@@ -376,7 +410,8 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.6,
-    flavorTextPhase2: "Niall congedie ses spectres et avance seul, sans sa jambe.",
+    flavorTextPhase2:
+      "Niall congedie ses spectres et avance seul, sans sa jambe.",
     effectsPhase2: { id: "SLEEP", duration: 2, chance: 0.3 },
     onTurnAction: (enemy) => {
       // Il invoque : deux tours ou il ne frappe pas mais gagne de l'armure,
@@ -385,11 +420,17 @@ export const LANDS_MONSTERS = {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 1) {
         enemy.armor += 40;
-        return { msg: "Niall appelle deux spectres a ses cotes.", skipAttack: true };
+        return {
+          msg: "Niall appelle deux spectres a ses cotes.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 4 === 3) {
         enemy.armor = Math.max(280, enemy.armor - 40);
-        return { dmgMult: 2.3, msg: "Niall charge, hallebarde chargee de givre." };
+        return {
+          dmgMult: 2.3,
+          msg: "Niall charge, hallebarde chargee de givre.",
+        };
       }
       return { msg: "Niall progresse d'un pas lourd." };
     },
@@ -439,12 +480,16 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "BURN", duration: 4, chance: 0.48 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "L'ecorce se fend et laisse voir le brasier qu'elle contenait.",
+    flavorTextPhase2:
+      "L'ecorce se fend et laisse voir le brasier qu'elle contenait.",
     effectsPhase2: { id: "BURN", duration: 5, chance: 0.62 },
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.4, msg: "L'esprit s'effondre sur vous de toute sa hauteur." };
+        return {
+          dmgMult: 2.4,
+          msg: "L'esprit s'effondre sur vous de toute sa hauteur.",
+        };
       }
       return { msg: "L'esprit rampe le long de la voute." };
     },
@@ -494,7 +539,8 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "SCARLET_ROT", duration: 4, chance: 0.5 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Elle se releve en fleur. « Je suis Malenia, Lame de Miquella. »",
+    flavorTextPhase2:
+      "Elle se releve en fleur. « Je suis Malenia, Lame de Miquella. »",
     effectsPhase2: { id: "SCARLET_ROT", duration: 5, chance: 0.7 },
     onTurnAction: (enemy) => {
       // Elle se soigne de ce qu'elle inflige : la seule facon de la contenir
@@ -548,7 +594,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 2 === 0) {
-        return { dmgMult: 1.9, msg: "Maliketh bondit du mur et retombe lame en avant." };
+        return {
+          dmgMult: 1.9,
+          msg: "Maliketh bondit du mur et retombe lame en avant.",
+        };
       }
       return { msg: "Maliketh court sur les colonnes brisees." };
     },
@@ -564,15 +613,22 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "BURN", duration: 4, chance: 0.5 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Les deux tetes se redressent ensemble. Le temps s'arrete une seconde.",
+    flavorTextPhase2:
+      "Les deux tetes se redressent ensemble. Le temps s'arrete une seconde.",
     effectsPhase2: { id: "STUN", duration: 2, chance: 0.4 },
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 1) {
-        return { msg: "Placidusax disparait. L'air devient immobile.", skipAttack: true };
+        return {
+          msg: "Placidusax disparait. L'air devient immobile.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 4 === 2) {
-        return { dmgMult: 3.0, msg: "Il reapparait au-dessus de vous et souffle." };
+        return {
+          dmgMult: 3.0,
+          msg: "Il reapparait au-dessus de vous et souffle.",
+        };
       }
       return { msg: "Les deux gueules claquent en alternance." };
     },
@@ -615,8 +671,10 @@ export const LANDS_MONSTERS = {
       // seule affliction.
       enemy._p = (enemy._p || 0) + 1;
       const cycle = enemy._p % 3;
-      if (cycle === 0) return { dmgMult: 1.5, msg: "Gideon lance une comete de Ranni." };
-      if (cycle === 1) return { dmgMult: 1.5, msg: "Gideon invoque les lames de Rykard." };
+      if (cycle === 0)
+        return { dmgMult: 1.5, msg: "Gideon lance une comete de Ranni." };
+      if (cycle === 1)
+        return { dmgMult: 1.5, msg: "Gideon invoque les lames de Rykard." };
       return { dmgMult: 1.5, msg: "Gideon deploie les ailes de Placidusax." };
     },
   },
@@ -631,15 +689,22 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.35 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Godfrey jette sa hache et arrache son manteau. « Vois-tu ? »",
+    flavorTextPhase2:
+      "Godfrey jette sa hache et arrache son manteau. « Vois-tu ? »",
     effectsPhase2: { id: "STUN", duration: 2, chance: 0.5 },
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 5 === 0) {
-        return { dmgMult: 3.2, msg: "Hoarah Loux vous saisit et vous ecrase au sol." };
+        return {
+          dmgMult: 3.2,
+          msg: "Hoarah Loux vous saisit et vous ecrase au sol.",
+        };
       }
       if (enemy._p % 5 === 3) {
-        return { dmgMult: 1.8, msg: "Il frappe le sol : l'onde remonte dans vos jambes." };
+        return {
+          dmgMult: 1.8,
+          msg: "Il frappe le sol : l'onde remonte dans vos jambes.",
+        };
       }
       return { msg: "Le Conquerant avance, poings ouverts." };
     },
@@ -680,7 +745,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.4, msg: "Radagon se teleporte et abat le Marteau d'Or." };
+        return {
+          dmgMult: 2.4,
+          msg: "Radagon se teleporte et abat le Marteau d'Or.",
+        };
       }
       return { msg: "Radagon trace un sceau dore dans l'air." };
     },
@@ -696,7 +764,8 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "DEATH_BLIGHT", duration: 3, chance: 0.45 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.4,
-    flavorTextPhase2: "La Bete se replie sur l'Anneau et repand l'Ordre comme une maree.",
+    flavorTextPhase2:
+      "La Bete se replie sur l'Anneau et repand l'Ordre comme une maree.",
     effectsPhase2: { id: "DEATH_BLIGHT", duration: 4, chance: 0.62 },
     onTurnAction: (enemy) => {
       // Elle fuit : un tour sur deux hors de portee. C'est le boss le plus
@@ -704,12 +773,21 @@ export const LANDS_MONSTERS = {
       // pic de degats.
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 2 === 1) {
-        return { msg: "La Bete s'eloigne en nageant dans le vide.", skipAttack: true };
+        return {
+          msg: "La Bete s'eloigne en nageant dans le vide.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 6 === 0) {
-        return { dmgMult: 3.0, msg: "L'Anneau d'Elden se referme : une pluie d'or tombe." };
+        return {
+          dmgMult: 3.0,
+          msg: "L'Anneau d'Elden se referme : une pluie d'or tombe.",
+        };
       }
-      return { dmgMult: 1.6, msg: "La Bete balaie l'espace de sa queue etoilee." };
+      return {
+        dmgMult: 1.6,
+        msg: "La Bete balaie l'espace de sa queue etoilee.",
+      };
     },
   },
 
@@ -771,12 +849,16 @@ export const LANDS_MONSTERS = {
     onHitEffect: { id: "DEATH_BLIGHT", duration: 3, chance: 0.4 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
-    flavorTextPhase2: "Gurranq oublie ce qu'il etait et se met a quatre pattes.",
+    flavorTextPhase2:
+      "Gurranq oublie ce qu'il etait et se met a quatre pattes.",
     effectsPhase2: { id: "BLEED", duration: 4, chance: 0.5 },
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.2, msg: "Gurranq laboure le sol de ses deux griffes." };
+        return {
+          dmgMult: 2.2,
+          msg: "Gurranq laboure le sol de ses deux griffes.",
+        };
       }
       return { msg: "Gurranq gronde, affame." };
     },
@@ -815,7 +897,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.5, msg: "L'eclat se lance en avant comme un boulet." };
+        return {
+          dmgMult: 2.5,
+          msg: "L'eclat se lance en avant comme un boulet.",
+        };
       }
       return { msg: "L'eclat roule sur lui-meme en cliquetant." };
     },
@@ -832,7 +917,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 0) {
-        return { dmgMult: 2.0, msg: "La Grande Jarre bascule et ecrase tout sous elle." };
+        return {
+          dmgMult: 2.0,
+          msg: "La Grande Jarre bascule et ecrase tout sous elle.",
+        };
       }
       return { msg: "La Grande Jarre oscille lourdement." };
     },
@@ -870,7 +958,10 @@ export const LANDS_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 0) {
-        return { dmgMult: 2.6, msg: "Astel ouvre une faille : la gravite se retourne." };
+        return {
+          dmgMult: 2.6,
+          msg: "Astel ouvre une faille : la gravite se retourne.",
+        };
       }
       return { msg: "Astel derive au-dessus du sable." };
     },
@@ -906,7 +997,10 @@ export const LANDS_MONSTERS = {
       // Il copie le rythme du joueur : deux coups rapides, puis un lourd.
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 3 === 0) {
-        return { dmgMult: 2.5, msg: "Le Champion enchaine la riposte parfaite." };
+        return {
+          dmgMult: 2.5,
+          msg: "Le Champion enchaine la riposte parfaite.",
+        };
       }
       return { msg: "Le Champion vous rend coup pour coup." };
     },

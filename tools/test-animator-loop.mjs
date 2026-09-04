@@ -42,7 +42,10 @@ const canvas = new Proxy(
   },
 );
 
-globalThis.document = { createElement: () => canvas, getElementById: () => canvas };
+globalThis.document = {
+  createElement: () => canvas,
+  getElementById: () => canvas,
+};
 
 const { SpriteAnimator } = await import("../sprites.js");
 
@@ -76,7 +79,8 @@ if (dessins === 0) echecs.push("une animation bouclee ne dessine pas");
 a.stop();
 const avant = dessins;
 pump(8);
-if (dessins !== avant) echecs.push(`stop() ne tient pas : ${dessins - avant} dessins apres arret`);
+if (dessins !== avant)
+  echecs.push(`stop() ne tient pas : ${dessins - avant} dessins apres arret`);
 
 // 3. Le cas du defaut : fin d'animation non bouclee qui detruit l'animateur.
 const b = new SpriteAnimator(canvas, { cell: 64, scale: 1, fps: 10 });
@@ -93,16 +97,22 @@ b.start();
 pump(10);
 const apresDestruction = dessinsB;
 pump(10);
-if (!b.destroyed) echecs.push("l'animateur n'a pas ete detruit, le scenario n'a pas joue");
+if (!b.destroyed)
+  echecs.push("l'animateur n'a pas ete detruit, le scenario n'a pas joue");
 if (dessinsB !== apresDestruction) {
-  echecs.push(`un animateur DETRUIT dessine encore : ${dessinsB - apresDestruction} dessins`);
+  echecs.push(
+    `un animateur DETRUIT dessine encore : ${dessinsB - apresDestruction} dessins`,
+  );
 }
-if (b.rafId != null) echecs.push(`rafId non nul apres destruction : ${b.rafId}`);
+if (b.rafId != null)
+  echecs.push(`rafId non nul apres destruction : ${b.rafId}`);
 
 // 4. Une animation non bouclee qui se termine sans destruction doit s'arreter.
 const c = new SpriteAnimator(canvas, { cell: 64, scale: 1, fps: 10 });
 let dessinsC = 0;
-c.draw = function () { dessinsC += 1; };
+c.draw = () => {
+  dessinsC += 1;
+};
 c.image = {};
 c.visible = true;
 c.animation = { row: 0, frames: 2, loop: false };
@@ -110,8 +120,14 @@ c.start();
 pump(10);
 const fige = dessinsC;
 pump(10);
-if (dessinsC !== fige) echecs.push(`animation non bouclee : la boucle tourne encore (${dessinsC - fige} dessins)`);
-if (c.rafId != null) echecs.push(`rafId non nul apres la fin d'une animation non bouclee : ${c.rafId}`);
+if (dessinsC !== fige)
+  echecs.push(
+    `animation non bouclee : la boucle tourne encore (${dessinsC - fige} dessins)`,
+  );
+if (c.rafId != null)
+  echecs.push(
+    `rafId non nul apres la fin d'une animation non bouclee : ${c.rafId}`,
+  );
 
 const NL = String.fromCharCode(10);
 if (echecs.length) {
@@ -119,5 +135,7 @@ if (echecs.length) {
   for (const e of echecs) console.log("  - " + e);
   process.exitCode = 1;
 } else {
-  console.log("Les quatre cas passent : boucle vivante, arret durable, aucun dessin apres destruction.");
+  console.log(
+    "Les quatre cas passent : boucle vivante, arret durable, aucun dessin apres destruction.",
+  );
 }

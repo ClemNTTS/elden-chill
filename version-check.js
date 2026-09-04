@@ -1,3 +1,4 @@
+import { saveGame } from "./save.js";
 /*
  * Detection de mise a jour deployee.
  *
@@ -10,7 +11,6 @@
  * dans actions.js que respecCritPoints() jetait silencieusement.
  */
 import { DEFAULT_GAME_STATE } from "./state.js";
-import { saveGame } from "./save.js";
 
 export const CHECK_REFRESH_KEY = "last_hard_refresh_timestamp";
 export const FORCE_VERSION_KEY = "app_version_code";

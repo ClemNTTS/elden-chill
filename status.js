@@ -96,7 +96,7 @@ export const STATUS_EFFECTS = {
     color: "#922b21",
     onTurnStart: (entity) => {
       const baseDamage = Math.max(2, Math.floor((entity.maxHp || 100) * 0.05));
-      const isPlayer = entity.hasOwnProperty("currentHp");
+      const isPlayer = Object.hasOwn(entity, "currentHp");
       const damage = isPlayer
         ? Math.max(
             1,
@@ -129,7 +129,7 @@ export const STATUS_EFFECTS = {
     onTurnStart: (entity) => {
       const max = entity.maxHp || entity.hp || 100;
       let damage = 0;
-      const isPlayer = entity.hasOwnProperty("currentHp");
+      const isPlayer = Object.hasOwn(entity, "currentHp");
 
       if (isPlayer) {
         const eff = getEffectiveStats();
@@ -141,7 +141,8 @@ export const STATUS_EFFECTS = {
         damage = Math.max(
           1,
           Math.floor(
-            damage * (1 - Math.min(0.55, getResistanceForEffect("BURN") * 0.06)),
+            damage *
+              (1 - Math.min(0.55, getResistanceForEffect("BURN") * 0.06)),
           ),
         );
         entity.currentHp -= damage;

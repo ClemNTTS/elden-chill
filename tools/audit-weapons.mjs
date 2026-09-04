@@ -23,7 +23,9 @@ import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 await import("../game.js");
 
-const { gameState, getEffectiveStats, getMagicDamage } = await import("../state.js");
+const { gameState, getEffectiveStats, getMagicDamage } = await import(
+  "../state.js"
+);
 const { ITEMS } = await import("../item.js");
 const { DEFAULT_PLAYER_PROFILE } = await import("../shared/player-profile.js");
 const { ITEM_TYPES } = await import("../constants.js");
@@ -43,7 +45,8 @@ const depth = {};
   while (queue.length) {
     const [id, d] = queue.shift();
     const collect = (itemId) => {
-      if (itemId && (depth[itemId] === undefined || d < depth[itemId])) depth[itemId] = d;
+      if (itemId && (depth[itemId] === undefined || d < depth[itemId]))
+        depth[itemId] = d;
     };
     for (const e of LOOT_TABLES[id] || []) collect(e.id);
     for (const key of ["monsters", "rareMonsters"]) {
@@ -52,7 +55,10 @@ const depth = {};
       }
     }
     for (const n of BIOMES[id]?.unlocks || []) {
-      if (BIOMES[n] && !seen.has(n)) { seen.add(n); queue.push([n, d + 1]); }
+      if (BIOMES[n] && !seen.has(n)) {
+        seen.add(n);
+        queue.push([n, d + 1]);
+      }
     }
   }
 }
@@ -61,8 +67,13 @@ const SEUIL_PRECOCE = 5;
 
 /** Force apportee par une arme a un personnage vierge. */
 const strengthAtZero = (id, level) => {
-  Object.assign(gameState.stats, JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)));
-  gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+  Object.assign(
+    gameState.stats,
+    JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)),
+  );
+  gameState.preparation = JSON.parse(
+    JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+  );
   gameState.inventory = [{ id, name: id, level, count: 0 }];
   gameState.equipped = { weapon: id, armor: null, accessory: null };
   try {
@@ -116,11 +127,23 @@ const dptWith = (id, stats, level) => {
    * "sans emploi". La lecon avait ete notee sans que l'outil soit corrige.
    */
   const st = {
-    vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50,
-    critChance: 0.15, critDamage: 2, ...stats,
+    vigor: 0,
+    strength: 0,
+    dexterity: 0,
+    intelligence: 0,
+    level: 50,
+    critChance: 0.15,
+    critDamage: 2,
+    ...stats,
   };
-  Object.assign(gameState.stats, JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)), st);
-  gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+  Object.assign(
+    gameState.stats,
+    JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)),
+    st,
+  );
+  gameState.preparation = JSON.parse(
+    JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+  );
   gameState.inventory = [{ id, name: id, level, count: 0 }];
   gameState.equipped = { weapon: id, armor: null, accessory: null };
   try {
@@ -166,15 +189,30 @@ const dptWith = (id, stats, level) => {
 
 const strengthWith = (id, stat, level) => {
   const st = {
-    vigor: 0, strength: 0, dexterity: 0, intelligence: 0, level: 50,
-    critChance: 0.15, critDamage: 2,
+    vigor: 0,
+    strength: 0,
+    dexterity: 0,
+    intelligence: 0,
+    level: 50,
+    critChance: 0.15,
+    critDamage: 2,
   };
   st[stat] = 40;
-  Object.assign(gameState.stats, JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)), st);
-  gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+  Object.assign(
+    gameState.stats,
+    JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats)),
+    st,
+  );
+  gameState.preparation = JSON.parse(
+    JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+  );
   gameState.inventory = [{ id, name: id, level, count: 0 }];
   gameState.equipped = { weapon: id, armor: null, accessory: null };
-  try { return getEffectiveStats().strength; } catch { return -1; }
+  try {
+    return getEffectiveStats().strength;
+  } catch {
+    return -1;
+  }
 };
 
 const inutiles = [];
@@ -184,27 +222,48 @@ for (const [id, item] of Object.entries(ITEMS)) {
   if (item.type !== ITEM_TYPES.WEAPON || id === "fists") continue;
 
   // Meilleur ecart face aux poings, sur les quatre builds, au niveau 5.
-  let meilleur = -Infinity;
+  let meilleur = Number.NEGATIVE_INFINITY;
   let meilleurBuild = null;
   for (const build of Object.values(BUILDS)) {
-    const ecart = dptWith(id, build.stats, 5) - dptWith("fists", build.stats, 10);
-    if (ecart > meilleur) { meilleur = ecart; meilleurBuild = build.label; }
+    const ecart =
+      dptWith(id, build.stats, 5) - dptWith("fists", build.stats, 10);
+    if (ecart > meilleur) {
+      meilleur = ecart;
+      meilleurBuild = build.label;
+    }
   }
   if (meilleur <= 0) inutiles.push({ nom: item.name, meilleur, meilleurBuild });
   if (strengthAtZero(id, 1) <= 0) nulles.push(item.name);
 }
 
-console.log(`Reference : les poings donnent ${PLANCHER} de Force a 0 statistique.` + NL);
+console.log(
+  `Reference : les poings donnent ${PLANCHER} de Force a 0 statistique.` + NL,
+);
 
-console.log(`--- ARMES SANS EMPLOI (${inutiles.length}) : degats/tour inferieurs aux poings sur les QUATRE builds` + NL);
+console.log(
+  `--- ARMES SANS EMPLOI (${inutiles.length}) : degats/tour inferieurs aux poings sur les QUATRE builds` +
+    NL,
+);
 for (const w of inutiles) {
-  console.log(`  ${w.nom.slice(0, 34).padEnd(36)} meilleur cas : ${w.meilleurBuild}, ecart ${w.meilleur.toFixed(1)} degats/tour`);
+  console.log(
+    `  ${w.nom.slice(0, 34).padEnd(36)} meilleur cas : ${w.meilleurBuild}, ecart ${w.meilleur.toFixed(1)} degats/tour`,
+  );
 }
-if (!inutiles.length) console.log("  aucune : chaque arme trouve un build ou elle est superieure");
+if (!inutiles.length)
+  console.log("  aucune : chaque arme trouve un build ou elle est superieure");
 
-console.log(NL + `--- INFO : ${nulles.length} armes donnent 0 a statistiques nulles.`);
-console.log("  Normal pour une arme a scaling. Seul cas genant : un personnage neuf");
-console.log("  ou fraichement rembourse qui l'equipe et tape a 0 jusqu'a reinvestir.");
+console.log(
+  NL + `--- INFO : ${nulles.length} armes donnent 0 a statistiques nulles.`,
+);
+console.log(
+  "  Normal pour une arme a scaling. Seul cas genant : un personnage neuf",
+);
+console.log(
+  "  ou fraichement rembourse qui l'equipe et tape a 0 jusqu'a reinvestir.",
+);
 
-console.log(NL + `${Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.WEAPON).length} armes verifiees.`);
+console.log(
+  NL +
+    `${Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.WEAPON).length} armes verifiees.`,
+);
 process.exitCode = inutiles.length ? 1 : 0;
