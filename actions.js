@@ -1,12 +1,24 @@
 import { gameState, runtimeState } from "./state.js";
-import {
-  clearSaveStorage,
-  saveGame,
-  suspendreSauvegarde,
-} from "./save.js";
+import { clearSaveStorage, saveGame, suspendreSauvegarde } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
+import { ActionLog } from "./ui-action-log.js";
+import {
+  NOM_PANOPLIE_MAX,
+  capturerPanoplie,
+  normaliserPanoplies,
+  panoplieVide,
+  resoudrePanoplie,
+} from "./loadouts.js";
 import { BIOMES } from "./biome.js";
+import { CONTRACT_ITEM_IDS } from "./constants.js";
+import { SETS_PAR_ARCHETYPE, piecesDuSet } from "./items/contracts.js";
+import {
+  avancerContrat,
+  genererContrat,
+  normaliserContrat,
+} from "./contracts.js";
+import { addJournalEntry } from "./systems.js";
 import { startExploration } from "./core.js";
 import {
   REBIRTH_LEVEL_BONUS,
@@ -25,7 +37,6 @@ import {
   getCritPointsAvailable,
   resetCritRanks,
   spendCritPoint,
-
 } from "./crit.js";
 
 /*
@@ -83,7 +94,11 @@ export const investRebirthNode = (nodeId) => {
 
 /** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
 export const respecRebirthTree = () => {
-  if (!confirm("Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.")) {
+  if (
+    !confirm(
+      "Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.",
+    )
+  ) {
     return;
   }
   resetRebirthTree();
@@ -102,7 +117,9 @@ export const startTrial = (trialId) => {
   const trial = TRIALS.find((t) => t.id === trialId);
   if (!trial || !canRebirth()) return;
   if (gameState.world.isExploring) {
-    alert("Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.");
+    alert(
+      "Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.",
+    );
     return;
   }
   startExploration(trial.biomeId);
@@ -166,7 +183,8 @@ export const selectPreparationConsumable = (consumableId) => {
     updateUI();
     return;
   }
-  if (!gameState.preparation.unlockedConsumables?.includes(consumableId)) return;
+  if (!gameState.preparation.unlockedConsumables?.includes(consumableId))
+    return;
   gameState.preparation.selectedConsumableId = consumableId;
   saveGame("select_consumable");
   updateUI();
@@ -174,25 +192,25 @@ export const selectPreparationConsumable = (consumableId) => {
 
 export const getUpgradeCost = (statName) => {
   const baseCost = upgradeCosts[statName] || 10;
-  let count = gameState.stats.level;
-  let x = Math.max((count - 11) * 0.02, 0);
-  return Math.floor(baseCost * ((x + 0.1) * Math.pow(count + 81, 2) + 1));
+  const count = gameState.stats.level;
+  const x = Math.max((count - 11) * 0.02, 0);
+  return Math.floor(baseCost * ((x + 0.1) * (count + 81) ** 2 + 1));
 };
 
 export const getMultiUpgradeCost = (statName, count) => {
   let totalCost = 0;
   for (let i = 0; i < count; i += 1) {
     const baseCost = upgradeCosts[statName] || 10;
-    let level = gameState.stats.level + i;
-    let x = Math.max((level - 11) * 0.02, 0);
-    totalCost += Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
+    const level = gameState.stats.level + i;
+    const x = Math.max((level - 11) * 0.02, 0);
+    totalCost += Math.floor(baseCost * ((x + 0.1) * (level + 81) ** 2 + 1));
   }
   return totalCost;
 };
 
 export const upgradeStat = (statName) => {
   if (!MAIN_STATS.has(statName)) return;
-  let cost = getUpgradeCost(statName);
+  const cost = getUpgradeCost(statName);
 
   if (gameState.stats.level >= getMaxLevel()) {
     alert(
@@ -223,7 +241,7 @@ export const upgradeStat = (statName) => {
 
 export const upgradeStatMultiple = (statName, count) => {
   if (!MAIN_STATS.has(statName)) return;
-  let totalCost = getMultiUpgradeCost(statName, count);
+  const totalCost = getMultiUpgradeCost(statName, count);
 
   if (gameState.stats.level + count > getMaxLevel()) {
     alert(
@@ -307,6 +325,334 @@ export const equipItem = (itemId) => {
 
   runtimeState.filterChanged = true;
   saveGame("equip_item");
+  updateUI();
+};
+
+/* ------------------------------------------------------------------ */
+/* Contrats de zone                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Etat des contrats, cree a la volee pour les sauvegardes anterieures. */
+export const getEtatContrats = () => {
+  if (!gameState.contracts || typeof gameState.contracts !== "object") {
+    gameState.contracts = { actif: null, completed: 0, total: 0 };
+  }
+  if (gameState.contracts.actif) {
+    gameState.contracts.actif = normaliserContrat(gameState.contracts.actif);
+  }
+  return gameState.contracts;
+};
+
+/** Le contrat en cours, ou null. */
+export const getContratActif = () => getEtatContrats().actif;
+
+/*
+ * Zones eligibles : celles que le joueur a debloquees.
+ *
+ * Un contrat ne doit jamais viser une zone inaccessible — ce serait une
+ * impasse silencieuse. Les zones anciennes restent dans le tirage : les y
+ * ramener est tout l'objet du systeme.
+ */
+const zonesEligibles = () =>
+  (gameState.world.unlockedBiomes || []).filter((id) => BIOMES[id]);
+
+/*
+ * Archetype dominant du joueur, d'apres ses statistiques investies.
+ *
+ * Les afflictions ne sont pas une statistique : on les detecte a l'equipement,
+ * quand le joueur porte deja des pieces qui posent des statuts. C'est le seul
+ * archetype qui se lit dans le build plutot que dans la feuille de stats.
+ */
+const archetypeDominant = () => {
+  const s = gameState.stats;
+  const portePieceStatut = Object.values(gameState.equipped).some((id) => {
+    const objet = ITEMS[id];
+    return (
+      objet?.funcOnHit &&
+      /Saignement|Putrefaction|Folie|Fleau/i.test(objet.description || "")
+    );
+  });
+  if (portePieceStatut) return "afflictions";
+
+  const candidats = [
+    ["strength", s.strength || 0],
+    ["dexterity", s.dexterity || 0],
+    ["intelligence", s.intelligence || 0],
+    ["vigor", s.vigor || 0],
+  ];
+  candidats.sort((a, b) => b[1] - a[1]);
+  return candidats[0][1] > 0 ? candidats[0][0] : "strength";
+};
+
+/*
+ * Pool de recompense d'un contrat.
+ *
+ * Le tirage est DIRIGE, et c'est indispensable : completer une panoplie de
+ * trois pieces tirees au hasard parmi quinze demanderait des dizaines de
+ * contrats rares ou legendaires. La recompense serait annoncee et jamais
+ * atteinte.
+ *
+ * On vise donc le set de l'archetype du joueur, et en priorite les pieces
+ * qu'il ne possede pas encore. Un set devient completable en trois contrats,
+ * ce qui en fait un objectif plutot qu'une loterie.
+ *
+ * Quand le set est complet, le pool s'ouvre aux autres : le joueur qui a fini
+ * sa panoplie peut en viser une seconde, ou monter le niveau des pieces
+ * acquises grace aux copies.
+ */
+const possede = (id) => gameState.inventory.some((entree) => entree.id === id);
+
+const poolRecompense = () => {
+  const setVise = SETS_PAR_ARCHETYPE[archetypeDominant()];
+  const manquantesDuSet = piecesDuSet(setVise).filter((id) => !possede(id));
+  if (manquantesDuSet.length > 0) return manquantesDuSet;
+
+  /*
+   * Le set vise est complet : on ouvre aux autres panoplies.
+   *
+   * On ne propose JAMAIS une piece deja possedee. Les pieces de contrat sont
+   * `isAlwaysMax` — une copie n'ajoute pas un niveau, elle n'ajoute rien du
+   * tout. Offrir un doublon en recompense d'un contrat legendaire serait pire
+   * que de ne rien offrir, puisque le joueur aurait vu la promesse s'afficher.
+   *
+   * Quand tout est ramasse, le pool est vide et calculerRecompense convertit la
+   * part d'objet en runes.
+   */
+  return CONTRACT_ITEM_IDS.filter((id) => !possede(id));
+};
+
+/**
+ * Propose un nouveau contrat.
+ *
+ * @param {string|null} zonePreferee force la zone (sinon tirage parmi les
+ *   zones debloquees)
+ */
+export const proposerContrat = (zonePreferee = null) => {
+  const etat = getEtatContrats();
+  const zones = zonesEligibles();
+  if (zones.length === 0) return null;
+
+  const biomeId =
+    zonePreferee && zones.includes(zonePreferee)
+      ? zonePreferee
+      : zones[Math.floor(Math.random() * zones.length)];
+
+  const contrat = genererContrat({
+    biomeId,
+    nomBiome: BIOMES[biomeId]?.name || biomeId,
+    niveauJoueur: gameState.stats.level || 1,
+    objetsExclusifs: poolRecompense(),
+  });
+
+  etat.actif = contrat;
+  saveGame("new_contract");
+  updateUI();
+  return contrat;
+};
+
+/** Abandonne le contrat en cours et en tire un autre. */
+export const abandonnerContrat = () => {
+  const etat = getEtatContrats();
+  if (!etat.actif) return;
+  if (
+    !confirm(
+      `Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`,
+    )
+  ) {
+    return;
+  }
+  etat.actif = null;
+  proposerContrat();
+};
+
+/**
+ * Verse la recompense d'un contrat honore et en propose un nouveau.
+ *
+ * Le niveau offert respecte le plafond de progression : un contrat ne doit pas
+ * etre un moyen de le contourner, sans quoi il deviendrait la voie optimale et
+ * viderait la trame principale de son role.
+ */
+export const reclamerContrat = () => {
+  const etat = getEtatContrats();
+  const contrat = etat.actif;
+  if (!contrat || !contrat.honore) return;
+
+  const { runes, objet, niveau } = contrat.recompense;
+
+  if (runes > 0) {
+    gameState.runes.banked += runes;
+    ActionLog(`Contrat honore : +${runes} runes.`, "log-runes");
+  }
+
+  /*
+   * Le pool ne propose jamais une piece deja possedee (voir poolRecompense),
+   * mais une sauvegarde ancienne ou retouchee peut en porter une. On ne cree
+   * pas de doublon : les pieces de contrat sont `isAlwaysMax`, une copie
+   * n'apporterait rien et encombrerait l'inventaire.
+   */
+  if (objet && ITEMS[objet] && !possede(objet)) {
+    gameState.inventory.push({
+      id: objet,
+      name: ITEMS[objet].name,
+      level: ITEMS[objet].isAlwaysMax ? 10 : 1,
+      count: 0,
+    });
+    ActionLog(`OBJET UNIQUE OBTENU : ${ITEMS[objet].name} !`, "log-crit");
+  }
+
+  if (niveau > 0) {
+    if (gameState.stats.level < getMaxLevel()) {
+      gameState.stats.level += niveau;
+      // Le niveau offert va en Vigueur : c'est la statistique la moins
+      // susceptible de casser un build, et la seule dont personne ne regrette
+      // un point.
+      gameState.stats.vigor += niveau;
+      ActionLog(
+        `Contrat legendaire : niveau ${gameState.stats.level} atteint.`,
+        "log-crit",
+      );
+    } else {
+      ActionLog(
+        "Contrat legendaire : niveau maximum deja atteint, le niveau offert est perdu.",
+        "log-event",
+      );
+    }
+  }
+
+  etat.completed = (etat.completed || 0) + 1;
+  etat.total = (etat.total || 0) + 1;
+  etat.actif = null;
+
+  addJournalEntry(
+    "checkpoint",
+    "Contrat honore",
+    `${contrat.titre} (${contrat.rarete}).`,
+    contrat.biomeId,
+  );
+
+  // Renouvellement immediat : le joueur ne doit jamais se retrouver sans
+  // contrat, c'est ce qui fait de ce systeme une boucle et non une liste.
+  proposerContrat();
+};
+
+/**
+ * Signale un evenement de jeu aux contrats. Appele par core.js.
+ *
+ * Le contrat n'avance QUE dans sa zone : `biomeId` est verifie par
+ * avancerContrat. Quand l'objectif tombe, on ne verse rien tout de suite —
+ * le joueur reclame lui-meme, pour que la recompense soit un moment et non
+ * une ligne de journal noyee dans un combat.
+ */
+export const signalerContrat = (evenement, quantite = 1, biomeId = null) => {
+  const etat = getEtatContrats();
+  if (!etat.actif || etat.actif.honore) return;
+
+  const avant = etat.actif.avancement;
+  etat.actif = avancerContrat(etat.actif, evenement, quantite, biomeId);
+
+  if (etat.actif.honore && avant < etat.actif.objectif) {
+    ActionLog(
+      `CONTRAT ACCOMPLI : ${etat.actif.titre} — reclamez votre du au camp.`,
+      "log-crit",
+    );
+  }
+};
+
+/* ------------------------------------------------------------------ */
+/* Panoplies enregistrees                                             */
+/* ------------------------------------------------------------------ */
+
+/** Liste normalisee, toujours de NB_PANOPLIES entrees. */
+export const getPanoplies = () => {
+  gameState.loadouts = normaliserPanoplies(gameState.loadouts);
+  return gameState.loadouts;
+};
+
+const possedeObjet = (id) =>
+  id === "fists" || gameState.inventory.some((entree) => entree.id === id);
+
+const possedeCendre = (id) => (gameState.ashesOfWarOwned || []).includes(id);
+
+/** Enregistre l'equipement courant dans l'emplacement donne. */
+export const enregistrerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  if (!panoplies[index]) return;
+
+  const ancien = panoplies[index];
+  if (
+    !ancien.vide &&
+    !confirm(`Remplacer "${ancien.nom}" par votre equipement actuel ?`)
+  ) {
+    return;
+  }
+
+  // Le nom choisi survit a l'ecrasement : on remplace le contenu, pas
+  // l'etiquette que le joueur a posee dessus.
+  panoplies[index] = capturerPanoplie(gameState, ancien.nom);
+  saveGame("save_loadout");
+  updateUI();
+};
+
+/**
+ * Recharge une panoplie.
+ *
+ * Les pieces manquantes sont ignorees et signalees : une panoplie enregistree
+ * avant une renaissance reference des objets que le joueur n'a plus.
+ */
+export const chargerPanoplie = (index) => {
+  const panoplie = getPanoplies()[index];
+  if (!panoplie || panoplie.vide) return;
+
+  const { applicable, manquants } = resoudrePanoplie(
+    panoplie,
+    possedeObjet,
+    possedeCendre,
+  );
+
+  gameState.equipped.weapon = applicable.weapon;
+  gameState.equipped.armor = applicable.armor;
+  gameState.equipped.accessory = applicable.accessory;
+  gameState.equippedAsh = applicable.ash;
+
+  runtimeState.filterChanged = true;
+  saveGame("load_loadout");
+  updateUI();
+
+  if (manquants.length > 0) {
+    ActionLog(
+      `${panoplie.nom} : ${manquants.length} piece(s) introuvable(s), emplacement laisse vide.`,
+      "log-event",
+    );
+  }
+};
+
+/** Renomme un emplacement. */
+export const renommerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  const panoplie = panoplies[index];
+  if (!panoplie) return;
+
+  const saisi = prompt(
+    `Nom de la panoplie (${NOM_PANOPLIE_MAX} signes maximum) :`,
+    panoplie.nom,
+  );
+  if (saisi === null) return;
+
+  const propre = saisi.trim().slice(0, NOM_PANOPLIE_MAX);
+  panoplie.nom = propre || `Panoplie ${index + 1}`;
+  saveGame("rename_loadout");
+  updateUI();
+};
+
+/** Vide un emplacement. */
+export const effacerPanoplie = (index) => {
+  const panoplies = getPanoplies();
+  const panoplie = panoplies[index];
+  if (!panoplie || panoplie.vide) return;
+  if (!confirm(`Effacer la panoplie "${panoplie.nom}" ?`)) return;
+
+  panoplies[index] = panoplieVide(index);
+  saveGame("clear_loadout");
   updateUI();
 };
 

@@ -1,5 +1,6 @@
 import { runtimeState } from "./state.js";
 import { applyTraitsToEnemy } from "./biome-traits.js";
+import { getFerveurMultDanger } from "./escalation.js";
 import { combatLoop } from "./combat.js";
 import { ActionLog, updateHealthBars, updateUI } from "./ui.js";
 import { MONSTERS } from "./monster.js";
@@ -56,12 +57,20 @@ function createEnemyInstance(template, multiplier) {
     randomMultiplier += Math.random();
   }
 
+  /*
+   * La Ferveur durcit les ennemis a mesure que les cycles s'enchainent, mais
+   * ne touche PAS a leurs runes : la contrepartie du danger passe entierement
+   * par la prime, qui est fragile. Gonfler aussi le gain de base reviendrait a
+   * offrir la moitie de la recompense sans risque.
+   */
+  const danger = getFerveurMultDanger(runtimeState.currentLoopCount);
+
   return applyTraitsToEnemy({
     ...template,
-    maxHp: Math.floor(template.hp * multiplier * randomMultiplier),
-    atk: Math.floor(template.atk * multiplier),
+    maxHp: Math.floor(template.hp * multiplier * randomMultiplier * danger),
+    atk: Math.floor(template.atk * multiplier * danger),
     runes: Math.floor(template.runes * multiplier * randomMultiplier),
-    hp: Math.floor(template.hp * multiplier * randomMultiplier),
+    hp: Math.floor(template.hp * multiplier * randomMultiplier * danger),
   });
 }
 
@@ -71,7 +80,7 @@ function spawnEnemyWithCompanions(
   depth = 0,
   maxDepth = 3,
 ) {
-  let group = [];
+  const group = [];
 
   // === Main enemy ===
   const enemy = createEnemyInstance(template, multiplier);
@@ -128,7 +137,7 @@ export const spawnMonster = (monsterId, sessionId) => {
     console.error(`[spawn] monstre inconnu : "${monsterId}"`);
     return;
   }
-  const multiplier = Math.pow(1.25, runtimeState.currentLoopCount);
+  const multiplier = 1.25 ** runtimeState.currentLoopCount;
 
   let groupSize = 1;
   if (template.groupCombinations) {
@@ -188,7 +197,7 @@ export const spawnMonster = (monsterId, sessionId) => {
 
   Object.values(gameState.equipped).forEach((itemId) => {
     const item = ITEMS[itemId];
-    if (item && item.passiveStatus) {
+    if (item?.passiveStatus) {
       const statusId = item.passiveStatus;
       const hasEffect = gameState.playerEffects.some((e) => e.id === statusId);
       if (!hasEffect) {
@@ -219,19 +228,27 @@ export const spawnMonster = (monsterId, sessionId) => {
     let delay = ms;
     try {
       const save = gameState.save || {};
-      const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+      const use =
+        save.useOfflineTime &&
+        (save.offlineTimeBank || 0) > 0 &&
+        gameState.world.isExploring;
       const M = runtimeState.offlineSpeedMultiplier || 3;
       if (use && M > 1 && ms > 0) {
         const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
         const bankMs = (save.offlineTimeBank || 0) * 1000;
         if (bankMs >= fullSavedMs) {
           delay = Math.max(0, Math.floor(ms / M));
-          save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+          save.offlineTimeBank = Math.max(
+            0,
+            (save.offlineTimeBank || 0) - fullSavedMs / 1000,
+          );
         } else if (bankMs > 0) {
           delay = Math.max(0, Math.floor(ms - bankMs));
           save.offlineTimeBank = 0;
         }
-        try { updateUI(); } catch (e) {}
+        try {
+          updateUI();
+        } catch (e) {}
       }
     } catch (e) {}
     return setTimeout(fn, delay);

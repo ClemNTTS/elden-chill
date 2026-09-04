@@ -10,6 +10,23 @@ Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez
 
 *   **Progression Continue :** Votre personnage combat automatiquement, accumulant des runes même lorsque vous êtes inactif.
 *   **Gestion du Risque :** Les runes collectées lors d'une expédition ne sont pas sécurisées. Vous devez choisir le bon moment pour vous replier au camp, au risque de tout perdre en cas de défaite.
+*   **Ferveur :** chaque cycle enchaîné sans repli monte d'un rang : la prime de
+    runes et de butin augmente, les ennemis durcissent. Cette prime n'est **pas**
+    encaissée cycle par cycle — elle attend dans une réserve versée au repli
+    volontaire, et perdue à la mort. Enchaîner un cycle de plus est un pari, pas
+    un réglage.
+*   **Panoplies :** trois builds enregistrés (arme, armure, accessoire, cendre),
+    rechargeables d'un geste pour changer de spécialisation selon la zone.
+*   **Contrats de zone :** un objectif à la fois, renouvelé dès qu'il est
+    honoré, qui donne une raison de retourner dans les zones déjà dépassées.
+    Trois raretés : les communes paient en runes, les rares y ajoutent un objet,
+    les légendaires offrent un niveau et du butin **introuvable ailleurs**.
+    Ce butin forme cinq panoplies, une par archétype de build (force, dextérité,
+    intelligence, vigueur, afflictions). Les contrats visent la panoplie qui
+    correspond à votre build et proposent en priorité les pièces qui vous
+    manquent : un set se complète en trois contrats, pas en trente. Ces pièces
+    arrivent **directement à leur valeur finale** — elles n'ont pas de niveau à
+    monter, parce qu'il aurait fallu des centaines de contrats pour y parvenir.
 *   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
 *   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
 *   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.
@@ -70,8 +87,9 @@ npm test
 ```
 
 La suite couvre les effets de cendres, les points de competence critique, les
-formules de PV et de soin, l'assainissement des sauvegardes, et des garde-fous
-d'architecture (voir [`tests/`](tests/)). Chaque cas est ecrit a partir d'une
+formules de PV et de soin, l'assainissement des sauvegardes, la Ferveur, les
+panoplies, les contrats, et des garde-fous d'architecture (voir
+[`tests/`](tests/)). Chaque cas est ecrit a partir d'une
 regression reelle : la premiere version de ces tests a ete validee en
 reintroduisant les bugs d'origine et en verifiant qu'ils echouaient.
 
@@ -81,9 +99,16 @@ Le lint et le formatage passent par Biome :
 npm run lint
 ```
 
-Cette etape est **non bloquante en CI** pour l'instant : 177 constats
-subsistent sur la base existante. Elle deviendra bloquante quand ils seront
-resorbes.
+En CI, le lint est **bloquant sur les fichiers que la branche modifie**, et
+seulement informatif sur le reste : 142 constats subsistent sur la base
+existante. Les rendre bloquants d'emblee exigerait un nettoyage de 16 000
+lignes avant toute autre contribution ; les ignorer laisserait la dette
+grossir. La ligne est donc tenue la ou elle se tient — le code ecrit
+aujourd'hui doit etre propre, le reste attend son tour.
+
+`organizeImports` est desactive dans `biome.json` : la regle deplace les
+imports AVANT les commentaires d'en-tete qui expliquent pourquoi chaque module
+existe, ce qui rend ces fichiers moins lisibles, pas plus.
 
 ## Architecture
 

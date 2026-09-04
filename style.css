@@ -3546,3 +3546,462 @@ button:disabled {
 
 #save-transfer-status.is-ok { color: #2ecc71; }
 #save-transfer-status.is-error { color: #e74c3c; }
+
+/* ------------------------------------------------------------------ */
+/* Ferveur : la prime en jeu pendant une expedition                    */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Le bandeau doit se lire d'un coup d'oeil au milieu d'un combat : c'est sur
+ * lui que repose la decision de se replier ou d'enchainer un cycle de plus.
+ * D'ou le montant en gros, le reste en petit.
+ */
+.ferveur-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-soft) 40%, transparent),
+    transparent 70%
+  );
+  font-family: var(--body-font);
+  line-height: 1.3;
+}
+
+.ferveur-banner.is-hidden {
+  display: none;
+}
+
+.ferveur-banner__rank {
+  flex: 0 0 auto;
+  font-family: var(--header-font);
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.ferveur-banner__bank {
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.ferveur-banner__hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+}
+
+/*
+ * Plafond de prime atteint : la menace continue de monter, plus la
+ * recompense. Le bandeau vire au rouge pour que cela se voie sans lire.
+ */
+.ferveur-banner.is-overheated {
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  border-left-color: var(--danger);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--danger) 18%, transparent),
+    transparent 70%
+  );
+}
+
+.ferveur-banner.is-overheated .ferveur-banner__rank {
+  color: var(--danger);
+}
+
+/*
+ * En etroit, l'indice passe sous le montant plutot que de comprimer les deux :
+ * le rang et la somme doivent rester sur la meme ligne, c'est le couple qui
+ * porte la decision.
+ */
+@media (max-width: 640px) {
+  .ferveur-banner {
+    padding: 7px 10px;
+    gap: 2px 8px;
+  }
+
+  .ferveur-banner__rank {
+    font-size: 0.74rem;
+  }
+
+  .ferveur-banner__bank {
+    font-size: 1rem;
+  }
+
+  .ferveur-banner__hint {
+    flex: 1 0 100%;
+    font-size: 0.68rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Panoplies enregistrees                                             */
+/* ------------------------------------------------------------------ */
+
+.loadouts {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.loadouts__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-bottom: 10px;
+}
+
+.loadouts__title {
+  font-family: var(--header-font);
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+
+.loadouts__hint {
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+/*
+ * Une seule colonne par defaut, et non une grille de trois.
+ *
+ * Trois colonnes obligeaient chaque carte a tenir dans un tiers de la largeur :
+ * sur telephone, les quatre boutons d'action passaient a la ligne un par un et
+ * la carte montait a pres de 200 pixels. En colonne, la carte est large, les
+ * boutons tiennent sur deux rangees, et la hauteur totale est plus faible.
+ * Les colonnes reviennent au-dela de 900px, ou la largeur les rend gratuites.
+ */
+.loadouts__list {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .loadouts__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.loadout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.loadout.is-active {
+  border-color: var(--accent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-soft) 35%, transparent),
+    var(--surface)
+  );
+}
+
+/* Un emplacement vide ne doit pas peser autant qu'une panoplie remplie. */
+.loadout.is-empty {
+  padding: 0;
+  border-style: dashed;
+  background: none;
+}
+
+.loadout__save-empty {
+  width: 100%;
+  padding: 14px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-soft);
+  font-family: var(--body-font);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.loadout__save-empty:hover {
+  color: var(--text);
+  background: var(--hover-btn);
+}
+
+.loadout__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.loadout__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--header-font);
+  font-size: 0.92rem;
+  color: var(--text);
+  /* Un nom long ne doit pas pousser le badge hors de la carte. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loadout__badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--surface-strong);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.loadout__pieces {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text-soft);
+  /* Deux lignes au plus : quatre pieces ne doivent pas doubler la carte. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.loadout__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.loadout__actions button {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 0.76rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/*
+ * Equiper est l'action principale : elle prend la place, les autres suivent.
+ *
+ * Selecteur volontairement aussi specifique que `.loadout__actions button`
+ * (0,2,1) : ecrit `.loadout__load` seul (0,1,0), il perdait contre la regle
+ * generique malgre l'ordre, et le bouton principal se retrouvait a la meme
+ * largeur que les trois autres.
+ */
+.loadout__actions .loadout__load {
+  flex: 2 1 100px;
+}
+
+.loadout__actions .loadout__load:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/*
+ * Sur telephone, les actions se rangent en rangees de deux plutot que de se
+ * comprimer sur une seule : sous 44 pixels de large, une cible tactile n'est
+ * plus fiable.
+ */
+/*
+ * Sur telephone : Equiper sur toute la largeur, les trois actions secondaires
+ * en dessous sur une seule rangee.
+ *
+ * Une rangee de trois plutot que deux rangees de deux : a deux par rangee,
+ * "Effacer" se retrouvait seul sur une pleine largeur, aussi gros que l'action
+ * principale alors qu'il est destructif — et la carte montait a 222 pixels.
+ * A trois, chaque bouton fait encore 90 pixels de large et la carte redescend
+ * sous 180.
+ */
+@media (max-width: 640px) {
+  .loadout__actions button {
+    flex: 1 1 calc(33.333% - 4px);
+    /* 44px de haut : en dessous, une cible tactile devient peu fiable. */
+    min-height: 44px;
+    padding: 10px 6px;
+    font-size: 0.72rem;
+  }
+
+  .loadout__actions .loadout__load {
+    flex: 1 1 100%;
+    font-size: 0.8rem;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Contrats de zone                                                   */
+/* ------------------------------------------------------------------ */
+
+.contract-empty {
+  margin: 0 0 10px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.contract {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contract__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+/*
+ * La rarete se lit avant le titre : c'est elle qui dit au joueur combien de
+ * temps l'engagement va lui couter, et donc s'il le prend maintenant.
+ */
+.contract__rarity {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contract--commune .contract__rarity {
+  color: var(--text-soft);
+}
+
+.contract--rare .contract__rarity {
+  color: var(--info, #6ba9ff);
+}
+
+.contract--legendaire .contract__rarity {
+  color: var(--accent);
+}
+
+.contract__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--header-font);
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.contract__text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+
+.contract__progress {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.contract__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  transition: width 0.35s ease;
+}
+
+.contract__progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.contract__reward {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.contract__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.contract__actions button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reclamer est une recompense : le bouton doit se voir comme telle. */
+.contract__claim {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface-strong));
+  font-weight: 700;
+}
+
+.contract.is-done .contract__progress-fill {
+  background: linear-gradient(90deg, var(--accent), var(--accent));
+}
+
+/* Abandonner ne doit pas attirer l'oeil autant que le reste. */
+.contract__abandon {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+/*
+ * Un contrat legendaire se distingue par le cadre, pas par une couleur de
+ * texte de plus : le panneau contient deja trois niveaux de gris.
+ */
+.contract--legendaire {
+  padding: 10px;
+  margin: -10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-soft) 22%, transparent),
+    transparent 60%
+  );
+}
+
+@media (max-width: 640px) {
+  .contract__title {
+    font-size: 0.92rem;
+  }
+
+  .contract__text {
+    font-size: 0.78rem;
+  }
+
+  /*
+   * Le titre passe sous la pastille de rarete plutot que de partager sa ligne :
+   * a 375px, un titre comme "Tete mise a prix : Profondeurs de la Souche" se
+   * retrouvait comprime sur trois lignes etroites a cote de la pastille.
+   */
+  .contract__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

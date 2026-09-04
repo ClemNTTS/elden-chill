@@ -48,6 +48,12 @@ export const DEFAULT_PLAYER_PROFILE = {
     accessory: null,
   },
   inventory: [{ id: "fists", name: "poings", level: 10, count: 0 }],
+  loadouts: [],
+  /*
+   * Contrats de zone. `actif` est le contrat en cours, `completed` le nombre
+   * honore depuis la derniere renaissance — la Lame du Serment le lit.
+   */
+  contracts: { actif: null, completed: 0, total: 0 },
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -132,9 +138,12 @@ export const LOCAL_PREFS_KEY = "eldenChillClientPrefs";
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const toObject = (value, fallback = {}) =>
-  value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
+  value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : fallback;
 
-const toArray = (value, fallback = []) => (Array.isArray(value) ? value : fallback);
+const toArray = (value, fallback = []) =>
+  Array.isArray(value) ? value : fallback;
 
 /*
  * Assainissement des donnees de sauvegarde.
@@ -174,7 +183,12 @@ const textePropre = (valeur, repli = "") => {
   return nettoye || repli;
 };
 
-const entierBorne = (valeur, repli = 0, min = 0, max = Number.MAX_SAFE_INTEGER) => {
+const entierBorne = (
+  valeur,
+  repli = 0,
+  min = 0,
+  max = Number.MAX_SAFE_INTEGER,
+) => {
   const n = Math.floor(Number(valeur));
   if (!Number.isFinite(n)) return repli;
   return Math.min(max, Math.max(min, n));
@@ -280,13 +294,35 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.codex = { ...base.codex, ...toObject(data.codex) };
   base.save = { ...base.save, ...toObject(data.save) };
   base.order = toArray(data.order, []);
+  /*
+   * Panoplies enregistrees. La normalisation fine vit dans loadouts.js — ce
+   * module doit rester sans dependance — on se contente ici de garantir un
+   * tableau.
+   */
+  base.loadouts = toArray(data.loadouts, []);
+  base.contracts = { ...base.contracts, ...toObject(data.contracts) };
+  base.contracts.completed = Math.max(
+    0,
+    Math.floor(Number(base.contracts.completed) || 0),
+  );
+  base.contracts.total = Math.max(
+    0,
+    Math.floor(Number(base.contracts.total) || 0),
+  );
+  // Le contrat lui-meme est normalise par contracts.js, que ce module ne peut
+  // pas importer sans se donner une dependance. On garantit juste un objet.
+  if (base.contracts.actif && typeof base.contracts.actif !== "object") {
+    base.contracts.actif = null;
+  }
 
   base.world.unlockedBiomes = toArray(
     base.world.unlockedBiomes,
     clone(DEFAULT_PLAYER_PROFILE.world.unlockedBiomes),
   );
   if (!base.world.unlockedBiomes.length) {
-    base.world.unlockedBiomes = clone(DEFAULT_PLAYER_PROFILE.world.unlockedBiomes);
+    base.world.unlockedBiomes = clone(
+      DEFAULT_PLAYER_PROFILE.world.unlockedBiomes,
+    );
   }
 
   base.runes.banked = Math.max(0, Math.floor(Number(base.runes.banked) || 0));
@@ -317,7 +353,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.min(999, Math.floor(Number(base.automation.stopAfterCycle) || 0)),
   );
-  base.rebirth = { ...DEFAULT_PLAYER_PROFILE.rebirth, ...toObject(data.rebirth) };
+  base.rebirth = {
+    ...DEFAULT_PLAYER_PROFILE.rebirth,
+    ...toObject(data.rebirth),
+  };
   base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
   base.rebirth.finalCleared = !!base.rebirth.finalCleared;
   base.rebirth.trialsCleared = toObject(base.rebirth.trialsCleared);
@@ -325,7 +364,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.save.version = PLAYER_PROFILE_VERSION;
   base.save.offlineTimeBank = Math.max(
     0,
-    Math.min(MAX_OFFLINE_TIME_BANK, Math.floor(Number(base.save.offlineTimeBank) || 0)),
+    Math.min(
+      MAX_OFFLINE_TIME_BANK,
+      Math.floor(Number(base.save.offlineTimeBank) || 0),
+    ),
   );
   base.save.useOfflineTime = !!base.save.useOfflineTime;
   base.save.sfxVolume = Math.max(
