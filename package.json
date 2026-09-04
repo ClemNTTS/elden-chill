@@ -1,0 +1,12 @@
+{
+  "name": "elden-chill",
+  "version": "2.5.0",
+  "private": true,
+  "type": "module",
+  "description": "Jeu de role incrementiel inspire d'Elden Ring, sans dependance ni build.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "lint": "npx --yes @biomejs/biome@1.9.4 ci .",
+    "format": "npx --yes @biomejs/biome@1.9.4 format --write ."
+  }
+}

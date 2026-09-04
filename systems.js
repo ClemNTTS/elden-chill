@@ -8,20 +8,11 @@ import {
   runtimeState,
 } from "./state.js";
 import { BIOME_GUIDE } from "./world-map.js";
+import { HAZARD_LABELS, ITEM_RARITIES } from "./constants.js";
 
-export const ITEM_RARITIES = {
-  COMMON: "commun",
-  RARE: "rare",
-  LEGENDARY: "legendaire",
-  RELIC: "relique",
-};
-
-export const HAZARD_LABELS = {
-  poison: "Poison",
-  gel: "Gel",
-  folie: "Folie",
-  putrefaction: "Putréfaction",
-};
+/* Reexport : ces tables ont demenage dans constants.js pour rompre le cycle
+ * item.js -> items/*.js -> systems.js -> item.js. */
+export { HAZARD_LABELS, ITEM_RARITIES };
 
 export const registerRunBuff = (buff) => {
   if (!gameState.preparation.activeRunBuffs) {

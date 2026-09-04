@@ -1,4 +1,4 @@
-import { applyEffect } from "./combat.js";
+import { applyEffect } from "./status-apply.js";
 import {
   gameState,
   getEffectiveStats,

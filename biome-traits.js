@@ -16,7 +16,7 @@
 //                  tableau de messages a journaliser.
 
 import { gameState, runtimeState } from "./state.js";
-import { applyEffect } from "./combat.js";
+import { applyEffect } from "./status-apply.js";
 
 /**
  * Chaque trait declare `name` et `detail` : ce sont eux que la fiche de biome

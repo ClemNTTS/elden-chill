@@ -11,11 +11,11 @@
 // jusqu'a +105 au chapitre X, dans le meme rapport que les points de vie des
 // monstres correspondants.
 
-import { applyEffect } from "../combat.js";
+import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
-import { ITEM_RARITIES } from "../systems.js";
-import { ActionLog } from "../ui.js";
+import { ITEM_RARITIES } from "../constants.js";
+import { ActionLog } from "../ui-action-log.js";
 
 export const LANDS_ITEMS = {
   /* ============ FESTIVAL (Dominula) — voie de la folie ============ */

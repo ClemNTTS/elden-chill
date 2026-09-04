@@ -48,6 +48,15 @@ export const mountDomStub = () => {
   globalThis.removeEventListener = noop;
   globalThis.setInterval = noop;
   globalThis.matchMedia = () => ({ matches: false, addEventListener: noop, addListener: noop });
+  // getComputedStyle manquait : updateUI() le lit, donc tout test qui touche
+  // a l'interface jetait avant d'atteindre son assertion.
+  globalThis.getComputedStyle = () =>
+    new Proxy(
+      {},
+      {
+        get: (target, key) => (key === "getPropertyValue" ? () => "" : ""),
+      },
+    );
   globalThis.document = {
     getElementById: () => inertElement,
     querySelector: () => inertElement,

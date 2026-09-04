@@ -571,3 +571,26 @@ export const ITEM_SETS = {
     },
   }
 };
+
+/*
+ * Libelles de rarete et de peril.
+ *
+ * Ils vivaient dans systems.js, qui importe item.js. Or items/lands.js et
+ * items/v21.js les lisent : item.js -> items/lands.js -> systems.js ->
+ * item.js formait un cycle, et aucun de ces modules ne s'importait hors
+ * navigateur. Ce sont des constantes pures ; leur place est ici, dans le seul
+ * module qui n'importe rien.
+ */
+export const ITEM_RARITIES = {
+  COMMON: "commun",
+  RARE: "rare",
+  LEGENDARY: "legendaire",
+  RELIC: "relique",
+};
+
+export const HAZARD_LABELS = {
+  poison: "Poison",
+  gel: "Gel",
+  folie: "Folie",
+  putrefaction: "Putréfaction",
+};
