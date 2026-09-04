@@ -21,6 +21,10 @@ Le jeu se concentre sur une boucle de gameplay simple mais exigeante : préparez
     honoré, qui donne une raison de retourner dans les zones déjà dépassées.
     Trois raretés : les communes paient en runes, les rares y ajoutent un objet,
     les légendaires offrent un niveau et du butin **introuvable ailleurs**.
+    Ce butin forme cinq panoplies, une par archétype de build (force, dextérité,
+    intelligence, vigueur, afflictions). Les contrats visent la panoplie qui
+    correspond à votre build et proposent en priorité les pièces qui vous
+    manquent : un set se complète en trois contrats, pas en trente.
 *   **Optimisation de "Build" :** Avec seulement 3 emplacements d'équipement, chaque choix est crucial. Combinez les objets pour créer des synergies puissantes.
 *   **Système de Butin (Loot) :** Vaincre les boss garantit l'obtention d'un objet. Trouver des copies d'un même objet permet de l'améliorer.
 *   **Plusieurs Zones :** Explorez différents biomes, chacun avec ses propres monstres et son boss redoutable.

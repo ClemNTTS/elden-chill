@@ -16,6 +16,7 @@ import {
 } from "./loadouts.js";
 import { BIOMES } from "./biome.js";
 import { CONTRACT_ITEM_IDS } from "./constants.js";
+import { SETS_PAR_ARCHETYPE, piecesDuSet } from "./items/contracts.js";
 import {
   avancerContrat,
   genererContrat,
@@ -353,6 +354,59 @@ export const getContratActif = () => getEtatContrats().actif;
 const zonesEligibles = () =>
   (gameState.world.unlockedBiomes || []).filter((id) => BIOMES[id]);
 
+/*
+ * Archetype dominant du joueur, d'apres ses statistiques investies.
+ *
+ * Les afflictions ne sont pas une statistique : on les detecte a l'equipement,
+ * quand le joueur porte deja des pieces qui posent des statuts. C'est le seul
+ * archetype qui se lit dans le build plutot que dans la feuille de stats.
+ */
+const archetypeDominant = () => {
+  const s = gameState.stats;
+  const portePieceStatut = Object.values(gameState.equipped).some((id) => {
+    const objet = ITEMS[id];
+    return objet?.funcOnHit && /Saignement|Putrefaction|Folie|Fleau/i.test(objet.description || "");
+  });
+  if (portePieceStatut) return "afflictions";
+
+  const candidats = [
+    ["strength", s.strength || 0],
+    ["dexterity", s.dexterity || 0],
+    ["intelligence", s.intelligence || 0],
+    ["vigor", s.vigor || 0],
+  ];
+  candidats.sort((a, b) => b[1] - a[1]);
+  return candidats[0][1] > 0 ? candidats[0][0] : "strength";
+};
+
+/*
+ * Pool de recompense d'un contrat.
+ *
+ * Le tirage est DIRIGE, et c'est indispensable : completer une panoplie de
+ * trois pieces tirees au hasard parmi quinze demanderait des dizaines de
+ * contrats rares ou legendaires. La recompense serait annoncee et jamais
+ * atteinte.
+ *
+ * On vise donc le set de l'archetype du joueur, et en priorite les pieces
+ * qu'il ne possede pas encore. Un set devient completable en trois contrats,
+ * ce qui en fait un objectif plutot qu'une loterie.
+ *
+ * Quand le set est complet, le pool s'ouvre aux autres : le joueur qui a fini
+ * sa panoplie peut en viser une seconde, ou monter le niveau des pieces
+ * acquises grace aux copies.
+ */
+const poolRecompense = () => {
+  const setVise = SETS_PAR_ARCHETYPE[archetypeDominant()];
+  const pieces = piecesDuSet(setVise);
+  const manquantes = pieces.filter(
+    (id) => !gameState.inventory.some((entree) => entree.id === id),
+  );
+
+  if (manquantes.length > 0) return manquantes;
+  if (pieces.length > 0) return pieces;
+  return CONTRACT_ITEM_IDS;
+};
+
 /**
  * Propose un nouveau contrat.
  *
@@ -373,7 +427,7 @@ export const proposerContrat = (zonePreferee = null) => {
     biomeId,
     nomBiome: BIOMES[biomeId]?.name || biomeId,
     niveauJoueur: gameState.stats.level || 1,
-    objetsExclusifs: CONTRACT_ITEM_IDS,
+    objetsExclusifs: poolRecompense(),
   });
 
   etat.actif = contrat;

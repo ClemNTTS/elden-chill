@@ -67,6 +67,197 @@ test("chaque objet exclusif est complet et equipable", async () => {
   assert.equal(Object.keys(CONTRACT_ITEMS).length, CONTRACT_ITEM_IDS.length);
 });
 
+test("les cinq panoplies couvrent un archetype chacune, en trois pieces", async () => {
+  const { CONTRACT_ITEMS, SETS_PAR_ARCHETYPE, piecesDuSet } = await import(
+    "../items/contracts.js"
+  );
+  const { ITEM_SETS } = await import("../constants.js");
+
+  const archetypes = Object.keys(SETS_PAR_ARCHETYPE);
+  assert.equal(archetypes.length, 5, "un set par archetype de build");
+
+  for (const [archetype, setId] of Object.entries(SETS_PAR_ARCHETYPE)) {
+    const pieces = piecesDuSet(setId);
+    assert.equal(pieces.length, 3, `${setId} doit compter trois pieces`);
+
+    // Une arme, une armure, un accessoire : sinon le set est inequipable,
+    // puisque le jeu n'a que ces trois emplacements.
+    const types = new Set(pieces.map((id) => CONTRACT_ITEMS[id].type));
+    for (const attendu of ["Arme", "Armure", "Accessoire"]) {
+      assert.ok(
+        types.has(attendu),
+        `${setId} (${archetype}) n'a pas de piece de type ${attendu}`,
+      );
+    }
+
+    const def = ITEM_SETS[setId];
+    assert.ok(def, `${setId} n'a pas de bonus de panoplie declare`);
+    assert.ok(def.bonuses?.[2] && def.bonuses?.[3], `${setId} : bonus 2 et 3 requis`);
+  }
+});
+
+test("chaque piece exclusive declare son set", async () => {
+  const { CONTRACT_ITEMS } = await import("../items/contracts.js");
+  const { ITEM_SETS } = await import("../constants.js");
+  for (const [id, objet] of Object.entries(CONTRACT_ITEMS)) {
+    assert.ok(objet.set, `${id} sans set`);
+    assert.ok(ITEM_SETS[objet.set], `${id} pointe vers un set inexistant`);
+  }
+});
+
+test("aucun bonus d'objet de contrat ne depend de l'historique de la partie", async () => {
+  /*
+   * La premiere Lame du Serment lisait le NOMBRE de contrats honores. Le bonus
+   * etait plafonne, mais le principe restait mauvais : compteur jamais remis a
+   * zero, puissance illisible sur la fiche de l'objet, valeur dependante de
+   * l'historique plutot que de l'etat present.
+   *
+   * Ce test echoue si un futur objet relit `contracts.completed` ou `total`.
+   */
+  const source = await import("node:fs").then((fs) =>
+    fs.readFileSync(new URL("../items/contracts.js", import.meta.url), "utf8"),
+  );
+  assert.ok(
+    !/contracts\?\.\s*(completed|total)/.test(source),
+    "un objet de contrat lit un compteur cumulatif",
+  );
+});
+
+test("le Serment est borne par la rarete du contrat en cours", async () => {
+  const { CONTRACT_ITEMS } = await import("../items/contracts.js");
+  const { gameState } = await import("../state.js");
+  const lame = CONTRACT_ITEMS.oath_blade;
+
+  const mesurer = () => {
+    const stats = { strength: 100 };
+    lame.applyMult(stats, 10);
+    return stats.strength;
+  };
+
+  gameState.contracts = { actif: null, completed: 9999, total: 9999 };
+  const sansContrat = mesurer();
+
+  gameState.contracts.actif = { rarete: "commune", honore: false };
+  const commune = mesurer();
+  gameState.contracts.actif = { rarete: "legendaire", honore: false };
+  const legendaire = mesurer();
+
+  assert.ok(commune > sansContrat, "un contrat en cours doit donner un bonus");
+  assert.ok(legendaire > commune, "le legendaire doit payer plus que la commune");
+
+  // Le plafond est atteint des le legendaire : rien ne peut aller au-dela.
+  gameState.contracts.actif = { rarete: "legendaire", honore: true };
+  assert.equal(
+    mesurer(),
+    sansContrat,
+    "un contrat deja honore ne doit plus donner de bonus",
+  );
+
+  // Et surtout : 9999 contrats honores n'y changent rien.
+  assert.equal(
+    sansContrat,
+    118,
+    "sans contrat en cours, seul le +18% de base s'applique",
+  );
+  gameState.contracts = { actif: null, completed: 0, total: 0 };
+});
+
+test("une panoplie complete reste dans une fourchette raisonnable", async () => {
+  /*
+   * Garde-fou d'equilibrage, pas de correction.
+   *
+   * Les pieces se cumulent avec le bonus de set, et plusieurs convertissent
+   * une statistique en une autre (armure -> force, intelligence -> zone). Une
+   * conversion mal calibree ne produit pas d'erreur : elle produit un build
+   * qui ecrase tous les autres, en silence.
+   *
+   * On borne donc le gain d'une panoplie de niveau 1 sur des statistiques
+   * egales. Le seuil est large a dessein : ce test attrape un facteur dix, pas
+   * un ajustement de dix pour cent.
+   */
+  const { gameState, getEffectiveStats } = await import("../state.js");
+  const { SETS_PAR_ARCHETYPE, CONTRACT_ITEMS, piecesDuSet } = await import(
+    "../items/contracts.js"
+  );
+
+  const statsDeBase = {
+    level: 60,
+    strength: 100,
+    dexterity: 100,
+    intelligence: 100,
+    vigor: 100,
+    armor: 100,
+    splashDamage: 0,
+    critChance: 0.05,
+    critDamage: 1.5,
+    critRanks: { chance: 0, damage: 0 },
+    flatDamagePenetration: 0,
+    percentDamagePenetration: 0,
+    runesSpent: 0,
+  };
+
+  const mesurer = (equipement, inventaire) => {
+    gameState.stats = { ...statsDeBase };
+    gameState.inventory = inventaire;
+    gameState.equipped = equipement;
+    gameState.preparation = { activeRunBuffs: [] };
+    return getEffectiveStats();
+  };
+
+  const nu = mesurer(
+    { weapon: null, armor: null, accessory: null },
+    [{ id: "fists", name: "poings", level: 10, count: 0 }],
+  );
+
+  for (const [archetype, setId] of Object.entries(SETS_PAR_ARCHETYPE)) {
+    const pieces = piecesDuSet(setId);
+    const equipement = { weapon: null, armor: null, accessory: null };
+    for (const id of pieces) {
+      const type = CONTRACT_ITEMS[id].type;
+      const cle =
+        type === "Arme" ? "weapon" : type === "Armure" ? "armor" : "accessory";
+      equipement[cle] = id;
+    }
+
+    const equipe = mesurer(equipement, [
+      { id: "fists", name: "poings", level: 10, count: 0 },
+      ...pieces.map((id) => ({
+        id,
+        name: CONTRACT_ITEMS[id].name,
+        level: 1,
+        count: 0,
+      })),
+    ]);
+
+    for (const [cle, valeur] of Object.entries(equipe)) {
+      if (typeof valeur === "number") {
+        assert.ok(
+          Number.isFinite(valeur),
+          `${setId} : ${cle} vaut ${valeur}`,
+        );
+      }
+    }
+
+    for (const cle of ["strength", "dexterity", "intelligence", "vigor", "armor"]) {
+      const rapport = equipe[cle] / (nu[cle] || 1);
+      assert.ok(
+        rapport <= 5,
+        `${setId} (${archetype}) multiplie ${cle} par ${rapport.toFixed(1)} : verifier la conversion`,
+      );
+    }
+
+    // Le set doit tout de meme apporter quelque chose de visible.
+    const cleArchetype =
+      archetype === "afflictions" ? "flatDamagePenetration" : archetype;
+    assert.ok(
+      equipe[cleArchetype] > nu[cleArchetype],
+      `${setId} n'ameliore pas ${cleArchetype}, sa raison d'etre`,
+    );
+  }
+
+  gameState.stats = { ...statsDeBase };
+});
+
 test("seule la rarete legendaire donne un niveau", () => {
   for (const rarete of Object.values(c.RARETES)) {
     const r = c.calculerRecompense(rarete, 50, "oath_blade");
