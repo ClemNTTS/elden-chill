@@ -727,16 +727,12 @@ const updateEquipmentDisplay = () => {
           false,
           getItemIcon(itemId, itemInInv.level),
         );
-        slot.onmouseenter = (e) => showItemComparisonTooltip(e, itemInInv);
-        slot.onmousemove = (e) => moveTooltip(e);
-        slot.onmouseleave = () => hideTooltip();
+        attachTooltipEvents(slot, itemInInv);
         return;
       }
     }
     renderSlotContent(slot, "Emplacement vide", "Aucun objet equipe", true);
-    slot.onmouseenter = null;
-    slot.onmousemove = null;
-    slot.onmouseleave = null;
+    detachTooltipEvents(slot);
   });
 
   const ashSlot = document.getElementById("slot-ash");
@@ -750,9 +746,7 @@ const updateEquipmentDisplay = () => {
       false,
       getAshIcon(equippedAshId),
     );
-    ashSlot.onmouseenter = (e) => showAshTooltip(e, equippedAshId);
-    ashSlot.onmousemove = (e) => moveTooltip(e);
-    ashSlot.onmouseleave = () => hideTooltip();
+    attachTooltipEvents(ashSlot, equippedAshId, true);
   } else {
     renderSlotContent(
       ashSlot,
@@ -760,9 +754,7 @@ const updateEquipmentDisplay = () => {
       "Selectionnez une ouverture",
       true,
     );
-    ashSlot.onmouseenter = null;
-    ashSlot.onmousemove = null;
-    ashSlot.onmouseleave = null;
+    detachTooltipEvents(ashSlot);
   }
 };
 
@@ -797,9 +789,7 @@ const updateInventoryEquippedDisplay = () => {
           <strong class="inventory-equipped-name">${ashData.name}</strong>
           <span class="inventory-equipped-meta">${runtimeState.ashUsesLeft}/${ashData.maxUses} charges</span>
         `;
-        card.onmouseenter = (e) => showAshTooltip(e, equippedAshId);
-        card.onmousemove = (e) => moveTooltip(e);
-        card.onmouseleave = () => hideTooltip();
+        attachTooltipEvents(card, equippedAshId, true);
       } else {
         card.classList.add("inventory-equipped-empty");
         card.innerHTML = `
@@ -2759,9 +2749,7 @@ const peindreCendres = (container) => {
     `;
 
     btn.onclick = () => equipAsh(ashId);
-    btn.onmouseenter = (e) => showAshTooltip(e, ashId);
-    btn.onmousemove = (e) => moveTooltip(e);
-    btn.onmouseleave = () => hideTooltip();
+    attachTooltipEvents(btn, ashId, true);
     container.appendChild(btn);
   });
 };
@@ -3604,23 +3592,79 @@ export const setAudioListener = () => {
 
 // ui.js
 
-const attachTooltipEvents = (element, itemOrId, isAsh = false) => {
-  // 1. Pour PC : Le hover classique
-  element.onmouseenter = (e) =>
-    isAsh
-      ? showAshTooltip(e, itemOrId)
-      : showItemComparisonTooltip(e, itemOrId);
-  element.onmouseleave = () => hideTooltip();
-  element.onmousemove = (e) => moveTooltip(e);
+/*
+ * Filet de securite : sur mobile, le panneau restait affiche indefiniment.
+ *
+ * Deux causes. D'abord, les navigateurs tactiles synthetisent mouseenter et
+ * mousemove APRES le relachement du doigt : le panneau, ferme au pointerup,
+ * etait rouvert dans la foulee par le faux mouseenter — et comme aucun
+ * mouseleave ne suit jamais un doigt, plus rien ne le refermait. Ensuite,
+ * plusieurs emplacements ne cablaient que les evenements souris, donc
+ * n'avaient aucun chemin de fermeture au toucher.
+ *
+ * Ce filet ferme le panneau des qu'un pointeur non-souris est relache ou
+ * annule n'importe ou dans la page, et a tout defilement.
+ */
+let tooltipDismissBound = false;
+const bindGlobalTooltipDismiss = () => {
+  if (tooltipDismissBound) return;
+  tooltipDismissBound = true;
+  const dismiss = (e) => {
+    if (e && e.pointerType === "mouse") return;
+    hideTooltip();
+  };
+  document.addEventListener("pointerup", dismiss, true);
+  document.addEventListener("pointercancel", dismiss, true);
+  window.addEventListener("scroll", () => hideTooltip(), true);
+};
 
-  // 2. Pour Mobile (et PC au clic) : Appuyer pour afficher, relÃ¢cher pour cacher
-  element.onpointerdown = (e) => {
-    // EmpÃªche le clic droit ou les menus contextuels mobiles de gÃªner
+/** Detache tout cablage de panneau pose par attachTooltipEvents. */
+const detachTooltipEvents = (element) => {
+  if (!element) return;
+  element.onmouseenter = null;
+  element.onmousemove = null;
+  element.onmouseleave = null;
+  element.onpointerenter = null;
+  element.onpointermove = null;
+  element.onpointerleave = null;
+  element.onpointerdown = null;
+  element.onpointerup = null;
+  element.onpointercancel = null;
+};
+
+const attachTooltipEvents = (element, itemOrId, isAsh = false) => {
+  if (!element) return;
+  bindGlobalTooltipDismiss();
+  detachTooltipEvents(element);
+
+  const show = (e) =>
     isAsh
       ? showAshTooltip(e, itemOrId)
       : showItemComparisonTooltip(e, itemOrId);
+
+  // Souris : survol classique. Filtre sur pointerType, sans quoi le faux
+  // survol emis apres un tap rouvrirait le panneau (voir plus haut).
+  element.onpointerenter = (e) => {
+    if (e.pointerType !== "mouse") return;
+    show(e);
+  };
+  element.onpointermove = (e) => {
+    if (e.pointerType !== "mouse") return;
+    moveTooltip(e);
+  };
+  element.onpointerleave = (e) => {
+    if (e.pointerType !== "mouse") return;
+    hideTooltip();
   };
 
-  element.onpointerup = () => hideTooltip();
-  element.onpointercancel = () => hideTooltip(); // Si le doigt glisse hors de l'Ã©cran
+  // Tactile et stylet : appui maintenu pour lire, relachement pour fermer.
+  element.onpointerdown = (e) => {
+    if (e.pointerType === "mouse") return;
+    show(e);
+  };
+  element.onpointerup = (e) => {
+    if (e.pointerType === "mouse") return;
+    hideTooltip();
+  };
+  element.onpointercancel = () => hideTooltip();
 };
