@@ -136,6 +136,79 @@ const toObject = (value, fallback = {}) =>
 
 const toArray = (value, fallback = []) => (Array.isArray(value) ? value : fallback);
 
+/*
+ * Assainissement des donnees de sauvegarde.
+ *
+ * Une sauvegarde n'est PAS une entree de confiance. Le sceau HMAC de
+ * save-crypto.js empeche l'edition triviale, mais sa clef est livree avec le
+ * bundle — le README le dit lui-meme — et le code de transfert est fait pour
+ * circuler entre joueurs. Quelqu'un peut donc forger un code valide.
+ *
+ * Le risque etait concret : `item.name` sortait d'ici tel quel et finissait
+ * dans `innerHTML` (renderSlotContent et les cartes d'inventaire). Un nom
+ * valant `<img src=x onerror=...>` s'executait a l'ouverture de l'inventaire,
+ * chez qui collait le code.
+ *
+ * On borne donc ce qui vient de la sauvegarde, plutot que de compter sur
+ * l'echappement de chaque point d'affichage : il y a quarante-quatre
+ * `innerHTML` dans ui.js, et il suffit d'en oublier un.
+ */
+
+/** Identifiants : lettres, chiffres, tiret bas et tiret. Rien d'autre. */
+const ID_VALIDE = /^[A-Za-z0-9_-]{1,64}$/;
+
+const idPropre = (valeur, repli = null) =>
+  typeof valeur === "string" && ID_VALIDE.test(valeur) ? valeur : repli;
+
+/*
+ * Texte libre : on retire tout ce qui pourrait ouvrir une balise ou une
+ * entite, et on borne la longueur. Un nom d'objet legitime n'a besoin ni de
+ * chevrons, ni d'esperluette, ni de guillemets.
+ */
+const textePropre = (valeur, repli = "") => {
+  if (typeof valeur !== "string") return repli;
+  const nettoye = valeur
+    .replace(/[<>&"'`\\]/g, "")
+    .trim()
+    .slice(0, 80);
+  return nettoye || repli;
+};
+
+const entierBorne = (valeur, repli = 0, min = 0, max = Number.MAX_SAFE_INTEGER) => {
+  const n = Math.floor(Number(valeur));
+  if (!Number.isFinite(n)) return repli;
+  return Math.min(max, Math.max(min, n));
+};
+
+/**
+ * Normalise une entree d'inventaire venue d'une sauvegarde.
+ * Renvoie null si l'entree n'a pas d'identifiant exploitable : mieux vaut
+ * perdre une ligne douteuse que la laisser atteindre l'affichage.
+ */
+const entreeInventairePropre = (brut) => {
+  const source = toObject(brut, null);
+  if (!source) return null;
+
+  const id = idPropre(source.id);
+  if (!id) return null;
+
+  return {
+    ...source,
+    id,
+    name: textePropre(source.name, id),
+    level: entierBorne(source.level, 1, 0, 1000),
+    count: entierBorne(source.count, 0, 0, 1e9),
+  };
+};
+
+/** Applique l'assainissement a toute une liste d'inventaire. */
+export const assainirInventaire = (liste) =>
+  toArray(liste, []).map(entreeInventairePropre).filter(Boolean);
+
+/** Identifiant d'objet equipe, ou null s'il est illisible. */
+export const assainirIdEquipe = (valeur) =>
+  valeur === null || valeur === undefined ? null : idPropre(valeur, null);
+
 export const createProfileId = () => {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -170,7 +243,13 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.runes = { ...base.runes, ...toObject(data.runes) };
   base.stats = { ...base.stats, ...toObject(data.stats) };
   base.equipped = { ...base.equipped, ...toObject(data.equipped) };
-  base.inventory = toArray(data.inventory, base.inventory);
+  for (const emplacement of Object.keys(base.equipped)) {
+    base.equipped[emplacement] = assainirIdEquipe(base.equipped[emplacement]);
+  }
+  base.inventory = assainirInventaire(data.inventory);
+  if (!base.inventory.length) {
+    base.inventory = clone(DEFAULT_PLAYER_PROFILE.inventory);
+  }
   base.world = { ...base.world, ...toObject(data.world) };
   base.playerEffects = toArray(data.playerEffects, []);
   base.ennemyEffects = toArray(data.ennemyEffects, []);
@@ -178,8 +257,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     ...base.ashesOfWaruses,
     ...toObject(data.ashesOfWaruses),
   };
-  base.ashesOfWarOwned = toArray(data.ashesOfWarOwned, []);
-  base.equippedAsh = data.equippedAsh ?? null;
+  base.ashesOfWarOwned = toArray(data.ashesOfWarOwned, [])
+    .map((id) => assainirIdEquipe(id))
+    .filter(Boolean);
+  base.equippedAsh = assainirIdEquipe(data.equippedAsh);
   base.ui = { ...base.ui, ...toObject(data.ui) };
   base.preparation = { ...base.preparation, ...toObject(data.preparation) };
   base.preparation.activeRunBuffs = toArray(

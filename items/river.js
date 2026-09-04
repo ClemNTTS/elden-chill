@@ -1,9 +1,9 @@
-import { applyEffect } from "../combat.js";
+import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, runtimeState,
   healPlayer,
 } from "../state.js";
-import { ActionLog } from "../ui.js";
+import { ActionLog } from "../ui-action-log.js";
 
 export const RIVER = {
   // RIVER

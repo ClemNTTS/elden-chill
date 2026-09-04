@@ -59,6 +59,46 @@ python -m http.server 8123
 
 Puis ouvrez `http://localhost:8123` dans un navigateur moderne.
 
+## Tests
+
+Le moteur se teste hors navigateur, sans aucune dependance : le lanceur
+integre de Node et le bouchon DOM de [`tools/headless-stub.mjs`](tools/headless-stub.mjs)
+suffisent.
+
+```bash
+npm test
+```
+
+La suite couvre les effets de cendres, les points de competence critique, les
+formules de PV et de soin, l'assainissement des sauvegardes, et des garde-fous
+d'architecture (voir [`tests/`](tests/)). Chaque cas est ecrit a partir d'une
+regression reelle : la premiere version de ces tests a ete validee en
+reintroduisant les bugs d'origine et en verifiant qu'ils echouaient.
+
+Le lint et le formatage passent par Biome :
+
+```bash
+npm run lint
+```
+
+Cette etape est **non bloquante en CI** pour l'instant : 177 constats
+subsistent sur la base existante. Elle deviendra bloquante quand ils seront
+resorbes.
+
+## Architecture
+
+Les modules se repartissent en deux couches, et la frontiere est verifiee par
+un test :
+
+- **donnees** — `state.js`, `item.js`, `ashes.js`, `constants.js`, `items/*`,
+  `shared/*`... Ces modules ne doivent jamais importer l'affichage.
+- **runtime** — `ui.js`, `combat.js`, `core.js`, `game.js`...
+
+Chaque couche est recursive de l'interieur, ce qui est assume. Ce qui est
+interdit, c'est qu'un cycle traverse la frontiere : c'etait le cas de
+`ashes.js -> combat.js`, `item.js -> ui.js` et `ui.js -> game.js`, et cela
+rendait le moteur impossible a importer hors navigateur — donc intestable.
+
 ## Technologies Utilisées
 
 Ce projet est volontairement simple et est construit avec des technologies web de base :

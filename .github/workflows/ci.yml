@@ -1,0 +1,43 @@
+# Verification a chaque poussee et a chaque pull request.
+#
+# Le seul workflow qui existait notifiait un wiki : rien ne verifiait le code.
+# Les quatre bugs de la session qui a introduit ces tests etaient tous
+# detectables par une assertion de trois lignes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Aucune dependance a installer : les tests utilisent le lanceur integre
+      # de Node et le bouchon DOM de tools/headless-stub.mjs.
+      - name: Suite de tests
+        run: npm test
+
+  lint:
+    name: Lint et formatage
+    runs-on: ubuntu-latest
+    # NON BLOQUANT, volontairement et temporairement.
+    #
+    # Biome releve 177 constats sur la base existante. Les rendre bloquants
+    # d'emblee reviendrait a exiger un nettoyage de 16 000 lignes avant toute
+    # autre contribution. Le travail est signale a chaque execution ; l'etape
+    # passera bloquante quand le compteur sera revenu a zero.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Biome
+        run: npx --yes @biomejs/biome@1.9.4 ci .

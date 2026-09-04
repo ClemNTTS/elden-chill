@@ -30,6 +30,14 @@ import {
   buildEnemyIntent,
   getRunModifier,
 } from "./systems.js";
+import { STACKING_EFFECTS, applyEffect } from "./status-apply.js";
+
+/*
+ * Reexport : applyEffect a demenage dans status-apply.js pour rompre le cycle
+ * d'imports (voir l'en-tete de ce module). Les appelants qui le lisent encore
+ * ici continuent de fonctionner.
+ */
+export { applyEffect };
 
 // Helper to use offline-time bank to speed up timeouts when enabled.
 function delayedSetTimeout(fn, ms) {
@@ -84,8 +92,6 @@ function clamp(v, min = 0) {
 
 /* ================= STATUS EFFECTS ================= */
 
-/** Afflictions qui s'accumulent au lieu de durer un nombre de tours. */
-const STACKING_EFFECTS = new Set(["BLEED", "FROSTBITE", "MADNESS", "DEATH_BLIGHT"]);
 
 /*
  * Plafond des afflictions exprimees en pourcentage des points de vie maximum.
@@ -105,27 +111,6 @@ const AFFLICTION_CAP = 6;
 const MADNESS_THRESHOLD = 8;
 const DEATH_BLIGHT_THRESHOLD = 12;
 
-export const applyEffect = (targetEffects, effectId, value) => {
-  if (!targetEffects.__owner) {
-    targetEffects.__owner = true;
-  }
-  // value can be duration or stacks
-  const existing = targetEffects.find((e) => e.id === effectId);
-  const adjustedValue = adjustStatusApplication(effectId, value || 1, targetEffects);
-  if (STACKING_EFFECTS.has(effectId)) {
-    if (existing) {
-      existing.stacks = (existing.stacks || 0) + adjustedValue;
-    } else {
-      targetEffects.push({ id: effectId, stacks: adjustedValue });
-    }
-  } else {
-    if (existing) {
-      existing.duration = Math.max(existing.duration, adjustedValue);
-    } else {
-      targetEffects.push({ id: effectId, duration: adjustedValue });
-    }
-  }
-};
 
 const processTurnEffects = (entity, effectsArray) => {
   let logMessages = [];

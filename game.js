@@ -1,4 +1,11 @@
 // Main entry point for the game
+import {
+  CHECK_REFRESH_KEY,
+  CURRENT_VERSION,
+  FORCE_VERSION_KEY,
+  IS_LOCAL_HOST,
+  checkForUpdate,
+} from "./version-check.js";
 import { BIOMES } from "./biome.js";
 import { ITEMS } from "./item.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
@@ -233,31 +240,15 @@ window.toggleNarrator = toggleNarrator;
 
 // --- Game Initialization ---
 
-const CHECK_REFRESH_KEY = "last_hard_refresh_timestamp";
-export const FORCE_VERSION_KEY = "app_version_code";
-export const CURRENT_VERSION = DEFAULT_GAME_STATE.save.version;
-const IS_LOCAL_HOST =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1";
-
-export async function checkForUpdate() {
-  if (IS_LOCAL_HOST) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`./version.json?t=${Date.now()}`);
-    const data = await response.json();
-
-    if (data.version !== CURRENT_VERSION) {
-      console.log("🛠️ Mise à jour détectée ! Refresh en cours...");
-      saveGame();
-      window.location.reload(true);
-    }
-  } catch (err) {
-    console.error("Impossible de vérifier les mises à jour", err);
-  }
-}
+/* Version et detection de mise a jour : voir version-check.js. Reexport pour
+ * les appelants historiques. */
+export {
+  CHECK_REFRESH_KEY,
+  CURRENT_VERSION,
+  FORCE_VERSION_KEY,
+  IS_LOCAL_HOST,
+  checkForUpdate,
+};
 
 const handleAutoRefresh = () => {
   if (IS_LOCAL_HOST) {
