@@ -15,6 +15,13 @@ import {
   resoudrePanoplie,
 } from "./loadouts.js";
 import { BIOMES } from "./biome.js";
+import { CONTRACT_ITEM_IDS } from "./constants.js";
+import {
+  avancerContrat,
+  genererContrat,
+  normaliserContrat,
+} from "./contracts.js";
+import { addJournalEntry } from "./systems.js";
 import { startExploration } from "./core.js";
 import {
   REBIRTH_LEVEL_BONUS,
@@ -316,6 +323,165 @@ export const equipItem = (itemId) => {
   runtimeState.filterChanged = true;
   saveGame("equip_item");
   updateUI();
+};
+
+/* ------------------------------------------------------------------ */
+/* Contrats de zone                                                   */
+/* ------------------------------------------------------------------ */
+
+/** Etat des contrats, cree a la volee pour les sauvegardes anterieures. */
+export const getEtatContrats = () => {
+  if (!gameState.contracts || typeof gameState.contracts !== "object") {
+    gameState.contracts = { actif: null, completed: 0, total: 0 };
+  }
+  if (gameState.contracts.actif) {
+    gameState.contracts.actif = normaliserContrat(gameState.contracts.actif);
+  }
+  return gameState.contracts;
+};
+
+/** Le contrat en cours, ou null. */
+export const getContratActif = () => getEtatContrats().actif;
+
+/*
+ * Zones eligibles : celles que le joueur a debloquees.
+ *
+ * Un contrat ne doit jamais viser une zone inaccessible — ce serait une
+ * impasse silencieuse. Les zones anciennes restent dans le tirage : les y
+ * ramener est tout l'objet du systeme.
+ */
+const zonesEligibles = () =>
+  (gameState.world.unlockedBiomes || []).filter((id) => BIOMES[id]);
+
+/**
+ * Propose un nouveau contrat.
+ *
+ * @param {string|null} zonePreferee force la zone (sinon tirage parmi les
+ *   zones debloquees)
+ */
+export const proposerContrat = (zonePreferee = null) => {
+  const etat = getEtatContrats();
+  const zones = zonesEligibles();
+  if (zones.length === 0) return null;
+
+  const biomeId =
+    zonePreferee && zones.includes(zonePreferee)
+      ? zonePreferee
+      : zones[Math.floor(Math.random() * zones.length)];
+
+  const contrat = genererContrat({
+    biomeId,
+    nomBiome: BIOMES[biomeId]?.name || biomeId,
+    niveauJoueur: gameState.stats.level || 1,
+    objetsExclusifs: CONTRACT_ITEM_IDS,
+  });
+
+  etat.actif = contrat;
+  saveGame("new_contract");
+  updateUI();
+  return contrat;
+};
+
+/** Abandonne le contrat en cours et en tire un autre. */
+export const abandonnerContrat = () => {
+  const etat = getEtatContrats();
+  if (!etat.actif) return;
+  if (!confirm(`Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`)) {
+    return;
+  }
+  etat.actif = null;
+  proposerContrat();
+};
+
+/**
+ * Verse la recompense d'un contrat honore et en propose un nouveau.
+ *
+ * Le niveau offert respecte le plafond de progression : un contrat ne doit pas
+ * etre un moyen de le contourner, sans quoi il deviendrait la voie optimale et
+ * viderait la trame principale de son role.
+ */
+export const reclamerContrat = () => {
+  const etat = getEtatContrats();
+  const contrat = etat.actif;
+  if (!contrat || !contrat.honore) return;
+
+  const { runes, objet, niveau } = contrat.recompense;
+
+  if (runes > 0) {
+    gameState.runes.banked += runes;
+    ActionLog(`Contrat honore : +${runes} runes.`, "log-runes");
+  }
+
+  if (objet && ITEMS[objet]) {
+    const existant = gameState.inventory.find((entree) => entree.id === objet);
+    if (existant) {
+      // Deja possede : une copie fait monter le niveau, comme tout le reste.
+      existant.count = (existant.count || 0) + 1;
+      ActionLog(`Contrat honore : copie de ${ITEMS[objet].name}.`, "log-crit");
+    } else {
+      gameState.inventory.push({
+        id: objet,
+        name: ITEMS[objet].name,
+        level: ITEMS[objet].isAlwaysMax ? 10 : 1,
+        count: 0,
+      });
+      ActionLog(`OBJET UNIQUE OBTENU : ${ITEMS[objet].name} !`, "log-crit");
+    }
+  }
+
+  if (niveau > 0) {
+    if (gameState.stats.level < getMaxLevel()) {
+      gameState.stats.level += niveau;
+      // Le niveau offert va en Vigueur : c'est la statistique la moins
+      // susceptible de casser un build, et la seule dont personne ne regrette
+      // un point.
+      gameState.stats.vigor += niveau;
+      ActionLog(`Contrat legendaire : niveau ${gameState.stats.level} atteint.`, "log-crit");
+    } else {
+      ActionLog(
+        "Contrat legendaire : niveau maximum deja atteint, le niveau offert est perdu.",
+        "log-event",
+      );
+    }
+  }
+
+  etat.completed = (etat.completed || 0) + 1;
+  etat.total = (etat.total || 0) + 1;
+  etat.actif = null;
+
+  addJournalEntry(
+    "checkpoint",
+    "Contrat honore",
+    `${contrat.titre} (${contrat.rarete}).`,
+    contrat.biomeId,
+  );
+
+  // Renouvellement immediat : le joueur ne doit jamais se retrouver sans
+  // contrat, c'est ce qui fait de ce systeme une boucle et non une liste.
+  proposerContrat();
+};
+
+/**
+ * Signale un evenement de jeu aux contrats. Appele par core.js.
+ *
+ * Le contrat n'avance QUE dans sa zone : `biomeId` est verifie par
+ * avancerContrat. Quand l'objectif tombe, on ne verse rien tout de suite —
+ * le joueur reclame lui-meme, pour que la recompense soit un moment et non
+ * une ligne de journal noyee dans un combat.
+ */
+export const signalerContrat = (evenement, quantite = 1, biomeId = null) => {
+  const etat = getEtatContrats();
+  if (!etat.actif || etat.actif.honore) return;
+
+  const avant = etat.actif.avancement;
+  etat.actif = avancerContrat(etat.actif, evenement, quantite, biomeId);
+
+  if (etat.actif.honore && avant < etat.actif.objectif) {
+    ActionLog(
+      `CONTRAT ACCOMPLI : ${etat.actif.titre} — reclamez votre du au camp.`,
+      "log-crit",
+    );
+  }
 };
 
 /* ------------------------------------------------------------------ */

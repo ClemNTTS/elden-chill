@@ -2,6 +2,7 @@ import { ASHES_OF_WAR } from "./ashes.js";
 import {
   getFerveurBoostRarete,
   getFerveurLibelle,
+  getFerveurRang,
   getFerveurTiragesButin,
   getPrimeFerveur,
 } from "./escalation.js";
@@ -27,6 +28,7 @@ import {
   getHealth,
 } from "./state.js";
 import { saveGame } from "./save.js";
+import { proposerContrat, signalerContrat } from "./actions.js";
 import {
   ActionLog,
   formatNumber,
@@ -294,6 +296,10 @@ export const handleDrops = (sessionId) => {
      * et supprimerait le pari. Elle attend dans une reserve a part, versee au
      * repli volontaire et perdue a la mort. Voir escalation.js.
      */
+    signalerContrat("monstre", 1, gameState.world.currentBiome);
+    if (enemy.isRare) signalerContrat("rare", 1, gameState.world.currentBiome);
+    if (enemy.isBoss) signalerContrat("boss", 1, gameState.world.currentBiome);
+
     const prime = getPrimeFerveur(runesAwarded, runtimeState.currentLoopCount);
     if (prime > 0) {
       runtimeState.ferveurBank += prime;
@@ -497,6 +503,16 @@ export const handleVictory = (sessionId) => {
     }
 
     runtimeState.currentLoopCount++;
+    signalerContrat("cycle", 1, gameState.world.currentBiome);
+    /*
+     * La Ferveur se signale en PALIER atteint et non en increment : c'est un
+     * rang courant, pas un cumul. avancerContrat le sait et prend le maximum.
+     */
+    signalerContrat(
+      "ferveur",
+      getFerveurRang(runtimeState.currentLoopCount),
+      gameState.world.currentBiome,
+    );
     gameState.world.progress = 0;
     gameState.world.checkpointReached = false;
     // Un cycle boucle : l'expedition progresse, le garde-fou repart de zero.

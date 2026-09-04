@@ -5,6 +5,7 @@ import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { V21_ITEMS } from "./items/v21.js";
 import { LANDS_ITEMS } from "./items/lands.js";
+import { CONTRACT_ITEMS } from "./items/contracts.js";
 import { gameState, getHealth, runtimeState,
   healPlayer,
 } from "./state.js";
@@ -1311,4 +1312,10 @@ export const ITEMS = {
   ...DEPTHS,
   ...V21_ITEMS,
   ...LANDS_ITEMS,
+  /*
+   * Butin exclusif des contrats legendaires. Present dans ITEMS pour que
+   * l'equipement, l'affichage et les panoplies le traitent comme le reste,
+   * mais cite dans aucune table de butin de biome : un test le verifie.
+   */
+  ...CONTRACT_ITEMS,
 };

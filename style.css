@@ -3841,3 +3841,167 @@ button:disabled {
     font-size: 0.8rem;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Contrats de zone                                                   */
+/* ------------------------------------------------------------------ */
+
+.contract-empty {
+  margin: 0 0 10px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.contract {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contract__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  min-width: 0;
+}
+
+/*
+ * La rarete se lit avant le titre : c'est elle qui dit au joueur combien de
+ * temps l'engagement va lui couter, et donc s'il le prend maintenant.
+ */
+.contract__rarity {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.contract--commune .contract__rarity {
+  color: var(--text-soft);
+}
+
+.contract--rare .contract__rarity {
+  color: var(--info, #6ba9ff);
+}
+
+.contract--legendaire .contract__rarity {
+  color: var(--accent);
+}
+
+.contract__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--header-font);
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.contract__text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}
+
+.contract__progress {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.contract__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  transition: width 0.35s ease;
+}
+
+.contract__progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.contract__reward {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.contract__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.contract__actions button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reclamer est une recompense : le bouton doit se voir comme telle. */
+.contract__claim {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface-strong));
+  font-weight: 700;
+}
+
+.contract.is-done .contract__progress-fill {
+  background: linear-gradient(90deg, var(--accent), var(--accent));
+}
+
+/* Abandonner ne doit pas attirer l'oeil autant que le reste. */
+.contract__abandon {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+/*
+ * Un contrat legendaire se distingue par le cadre, pas par une couleur de
+ * texte de plus : le panneau contient deja trois niveaux de gris.
+ */
+.contract--legendaire {
+  padding: 10px;
+  margin: -10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-soft) 22%, transparent),
+    transparent 60%
+  );
+}
+
+@media (max-width: 640px) {
+  .contract__title {
+    font-size: 0.92rem;
+  }
+
+  .contract__text {
+    font-size: 0.78rem;
+  }
+
+  /*
+   * Le titre passe sous la pastille de rarete plutot que de partager sa ligne :
+   * a 375px, un titre comme "Tete mise a prix : Profondeurs de la Souche" se
+   * retrouvait comprime sur trois lignes etroites a cote de la pastille.
+   */
+  .contract__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

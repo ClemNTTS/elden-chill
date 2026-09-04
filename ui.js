@@ -276,7 +276,12 @@ import {
   enregistrerPanoplie,
   getPanoplies,
   renommerPanoplie,
+  abandonnerContrat,
+  getContratActif,
+  proposerContrat,
+  reclamerContrat,
 } from "./actions.js";
+import { REGLAGES_RARETE, progressionContrat } from "./contracts.js";
 import { panoplieEstActive } from "./loadouts.js";
 import { encaisserFerveur, startExploration } from "./core.js";
 import {
@@ -466,6 +471,72 @@ export const formatNumber = (num) => {
     return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
   }
   return num.toString();
+};
+
+/*
+ * Contrat en cours.
+ *
+ * Une seule carte, qui doit repondre a trois questions en un coup d'oeil : ou
+ * aller, combien il reste, et ce que ca paie. Le bouton change de nature selon
+ * l'etat — reclamer quand c'est fini, abandonner sinon — plutot que d'afficher
+ * en permanence deux actions dont une seule est jamais pertinente.
+ */
+const updateContractDisplay = () => {
+  const corps = document.getElementById("contract-body");
+  if (!corps) return;
+
+  const contrat = getContratActif();
+
+  if (!contrat) {
+    corps.innerHTML = `
+      <p class="contract-empty">Aucun contrat en cours.</p>
+      <button type="button" id="contract-new">Demander un contrat</button>
+    `;
+    const btn = document.getElementById("contract-new");
+    if (btn) btn.onclick = () => proposerContrat();
+    return;
+  }
+
+  const part = Math.round(progressionContrat(contrat) * 100);
+  const recompenses = [];
+  if (contrat.recompense.runes > 0) {
+    recompenses.push(`${formatNumber(contrat.recompense.runes)} runes`);
+  }
+  if (contrat.recompense.objet) {
+    const nom = ITEMS[contrat.recompense.objet]?.name || contrat.recompense.objet;
+    recompenses.push(`${nom} (exclusif)`);
+  }
+  if (contrat.recompense.niveau > 0) {
+    recompenses.push(`${contrat.recompense.niveau} niveau`);
+  }
+
+  corps.innerHTML = `
+    <article class="contract contract--${contrat.rarete}${contrat.honore ? " is-done" : ""}">
+      <header class="contract__head">
+        <span class="contract__rarity">${REGLAGES_RARETE[contrat.rarete]?.libelle || contrat.rarete}</span>
+        <strong class="contract__title">${echapperHtml(contrat.titre)}</strong>
+      </header>
+      <p class="contract__text">${echapperHtml(contrat.texte)}</p>
+      <div class="contract__progress" role="progressbar"
+           aria-valuenow="${contrat.avancement}" aria-valuemin="0" aria-valuemax="${contrat.objectif}">
+        <div class="contract__progress-fill" style="width:${part}%"></div>
+        <span class="contract__progress-text">${contrat.avancement} / ${contrat.objectif}</span>
+      </div>
+      <p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>
+      <div class="contract__actions">
+        ${
+          contrat.honore
+            ? '<button type="button" id="contract-claim" class="contract__claim">Reclamer</button>'
+            : '<button type="button" id="contract-abandon" class="contract__abandon">Abandonner</button>'
+        }
+      </div>
+    </article>
+  `;
+
+  const claim = document.getElementById("contract-claim");
+  if (claim) claim.onclick = () => reclamerContrat();
+  const abandon = document.getElementById("contract-abandon");
+  if (abandon) abandon.onclick = () => abandonnerContrat();
 };
 
 /*
@@ -2923,6 +2994,7 @@ export const updateUI = () => {
   updateNavState();
   updateRuneDisplay();
   updateLoadoutsDisplay();
+  updateContractDisplay();
   updateStatDisplay();
   updateEquipmentDisplay();
   updateInventoryEquippedDisplay();

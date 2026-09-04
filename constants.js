@@ -594,3 +594,22 @@ export const HAZARD_LABELS = {
   folie: "Folie",
   putrefaction: "Putréfaction",
 };
+
+/*
+ * Identifiants du butin exclusif des contrats.
+ *
+ * Ici plutot que dans items/contracts.js pour une raison mecanique : cette
+ * table importe state.js, qui importe item.js, qui la reagrege — un module
+ * qui n'a besoin que des identifiants (actions.js, les tests) declenchait donc
+ * la chaine complete et tombait sur un `Cannot access before initialization`
+ * selon l'ordre de chargement.
+ *
+ * constants.js n'importe rien : la liste y est lisible depuis n'importe ou.
+ * Un test verifie qu'elle correspond exactement aux objets definis.
+ */
+export const CONTRACT_ITEM_IDS = [
+  "oath_blade",
+  "ledger_of_debts",
+  "mourners_veil",
+  "writ_of_ruin",
+];
