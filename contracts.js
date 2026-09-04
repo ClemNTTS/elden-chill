@@ -182,7 +182,9 @@ export const calculerRecompense = (
   const compense = reglages.donneObjet && !objet;
 
   return {
-    runes: Math.floor(reglages.runesParNiveauJoueur * niveau * (compense ? 3 : 1)),
+    runes: Math.floor(
+      reglages.runesParNiveauJoueur * niveau * (compense ? 3 : 1),
+    ),
     objet,
     niveau: reglages.donneNiveau ? 1 : 0,
   };
@@ -307,13 +309,19 @@ export const normaliserContrat = (brut) => {
   const recompenseBrute = brut.recompense || {};
   return {
     id:
-      typeof brut.id === "string" ? brut.id.slice(0, 64) : `contrat_${Date.now()}`,
-    modele: MODELES.some((m) => m.id === brut.modele) ? brut.modele : MODELES[0].id,
+      typeof brut.id === "string"
+        ? brut.id.slice(0, 64)
+        : `contrat_${Date.now()}`,
+    modele: MODELES.some((m) => m.id === brut.modele)
+      ? brut.modele
+      : MODELES[0].id,
     evenement: typeof brut.evenement === "string" ? brut.evenement : "monstre",
     rarete,
     biomeId: brut.biomeId,
     nomBiome:
-      typeof brut.nomBiome === "string" ? brut.nomBiome.slice(0, 60) : brut.biomeId,
+      typeof brut.nomBiome === "string"
+        ? brut.nomBiome.slice(0, 60)
+        : brut.biomeId,
     titre: typeof brut.titre === "string" ? brut.titre.slice(0, 80) : "Contrat",
     texte: typeof brut.texte === "string" ? brut.texte.slice(0, 200) : "",
     objectif,

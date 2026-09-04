@@ -51,7 +51,11 @@ test("un identifiant d'objet forge fait rejeter la ligne", () => {
 
 test("un emplacement equipe illisible retombe a null", () => {
   const out = normalizePlayerProfile({
-    equipped: { weapon: "<img onerror=1>", armor: "plate_armor", accessory: null },
+    equipped: {
+      weapon: "<img onerror=1>",
+      armor: "plate_armor",
+      accessory: null,
+    },
   });
   assert.equal(out.equipped.weapon, null);
   assert.equal(out.equipped.armor, "plate_armor");
@@ -88,7 +92,14 @@ test("les nombres de la sauvegarde sont bornes", () => {
 
 test("un nom legitime traverse la normalisation intact", () => {
   const out = normalizePlayerProfile({
-    inventory: [{ id: "sword_broken", name: "Epee brisee du Sans-Eclat", level: 3, count: 2 }],
+    inventory: [
+      {
+        id: "sword_broken",
+        name: "Epee brisee du Sans-Eclat",
+        level: 3,
+        count: 2,
+      },
+    ],
   });
   assert.equal(out.inventory[0].name, "Epee brisee du Sans-Eclat");
   assert.equal(out.inventory[0].level, 3);
@@ -96,9 +107,18 @@ test("un nom legitime traverse la normalisation intact", () => {
 });
 
 test("un inventaire vide ou absurde retombe sur l'inventaire par defaut", () => {
-  for (const entree of [undefined, null, [], "pas un tableau", [{}, { id: 42 }]]) {
+  for (const entree of [
+    undefined,
+    null,
+    [],
+    "pas un tableau",
+    [{}, { id: 42 }],
+  ]) {
     const out = normalizePlayerProfile({ inventory: entree });
-    assert.ok(out.inventory.length > 0, `inventaire vide pour ${JSON.stringify(entree)}`);
+    assert.ok(
+      out.inventory.length > 0,
+      `inventaire vide pour ${JSON.stringify(entree)}`,
+    );
     assert.ok(out.inventory.every((i) => typeof i.id === "string"));
   }
 });
@@ -107,5 +127,8 @@ test("une sauvegarde vide produit un profil complet et coherent", () => {
   const out = normalizePlayerProfile({});
   assert.ok(out.stats && out.runes && out.world && out.inventory);
   assert.ok(out.world.unlockedBiomes.length > 0);
-  assert.equal(typeof out.save.profileId === "string" || out.save.profileId === undefined, true);
+  assert.equal(
+    typeof out.save.profileId === "string" || out.save.profileId === undefined,
+    true,
+  );
 });

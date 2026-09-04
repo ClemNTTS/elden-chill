@@ -100,8 +100,7 @@ export const CONTRACT_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     set: "OATHBOUND",
     isAlwaysMax: true,
-    description:
-      "Exclusif aux contrats. Force +12%. Penetration d'armure +42.",
+    description: "Exclusif aux contrats. Force +12%. Penetration d'armure +42.",
     applyFlat: (stats) => {
       stats.flatDamagePenetration += 42;
     },
@@ -120,8 +119,7 @@ export const CONTRACT_ITEMS = {
     type: ITEM_TYPES.WEAPON,
     set: "BOUNTY_HUNTER",
     isAlwaysMax: true,
-    description:
-      "Exclusif aux contrats. Dexterite +20%. Chance critique +17%.",
+    description: "Exclusif aux contrats. Dexterite +20%. Chance critique +17%.",
     applyFlat: (stats) => {
       stats.critChance += 0.17;
     },

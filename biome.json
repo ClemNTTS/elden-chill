@@ -36,5 +36,8 @@
         "noForEach": "off"
       }
     }
+  },
+  "organizeImports": {
+    "enabled": false
   }
 }

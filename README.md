@@ -99,9 +99,16 @@ Le lint et le formatage passent par Biome :
 npm run lint
 ```
 
-Cette etape est **non bloquante en CI** pour l'instant : 177 constats
-subsistent sur la base existante. Elle deviendra bloquante quand ils seront
-resorbes.
+En CI, le lint est **bloquant sur les fichiers que la branche modifie**, et
+seulement informatif sur le reste : 142 constats subsistent sur la base
+existante. Les rendre bloquants d'emblee exigerait un nettoyage de 16 000
+lignes avant toute autre contribution ; les ignorer laisserait la dette
+grossir. La ligne est donc tenue la ou elle se tient — le code ecrit
+aujourd'hui doit etre propre, le reste attend son tour.
+
+`organizeImports` est desactive dans `biome.json` : la regle deplace les
+imports AVANT les commentaires d'en-tete qui expliquent pourquoi chaque module
+existe, ce qui rend ces fichiers moins lisibles, pas plus.
 
 ## Architecture
 

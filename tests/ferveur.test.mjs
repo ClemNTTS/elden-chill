@@ -17,8 +17,16 @@ test("le rang suit les cycles et sature au plafond", () => {
   assert.equal(esc.getFerveurRang(0), 0);
   assert.equal(esc.getFerveurRang(1), 1);
   assert.equal(esc.getFerveurRang(esc.FERVEUR_RANG_MAX), esc.FERVEUR_RANG_MAX);
-  assert.equal(esc.getFerveurRang(999), esc.FERVEUR_RANG_MAX, "le rang doit saturer");
-  assert.equal(esc.getFerveurRang(-5), 0, "un compteur negatif ne doit pas donner de rang");
+  assert.equal(
+    esc.getFerveurRang(999),
+    esc.FERVEUR_RANG_MAX,
+    "le rang doit saturer",
+  );
+  assert.equal(
+    esc.getFerveurRang(-5),
+    0,
+    "un compteur negatif ne doit pas donner de rang",
+  );
 });
 
 test("la prime est nulle au premier cycle", () => {
@@ -57,7 +65,10 @@ test("a rang egal la prime progresse plus vite que le danger", () => {
   for (let c = 1; c <= esc.FERVEUR_RANG_MAX; c++) {
     const prime = esc.getFerveurMultRunes(c) - 1;
     const danger = esc.getFerveurMultDanger(c) - 1;
-    assert.ok(prime > danger, `au rang ${c} : prime ${prime} <= danger ${danger}`);
+    assert.ok(
+      prime > danger,
+      `au rang ${c} : prime ${prime} <= danger ${danger}`,
+    );
   }
 });
 
@@ -71,7 +82,10 @@ test("les seuils de butin se declenchent aux rangs annonces", () => {
   assert.equal(esc.getFerveurTiragesButin(esc.FERVEUR_RANG_BUTIN - 1), 0);
   assert.equal(esc.getFerveurTiragesButin(esc.FERVEUR_RANG_BUTIN), 1);
   assert.equal(esc.getFerveurBoostRarete(esc.FERVEUR_RANG_RARETE - 1), 0);
-  assert.equal(esc.getFerveurBoostRarete(esc.FERVEUR_RANG_RARETE), esc.FERVEUR_BOOST_RARETE);
+  assert.equal(
+    esc.getFerveurBoostRarete(esc.FERVEUR_RANG_RARETE),
+    esc.FERVEUR_BOOST_RARETE,
+  );
 });
 
 test("la reserve de Ferveur ne survit pas a un rechargement", async () => {

@@ -70,7 +70,8 @@ export const normaliserPanoplies = (source) => {
           ? valeur
           : null;
     }
-    propre.vide = !propre.weapon && !propre.armor && !propre.accessory && !propre.ash;
+    propre.vide =
+      !propre.weapon && !propre.armor && !propre.accessory && !propre.ash;
     sortie.push(propre);
   }
 
