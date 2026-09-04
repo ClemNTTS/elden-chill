@@ -9,7 +9,7 @@ export const DEFAULT_GAME_STATE = JSON.parse(
   JSON.stringify(DEFAULT_PLAYER_PROFILE),
 );
 
-export let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
+export const gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
 
 // Non-saved, runtime state
 export const runtimeState = {
@@ -64,8 +64,18 @@ export function setGameState(newState) {
     }
   };
 
-  ["runes", "stats", "equipped", "ui", "preparation", "journal", "codex", "save", "rebirth", "automation"]
-    .forEach(mergeObject);
+  [
+    "runes",
+    "stats",
+    "equipped",
+    "ui",
+    "preparation",
+    "journal",
+    "codex",
+    "save",
+    "rebirth",
+    "automation",
+  ].forEach(mergeObject);
 
   mergeObject("ashesOfWaruses");
 
@@ -113,7 +123,7 @@ export const DEX_ATTACK_EXPONENT = 1.75;
 
 /** Attaques supplementaires apportees par la dexterite, partie decimale incluse. */
 export const getDexExtraAttacks = (dexterity = 0) =>
-  Math.pow(Math.max(0, dexterity) / DEX_ATTACK_DIVISOR, DEX_ATTACK_EXPONENT);
+  (Math.max(0, dexterity) / DEX_ATTACK_DIVISOR) ** DEX_ATTACK_EXPONENT;
 
 /**
  * Rendement de l'intelligence.
@@ -146,7 +156,7 @@ export const getMagicDamage = (intelligence = 0) =>
   Math.floor(Math.max(0, intelligence) * INT_MAGIC_PER_POINT);
 
 export function getEffectiveStats() {
-  let effStats = {
+  const effStats = {
     ...gameState.stats,
     attacksPerTurn: 1,
     extraAttackChance: 0,
@@ -178,7 +188,7 @@ export function getEffectiveStats() {
       const itemId = gameState.equipped[slotType];
       const itemData = ITEMS[itemId];
 
-      if (itemData && itemData[type]) {
+      if (itemData?.[type]) {
         const invItem = gameState.inventory.find((i) => i.id === itemId);
         const level = invItem ? invItem.level : 1;
         itemData[type](effStats, level);
@@ -207,10 +217,10 @@ export function getEffectiveStats() {
   Object.keys(setCounts).forEach((setName) => {
     const count = setCounts[setName];
     const setDef = ITEM_SETS[setName];
-    if (setDef && setDef.bonuses) {
+    if (setDef?.bonuses) {
       // On applique chaque palier atteint (ex: bonus de 2 pièces, puis de 3)
       for (let i = 1; i <= count; i++) {
-        if (setDef.bonuses[i] && setDef.bonuses[i].effect) {
+        if (setDef.bonuses[i]?.effect) {
           setDef.bonuses[i].effect(effStats);
         }
       }
@@ -248,7 +258,9 @@ export function getEffectiveStats() {
    * blindees de fin de parcours. Sur la force de BASE, comme les attaques de
    * dexterite, pour ne pas recreer une boucle avec les objets.
    */
-  effStats.flatDamagePenetration += Math.floor((gameState.stats.strength || 0) / 1.3);
+  effStats.flatDamagePenetration += Math.floor(
+    (gameState.stats.strength || 0) / 1.3,
+  );
 
   /*
    * Levier propre a la VIGUEUR : mitigation des boss.

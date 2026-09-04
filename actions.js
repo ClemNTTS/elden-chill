@@ -1,9 +1,5 @@
 import { gameState, runtimeState } from "./state.js";
-import {
-  clearSaveStorage,
-  saveGame,
-  suspendreSauvegarde,
-} from "./save.js";
+import { clearSaveStorage, saveGame, suspendreSauvegarde } from "./save.js";
 import { updateUI } from "./ui.js";
 import { ITEMS } from "./item.js";
 import { ActionLog } from "./ui-action-log.js";
@@ -41,7 +37,6 @@ import {
   getCritPointsAvailable,
   resetCritRanks,
   spendCritPoint,
-
 } from "./crit.js";
 
 /*
@@ -99,7 +94,11 @@ export const investRebirthNode = (nodeId) => {
 
 /** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
 export const respecRebirthTree = () => {
-  if (!confirm("Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.")) {
+  if (
+    !confirm(
+      "Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.",
+    )
+  ) {
     return;
   }
   resetRebirthTree();
@@ -118,7 +117,9 @@ export const startTrial = (trialId) => {
   const trial = TRIALS.find((t) => t.id === trialId);
   if (!trial || !canRebirth()) return;
   if (gameState.world.isExploring) {
-    alert("Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.");
+    alert(
+      "Terminez ou quittez votre expedition en cours avant d'affronter une epreuve.",
+    );
     return;
   }
   startExploration(trial.biomeId);
@@ -182,7 +183,8 @@ export const selectPreparationConsumable = (consumableId) => {
     updateUI();
     return;
   }
-  if (!gameState.preparation.unlockedConsumables?.includes(consumableId)) return;
+  if (!gameState.preparation.unlockedConsumables?.includes(consumableId))
+    return;
   gameState.preparation.selectedConsumableId = consumableId;
   saveGame("select_consumable");
   updateUI();
@@ -190,25 +192,25 @@ export const selectPreparationConsumable = (consumableId) => {
 
 export const getUpgradeCost = (statName) => {
   const baseCost = upgradeCosts[statName] || 10;
-  let count = gameState.stats.level;
-  let x = Math.max((count - 11) * 0.02, 0);
-  return Math.floor(baseCost * ((x + 0.1) * Math.pow(count + 81, 2) + 1));
+  const count = gameState.stats.level;
+  const x = Math.max((count - 11) * 0.02, 0);
+  return Math.floor(baseCost * ((x + 0.1) * (count + 81) ** 2 + 1));
 };
 
 export const getMultiUpgradeCost = (statName, count) => {
   let totalCost = 0;
   for (let i = 0; i < count; i += 1) {
     const baseCost = upgradeCosts[statName] || 10;
-    let level = gameState.stats.level + i;
-    let x = Math.max((level - 11) * 0.02, 0);
-    totalCost += Math.floor(baseCost * ((x + 0.1) * Math.pow(level + 81, 2) + 1));
+    const level = gameState.stats.level + i;
+    const x = Math.max((level - 11) * 0.02, 0);
+    totalCost += Math.floor(baseCost * ((x + 0.1) * (level + 81) ** 2 + 1));
   }
   return totalCost;
 };
 
 export const upgradeStat = (statName) => {
   if (!MAIN_STATS.has(statName)) return;
-  let cost = getUpgradeCost(statName);
+  const cost = getUpgradeCost(statName);
 
   if (gameState.stats.level >= getMaxLevel()) {
     alert(
@@ -239,7 +241,7 @@ export const upgradeStat = (statName) => {
 
 export const upgradeStatMultiple = (statName, count) => {
   if (!MAIN_STATS.has(statName)) return;
-  let totalCost = getMultiUpgradeCost(statName, count);
+  const totalCost = getMultiUpgradeCost(statName, count);
 
   if (gameState.stats.level + count > getMaxLevel()) {
     alert(
@@ -365,7 +367,10 @@ const archetypeDominant = () => {
   const s = gameState.stats;
   const portePieceStatut = Object.values(gameState.equipped).some((id) => {
     const objet = ITEMS[id];
-    return objet?.funcOnHit && /Saignement|Putrefaction|Folie|Fleau/i.test(objet.description || "");
+    return (
+      objet?.funcOnHit &&
+      /Saignement|Putrefaction|Folie|Fleau/i.test(objet.description || "")
+    );
   });
   if (portePieceStatut) return "afflictions";
 
@@ -449,7 +454,11 @@ export const proposerContrat = (zonePreferee = null) => {
 export const abandonnerContrat = () => {
   const etat = getEtatContrats();
   if (!etat.actif) return;
-  if (!confirm(`Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`)) {
+  if (
+    !confirm(
+      `Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`,
+    )
+  ) {
     return;
   }
   etat.actif = null;
@@ -498,7 +507,10 @@ export const reclamerContrat = () => {
       // susceptible de casser un build, et la seule dont personne ne regrette
       // un point.
       gameState.stats.vigor += niveau;
-      ActionLog(`Contrat legendaire : niveau ${gameState.stats.level} atteint.`, "log-crit");
+      ActionLog(
+        `Contrat legendaire : niveau ${gameState.stats.level} atteint.`,
+        "log-crit",
+      );
     } else {
       ActionLog(
         "Contrat legendaire : niveau maximum deja atteint, le niveau offert est perdu.",

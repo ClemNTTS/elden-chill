@@ -129,7 +129,6 @@ export const ITEM_SETS = {
     },
   },
 
-
   CARIAN_KNIGHT: {
     name: "Panoplie du Chevalier Carien",
     bonuses: {
@@ -694,7 +693,7 @@ export const ITEM_SETS = {
         },
       },
     },
-  }
+  },
 };
 
 /*

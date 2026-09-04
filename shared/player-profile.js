@@ -138,9 +138,12 @@ export const LOCAL_PREFS_KEY = "eldenChillClientPrefs";
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const toObject = (value, fallback = {}) =>
-  value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
+  value && typeof value === "object" && !Array.isArray(value)
+    ? value
+    : fallback;
 
-const toArray = (value, fallback = []) => (Array.isArray(value) ? value : fallback);
+const toArray = (value, fallback = []) =>
+  Array.isArray(value) ? value : fallback;
 
 /*
  * Assainissement des donnees de sauvegarde.
@@ -180,7 +183,12 @@ const textePropre = (valeur, repli = "") => {
   return nettoye || repli;
 };
 
-const entierBorne = (valeur, repli = 0, min = 0, max = Number.MAX_SAFE_INTEGER) => {
+const entierBorne = (
+  valeur,
+  repli = 0,
+  min = 0,
+  max = Number.MAX_SAFE_INTEGER,
+) => {
   const n = Math.floor(Number(valeur));
   if (!Number.isFinite(n)) return repli;
   return Math.min(max, Math.max(min, n));
@@ -312,7 +320,9 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     clone(DEFAULT_PLAYER_PROFILE.world.unlockedBiomes),
   );
   if (!base.world.unlockedBiomes.length) {
-    base.world.unlockedBiomes = clone(DEFAULT_PLAYER_PROFILE.world.unlockedBiomes);
+    base.world.unlockedBiomes = clone(
+      DEFAULT_PLAYER_PROFILE.world.unlockedBiomes,
+    );
   }
 
   base.runes.banked = Math.max(0, Math.floor(Number(base.runes.banked) || 0));
@@ -343,7 +353,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.min(999, Math.floor(Number(base.automation.stopAfterCycle) || 0)),
   );
-  base.rebirth = { ...DEFAULT_PLAYER_PROFILE.rebirth, ...toObject(data.rebirth) };
+  base.rebirth = {
+    ...DEFAULT_PLAYER_PROFILE.rebirth,
+    ...toObject(data.rebirth),
+  };
   base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
   base.rebirth.finalCleared = !!base.rebirth.finalCleared;
   base.rebirth.trialsCleared = toObject(base.rebirth.trialsCleared);
@@ -351,7 +364,10 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.save.version = PLAYER_PROFILE_VERSION;
   base.save.offlineTimeBank = Math.max(
     0,
-    Math.min(MAX_OFFLINE_TIME_BANK, Math.floor(Number(base.save.offlineTimeBank) || 0)),
+    Math.min(
+      MAX_OFFLINE_TIME_BANK,
+      Math.floor(Number(base.save.offlineTimeBank) || 0),
+    ),
   );
   base.save.useOfflineTime = !!base.save.useOfflineTime;
   base.save.sfxVolume = Math.max(

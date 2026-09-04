@@ -94,7 +94,7 @@ function delayedSetTimeout(fn, ms) {
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
   if (!itemTemplate) return;
-  let inventoryItem = gameState.inventory.find((item) => item.id === itemId);
+  const inventoryItem = gameState.inventory.find((item) => item.id === itemId);
 
   if (!inventoryItem) {
     gameState.inventory.push({
@@ -183,7 +183,7 @@ const MAX_AUTO_DEATHS = 5;
 
 export const handleDeath = () => {
   playSfx("death");
-  ActionLog(`Vous êtes mort. Les runes portées sont perdues ...`);
+  ActionLog("Vous êtes mort. Les runes portées sont perdues ...");
   addJournalEntry(
     "checkpoint",
     "Expedition interrompue",
@@ -261,10 +261,12 @@ export const handleDeath = () => {
 export const handleDrops = (sessionId) => {
   const eff = getEffectiveStats();
   const intBonus =
-    1 + Math.min(INT_RUNE_CAP, eff.intelligence / 100) + (eff.runeGainMult || 0);
+    1 +
+    Math.min(INT_RUNE_CAP, eff.intelligence / 100) +
+    (eff.runeGainMult || 0);
   let wasABossEncounter = false;
   if (runtimeState.defeatedEnemies.length > 1) {
-    ActionLog(`Vous avez triomphé ! Voici un détail des gains : `, "log-crit");
+    ActionLog("Vous avez triomphé ! Voici un détail des gains : ", "log-crit");
   }
   runtimeState.defeatedEnemies.forEach((enemy) => {
     if (enemy.isBoss) {
@@ -411,7 +413,9 @@ export const handleVictory = (sessionId) => {
       );
     }
 
-    const prepUnlocks = grantPreparationRewardForBiome(gameState.world.currentBiome);
+    const prepUnlocks = grantPreparationRewardForBiome(
+      gameState.world.currentBiome,
+    );
     if (prepUnlocks.length) {
       ActionLog(
         `Nouvelle preparation disponible : ${prepUnlocks.join(", ")}.`,
@@ -542,7 +546,10 @@ export const handleVictory = (sessionId) => {
 
     ActionLog(`--- DÉBUT DU CYCLE ${runtimeState.currentLoopCount + 1} ---`);
     if (runtimeState.currentLoopCount > 0) {
-      ActionLog(getFerveurLibelle(runtimeState.currentLoopCount), "log-ash-activation");
+      ActionLog(
+        getFerveurLibelle(runtimeState.currentLoopCount),
+        "log-ash-activation",
+      );
     }
 
     delayedSetTimeout(() => {
@@ -612,7 +619,10 @@ export function nextEncounter(sessionId) {
 
   if (canTriggerEvent) {
     const eventDef = getWeightedBiomeEvent(gameState.world.currentBiome);
-    const eventResult = resolveBiomeEvent(eventDef, gameState.world.currentBiome);
+    const eventResult = resolveBiomeEvent(
+      eventDef,
+      gameState.world.currentBiome,
+    );
     gameState.world.lastEventProgress = gameState.world.progress;
 
     if (eventResult?.log) {
@@ -644,7 +654,9 @@ export function nextEncounter(sessionId) {
 
     if (eventResult?.forceRare && biome.rareMonsters?.length) {
       const rareId =
-        biome.rareMonsters[Math.floor(Math.random() * biome.rareMonsters.length)];
+        biome.rareMonsters[
+          Math.floor(Math.random() * biome.rareMonsters.length)
+        ];
       gameState.world.rareSpawnsCount++;
       spawnMonster(rareId, sessionId);
       return;
@@ -668,13 +680,12 @@ export function nextEncounter(sessionId) {
     gameState.world.rareSpawnsCount++;
     spawnMonster(rareId, sessionId);
     return;
-  } else {
-    spawnMonster(
-      biome.monsters[Math.floor(Math.random() * biome.monsters.length)],
-      sessionId,
-    );
-    return;
   }
+  spawnMonster(
+    biome.monsters[Math.floor(Math.random() * biome.monsters.length)],
+    sessionId,
+  );
+  return;
 }
 
 export const startExploration = (biomeId) => {

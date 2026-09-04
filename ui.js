@@ -55,8 +55,8 @@ const TRACK_GAIN = {
   "camp_song_3.mp3": 0.94,
   "camp_song_4.mp3": 1,
   "camp_song_5.mp3": 0.85,
-  "camp_song_6.mp3": 0.90,
-  "camp_song_7.mp3": 0.70,
+  "camp_song_6.mp3": 0.9,
+  "camp_song_7.mp3": 0.7,
   "dungeon_song_1.mp3": 1,
   "dungeon_song_2.mp3": 1,
   "dungeon_song_3.mp3": 1,
@@ -503,7 +503,8 @@ const updateContractDisplay = () => {
     recompenses.push(`${formatNumber(contrat.recompense.runes)} runes`);
   }
   if (contrat.recompense.objet) {
-    const nom = ITEMS[contrat.recompense.objet]?.name || contrat.recompense.objet;
+    const nom =
+      ITEMS[contrat.recompense.objet]?.name || contrat.recompense.objet;
     recompenses.push(`${nom} (exclusif)`);
   }
   if (contrat.recompense.niveau > 0) {
@@ -933,15 +934,22 @@ const updateStatDisplay = () => {
   if (superEl) {
     const superChance = getSuperCritChance(eff);
     const mult = getCritDamageMultiplier(eff);
-    superEl.innerText = superChance > 0
-      ? `Super critique ${(superChance * 100).toFixed(1)}% des coups (x${(eff.critDamage * SUPER_CRIT_MULTIPLIER).toFixed(1)}) - degats moyens x${mult.toFixed(2)}`
-      : `Degats moyens x${mult.toFixed(2)}. Au-dela de 100% de chance, le surplus devient du super critique.`;
+    superEl.innerText =
+      superChance > 0
+        ? `Super critique ${(superChance * 100).toFixed(1)}% des coups (x${(eff.critDamage * SUPER_CRIT_MULTIPLIER).toFixed(1)}) - degats moyens x${mult.toFixed(2)}`
+        : `Degats moyens x${mult.toFixed(2)}. Au-dela de 100% de chance, le surplus devient du super critique.`;
     superEl.classList.toggle("is-active", superChance > 0);
   }
 };
 
 const updateEquipmentDisplay = () => {
-  const renderSlotContent = (slot, title, meta = "", empty = false, icon = null) => {
+  const renderSlotContent = (
+    slot,
+    title,
+    meta = "",
+    empty = false,
+    icon = null,
+  ) => {
     slot.innerHTML = `
       ${iconMarkup(icon, { scale: 3, frame: "slot-icon", label: empty ? "" : title })}
       <span class="slot-text">
@@ -1149,7 +1157,10 @@ const mountCombatHero = () => {
     // Echelle 4 contre 1.6 pour les monstres : les heros n'occupent qu'environ
     // 20 des 32px de leur cellule, les monstres 56 des 64. A echelle egale, le
     // monstre ecrasait le heros.
-    combatHeroAnimator = new SpriteAnimator(canvas, { scale: 4, fps: sheet.fps });
+    combatHeroAnimator = new SpriteAnimator(canvas, {
+      scale: 4,
+      fps: sheet.fps,
+    });
   }
   combatHeroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps });
   combatHeroId = heroId;
@@ -1191,7 +1202,6 @@ const mountCombatEnemy = async () => {
 };
 
 const mountCombatEnemyFor = async (canvas, enemy) => {
-
   const visual = getMonsterVisual(enemy.id);
   const key = `${enemy.id}:${visual.archetype}:${visual.tint}:${visual.scale}`;
 
@@ -1316,9 +1326,10 @@ const STICKY_HEIGHTS = [["combat-actions", "--combat-actions-height"]];
 const watchCombatZoneHeight = () => {
   if (combatZoneObserver) return;
 
-  const nodes = STICKY_HEIGHTS
-    .map(([id, prop]) => [document.getElementById(id), prop])
-    .filter(([node]) => node);
+  const nodes = STICKY_HEIGHTS.map(([id, prop]) => [
+    document.getElementById(id),
+    prop,
+  ]).filter(([node]) => node);
   if (!nodes.length) return;
 
   const publish = () => {
@@ -1371,7 +1382,8 @@ export const showEventBanner = ({ title, kind, text }) => {
   const banniere = document.getElementById("event-banner");
   if (!banniere) return;
 
-  document.getElementById("event-banner-title").innerText = title || "Evenement";
+  document.getElementById("event-banner-title").innerText =
+    title || "Evenement";
   document.getElementById("event-banner-text").innerText = text || "";
   banniere.dataset.tone = TON_PAR_GENRE[kind] || "route";
 
@@ -1397,7 +1409,9 @@ export const showEventBanner = ({ title, kind, text }) => {
 
   masqueBanniereId = setTimeout(() => {
     banniere.classList.remove("is-visible");
-    setTimeout(() => { banniere.hidden = true; }, 300);
+    setTimeout(() => {
+      banniere.hidden = true;
+    }, 300);
   }, 5000);
 };
 
@@ -1421,10 +1435,12 @@ export const syncCombatSprites = () => {
 export const playEnemyHurt = () => playMonsterAnimation(enemyAnimator, "hurt");
 
 /** L'ennemi frappe. */
-export const playEnemyAttack = () => playMonsterAnimation(enemyAnimator, "attack");
+export const playEnemyAttack = () =>
+  playMonsterAnimation(enemyAnimator, "attack");
 
 /** L'ennemi meurt : il reste au sol, on ne revient pas a l'attente. */
-export const playEnemyDeath = () => playMonsterAnimation(enemyAnimator, "death");
+export const playEnemyDeath = () =>
+  playMonsterAnimation(enemyAnimator, "death");
 
 /** Le heros frappe, dans la lane de combat. */
 export const playHeroCombatAttack = () => {
@@ -1479,7 +1495,8 @@ export const playHeroAnimation = (name) => {
   heroAnimator.play(sheet.file, row, {
     fps: sheet.fps,
     loop: false,
-    onEnd: () => heroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
+    onEnd: () =>
+      heroAnimator.play(sheet.file, sheet.rows.idle, { fps: sheet.fps }),
   });
 };
 
@@ -1765,8 +1782,18 @@ const bindMapControls = () => {
     if (btn) btn.addEventListener("click", handler);
   };
 
-  wire("map-zoom-in", withGraph((g) => g.zoom({ level: g.zoom() * 1.3, renderedPosition: centerOfMap() })));
-  wire("map-zoom-out", withGraph((g) => g.zoom({ level: g.zoom() / 1.3, renderedPosition: centerOfMap() })));
+  wire(
+    "map-zoom-in",
+    withGraph((g) =>
+      g.zoom({ level: g.zoom() * 1.3, renderedPosition: centerOfMap() }),
+    ),
+  );
+  wire(
+    "map-zoom-out",
+    withGraph((g) =>
+      g.zoom({ level: g.zoom() / 1.3, renderedPosition: centerOfMap() }),
+    ),
+  );
   wire("map-fit", withGraph(frameMap));
   wire(
     "map-locate",
@@ -1801,7 +1828,7 @@ const frameMap = (graph) => {
     const focus =
       graph.getElementById(selectedBiomeId) ||
       graph.getElementById(gameState.world.currentBiome);
-    if (focus && focus.length) graph.center(focus);
+    if (focus?.length) graph.center(focus);
   } catch (error) {
     console.warn("Cadrage de la carte ignore :", error);
   }
@@ -2100,14 +2127,16 @@ const renderWorldMap = (visibleIds) => {
           // vue d'ensemble : leur police est assez grande pour passer le seuil.
           selector: ".current-node",
           style: {
-            "border-color": accent,
-            "border-width": 4,
             // Zone courante : anneau d'accent, nettement plus grosse. En vue
             // d'ensemble le texte est illisible quel que soit le seuil (a 0.36
             // de zoom, une police de 12 rend 4px) : ce sont la taille et la
             // couleur qui portent l'information, pas le libelle.
             width: 30,
             height: 30,
+            // "border-color" et "border-width" etaient declares deux fois dans
+            // cet objet. Les premieres valeurs etaient mortes : en JavaScript
+            // la derniere occurrence gagne, l'anneau faisait donc bien 5 et non
+            // 4. Le rendu est inchange, seules les lignes sans effet partent.
             "border-color": accent,
             "border-width": 5,
             "font-size": 12,
@@ -2201,7 +2230,9 @@ const renderBiomeDetail = (biomeId) => {
   const biome = BIOMES[biomeId];
   const guide = BIOME_GUIDE[biomeId];
   const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
-  const traits = (BIOMES[biomeId]?.traits || []).map(getBiomeTrait).filter(Boolean);
+  const traits = (BIOMES[biomeId]?.traits || [])
+    .map(getBiomeTrait)
+    .filter(Boolean);
   const lootPreview = (LOOT_TABLES[biomeId] || [])
     .map((loot) => ITEMS[loot.id]?.name)
     .filter(Boolean)
@@ -2602,8 +2633,7 @@ const updateCombatPresentation = () => {
 
   enemyName.innerText = currentEnemy.name;
   if (enemyMeta) {
-    enemyMeta.innerText =
-      `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
+    enemyMeta.innerText = `${prefix} · ATK ${currentEnemy.atk}${currentEnemy.armor ? ` · ARM ${currentEnemy.armor}` : ""}`;
   }
   battleMeta.innerText = `${currentBiome?.name || "Expedition"} · ${runtimeState.currentLoopCount > 0 ? `Cycle ${runtimeState.currentLoopCount + 1}` : "Premier passage"}`;
 
@@ -2953,7 +2983,8 @@ export const updateRealTimeStatsDisplay = () => {
   // Calcul des stats spÃ©cifiques
   // Meme formule que combat.js, objets compris.
   const dodgeChance = Math.floor(
-    Math.min(0.5, gameState.stats.dexterity / 400 + (eff.dodgeChance || 0)) * 100,
+    Math.min(0.5, gameState.stats.dexterity / 400 + (eff.dodgeChance || 0)) *
+      100,
   );
   const flatPen = eff.flatDamagePenetration || 0;
   const percentPen = (eff.percentDamagePenetration || 0) * 100;
@@ -2975,7 +3006,7 @@ export const updateRealTimeStatsDisplay = () => {
     <div class="rt-stat"><span>Penetration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
     <hr>
     <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}${      eff.extraAttackChance > 0.005        ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>`        : ""    }</b></div>
+    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}${eff.extraAttackChance > 0.005 ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>` : ""}</b></div>
     <div class="rt-stat"><span>Degats de zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
     <div class="rt-stat"><span>Deg. min. Epines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
     <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
@@ -3212,7 +3243,7 @@ const EMBER_COLORS = ["#ec984c", "#c6ac74", "#e8c06a", "#b8683c"];
 export const createFireParticles = () => {
   const container = document.getElementById("fire-particles");
   if (!container) return;
-  if (container.childElementCount) return;   // deja peuplé
+  if (container.childElementCount) return; // deja peuplé
 
   const count = 46;
   for (let i = 0; i < count; i += 1) {
@@ -3306,7 +3337,7 @@ export const setAudioListener = () => {
   if (sfxSlider) {
     sfxSlider.value = gameState.save?.sfxVolume ?? 0.5;
     sfxSlider.oninput = (e) => {
-      setSfxVolume(parseFloat(e.target.value));
+      setSfxVolume(Number.parseFloat(e.target.value));
       // Un retour immediat : sans lui, on regle a l'aveugle.
       playSfx("hit");
       saveGame();
@@ -3330,7 +3361,7 @@ export const setAudioListener = () => {
     [campAudio, dungeonAudio, narratorAudio].forEach(applyTrackVolume);
 
     volumeSlider.oninput = (e) => {
-      const volume = parseFloat(e.target.value);
+      const volume = Number.parseFloat(e.target.value);
 
       if (!gameState.save) gameState.save = {};
       gameState.save.audioVolume = volume;
@@ -3342,4 +3373,3 @@ export const setAudioListener = () => {
 };
 
 // ui.js
-
