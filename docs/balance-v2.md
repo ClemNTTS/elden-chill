@@ -31,6 +31,13 @@ La refonte ajoute une carte de campagne, une nouvelle branche souterraine et un 
   - `0-40 vigueur`: `+45 PV / point`
   - `41-60`: `+35 PV / point`
   - `61+`: `+25 PV / point`
+  - **prime de palier**, volontaire: franchir un palier ne reprend pas la pente
+    precedente, il saute.
+    - `40 -> 41`: `+435 PV` au lieu de `+35` (400 de prime)
+    - `60 -> 61`: `+125 PV` au lieu de `+25` (100 de prime)
+    - soit `500 PV` de prime pour qui pousse la vigueur au-dela de 60.
+      Franchir un palier doit se sentir, alors meme que le rendement par point
+      baisse juste apres. Verrouille par `tests/formules.test.mjs`.
 - Esquive:
   - `Dex / 400`
   - capee a `50%`

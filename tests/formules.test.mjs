@@ -20,24 +20,24 @@ test("les paliers de PV valent ce que le moteur calcule aujourd'hui", () => {
 });
 
 /*
- * ATTENTION : ce test ancre un ECART entre le code et docs/balance-v2.md.
+ * Les deux marches de la courbe de PV sont VOULUES.
  *
- * La documentation annonce trois pentes — +45, +35 puis +25 PV par point.
- * Le code ajoute en plus deux marches au franchissement des paliers, parce que
- * les constantes de depart (2200 et 3000) ne prolongent pas la pente
- * precedente :
+ * Au franchissement d'un palier, la vigueur ne reprend pas la pente
+ * precedente : elle saute.
  *
- *   vigueur 40 -> 41 : +435 PV au lieu de +35  (400 PV offerts)
- *   vigueur 60 -> 61 : +125 PV au lieu de +25  (100 PV offerts)
+ *   vigueur 40 -> 41 : +435 PV au lieu de +35  (400 PV de prime)
+ *   vigueur 60 -> 61 : +125 PV au lieu de +25  (100 PV de prime)
  *
- * Soit 500 PV gratuits pour qui depasse 60 de vigueur. Rien ne dit si c'est
- * voulu : la continuite demanderait 1800 et 2900 a la place.
+ * Soit 500 PV de prime pour qui pousse la vigueur au-dela de 60. C'est un
+ * choix d'equilibrage assume : franchir un palier doit se sentir, alors meme
+ * que le rendement par point baisse juste apres. Une courbe continue
+ * demanderait 1800 et 2900 au lieu de 2200 et 3000.
  *
- * Le test fige donc le comportement ACTUEL plutot que celui de la
- * documentation. Corriger la courbe change l'equilibrage de toutes les
- * sauvegardes existantes : c'est une decision de game design, pas une
- * correction de bug, et elle doit etre prise sciemment. Si elle est prise, ce
- * test echouera — et c'est exactement son role.
+ * docs/balance-v2.md ne decrit que les trois pentes et passe les marches sous
+ * silence : c'est la documentation qui est incomplete, pas le code.
+ *
+ * Ce test verrouille les deux marches. S'il echoue, c'est que quelqu'un a
+ * "corrige" la courbe en croyant reparer une incoherence.
  */
 test("les marches aux franchissements de palier sont celles attendues", () => {
   assert.equal(getHealth(41) - getHealth(40), 435, "marche a la vigueur 41");
