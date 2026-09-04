@@ -1,3 +1,42 @@
+import {
+  equipAsh,
+  equipItem,
+  investCritPoint,
+  investRebirthNode,
+  refundRunes,
+  requestRebirth,
+  resetGame,
+  respecCritPoints,
+  respecRebirthTree,
+  startTrial,
+  upgradeStat,
+  upgradeStatMultiple,
+} from "./actions.js";
+import { BIOMES } from "./biome.js";
+import { startExploration } from "./core.js";
+import { ITEMS } from "./item.js";
+import {
+  exportSaveString,
+  importSaveString,
+  loadGame,
+  saveGame,
+} from "./save.js";
+import { enqueueDevSpawn } from "./spawn.js";
+import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
+import {
+  createFireParticles,
+  hideTooltip,
+  initCampParallax,
+  moveTooltip,
+  playCampMusic,
+  setAudioListener,
+  showStatTooltip,
+  toggleNarrator,
+  toggleOptions,
+  toggleRealTimeStats,
+  toggleView,
+  updateUI,
+} from "./ui.js";
 // Main entry point for the game
 import {
   CHECK_REFRESH_KEY,
@@ -6,45 +45,6 @@ import {
   IS_LOCAL_HOST,
   checkForUpdate,
 } from "./version-check.js";
-import { BIOMES } from "./biome.js";
-import { ITEMS } from "./item.js";
-import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
-import {
-  exportSaveString,
-  importSaveString,
-  loadGame,
-  saveGame,
-} from "./save.js";
-import {
-  equipAsh,
-  equipItem,
-  resetGame,
-  upgradeStat,
-  upgradeStatMultiple,
-  investCritPoint,
-  respecCritPoints,
-  startTrial,
-  requestRebirth,
-  investRebirthNode,
-  respecRebirthTree,
-  refundRunes,
-} from "./actions.js";
-import { startExploration } from "./core.js";
-import {
-  createFireParticles,
-  initCampParallax,
-  hideTooltip,
-  moveTooltip,
-  showStatTooltip,
-  toggleOptions,
-  toggleView,
-  updateUI,
-  playCampMusic,
-  toggleNarrator,
-  setAudioListener,
-  toggleRealTimeStats,
-} from "./ui.js";
-import { enqueueDevSpawn } from "./spawn.js";
 
 // Dev tools
 const dev = {
@@ -58,7 +58,7 @@ const dev = {
     if (ITEMS[itemId]) {
       // Re-implementing dropItem logic for dev purposes to avoid circular deps
       const itemTemplate = ITEMS[itemId];
-      let inventoryItem = gameState.inventory.find(
+      const inventoryItem = gameState.inventory.find(
         (item) => item.id === itemId,
       );
       if (!inventoryItem) {
@@ -117,7 +117,7 @@ const dev = {
     Object.keys(ITEMS).forEach((itemId) => {
       const itemTemplate = ITEMS[itemId];
 
-      let inventoryItem = gameState.inventory.find(
+      const inventoryItem = gameState.inventory.find(
         (item) => item.id === itemId,
       );
 
@@ -266,7 +266,7 @@ const handleAutoRefresh = () => {
   if (
     lastVersion !== CURRENT_VERSION ||
     !lastRefresh ||
-    now - parseInt(lastRefresh) > ONE_DAY_MS
+    now - Number.parseInt(lastRefresh) > ONE_DAY_MS
   ) {
     localStorage.setItem(CHECK_REFRESH_KEY, now.toString());
     localStorage.setItem(FORCE_VERSION_KEY, CURRENT_VERSION);

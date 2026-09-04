@@ -60,7 +60,10 @@ export const ENDGAME_MONSTERS = {
       // Alterne garde et represailles : deux tours a encaisser, un a craindre.
       enemy._guard = (enemy._guard || 0) + 1;
       if (enemy._guard % 3 === 0) {
-        return { dmgMult: 2.1, msg: "Le veilleur abat sa hallebarde de tout son poids." };
+        return {
+          dmgMult: 2.1,
+          msg: "Le veilleur abat sa hallebarde de tout son poids.",
+        };
       }
       enemy.armor += 25;
       return { msg: "Le veilleur resserre sa garde dorée.", skipAttack: true };
@@ -77,15 +80,22 @@ export const ENDGAME_MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.22 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "L'avatar fend son propre tronc : la sève dorée prend feu.",
+    flavorTextPhase2:
+      "L'avatar fend son propre tronc : la sève dorée prend feu.",
     effectsPhase2: { id: "BURN", duration: 3, chance: 0.4 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 3 === 1) {
-        return { msg: "L'avatar plante ses racines et aspire la lumière.", skipAttack: true };
+        return {
+          msg: "L'avatar plante ses racines et aspire la lumière.",
+          skipAttack: true,
+        };
       }
       if (enemy._pattern % 3 === 2) {
-        return { dmgMult: 1.7, msg: "Un balayage de racines dorées traverse la cour." };
+        return {
+          dmgMult: 1.7,
+          msg: "Un balayage de racines dorées traverse la cour.",
+        };
       }
       return { msg: "L'avatar frappe du plat de son tronc." };
     },
@@ -125,7 +135,10 @@ export const ENDGAME_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._swoop = (enemy._swoop || 0) + 1;
       if (enemy._swoop % 2 === 0) {
-        return { dmgMult: 1.9, msg: "L'oiseau de mort fond sur vous, faux en avant." };
+        return {
+          dmgMult: 1.9,
+          msg: "L'oiseau de mort fond sur vous, faux en avant.",
+        };
       }
       return { msg: "L'oiseau de mort prend de l'altitude." };
     },
@@ -141,12 +154,16 @@ export const ENDGAME_MONSTERS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.3 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
-    flavorTextPhase2: "Le gardien laisse tomber son manteau : dessous, il n'y a plus de chair.",
+    flavorTextPhase2:
+      "Le gardien laisse tomber son manteau : dessous, il n'y a plus de chair.",
     effectsPhase2: { id: "BLEED", duration: 4, chance: 0.48 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 4 === 0) {
-        return { dmgMult: 2.2, msg: "Le gardien libère une lame de brume glacée." };
+        return {
+          dmgMult: 2.2,
+          msg: "Le gardien libère une lame de brume glacée.",
+        };
       }
       return { msg: "Le gardien avance d'un pas mesuré." };
     },
@@ -186,7 +203,10 @@ export const ENDGAME_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._charge = (enemy._charge || 0) + 1;
       if (enemy._charge % 3 === 1) {
-        return { msg: "La cavalerie nocturne prend son elan dans la neige.", skipAttack: true };
+        return {
+          msg: "La cavalerie nocturne prend son elan dans la neige.",
+          skipAttack: true,
+        };
       }
       return { dmgMult: 1.6, msg: "La charge nocturne fend la plaine." };
     },
@@ -202,15 +222,22 @@ export const ENDGAME_MONSTERS = {
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.42 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Le dragon replie ses ailes et le froid cesse d'etre du vent.",
+    flavorTextPhase2:
+      "Le dragon replie ses ailes et le froid cesse d'etre du vent.",
     effectsPhase2: { id: "FROSTBITE", duration: 4, chance: 0.6 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 3 === 1) {
-        return { msg: "Le dragon inspire ; l'air se charge de cristaux.", skipAttack: true };
+        return {
+          msg: "Le dragon inspire ; l'air se charge de cristaux.",
+          skipAttack: true,
+        };
       }
       if (enemy._pattern % 3 === 2) {
-        return { dmgMult: 2.0, msg: "Un souffle de givre balaie la plaine consacree." };
+        return {
+          dmgMult: 2.0,
+          msg: "Un souffle de givre balaie la plaine consacree.",
+        };
       }
       return { msg: "Le dragon frappe du poitrail." };
     },
@@ -253,7 +280,9 @@ export const ENDGAME_MONSTERS = {
       if (enemy._feed % 3 === 0) {
         const heal = Math.floor(enemy.maxHp * 0.06);
         enemy.hp = Math.min(enemy.maxHp, enemy.hp + heal);
-        return { msg: `Le limier laper le sang et recouvre ${heal} points de vie.` };
+        return {
+          msg: `Le limier laper le sang et recouvre ${heal} points de vie.`,
+        };
       }
       return { dmgMult: 1.3, msg: "Le limier ouvre une plaie nette." };
     },
@@ -269,12 +298,16 @@ export const ENDGAME_MONSTERS = {
     onHitEffect: { id: "BLEED", duration: 3, chance: 0.45 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.4,
-    flavorTextPhase2: "L'echo leve son trident : le palais entier se met a saigner.",
+    flavorTextPhase2:
+      "L'echo leve son trident : le palais entier se met a saigner.",
     effectsPhase2: { id: "BLEED", duration: 4, chance: 0.62 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 4 === 0) {
-        return { dmgMult: 2.4, msg: "Le sang accumule retombe en une seule vague." };
+        return {
+          dmgMult: 2.4,
+          msg: "Le sang accumule retombe en une seule vague.",
+        };
       }
       return { msg: "L'echo tourne autour de vous, trident bas." };
     },
@@ -314,7 +347,10 @@ export const ENDGAME_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._horn = (enemy._horn || 0) + 1;
       if (enemy._horn % 2 === 0) {
-        return { dmgMult: 1.8, msg: "L'envoye souffle dans sa trompe : l'onde ratisse large." };
+        return {
+          dmgMult: 1.8,
+          msg: "L'envoye souffle dans sa trompe : l'onde ratisse large.",
+        };
       }
       return { msg: "L'envoye reprend son souffle." };
     },
@@ -330,15 +366,22 @@ export const ENDGAME_MONSTERS = {
     onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.4 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "L'armure cede ; ce qui sort n'est plus soigne par personne.",
+    flavorTextPhase2:
+      "L'armure cede ; ce qui sort n'est plus soigne par personne.",
     effectsPhase2: { id: "SCARLET_ROT", duration: 4, chance: 0.6 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 3 === 1) {
-        return { msg: "Le chevalier ancre sa lame dans le tronc.", skipAttack: true };
+        return {
+          msg: "Le chevalier ancre sa lame dans le tronc.",
+          skipAttack: true,
+        };
       }
       if (enemy._pattern % 3 === 2) {
-        return { dmgMult: 2.0, msg: "Une gerbe de spores ecarlates jaillit de la lame." };
+        return {
+          dmgMult: 2.0,
+          msg: "Une gerbe de spores ecarlates jaillit de la lame.",
+        };
       }
       return { msg: "Le chevalier enchaine deux estocs." };
     },
@@ -370,7 +413,10 @@ export const TRIAL_MONSTERS = {
     onTurnAction: (enemy) => {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 0) {
-        return { dmgMult: 2.5, msg: "Le Veilleur abaisse sa garde et frappe une seule fois." };
+        return {
+          dmgMult: 2.5,
+          msg: "Le Veilleur abaisse sa garde et frappe une seule fois.",
+        };
       }
       return { msg: "Le Veilleur vous observe sans bouger." };
     },
@@ -409,7 +455,8 @@ export const TRIAL_MONSTERS = {
     onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.42 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.6,
-    flavorTextPhase2: "La couronne se remet en place. Il n'y a personne dessous.",
+    flavorTextPhase2:
+      "La couronne se remet en place. Il n'y a personne dessous.",
     effectsPhase2: { id: "SCARLET_ROT", duration: 4, chance: 0.6 },
     onTurnAction: (enemy) => {
       // Se soigne tant qu'on ne la tue pas assez vite : filtre les builds qui
@@ -418,9 +465,14 @@ export const TRIAL_MONSTERS = {
       if (enemy._p % 5 === 0) {
         const heal = Math.floor(enemy.maxHp * 0.04);
         enemy.hp = Math.min(enemy.maxHp, enemy.hp + heal);
-        return { msg: `La couronne se recompose et regagne ${heal} points de vie.` };
+        return {
+          msg: `La couronne se recompose et regagne ${heal} points de vie.`,
+        };
       }
-      return { dmgMult: 1.4, msg: "La couronne tourne lentement sur elle-meme." };
+      return {
+        dmgMult: 1.4,
+        msg: "La couronne tourne lentement sur elle-meme.",
+      };
     },
   },
   trial_first_boss: {
@@ -440,11 +492,17 @@ export const TRIAL_MONSTERS = {
       enemy._p = (enemy._p || 0) + 1;
       if (enemy._p % 4 === 1) {
         enemy.armor += 60;
-        return { msg: "Le Premier Sans-Eclat adopte votre propre garde.", skipAttack: true };
+        return {
+          msg: "Le Premier Sans-Eclat adopte votre propre garde.",
+          skipAttack: true,
+        };
       }
       if (enemy._p % 4 === 3) {
         enemy.armor = Math.max(400, enemy.armor - 60);
-        return { dmgMult: 2.6, msg: "Il enchaine la riposte que vous auriez faite." };
+        return {
+          dmgMult: 2.6,
+          msg: "Il enchaine la riposte que vous auriez faite.",
+        };
       }
       return { msg: "Il avance d'un pas, exactement comme vous." };
     },

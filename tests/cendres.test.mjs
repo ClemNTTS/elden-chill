@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 /*
  * Cendres de guerre.
  *
@@ -7,7 +8,6 @@
  * forfait — 100% des PV a vigueur 0, encore 12% a vigueur 99.
  */
 import test from "node:test";
-import assert from "node:assert/strict";
 import { ashes, etatNeuf, pvMax, state } from "./aide.mjs";
 
 const { ASHES_OF_WAR } = ashes;
@@ -53,7 +53,12 @@ test("Entaille Sanglante conserve son multiplicateur et son saignement", () => {
 });
 
 test("le soin du Sans-Eclat rend 5 PV par niveau, plafonne a 250", () => {
-  for (const [level, attendu] of [[1, 5], [10, 50], [50, 250], [200, 250]]) {
+  for (const [level, attendu] of [
+    [1, 5],
+    [10, 50],
+    [50, 250],
+    [200, 250],
+  ]) {
     etatNeuf({ stats: { level, vigor: 40 } });
     state.runtimeState.playerCurrentHp = 10;
     ASHES_OF_WAR.beginer_tarnished_heal.effect(state.getEffectiveStats(), null);

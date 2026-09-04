@@ -152,6 +152,9 @@ export const getCritDamageMultiplier = (effectiveStats) => {
   const superRate = getSuperCritChance(effectiveStats);
   const normalRate = hitRate - superRate;
   return (
-    1 - hitRate + normalRate * damage + superRate * damage * SUPER_CRIT_MULTIPLIER
+    1 -
+    hitRate +
+    normalRate * damage +
+    superRate * damage * SUPER_CRIT_MULTIPLIER
   );
 };

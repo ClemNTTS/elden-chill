@@ -110,10 +110,16 @@ body {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(197, 173, 115, 0.08), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(118, 151, 190, 0.08), transparent 28%),
-    linear-gradient(180deg, #0f0d0b, #171410);
+  background: radial-gradient(
+      circle at top left,
+      rgba(197, 173, 115, 0.08),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(118, 151, 190, 0.08),
+      transparent 28%
+    ), linear-gradient(180deg, #0f0d0b, #171410);
   color: var(--text);
   font-family: var(--body-font);
   overflow-x: hidden;
@@ -142,17 +148,18 @@ p {
 button {
   appearance: none;
   border: 1px solid var(--border-strong);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface-muted));
+  background: linear-gradient(
+    180deg,
+    var(--surface-strong),
+    var(--surface-muted)
+  );
   color: var(--text);
   border-radius: 10px;
   padding: 0.8rem 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color
+    0.18s ease, box-shadow 0.18s ease;
   box-shadow: 0 10px 20px rgba(70, 54, 28, 0.08);
 }
 
@@ -222,7 +229,6 @@ button:disabled {
   }
 }
 
-
 #game-container {
   position: relative;
   z-index: 1;
@@ -241,10 +247,8 @@ button:disabled {
    utiliser les memes jetons, sinon le decor du camp reste cache derriere un
    fond a 94% d'opacite. */
 #game-container {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.14)),
-    var(--shell-sheen),
-    var(--shell-veil);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.14)),
+    var(--shell-sheen), var(--shell-veil);
 }
 
 .app-header {
@@ -289,7 +293,11 @@ button:disabled {
 }
 
 .nav-btn.is-active {
-  background: linear-gradient(180deg, var(--accent-soft), rgba(255, 255, 255, 0.65));
+  background: linear-gradient(
+    180deg,
+    var(--accent-soft),
+    rgba(255, 255, 255, 0.65)
+  );
   border-color: var(--accent);
 }
 
@@ -347,7 +355,12 @@ button:disabled {
   pointer-events: none;
   /* Le decor s'efface vers le bas : les panneaux n'ont pas a se battre contre
      un sol charge. */
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 96%);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 52%,
+    transparent 96%
+  );
   mask-image: linear-gradient(180deg, #000 0%, #000 52%, transparent 96%);
   transition: opacity 400ms ease;
 }
@@ -480,7 +493,12 @@ button:disabled {
   position: absolute;
   inset: 0 0 auto;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28),
+    transparent
+  );
   opacity: 0.55;
 }
 
@@ -538,9 +556,11 @@ button:disabled {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 78%, var(--accent-soft), transparent 62%),
-    var(--surface-muted);
+  background: radial-gradient(
+      circle at 50% 78%,
+      var(--accent-soft),
+      transparent 62%
+    ), var(--surface-muted);
   border: 1px solid var(--border-strong);
   box-shadow: inset 0 -18px 40px rgba(0, 0, 0, 0.35);
   overflow: hidden;
@@ -886,10 +906,16 @@ button:disabled {
   height: clamp(380px, 58vh, 640px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  background:
-    radial-gradient(circle at 25% 18%, rgba(160, 136, 89, 0.22), transparent 24%),
-    radial-gradient(circle at 77% 74%, rgba(95, 127, 159, 0.16), transparent 22%),
-    linear-gradient(180deg, #f6efdf, #eaddc6);
+  background: radial-gradient(
+      circle at 25% 18%,
+      rgba(160, 136, 89, 0.22),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 77% 74%,
+      rgba(95, 127, 159, 0.16),
+      transparent 22%
+    ), linear-gradient(180deg, #f6efdf, #eaddc6);
   overflow: hidden;
 }
 
@@ -927,8 +953,11 @@ button:disabled {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 60%);
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.03),
+    transparent 60%
+  );
 }
 
 #world-map::before {
@@ -936,24 +965,32 @@ button:disabled {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at center, rgba(197, 173, 115, 0.04), transparent 38%);
+  background: radial-gradient(
+    circle at center,
+    rgba(197, 173, 115, 0.04),
+    transparent 38%
+  );
   opacity: 0.8;
 }
 
 #world-map-shell {
-  background:
-    radial-gradient(circle at 25% 18%, rgba(160, 136, 89, 0.22), transparent 24%),
-    radial-gradient(circle at 77% 74%, rgba(95, 127, 159, 0.18), transparent 22%),
-    linear-gradient(180deg, #241d16, #15120f);
+  background: radial-gradient(
+      circle at 25% 18%,
+      rgba(160, 136, 89, 0.22),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 77% 74%,
+      rgba(95, 127, 159, 0.18),
+      transparent 22%
+    ), linear-gradient(180deg, #241d16, #15120f);
 }
 
 #world-map-shell::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+  background-image: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 54px 54px;
   opacity: 0.35;
@@ -1012,9 +1049,8 @@ button:disabled {
 
 .world-node.selected {
   transform: translate(-50%, -50%) scale(1.08);
-  box-shadow:
-    0 0 0 4px rgba(134, 113, 66, 0.16),
-    0 18px 30px rgba(82, 68, 39, 0.18);
+  box-shadow: 0 0 0 4px rgba(134, 113, 66, 0.16), 0 18px 30px
+    rgba(82, 68, 39, 0.18);
 }
 
 /* Empilee par defaut. Cette colonne etait une grille a deux colonnes, ce qui
@@ -1256,7 +1292,8 @@ button:disabled {
 
 #biome-list {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--border-strong) 70%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--border-strong) 70%, transparent)
+    transparent;
 }
 
 .biome-shortcut {
@@ -1310,7 +1347,11 @@ button:disabled {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(245, 235, 212, 0.9), rgba(236, 225, 201, 0.92));
+  background: linear-gradient(
+    180deg,
+    rgba(245, 235, 212, 0.9),
+    rgba(236, 225, 201, 0.92)
+  );
   color: var(--text-soft);
   font-size: 0.92rem;
 }
@@ -1321,16 +1362,28 @@ button:disabled {
 
 .build-cap-status.is-maxed {
   border-color: rgba(184, 141, 76, 0.34);
-  background: linear-gradient(180deg, rgba(245, 229, 197, 0.95), rgba(232, 214, 184, 0.94));
+  background: linear-gradient(
+    180deg,
+    rgba(245, 229, 197, 0.95),
+    rgba(232, 214, 184, 0.94)
+  );
   color: var(--text);
 }
 
 .build-cap-status {
-  background: linear-gradient(180deg, rgba(37, 31, 24, 0.96), rgba(28, 23, 18, 0.95));
+  background: linear-gradient(
+    180deg,
+    rgba(37, 31, 24, 0.96),
+    rgba(28, 23, 18, 0.95)
+  );
 }
 
 .build-cap-status.is-maxed {
-  background: linear-gradient(180deg, rgba(53, 40, 24, 0.96), rgba(40, 29, 18, 0.95));
+  background: linear-gradient(
+    180deg,
+    rgba(53, 40, 24, 0.96),
+    rgba(40, 29, 18, 0.95)
+  );
 }
 
 .stat-line {
@@ -1525,9 +1578,11 @@ button:disabled {
   flex: 0 0 auto;
   padding: 9px;
   border-radius: var(--radius-sm);
-  background:
-    radial-gradient(circle at 50% 42%, var(--item-glow, transparent), transparent 68%),
-    var(--surface-subtle);
+  background: radial-gradient(
+      circle at 50% 42%,
+      var(--item-glow, transparent),
+      transparent 68%
+    ), var(--surface-subtle);
   border: 1px solid var(--border);
 }
 
@@ -1573,10 +1628,8 @@ button:disabled {
   justify-items: center;
   gap: 8px;
   text-align: center;
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s
+    ease;
 }
 
 .inventory-item:hover {
@@ -1656,24 +1709,40 @@ button:disabled {
 
 .inventory-item.item-type-weapon,
 .inventory-equipped-card.item-type-weapon {
-  background: linear-gradient(180deg, rgba(60, 38, 31, 0.96), rgba(44, 28, 23, 0.94));
+  background: linear-gradient(
+    180deg,
+    rgba(60, 38, 31, 0.96),
+    rgba(44, 28, 23, 0.94)
+  );
   border-color: rgba(181, 109, 83, 0.35);
 }
 
 .inventory-item.item-type-armor,
 .inventory-equipped-card.item-type-armor {
-  background: linear-gradient(180deg, rgba(31, 40, 55, 0.96), rgba(22, 29, 41, 0.94));
+  background: linear-gradient(
+    180deg,
+    rgba(31, 40, 55, 0.96),
+    rgba(22, 29, 41, 0.94)
+  );
   border-color: rgba(120, 140, 185, 0.34);
 }
 
 .inventory-item.item-type-accessory,
 .inventory-equipped-card.item-type-accessory {
-  background: linear-gradient(180deg, rgba(39, 46, 28, 0.96), rgba(29, 34, 21, 0.94));
+  background: linear-gradient(
+    180deg,
+    rgba(39, 46, 28, 0.96),
+    rgba(29, 34, 21, 0.94)
+  );
   border-color: rgba(132, 155, 82, 0.34);
 }
 
 .inventory-equipped-card.item-type-ash {
-  background: linear-gradient(180deg, rgba(53, 40, 24, 0.96), rgba(40, 29, 18, 0.94));
+  background: linear-gradient(
+    180deg,
+    rgba(53, 40, 24, 0.96),
+    rgba(40, 29, 18, 0.94)
+  );
   border-color: rgba(184, 141, 76, 0.34);
 }
 
@@ -1970,7 +2039,11 @@ button:disabled {
   z-index: 1;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface-strong), rgba(255, 255, 255, 0));
+  background: linear-gradient(
+    180deg,
+    var(--surface-strong),
+    rgba(255, 255, 255, 0)
+  );
   color: var(--text-soft);
 }
 
@@ -2053,13 +2126,16 @@ button:disabled {
 }
 
 .log-entry {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--surface-muted);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.015)
+    ), var(--surface-muted);
 }
 
 .log-entry-latest {
-  box-shadow:
-    0 0 0 2px rgba(197, 173, 115, 0.16),
-    0 18px 30px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 0 0 2px rgba(197, 173, 115, 0.16), 0 18px 30px
+    rgba(0, 0, 0, 0.22);
 }
 
 .log-repeat-badge {
@@ -2136,8 +2212,12 @@ button:disabled {
   overflow: hidden;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--border-strong) 78%, transparent);
-  background: linear-gradient(180deg, var(--surface-muted), color-mix(in srgb, var(--surface-strong) 88%, black));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  background: linear-gradient(
+    180deg,
+    var(--surface-muted),
+    color-mix(in srgb, var(--surface-strong) 88%, black)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .hp-fill {
@@ -2321,11 +2401,7 @@ button:disabled {
   bottom: 100%;
   height: 18px;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0),
-    var(--surface-strong)
-  );
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), var(--surface-strong));
 }
 
 .biome-actions-bottom {
@@ -2355,13 +2431,14 @@ button:disabled {
   padding: 14px 16px;
   border-radius: 8px;
   border: 1px solid rgba(122, 101, 64, 0.28);
-  background:
-    linear-gradient(180deg, rgba(255, 251, 243, 0.98), rgba(243, 234, 218, 0.96)),
-    var(--surface-strong);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 251, 243, 0.98),
+      rgba(243, 234, 218, 0.96)
+    ), var(--surface-strong);
   color: var(--text);
-  box-shadow:
-    0 22px 46px rgba(69, 49, 26, 0.18),
-    0 4px 12px rgba(69, 49, 26, 0.08);
+  box-shadow: 0 22px 46px rgba(69, 49, 26, 0.18), 0 4px 12px
+    rgba(69, 49, 26, 0.08);
   pointer-events: none;
   line-height: 1.45;
   backdrop-filter: blur(12px);
@@ -2369,12 +2446,12 @@ button:disabled {
 
 #tooltip {
   border-color: rgba(205, 179, 115, 0.24);
-  background:
-    linear-gradient(180deg, rgba(30, 25, 20, 0.98), rgba(21, 18, 15, 0.97)),
-    var(--surface-strong);
-  box-shadow:
-    0 22px 46px rgba(0, 0, 0, 0.34),
-    0 4px 12px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(
+      180deg,
+      rgba(30, 25, 20, 0.98),
+      rgba(21, 18, 15, 0.97)
+    ), var(--surface-strong);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.34), 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 .tooltip-title {
@@ -2606,9 +2683,11 @@ button:disabled {
   display: grid;
   gap: 14px;
   opacity: 0.92;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
-    color-mix(in srgb, var(--surface-strong) 92%, transparent);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0.06)
+    ), color-mix(in srgb, var(--surface-strong) 92%, transparent);
   border-color: color-mix(in srgb, var(--border) 88%, transparent);
   margin-top: 18px;
 }
@@ -2621,24 +2700,24 @@ button:disabled {
   min-width: 160px;
   appearance: none;
   border: 1px solid var(--border-strong);
-  background:
-    linear-gradient(180deg, var(--surface-strong), var(--surface-muted));
+  background: linear-gradient(
+    180deg,
+    var(--surface-strong),
+    var(--surface-muted)
+  );
   color: var(--text);
   padding: 0.75rem 2.4rem 0.75rem 0.9rem;
   border-radius: 8px;
   box-shadow: 0 10px 20px rgba(58, 43, 20, 0.08);
-  background-image:
-    linear-gradient(180deg, var(--surface-strong), var(--surface-muted)),
-    linear-gradient(45deg, transparent 50%, var(--text-soft) 50%),
+  background-image: linear-gradient(
+      180deg,
+      var(--surface-strong),
+      var(--surface-muted)
+    ), linear-gradient(45deg, transparent 50%, var(--text-soft) 50%),
     linear-gradient(135deg, var(--text-soft) 50%, transparent 50%);
-  background-position:
-    0 0,
-    calc(100% - 18px) calc(50% - 3px),
-    calc(100% - 12px) calc(50% - 3px);
-  background-size:
-    100% 100%,
-    6px 6px,
-    6px 6px;
+  background-position: 0 0, calc(100% - 18px) calc(50% - 3px), calc(100% - 12px)
+    calc(50% - 3px);
+  background-size: 100% 100%, 6px 6px, 6px 6px;
   background-repeat: no-repeat;
 }
 
@@ -2751,7 +2830,6 @@ button:disabled {
     bottom: auto;
   }
 
-
   #ash-button {
     width: 100%;
   }
@@ -2863,30 +2941,30 @@ button:disabled {
   }
 
   #world-map-shell {
-      min-height: 300px;
-      height: 42vh;
-      padding: 12px;
-    }
+    min-height: 300px;
+    height: 42vh;
+    padding: 12px;
+  }
 
   #world-map-shell::before,
   #world-map-paths {
     display: none;
   }
 
-    #world-map {
-      position: absolute;
-      inset: 0;
-      display: block;
-    }
+  #world-map {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
 
-    .map-side-column {
-      grid-template-columns: 1fr;
-    }
+  .map-side-column {
+    grid-template-columns: 1fr;
+  }
 
-    #biome-list {
-      max-height: 30vh;
-      padding-right: 2px;
-    }
+  #biome-list {
+    max-height: 30vh;
+    padding-right: 2px;
+  }
 
   .world-node {
     position: static;
@@ -3352,10 +3430,18 @@ button:disabled {
   background: var(--accent);
 }
 
-.event-banner[data-tone="gain"] .event-banner__kind { background: #2ecc71; }
-.event-banner[data-tone="danger"] .event-banner__kind { background: #e74c3c; }
-.event-banner[data-tone="grace"] .event-banner__kind { background: #f1c40f; }
-.event-banner[data-tone="route"] .event-banner__kind { background: #54a0d4; }
+.event-banner[data-tone="gain"] .event-banner__kind {
+  background: #2ecc71;
+}
+.event-banner[data-tone="danger"] .event-banner__kind {
+  background: #e74c3c;
+}
+.event-banner[data-tone="grace"] .event-banner__kind {
+  background: #f1c40f;
+}
+.event-banner[data-tone="route"] .event-banner__kind {
+  background: #54a0d4;
+}
 
 .event-banner__body {
   min-width: 0;
@@ -3381,8 +3467,12 @@ button:disabled {
     top: 6px;
     padding: 8px 10px;
   }
-  .event-banner__title { font-size: 0.84rem; }
-  .event-banner__text { font-size: 0.72rem; }
+  .event-banner__title {
+    font-size: 0.84rem;
+  }
+  .event-banner__text {
+    font-size: 0.72rem;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -3425,8 +3515,12 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
-  .combat-lane__name { font-size: 0.9rem; }
-  .combat-lane__meta { font-size: 0.7rem; }
+  .combat-lane__name {
+    font-size: 0.9rem;
+  }
+  .combat-lane__meta {
+    font-size: 0.7rem;
+  }
 }
 
 /*
@@ -3481,12 +3575,20 @@ button:disabled {
 }
 
 /* La severite teinte le libelle : c'est le seul mot a lire en urgence. */
-.combat-lane.intent-boss .combat-lane__intent { color: #e74c3c; }
-.combat-lane.intent-elite .combat-lane__intent { color: #f1c40f; }
-.combat-lane.intent-heavy .combat-lane__intent { color: #e67e22; }
+.combat-lane.intent-boss .combat-lane__intent {
+  color: #e74c3c;
+}
+.combat-lane.intent-elite .combat-lane__intent {
+  color: #f1c40f;
+}
+.combat-lane.intent-heavy .combat-lane__intent {
+  color: #e67e22;
+}
 
 @media (max-width: 640px) {
-  .combat-lane__intent { font-size: 0.78rem; }
+  .combat-lane__intent {
+    font-size: 0.78rem;
+  }
 }
 
 /*
@@ -3544,5 +3646,9 @@ button:disabled {
   word-break: break-all;
 }
 
-#save-transfer-status.is-ok { color: #2ecc71; }
-#save-transfer-status.is-error { color: #e74c3c; }
+#save-transfer-status.is-ok {
+  color: #2ecc71;
+}
+#save-transfer-status.is-error {
+  color: #e74c3c;
+}

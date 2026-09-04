@@ -14,7 +14,7 @@
 //   node tools/audit-descriptions.mjs
 //   node tools/audit-descriptions.mjs --tout   (affiche aussi les cas douteux)
 
-import { readFileSync, readdirSync } from "fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { mountDomStub } from "./headless-stub.mjs";
 
 /*
@@ -35,16 +35,34 @@ const { gameState, getEffectiveStats } = await import("../state.js");
 const { DEFAULT_PLAYER_PROFILE } = await import("../shared/player-profile.js");
 
 gameState.stats = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats));
-gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+gameState.preparation = JSON.parse(
+  JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+);
 gameState.inventory = [];
 gameState.equipped = { weapon: null, armor: null, accessory: null };
 Object.assign(gameState.stats, {
-  level: 100, vigor: 60, strength: 60, dexterity: 60, intelligence: 60,
-  critChance: 0.3, critDamage: 2,
+  level: 100,
+  vigor: 60,
+  strength: 60,
+  dexterity: 60,
+  intelligence: 60,
+  critChance: 0.3,
+  critDamage: 2,
 });
 const CLES = Object.keys(getEffectiveStats());
-const RESIST = ["poison", "putrefaction", "gel", "saignement", "folie", "sommeil",
-                "mortdombre", "feu", "foudre", "sacre", "magie"];
+const RESIST = [
+  "poison",
+  "putrefaction",
+  "gel",
+  "saignement",
+  "folie",
+  "sommeil",
+  "mortdombre",
+  "feu",
+  "foudre",
+  "sacre",
+  "magie",
+];
 
 /** Valeurs numeriques que l'objet produit reellement, aux niveaux 1 et 10. */
 const valeursProduites = (id) => {
@@ -61,7 +79,11 @@ const valeursProduites = (id) => {
     cible.attacksPerTurn = 1;
     const avant = { ...cible, resistances: { ...resistances } };
     for (const fn of ["applyFlat", "applyMult"]) {
-      try { item[fn]?.(cible, niveau); } catch { /* contexte */ }
+      try {
+        item[fn]?.(cible, niveau);
+      } catch {
+        /* contexte */
+      }
     }
     for (const k of Object.keys(cible)) {
       if (k === "resistances") continue;
@@ -77,8 +99,14 @@ const valeursProduites = (id) => {
       out.add(cible.resistances[r] - avant.resistances[r]);
     }
     // Les taux annonces en pourcentage : un delta de 0.055 se lit "5,5%".
-    for (const k of ["critChance", "critDamage", "percentDamagePenetration",
-                     "bossMitigation", "runeGainMult", "dodgeChance"]) {
+    for (const k of [
+      "critChance",
+      "critDamage",
+      "percentDamagePenetration",
+      "bossMitigation",
+      "runeGainMult",
+      "dodgeChance",
+    ]) {
       const delta = (cible[k] ?? 0) - (avant[k] ?? 0);
       out.add(Math.round(delta * 10000) / 10000);
     }
@@ -93,10 +121,12 @@ const showAll = process.argv.includes("--tout");
 const numbersInText = (text) => {
   const out = new Set();
   for (const m of text.matchAll(/(\d+(?:[.,]\d+)?)\s*%/g)) {
-    out.add(Math.round(parseFloat(m[1].replace(",", ".")) * 100) / 10000);
+    out.add(
+      Math.round(Number.parseFloat(m[1].replace(",", ".")) * 100) / 10000,
+    );
   }
   for (const m of text.matchAll(/(?<![%\d.,])(\d+(?:[.,]\d+)?)(?!\s*%)/g)) {
-    out.add(parseFloat(m[1].replace(",", ".")));
+    out.add(Number.parseFloat(m[1].replace(",", ".")));
   }
   return out;
 };
@@ -105,7 +135,7 @@ const numbersInText = (text) => {
 const numbersInCode = (code) => {
   const out = new Set();
   for (const m of code.matchAll(/(?<![\w.])(\d+(?:\.\d+)?)/g)) {
-    const v = parseFloat(m[1]);
+    const v = Number.parseFloat(m[1]);
     out.add(v);
     // Un ratio ecrit 0.18 se lit "18%" dans la description.
     if (v < 1) out.add(Math.round(v * 10000) / 10000);
@@ -126,7 +156,8 @@ for (const file of files) {
 
   entries.forEach((entry, index) => {
     const start = entry.index;
-    const end = index + 1 < entries.length ? entries[index + 1].index : src.length;
+    const end =
+      index + 1 < entries.length ? entries[index + 1].index : src.length;
     const body = src.slice(start, end);
 
     const desc = body.match(/description:\s*((?:"[^"]*"\s*\+?\s*)+)/);
@@ -170,16 +201,24 @@ console.log(
   `${suspects.length} objet(s) dont la description cite un nombre absent du code.\n` +
     `Les nombres calcules plutot qu'ecrits produisent des faux positifs : a verifier a la main.\n`,
 );
-console.log(`--- SUSPICION FORTE (${forts.length}) : plus de la moitie des nombres annonces sont introuvables\n`);
+console.log(
+  `--- SUSPICION FORTE (${forts.length}) : plus de la moitie des nombres annonces sont introuvables\n`,
+);
 for (const s of forts) {
   console.log(`  ${s.nom.slice(0, 36).padEnd(38)} ${s.file}:${s.ligne}`);
-  console.log(`     annonce sans equivalent dans le code : ${s.manquants.join(", ")}`);
+  console.log(
+    `     annonce sans equivalent dans le code : ${s.manquants.join(", ")}`,
+  );
 }
 if (showAll) {
   console.log(`\n--- SUSPICION FAIBLE (${faibles.length})\n`);
   for (const s of faibles) {
-    console.log(`  ${s.nom.slice(0, 36).padEnd(38)} ${s.file}:${s.ligne}  ->  ${s.manquants.join(", ")}`);
+    console.log(
+      `  ${s.nom.slice(0, 36).padEnd(38)} ${s.file}:${s.ligne}  ->  ${s.manquants.join(", ")}`,
+    );
   }
 } else {
-  console.log(`\n(${faibles.length} cas de suspicion faible masques, relancer avec --tout)`);
+  console.log(
+    `\n(${faibles.length} cas de suspicion faible masques, relancer avec --tout)`,
+  );
 }

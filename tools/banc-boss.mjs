@@ -19,12 +19,8 @@
 import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 
-const {
-  BUILDS,
-  applyBuild,
-  playerDamagePerTurn,
-  enemyDamagePerTurn,
-} = await import("./simulate-balance.mjs");
+const { BUILDS, applyBuild, playerDamagePerTurn, enemyDamagePerTurn } =
+  await import("./simulate-balance.mjs");
 const { gameState, getEffectiveStats, getHealth } = await import("../state.js");
 const { MONSTERS } = await import("../monster.js");
 const { BIOMES } = await import("../biome.js");
@@ -41,11 +37,36 @@ const niveauObjet = Number(
  */
 const PALIERS = [
   { des: "limgrave_west", arme: "kama", armure: null, accessoire: null },
-  { des: "limgrave_north", arme: "kama", armure: "alchimist_suit", accessoire: "scholars_ring" },
-  { des: "stormwind_castle", arme: "queen_staff", armure: "alchimist_suit", accessoire: "troll_necklace" },
-  { des: "liurnia_south", arme: "carian_glintstone_staff", armure: "carian_knight_armor", accessoire: "troll_necklace" },
-  { des: "raya_lucaria_academy", arme: "carian_glintstone_staff", armure: "carian_knight_armor", accessoire: "godrick_great_rune" },
-  { des: "nokron", arme: "carian_glintstone_staff", armure: "carian_knight_armor", accessoire: "moon_of_nokstella" },
+  {
+    des: "limgrave_north",
+    arme: "kama",
+    armure: "alchimist_suit",
+    accessoire: "scholars_ring",
+  },
+  {
+    des: "stormwind_castle",
+    arme: "queen_staff",
+    armure: "alchimist_suit",
+    accessoire: "troll_necklace",
+  },
+  {
+    des: "liurnia_south",
+    arme: "carian_glintstone_staff",
+    armure: "carian_knight_armor",
+    accessoire: "troll_necklace",
+  },
+  {
+    des: "raya_lucaria_academy",
+    arme: "carian_glintstone_staff",
+    armure: "carian_knight_armor",
+    accessoire: "godrick_great_rune",
+  },
+  {
+    des: "nokron",
+    arme: "carian_glintstone_staff",
+    armure: "carian_knight_armor",
+    accessoire: "moon_of_nokstella",
+  },
 ];
 
 /* Ordre de progression, pour savoir quel palier s'applique. */
@@ -135,7 +156,9 @@ for (const [biomeId, biome] of Object.entries(BIOMES)) {
   });
 }
 
-console.log("BIOME                        BOSS                       BANDE      SURVIE  CONFORT  RELEVE");
+console.log(
+  "BIOME                        BOSS                       BANDE      SURVIE  CONFORT  RELEVE",
+);
 for (const l of lignes) {
   console.log(
     l.nom.slice(0, 27).padEnd(29) +
@@ -148,7 +171,9 @@ for (const l of lignes) {
 }
 
 console.log(NL + "CALIBRATION SUR LES RELEVES DE TERRAIN");
-console.log("biome                     releve   survie   confort   ecart(confort)");
+console.log(
+  "biome                     releve   survie   confort   ecart(confort)",
+);
 const ecarts = [];
 for (const l of lignes) {
   if (!l.releve) continue;
@@ -164,7 +189,12 @@ for (const l of lignes) {
 }
 if (ecarts.length) {
   const moy = ecarts.reduce((a, b) => a + b, 0) / ecarts.length;
-  console.log(NL + "  ecart moyen releve - confort : " + (moy > 0 ? "+" : "") + moy.toFixed(1));
+  console.log(
+    NL +
+      "  ecart moyen releve - confort : " +
+      (moy > 0 ? "+" : "") +
+      moy.toFixed(1),
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -185,7 +215,7 @@ if (ecarts.length) {
  * de Nokron 120 a Ainsel 68 est fausse quel que soit le modele.
  */
 if (process.argv.includes("--ecrire-bandes")) {
-  const { readFileSync, writeFileSync } = await import("fs");
+  const { readFileSync, writeFileSync } = await import("node:fs");
   const MAX_BANDE = 220;
 
   const parents = new Map();
@@ -222,8 +252,14 @@ if (process.argv.includes("--ecrire-bandes")) {
   const RATIO_EXTRAPOLE = rapports.length
     ? rapports[Math.floor(rapports.length / 2)]
     : 1;
-  console.log(NL + "  rapport median mesure/ecrit (biomes > 35) : x" +
-    RATIO_EXTRAPOLE.toFixed(2) + "  sur " + rapports.length + " biomes");
+  console.log(
+    NL +
+      "  rapport median mesure/ecrit (biomes > 35) : x" +
+      RATIO_EXTRAPOLE.toFixed(2) +
+      "  sur " +
+      rapports.length +
+      " biomes",
+  );
 
   const parId = new Map(lignes.map((l) => [l.biomeId, l]));
   const nouvelles = new Map();
@@ -282,11 +318,19 @@ if (process.argv.includes("--ecrire-bandes")) {
     if (ancre === -1 || ancre > debutBloc + 400) continue;
     const fin = src.indexOf("]", ancre);
     const debutValeurs = ancre + "recommendedLevel: [".length;
-    const avant = src.slice(debutValeurs, fin).split(",").map((n) => Number(n.trim()));
+    const avant = src
+      .slice(debutValeurs, fin)
+      .split(",")
+      .map((n) => Number(n.trim()));
     if (avant[0] === bas && avant[1] === haut) continue;
     src = src.slice(0, debutValeurs) + bas + ", " + haut + src.slice(fin);
     modifiees += 1;
-    journal.push({ id, avant, apres: [bas, haut], mesure: !extrapoles.has(id) });
+    journal.push({
+      id,
+      avant,
+      apres: [bas, haut],
+      mesure: !extrapoles.has(id),
+    });
   }
 
   writeFileSync(chemin, src);
@@ -301,5 +345,7 @@ if (process.argv.includes("--ecrire-bandes")) {
         (j.mesure ? "mesure" : "extrapolation x" + RATIO_EXTRAPOLE.toFixed(2)),
     );
   }
-  console.log(NL + "  bandes modifiees : " + modifiees + " / " + nouvelles.size);
+  console.log(
+    NL + "  bandes modifiees : " + modifiees + " / " + nouvelles.size,
+  );
 }

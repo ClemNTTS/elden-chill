@@ -33,7 +33,7 @@
  *   node tools/lisse-boss.mjs                     (essai a blanc)
  *   node tools/lisse-boss.mjs --tolerance=1.6 --ecrire
  */
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { BIOMES } from "../biome.js";
 import { MONSTERS } from "../monster.js";
 import { BIOME_GUIDE } from "../world-map.js";
@@ -76,7 +76,10 @@ const regression = (cle) => {
   const sx = liste.reduce((s, p) => s + p.niveau, 0);
   const sy = liste.reduce((s, p) => s + Math.log(Math.max(1, p[cle])), 0);
   const sxx = liste.reduce((s, p) => s + p.niveau * p.niveau, 0);
-  const sxy = liste.reduce((s, p) => s + p.niveau * Math.log(Math.max(1, p[cle])), 0);
+  const sxy = liste.reduce(
+    (s, p) => s + p.niveau * Math.log(Math.max(1, p[cle])),
+    0,
+  );
   const b = (n * sxy - sx * sy) / (n * sxx - sx * sx);
   const a = (sy - b * sx) / n;
   return (niveau) => Math.exp(a + b * niveau);
@@ -95,7 +98,9 @@ const changes = liste.filter((p) => p.hp !== p.hpInit || p.deg !== p.degInit);
 changes.sort((a, b) => a.niveau - b.niveau);
 
 console.log("tolerance : x" + TOLERANCE + " autour de la courbe" + NL);
-console.log("BOSS                          NIV   PV                    DEGATS/TOUR");
+console.log(
+  "BOSS                          NIV   PV                    DEGATS/TOUR",
+);
 for (const p of changes) {
   const boss = MONSTERS[p.bossId];
   const atkAvant = boss.atk;
@@ -108,12 +113,19 @@ for (const p of changes) {
       (atkAvant === atkApres ? "=" : "atk " + atkAvant + " -> " + atkApres),
   );
 }
-console.log(NL + "boss ramenes sur la courbe : " + changes.length + " / " + liste.length);
+console.log(
+  NL + "boss ramenes sur la courbe : " + changes.length + " / " + liste.length,
+);
 
 if (!ecrire) {
   console.log("(essai a blanc — relancer avec --ecrire)");
 } else {
-  const fichiers = ["../monster.js", "../monsters/lands.js", "../monsters/endgame.js", "../monsters/v21.js"];
+  const fichiers = [
+    "../monster.js",
+    "../monsters/lands.js",
+    "../monsters/endgame.js",
+    "../monsters/v21.js",
+  ];
   let ecrits = 0;
   for (const rel of fichiers) {
     const url = new URL(rel, import.meta.url);

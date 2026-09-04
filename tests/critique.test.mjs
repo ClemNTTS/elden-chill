@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 /*
  * Points de competence critique.
  *
@@ -7,11 +8,16 @@
  * bouton ne faisait rien, sans le moindre signe visible.
  */
 import test from "node:test";
-import assert from "node:assert/strict";
 import { crit, etatNeuf } from "./aide.mjs";
 
 test("un point de competence tous les dix niveaux", () => {
-  for (const [level, attendu] of [[0, 0], [9, 0], [10, 1], [99, 9], [220, 22]]) {
+  for (const [level, attendu] of [
+    [0, 0],
+    [9, 0],
+    [10, 1],
+    [99, 9],
+    [220, 22],
+  ]) {
     etatNeuf({ stats: { level } });
     assert.equal(crit.getCritPointsTotal(), attendu, `niveau ${level}`);
   }
@@ -100,15 +106,27 @@ test("un refus de confirmation laisse les points en place", async () => {
   etatNeuf({ stats: { level: 150 } });
   crit.spendCritPoint("damage", 2);
   actions.respecCritPoints();
-  assert.equal(crit.getCritPointsSpent(), 2, "les points ont ete rendus malgre le refus");
+  assert.equal(
+    crit.getCritPointsSpent(),
+    2,
+    "les points ont ete rendus malgre le refus",
+  );
 });
 
 test("le jet de critique respecte la probabilite annoncee", () => {
   const stats = { critChance: 0, critDamage: 2 };
-  assert.equal(crit.rollCrit(stats, () => 0).isCrit, false, "0% a quand meme crit");
+  assert.equal(
+    crit.rollCrit(stats, () => 0).isCrit,
+    false,
+    "0% a quand meme crit",
+  );
 
   const sur = { critChance: 1, critDamage: 2 };
-  assert.equal(crit.rollCrit(sur, () => 0.99).isCrit, true, "100% n'a pas crit");
+  assert.equal(
+    crit.rollCrit(sur, () => 0.99).isCrit,
+    true,
+    "100% n'a pas crit",
+  );
 });
 
 test("au-dela de 100%, le surplus devient du super critique", () => {
@@ -126,7 +144,10 @@ test("au-dela de 100%, le surplus devient du super critique", () => {
 });
 
 test("le multiplicateur moyen croit avec la chance critique", () => {
-  const faible = crit.getCritDamageMultiplier({ critChance: 0.2, critDamage: 2 });
+  const faible = crit.getCritDamageMultiplier({
+    critChance: 0.2,
+    critDamage: 2,
+  });
   const fort = crit.getCritDamageMultiplier({ critChance: 0.8, critDamage: 2 });
   assert.ok(fort > faible, `${fort} n'est pas superieur a ${faible}`);
   assert.ok(faible >= 1, "un critique ne peut pas reduire les degats moyens");

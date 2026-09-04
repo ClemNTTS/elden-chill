@@ -28,14 +28,25 @@ const tout = process.argv.includes("--liste");
 /* Cles reellement lues par le moteur : celles que getEffectiveStats produit,
    plus resistances qui est un sous-objet. */
 gameState.stats = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats));
-gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+gameState.preparation = JSON.parse(
+  JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+);
 gameState.inventory = [];
 gameState.equipped = { weapon: null, armor: null, accessory: null };
 const CLES_MOTEUR = new Set(Object.keys(getEffectiveStats()));
 
 const RESISTANCES = new Set([
-  "poison", "putrefaction", "gel", "saignement", "folie", "sommeil",
-  "mortdombre", "feu", "foudre", "sacre", "magie",
+  "poison",
+  "putrefaction",
+  "gel",
+  "saignement",
+  "folie",
+  "sommeil",
+  "mortdombre",
+  "feu",
+  "foudre",
+  "sacre",
+  "magie",
 ]);
 
 /*
@@ -46,7 +57,8 @@ const RESISTANCES = new Set([
  * a signaler que les objets ameliorables dont le niveau ne change rien : leurs
  * runes d'amelioration sont perdues sans que rien ne le dise au joueur.
  */
-const sansScalingAssume = (id, item) => id === "fists" || item.isAlwaysMax === true;
+const sansScalingAssume = (id, item) =>
+  id === "fists" || item.isAlwaysMax === true;
 
 /** Enregistre les cles ecrites par applyFlat / applyMult. */
 const sonde = () => {
@@ -60,7 +72,11 @@ const sonde = () => {
   for (const r of RESISTANCES) base[r] = 20;
   const resistances = new Proxy(base, {
     get: (t, k) => (typeof k === "symbol" ? undefined : (t[k] ?? 0)),
-    set: (t, k, v) => { ecrites.add(`resistances.${String(k)}`); t[k] = v; return true; },
+    set: (t, k, v) => {
+      ecrites.add(`resistances.${String(k)}`);
+      t[k] = v;
+      return true;
+    },
   });
   const cible = { resistances };
   /*
@@ -74,7 +90,11 @@ const sonde = () => {
   cible.attacksPerTurn = 1;
   const proxy = new Proxy(cible, {
     get: (t, k) => (typeof k === "symbol" ? undefined : (t[k] ?? 0)),
-    set: (t, k, v) => { ecrites.add(String(k)); t[k] = v; return true; },
+    set: (t, k, v) => {
+      ecrites.add(String(k));
+      t[k] = v;
+      return true;
+    },
   });
   return { proxy, ecrites };
 };
@@ -101,16 +121,25 @@ gameState.playerEffects = [
 ];
 
 Object.assign(gameState.stats, {
-  level: 100, vigor: 60, strength: 60, dexterity: 60, intelligence: 60,
+  level: 100,
+  vigor: 60,
+  strength: 60,
+  dexterity: 60,
+  intelligence: 60,
   // Plusieurs objets exigent un minimum de critique de BASE pour s'activer :
   // sans ca leur branche ne s'executait jamais et ils passaient pour inertes.
-  critChance: 0.3, critDamage: 2,
+  critChance: 0.3,
+  critDamage: 2,
 });
 
 const cles = (item, niveau) => {
   const { proxy, ecrites } = sonde();
   for (const fn of ["applyFlat", "applyMult"]) {
-    try { item[fn]?.(proxy, niveau); } catch { /* dependances de contexte */ }
+    try {
+      item[fn]?.(proxy, niveau);
+    } catch {
+      /* dependances de contexte */
+    }
   }
   /*
    * Le scaling vit souvent dans funcOnHit (chance de saignement, attaque
@@ -119,7 +148,11 @@ const cles = (item, niveau) => {
    */
   const effetsCible = [];
   let touche = null;
-  try { touche = item.funcOnHit?.(proxy, effetsCible, niveau); } catch { /* contexte */ }
+  try {
+    touche = item.funcOnHit?.(proxy, effetsCible, niveau);
+  } catch {
+    /* contexte */
+  }
   return {
     ecrites,
     valeurs: { ...proxy },
@@ -127,7 +160,13 @@ const cles = (item, niveau) => {
   };
 };
 
-const problemes = { icone: [], description: [], scaling: [], fictif: [], inerteNiv1: [] };
+const problemes = {
+  icone: [],
+  description: [],
+  scaling: [],
+  fictif: [],
+  inerteNiv1: [],
+};
 
 for (const [id, item] of Object.entries(ITEMS)) {
   if (!item.type) continue;
@@ -136,7 +175,8 @@ for (const [id, item] of Object.entries(ITEMS)) {
   if (!getItemIcon(id, 10)) problemes.icone.push({ id, nom });
 
   const desc = (item.description || "").trim();
-  if (!desc) problemes.description.push({ id, nom, raison: "aucune description" });
+  if (!desc)
+    problemes.description.push({ id, nom, raison: "aucune description" });
 
   const bas = cles(item, 1);
   const haut = cles(item, 10);
@@ -172,8 +212,13 @@ for (const [id, item] of Object.entries(ITEMS)) {
    */
   const aDesEffets = item.applyFlat || item.applyMult || item.funcOnHit;
   if (aDesEffets && !sansScalingAssume(id, item)) {
-    const corps = ["applyFlat", "applyMult", "funcOnHit", "funcOnBeingHit",
-                   "passiveStatusReduction"]
+    const corps = [
+      "applyFlat",
+      "applyMult",
+      "funcOnHit",
+      "funcOnBeingHit",
+      "passiveStatusReduction",
+    ]
       .map((fn) => (typeof item[fn] === "function" ? item[fn].toString() : ""))
       .join(";")
       // On retire les listes de parametres : "(stats, itemLevel) =>" ne compte pas.
@@ -194,8 +239,9 @@ for (const [id, item] of Object.entries(ITEMS)) {
    */
   if (aDesEffets && !sansScalingAssume(id, item)) {
     const vide = cles({}, 1);
-    const inerte = JSON.stringify(bas.valeurs) === JSON.stringify(vide.valeurs)
-      && bas.surCible === vide.surCible;
+    const inerte =
+      JSON.stringify(bas.valeurs) === JSON.stringify(vide.valeurs) &&
+      bas.surCible === vide.surCible;
     if (inerte) problemes.inerteNiv1.push({ id, nom });
   }
 
@@ -216,18 +262,28 @@ const titres = {
 for (const [cle, liste] of Object.entries(problemes)) {
   console.log(`${titres[cle].padEnd(58)} ${String(liste.length).padStart(3)}`);
 }
-console.log(NL + `${Object.keys(ITEMS).filter((k) => ITEMS[k].type).length} objets verifies, ${total} probleme(s).` + NL);
+console.log(
+  NL +
+    `${Object.keys(ITEMS).filter((k) => ITEMS[k].type).length} objets verifies, ${total} probleme(s).` +
+    NL,
+);
 
 for (const [cle, liste] of Object.entries(problemes)) {
   if (!liste.length) continue;
   console.log(`--- ${titres[cle]} (${liste.length}) ---`);
   const montrer = tout ? liste : liste.slice(0, 12);
   for (const p of montrer) {
-    const suffixe = p.cles ? `  ->  ${p.cles.join(", ")}` : p.raison ? `  (${p.raison})` : "";
+    const suffixe = p.cles
+      ? `  ->  ${p.cles.join(", ")}`
+      : p.raison
+        ? `  (${p.raison})`
+        : "";
     console.log(`  ${p.nom.slice(0, 36).padEnd(38)} ${p.id}${suffixe}`);
   }
   if (!tout && liste.length > montrer.length) {
-    console.log(`  (${liste.length - montrer.length} autres, relancer avec --liste)`);
+    console.log(
+      `  (${liste.length - montrer.length} autres, relancer avec --liste)`,
+    );
   }
   console.log("");
 }

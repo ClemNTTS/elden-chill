@@ -56,7 +56,9 @@ for (const [id, biome] of Object.entries(BIOMES)) {
 
 sauts.sort((a, b) => b.trou - a.trou);
 
-console.log("BIOME                        DEPUIS                  FIN→DEBUT   TROU");
+console.log(
+  "BIOME                        DEPUIS                  FIN→DEBUT   TROU",
+);
 for (const s of sauts) {
   const marque = s.trou > 0 ? (s.trou >= 10 ? " ⚠" : " ·") : "";
   console.log(
@@ -72,5 +74,7 @@ const murs = sauts.filter((s) => s.trou >= 10);
 console.log("\nbiomes mesures : " + sauts.length);
 console.log("murs de 10 niveaux ou plus : " + murs.length);
 for (const m of murs) {
-  console.log("  " + m.nom.padEnd(28) + "+" + m.trou + " niveaux, boss " + m.boss);
+  console.log(
+    "  " + m.nom.padEnd(28) + "+" + m.trou + " niveaux, boss " + m.boss,
+  );
 }

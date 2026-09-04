@@ -1,10 +1,10 @@
+import { ENDGAME_MONSTERS, TRIAL_MONSTERS } from "./monsters/endgame.js";
+import { LANDS_MONSTERS } from "./monsters/lands.js";
 /*regles de bases que je vais tester
 hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur de 1 a 2 sure la vie et le drop de runes
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
 import { V21_MONSTERS } from "./monsters/v21.js";
-import { ENDGAME_MONSTERS, TRIAL_MONSTERS } from "./monsters/endgame.js";
-import { LANDS_MONSTERS } from "./monsters/lands.js";
 
 export const MONSTERS = {
   // === LIMGRAVE WEST===
@@ -938,10 +938,9 @@ export const MONSTERS = {
           msg: `${enemy.name} bande son arc de corne...`,
           skipAttack: true,
         };
-      } else {
-        enemy.isCharging = false;
-        return { msg: "TIR MAGIQUE !", dmgMult: 3.0 };
       }
+      enemy.isCharging = false;
+      return { msg: "TIR MAGIQUE !", dmgMult: 3.0 };
     },
   },
 

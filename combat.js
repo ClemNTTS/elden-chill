@@ -1,17 +1,23 @@
 import { ASHES_OF_WAR } from "./ashes.js";
-import { playSfx } from "./sfx.js";
-import { rollCrit } from "./crit.js";
 import { tickBiomeTraits } from "./biome-traits.js";
-import { getMagicDamage } from "./state.js";
-import { STATUS_EFFECTS } from "./status.js";
-import { ITEMS } from "./item.js";
 import { handleDeath, handleVictory } from "./core.js";
+import { rollCrit } from "./crit.js";
+import { ITEMS } from "./item.js";
+import { playSfx } from "./sfx.js";
+import { getMagicDamage } from "./state.js";
 import {
   gameState,
   getEffectiveStats,
-  runtimeState,
   getHealth,
+  runtimeState,
 } from "./state.js";
+import { STACKING_EFFECTS, applyEffect } from "./status-apply.js";
+import { STATUS_EFFECTS } from "./status.js";
+import {
+  adjustStatusApplication,
+  buildEnemyIntent,
+  getRunModifier,
+} from "./systems.js";
 import {
   ActionLog,
   formatNumber,
@@ -25,12 +31,6 @@ import {
   updateHealthBars,
   updateUI,
 } from "./ui.js";
-import {
-  adjustStatusApplication,
-  buildEnemyIntent,
-  getRunModifier,
-} from "./systems.js";
-import { STACKING_EFFECTS, applyEffect } from "./status-apply.js";
 
 /*
  * Reexport : applyEffect a demenage dans status-apply.js pour rompre le cycle
@@ -44,14 +44,20 @@ function delayedSetTimeout(fn, ms) {
   let delay = ms;
   try {
     const save = gameState.save || {};
-    const use = save.useOfflineTime && (save.offlineTimeBank || 0) > 0 && gameState.world.isExploring;
+    const use =
+      save.useOfflineTime &&
+      (save.offlineTimeBank || 0) > 0 &&
+      gameState.world.isExploring;
     const M = runtimeState.offlineSpeedMultiplier || 3;
     if (use && M > 1 && ms > 0) {
       const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
       const bankMs = (save.offlineTimeBank || 0) * 1000;
       if (bankMs >= fullSavedMs) {
         delay = Math.max(0, Math.floor(ms / M));
-        save.offlineTimeBank = Math.max(0, (save.offlineTimeBank || 0) - fullSavedMs / 1000);
+        save.offlineTimeBank = Math.max(
+          0,
+          (save.offlineTimeBank || 0) - fullSavedMs / 1000,
+        );
       } else if (bankMs > 0) {
         delay = Math.max(0, Math.floor(ms - bankMs));
         save.offlineTimeBank = 0;
@@ -92,7 +98,6 @@ function clamp(v, min = 0) {
 
 /* ================= STATUS EFFECTS ================= */
 
-
 /*
  * Plafond des afflictions exprimees en pourcentage des points de vie maximum.
  *
@@ -111,9 +116,8 @@ const AFFLICTION_CAP = 6;
 const MADNESS_THRESHOLD = 8;
 const DEATH_BLIGHT_THRESHOLD = 12;
 
-
 const processTurnEffects = (entity, effectsArray) => {
-  let logMessages = [];
+  const logMessages = [];
   let skipTurn = false;
 
   if (effectsArray.length === 0) return { logMessages, skipTurn };
@@ -190,7 +194,7 @@ export function performAttack({
     // --- END NEW BLEED LOGIC ---
     // --- FROSTBITE LOGIC ---
 
-    let frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
+    const frostEffect = targetEffects.find((eff) => eff.id === "FROSTBITE");
     if (frostEffect && frostEffect.stacks >= 10) {
       /*
        * Plafonne par rapport au coup du joueur (voir AFFLICTION_CAP).
@@ -351,11 +355,13 @@ export function performAttack({
     }
 
     if (!isPlayer && attacker?.isBoss) {
-      finalDamage = Math.floor(finalDamage * (1 - Math.min(0.45, eff.bossMitigation || 0)));
+      finalDamage = Math.floor(
+        finalDamage * (1 - Math.min(0.45, eff.bossMitigation || 0)),
+      );
     }
     if (isPlayer && targetEffects.__executionBonus) {
       finalDamage += targetEffects.__executionBonus;
-      delete targetEffects.__executionBonus;
+      Reflect.deleteProperty(targetEffects, "__executionBonus");
     }
     finalDamage = Math.max(0, finalDamage);
 
@@ -587,7 +593,9 @@ export const combatLoop = (sessionId) => {
 
   // Tick des traits de biome, avant tout le reste du tour : c'est la regle
   // locale de la zone, elle s'applique meme si le joueur est etourdi.
-  tickBiomeTraits(playerObj.maxHp).forEach((msg) => ActionLog(msg, "log-status"));
+  tickBiomeTraits(playerObj.maxHp).forEach((msg) =>
+    ActionLog(msg, "log-status"),
+  );
   playerObj.currentHp = runtimeState.playerCurrentHp;
 
   delayedSetTimeout(() => {
@@ -609,7 +617,7 @@ export const combatLoop = (sessionId) => {
     updateHealthBars();
     updateUI();
 
-    let delay = reductionHappened ? 500 : 0;
+    const delay = reductionHappened ? 500 : 0;
     delayedSetTimeout(() => {
       const playerStatus = processTurnEffects(
         playerObj,
@@ -709,7 +717,7 @@ export const combatLoop = (sessionId) => {
 
       const continueCombat = () => {
         /* ================= KILL CHECK ================= */
-        let defeatedEnemies = [];
+        const defeatedEnemies = [];
 
         for (let i = runtimeState.currentEnemyGroup.length - 1; i >= 0; i--) {
           const enemy = runtimeState.currentEnemyGroup[i];
@@ -744,7 +752,7 @@ export const combatLoop = (sessionId) => {
         }
 
         /* ================= VICTORY CHECK ================= */
-          if (runtimeState.currentEnemyGroup.length === 0) {
+        if (runtimeState.currentEnemyGroup.length === 0) {
           runtimeState.lastDefeatedEnemy =
             defeatedEnemies[defeatedEnemies.length - 1] || null;
           delayedSetTimeout(() => handleVictory(sessionId), 500);
@@ -779,7 +787,7 @@ export const combatLoop = (sessionId) => {
             gameState.ennemyEffects,
           );
 
-                if (runtimeState.currentEnemyGroup[0].hp <= 0) {
+          if (runtimeState.currentEnemyGroup[0].hp <= 0) {
             ActionLog(
               `${runtimeState.currentEnemyGroup[0].name} succombe à ses blessures !`,
             );
@@ -814,11 +822,10 @@ export const combatLoop = (sessionId) => {
               return;
             }
 
-            const loop =
-              runtimeState.currentEnemyGroup[0].specificStats &&
-              runtimeState.currentEnemyGroup[0].specificStats.attacksPerTurn
-                ? runtimeState.currentEnemyGroup[0].specificStats.attacksPerTurn
-                : 1;
+            const loop = runtimeState.currentEnemyGroup[0].specificStats
+              ?.attacksPerTurn
+              ? runtimeState.currentEnemyGroup[0].specificStats.attacksPerTurn
+              : 1;
 
             const enemy = runtimeState.currentEnemyGroup[0];
             let enemyDmgMult = 1;
@@ -867,7 +874,7 @@ export const combatLoop = (sessionId) => {
           updateHealthBars();
           updateUI();
 
-            if (runtimeState.playerCurrentHp <= 0) {
+          if (runtimeState.playerCurrentHp <= 0) {
             handleDeath();
           } else if (runtimeState.currentEnemyGroup[0].hp <= 0) {
             delayedSetTimeout(continueCombat, 500);

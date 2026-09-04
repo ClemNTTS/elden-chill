@@ -27,13 +27,6 @@ jobs:
   lint:
     name: Lint et formatage
     runs-on: ubuntu-latest
-    # NON BLOQUANT, volontairement et temporairement.
-    #
-    # Biome releve 177 constats sur la base existante. Les rendre bloquants
-    # d'emblee reviendrait a exiger un nettoyage de 16 000 lignes avant toute
-    # autre contribution. Le travail est signale a chaque execution ; l'etape
-    # passera bloquante quand le compteur sera revenu a zero.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

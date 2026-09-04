@@ -29,14 +29,30 @@ const SOUNDS = {
   crit: { file: "Weapons/sword_clash.wav", volume: 0.75, minGap: 160 },
   hurt: { file: "Retro/hurt.wav", volume: 0.5, minGap: 220 },
   kill: { file: "Combat and Gore/bone_snap.wav", volume: 0.5, minGap: 200 },
-  ash: { file: "Musical Effects/8_bit_chime_quick.wav", volume: 0.6, minGap: 300 },
+  ash: {
+    file: "Musical Effects/8_bit_chime_quick.wav",
+    volume: 0.6,
+    minGap: 300,
+  },
   loot: { file: "Items/item_equip.wav", volume: 0.65, minGap: 400 },
   runes: { file: "Items/coins_gather_quick.wav", volume: 0.55, minGap: 500 },
-  bossDown: { file: "Musical Effects/brass_chime_positive.wav", volume: 0.8, minGap: 1500 },
+  bossDown: {
+    file: "Musical Effects/brass_chime_positive.wav",
+    volume: 0.8,
+    minGap: 1500,
+  },
   // Les evenements passaient totalement inapercus : une ligne de journal au
   // milieu du flot de combat. Un son court les annonce.
-  event: { file: "Musical Effects/8_bit_mystery.wav", volume: 0.7, minGap: 1200 },
-  death: { file: "Musical Effects/8_bit_defeated.wav", volume: 0.7, minGap: 1500 },
+  event: {
+    file: "Musical Effects/8_bit_mystery.wav",
+    volume: 0.7,
+    minGap: 1200,
+  },
+  death: {
+    file: "Musical Effects/8_bit_defeated.wav",
+    volume: 0.7,
+    minGap: 1500,
+  },
 };
 
 const POOL_SIZE = 3;

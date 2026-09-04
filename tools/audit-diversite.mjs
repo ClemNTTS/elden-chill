@@ -15,7 +15,9 @@
 import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 
-const { BUILDS, applyBuild, playerDamagePerTurn } = await import("./simulate-balance.mjs");
+const { BUILDS, applyBuild, playerDamagePerTurn } = await import(
+  "./simulate-balance.mjs"
+);
 const { gameState, getEffectiveStats, getHealth } = await import("../state.js");
 const { ITEMS } = await import("../item.js");
 const { ITEM_SETS } = await import("../constants.js");
@@ -24,9 +26,12 @@ const { MONSTERS } = await import("../monster.js");
 const { BIOME_GUIDE } = await import("../world-map.js");
 
 const NL = String.fromCharCode(10);
-const arg = (n, d) => process.argv.find((x) => x.startsWith("--" + n + "="))?.split("=")[1] ?? d;
+const arg = (n, d) =>
+  process.argv.find((x) => x.startsWith("--" + n + "="))?.split("=")[1] ?? d;
 const JUSQUA = arg("jusqua", "raya_lucaria_academy");
-const NIVEAU = Number(arg("niveau", BIOME_GUIDE[JUSQUA]?.recommendedLevel?.[0] || 60));
+const NIVEAU = Number(
+  arg("niveau", BIOME_GUIDE[JUSQUA]?.recommendedLevel?.[0] || 60),
+);
 const NIVEAU_OBJET = Number(arg("niveau-objet", 6));
 const ARMURE_CIBLE = Number(arg("armure", 180));
 
@@ -69,13 +74,19 @@ const panoplieDe = (ids) => {
     const s = ITEMS[id]?.set;
     if (s) compte.set(s, (compte.get(s) || 0) + 1);
   }
-  for (const [s, n] of compte) if (n >= 2 && ITEM_SETS[s]) return { set: s, pieces: n };
+  for (const [s, n] of compte)
+    if (n >= 2 && ITEM_SETS[s]) return { set: s, pieces: n };
   return null;
 };
 
 const evaluer = (arme, armure, accessoire) => {
   const porte = [arme, armure, accessoire].filter(Boolean);
-  gameState.inventory = porte.map((id) => ({ id, name: id, level: NIVEAU_OBJET, count: 0 }));
+  gameState.inventory = porte.map((id) => ({
+    id,
+    name: id,
+    level: NIVEAU_OBJET,
+    count: 0,
+  }));
   gameState.equipped = { weapon: arme, armor: armure, accessory: accessoire };
   let eff;
   try {
@@ -86,7 +97,11 @@ const evaluer = (arme, armure, accessoire) => {
   const degats = playerDamagePerTurn(eff, ARMURE_CIBLE);
   const pv = getHealth(eff.vigor);
   /* Score unique : degats et survie comptent autant l'un que l'autre. */
-  return { score: Math.sqrt(Math.max(0, degats) * Math.max(1, pv)), degats, pv };
+  return {
+    score: Math.sqrt(Math.max(0, degats) * Math.max(1, pv)),
+    degats,
+    pv,
+  };
 };
 
 const resultats = [];
@@ -109,7 +124,9 @@ for (const build of Object.keys(BUILDS)) {
   /* Combien de combinaisons tiennent a 10% du sommet ? C'est la mesure de la
    * marge de manoeuvre laissee au joueur. */
   const viables = combos.filter((x) => x.score >= meilleur.score * 0.9).length;
-  const viables20 = combos.filter((x) => x.score >= meilleur.score * 0.8).length;
+  const viables20 = combos.filter(
+    (x) => x.score >= meilleur.score * 0.8,
+  ).length;
 
   /* Concentration par emplacement : le meilleur score ATTEIGNABLE avec chaque
    * objet. Si le deuxieme est loin derriere le premier, l'emplacement n'offre
@@ -128,20 +145,47 @@ for (const build of Object.keys(BUILDS)) {
     armure: sommetPar("b", armures),
     accessoire: sommetPar("c", accessoires),
   };
-  resultats.push({ build, meilleur, meilleurLibre, meilleurPanoplie, viables, viables20, sommets, total: combos.length });
+  resultats.push({
+    build,
+    meilleur,
+    meilleurLibre,
+    meilleurPanoplie,
+    viables,
+    viables20,
+    sommets,
+    total: combos.length,
+  });
 }
 
-console.log("BUTIN JOIGNABLE JUSQU'A " + (BIOMES[JUSQUA]?.name || JUSQUA).toUpperCase());
+console.log(
+  "BUTIN JOIGNABLE JUSQU'A " + (BIOMES[JUSQUA]?.name || JUSQUA).toUpperCase(),
+);
 console.log("  biomes traverses : " + atteints.length);
-console.log("  objets           : " + objets.length +
-  "  (" + armes.length + " armes, " + armures.length + " armures, " + accessoires.length + " accessoires)");
-console.log("  niveau teste     : " + NIVEAU + ", objets au niveau " + NIVEAU_OBJET + NL);
+console.log(
+  "  objets           : " +
+    objets.length +
+    "  (" +
+    armes.length +
+    " armes, " +
+    armures.length +
+    " armures, " +
+    accessoires.length +
+    " accessoires)",
+);
+console.log(
+  "  niveau teste     : " + NIVEAU + ", objets au niveau " + NIVEAU_OBJET + NL,
+);
 
-console.log("BUILD        COMBOS   <10%   <20%   MEILLEUR LIBRE vs MEILLEUR PANOPLIE");
+console.log(
+  "BUILD        COMBOS   <10%   <20%   MEILLEUR LIBRE vs MEILLEUR PANOPLIE",
+);
 for (const r of resultats) {
-  const ecart = r.meilleurLibre && r.meilleurPanoplie
-    ? ((r.meilleurLibre.score / r.meilleurPanoplie.score - 1) * 100).toFixed(1) + "%"
-    : "—";
+  const ecart =
+    r.meilleurLibre && r.meilleurPanoplie
+      ? ((r.meilleurLibre.score / r.meilleurPanoplie.score - 1) * 100).toFixed(
+          1,
+        ) + "%"
+      : "—";
   console.log(
     r.build.padEnd(13) +
       String(r.total).padStart(6) +
@@ -149,7 +193,8 @@ for (const r of resultats) {
       String(r.viables20).padStart(7) +
       "   " +
       (r.meilleur.panoplie ? "panoplie gagne" : "libre gagne").padEnd(16) +
-      " ecart libre : " + ecart,
+      " ecart libre : " +
+      ecart,
   );
 }
 
@@ -158,18 +203,30 @@ for (const r of resultats) {
   console.log(NL + "  " + r.build.toUpperCase());
   const ligne = (t, c) =>
     c
-      ? "    " + t.padEnd(20) +
-        [c.a, c.b, c.c].map((x) => x || "—").join(" + ").padEnd(70) +
-        " score " + Math.round(c.score) +
-        (c.panoplie ? "  [" + c.panoplie.set + " x" + c.panoplie.pieces + "]" : "")
+      ? "    " +
+        t.padEnd(20) +
+        [c.a, c.b, c.c]
+          .map((x) => x || "—")
+          .join(" + ")
+          .padEnd(70) +
+        " score " +
+        Math.round(c.score) +
+        (c.panoplie
+          ? "  [" + c.panoplie.set + " x" + c.panoplie.pieces + "]"
+          : "")
       : "    " + t + " —";
   console.log(ligne("meilleur", r.meilleur));
   console.log(ligne("meilleur sans set", r.meilleurLibre));
 }
 
 console.log(NL + "CONCENTRATION PAR EMPLACEMENT");
-console.log("Le meilleur score atteignable avec chaque objet. Un ecart net entre le");
-console.log("premier et le deuxieme veut dire que l'emplacement n'offre aucun choix." + NL);
+console.log(
+  "Le meilleur score atteignable avec chaque objet. Un ecart net entre le",
+);
+console.log(
+  "premier et le deuxieme veut dire que l'emplacement n'offre aucun choix." +
+    NL,
+);
 for (const r of resultats) {
   console.log("  " + r.build.toUpperCase());
   for (const [slot, tops] of Object.entries(r.sommets)) {

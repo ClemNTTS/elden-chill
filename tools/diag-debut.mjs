@@ -12,7 +12,8 @@ import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 await import("../game.js");
 
-const { gameState, getEffectiveStats, getHealth, getMagicDamage } = await import("../state.js");
+const { gameState, getEffectiveStats, getHealth, getMagicDamage } =
+  await import("../state.js");
 const { BIOMES, LOOT_TABLES } = await import("../biome.js");
 const { ITEMS } = await import("../item.js");
 const { MONSTERS } = await import("../monster.js");
@@ -38,7 +39,10 @@ const PRECOCES = (() => {
     if (id === CIBLE_BIOME) continue; // on s'arrete au biome du boss
     ordre.push(id);
     for (const n of BIOMES[id]?.unlocks || []) {
-      if (BIOMES[n] && !vus.has(n)) { vus.add(n); file.push([n, d + 1]); }
+      if (BIOMES[n] && !vus.has(n)) {
+        vus.add(n);
+        file.push([n, d + 1]);
+      }
     }
   }
   return process.env.TOUT_LE_POOL ? Object.keys(BIOMES) : ordre.slice(0, 7);
@@ -68,15 +72,27 @@ const POINTS = (NIVEAU - 1) * 3;
 
 const poser = (poids, equipement) => {
   gameState.stats = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.stats));
-  gameState.preparation = JSON.parse(JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation));
+  gameState.preparation = JSON.parse(
+    JSON.stringify(DEFAULT_PLAYER_PROFILE.preparation),
+  );
   gameState.stats.level = NIVEAU;
   for (const [stat, part] of Object.entries(poids)) {
     gameState.stats[stat] = Math.floor(POINTS * part);
   }
   gameState.inventory = Object.keys(equipement)
     .filter((k) => equipement[k])
-    .map((k) => ({ id: equipement[k], name: equipement[k], level: 5, count: 0 }));
-  gameState.equipped = { weapon: null, armor: null, accessory: null, ...equipement };
+    .map((k) => ({
+      id: equipement[k],
+      name: equipement[k],
+      level: 5,
+      count: 0,
+    }));
+  gameState.equipped = {
+    weapon: null,
+    armor: null,
+    accessory: null,
+    ...equipement,
+  };
   return getEffectiveStats();
 };
 
@@ -84,7 +100,11 @@ const poser = (poids, equipement) => {
 const dpt = (eff, armure) => {
   const a = Math.max(
     armure * 0.25,
-    Math.max(1, armure * (1 - (eff.percentDamagePenetration || 0)) - (eff.flatDamagePenetration || 0)),
+    Math.max(
+      1,
+      armure * (1 - (eff.percentDamagePenetration || 0)) -
+        (eff.flatDamagePenetration || 0),
+    ),
   );
   const c = Math.max(0, eff.critChance || 0);
   const hit = Math.min(1, c);
@@ -105,20 +125,32 @@ const accessoires = parType(ITEM_TYPES.ACCESSORY);
 
 const boss = MONSTERS[BOSS];
 if (!boss) {
-  console.log(`Boss ${BOSS} introuvable. Ids disponibles contenant "godrick" :`,
-    Object.keys(MONSTERS).filter((k) => k.includes("godrick")));
+  console.log(
+    `Boss ${BOSS} introuvable. Ids disponibles contenant "godrick" :`,
+    Object.keys(MONSTERS).filter((k) => k.includes("godrick")),
+  );
   process.exit(1);
 }
 
 const NL = String.fromCharCode(10);
-console.log(`Niveau ${NIVEAU} — ${POINTS} points repartis, objets des six premiers biomes (niveau 5).`);
-console.log(`Cible : ${boss.name} — ${boss.hp} PV, ${boss.armor} armure, ${boss.atk} attaque.` + NL);
-console.log("build            arme                        degats/tour  tours  PV joueur  survie  verdict");
+console.log(
+  `Niveau ${NIVEAU} — ${POINTS} points repartis, objets des six premiers biomes (niveau 5).`,
+);
+console.log(
+  `Cible : ${boss.name} — ${boss.hp} PV, ${boss.armor} armure, ${boss.atk} attaque.` +
+    NL,
+);
+console.log(
+  "build            arme                        degats/tour  tours  PV joueur  survie  verdict",
+);
 
 const lignes = [];
 for (const [nom, poids] of Object.entries(BUILDS)) {
   let meilleur = null;
-  if (!armes.length) throw new Error("aucune arme dans le pool : les biomes precoces sont mal derives");
+  if (!armes.length)
+    throw new Error(
+      "aucune arme dans le pool : les biomes precoces sont mal derives",
+    );
   for (const w of armes) {
     for (const ar of armures.concat([null])) {
       for (const ac of accessoires.concat([null])) {
@@ -130,22 +162,34 @@ for (const [nom, poids] of Object.entries(BUILDS)) {
       }
     }
   }
-  const tours = meilleur.d > 0 ? boss.hp / meilleur.d : Infinity;
+  const tours =
+    meilleur.d > 0 ? boss.hp / meilleur.d : Number.POSITIVE_INFINITY;
   // Combien de tours le joueur encaisse-t-il ?
-  const encaisse = Math.max(1, boss.atk * (100 / Math.max(1, meilleur.eff.armor)));
+  const encaisse = Math.max(
+    1,
+    boss.atk * (100 / Math.max(1, meilleur.eff.armor)),
+  );
   const survie = meilleur.pv / encaisse;
   lignes.push({ nom, ...meilleur, tours, survie });
 }
 
 const refTours = Math.min(...lignes.map((l) => l.tours));
 for (const l of lignes) {
-  const verdict = l.tours <= refTours * 1.25 ? "" : l.tours > refTours * 2 ? "  <-- tres en retrait" : "  <- en retrait";
+  const verdict =
+    l.tours <= refTours * 1.25
+      ? ""
+      : l.tours > refTours * 2
+        ? "  <-- tres en retrait"
+        : "  <- en retrait";
   console.log(
     `${l.nom.padEnd(15)} ${(ITEMS[l.w]?.name || l.w).slice(0, 26).padEnd(28)}` +
-    `${String(Math.round(l.d)).padStart(9)}  ${l.tours.toFixed(1).padStart(6)}` +
-    `${String(Math.round(l.pv)).padStart(10)}  ${l.survie.toFixed(1).padStart(6)}${verdict}`,
+      `${String(Math.round(l.d)).padStart(9)}  ${l.tours.toFixed(1).padStart(6)}` +
+      `${String(Math.round(l.pv)).padStart(10)}  ${l.survie.toFixed(1).padStart(6)}${verdict}`,
   );
 }
 
 const ecart = Math.max(...lignes.map((l) => l.tours)) / refTours;
-console.log(NL + `Ecart entre le meilleur et le pire build : x${ecart.toFixed(1)} en tours pour tuer le boss.`);
+console.log(
+  NL +
+    `Ecart entre le meilleur et le pire build : x${ecart.toFixed(1)} en tours pour tuer le boss.`,
+);

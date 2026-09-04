@@ -24,7 +24,9 @@
   for (const nom of fichiers) {
     const url = `./assets/music/${nom}`;
     try {
-      const reponse = await fetch(url, { headers: { Range: "bytes=0-1500000" } });
+      const reponse = await fetch(url, {
+        headers: { Range: "bytes=0-1500000" },
+      });
       const mem = await ac.decodeAudioData(await reponse.arrayBuffer());
       const canal = mem.getChannelData(0);
       let somme = 0;
@@ -36,7 +38,9 @@
       const gain = Math.min(1, 10 ** (Math.min(0, CIBLE - rms) / 20));
       niveaux.push(rms + 20 * Math.log10(gain));
       lignes.push(`  "${nom}": ${gain >= 1 ? "1" : gain.toFixed(2)},`);
-      console.log(`${nom.padEnd(22)} ${rms.toFixed(1)} dBFS  ->  gain ${gain.toFixed(2)}`);
+      console.log(
+        `${nom.padEnd(22)} ${rms.toFixed(1)} dBFS  ->  gain ${gain.toFixed(2)}`,
+      );
     } catch (error) {
       console.warn(`${nom} : ${error.message}`);
     }

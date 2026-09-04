@@ -569,7 +569,7 @@ export const ITEM_SETS = {
         },
       },
     },
-  }
+  },
 };
 
 /*

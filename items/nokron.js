@@ -1,6 +1,6 @@
-import { applyEffect } from "../status-apply.js";
 import { ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, runtimeState } from "../state.js";
+import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
 
 export const NOKRON = {

@@ -113,8 +113,16 @@ export const NEUTRAL_HERO = "water";
 export const STAT_META = {
   vigor: { label: "Vigueur", short: "VIG", accent: "var(--stat-vigor)" },
   strength: { label: "Force", short: "FOR", accent: "var(--stat-strength)" },
-  dexterity: { label: "Dexterite", short: "DEX", accent: "var(--stat-dexterity)" },
-  intelligence: { label: "Intelligence", short: "INT", accent: "var(--stat-intelligence)" },
+  dexterity: {
+    label: "Dexterite",
+    short: "DEX",
+    accent: "var(--stat-dexterity)",
+  },
+  intelligence: {
+    label: "Intelligence",
+    short: "INT",
+    accent: "var(--stat-intelligence)",
+  },
 };
 
 /** Ce que devient le Sans-Eclat quand telle stat domine. */
@@ -196,26 +204,65 @@ export const MONSTER_CELL = 64;
 export const BOSS_MONSTER_CELL = 96;
 
 export const BOSS_ARCHETYPES = [
-  "troll1_boss", "bloodhound_knight_darriwil", "margit", "limgrave_dragon",
-  "hero_of_zamor", "misbegotten_leonine", "grafted_scion", "godrick",
-  "commander_oneil_weak", "commander_oneil_strong", "red_wolf_radagon",
-  "bell_bearing_hunter_liurnia", "carian_knight_bols", "rennala",
-  "liurnia_dragon_smarag", "royal_knight_loretta", "radahn", "ekzykes",
-  "draconic_tree_sentinel", "ancestral_spirit", "mimic_tear_boss",
-  "dragonkin_ainsel", "fia_champion_echo", "astel_bud",
-  "malenia_blade", "elden_beast", "hoarah_loux", "placidusax",
-  "rykard_lord_blasphemy", "throne_radagon", "azula_maliketh",
-  "godskin_apostle", "godskin_noble", "commander_niall", "elemer_briar",
-  "evergaol_astel", "evergaol_fortissax", "evergaol_nameless_champion",
-  "divine_tower_keeper", "catacomb_burnt_spirit",
-  "gurranq_beast_clergyman", "jarburg_great_jar",
+  "troll1_boss",
+  "bloodhound_knight_darriwil",
+  "margit",
+  "limgrave_dragon",
+  "hero_of_zamor",
+  "misbegotten_leonine",
+  "grafted_scion",
+  "godrick",
+  "commander_oneil_weak",
+  "commander_oneil_strong",
+  "red_wolf_radagon",
+  "bell_bearing_hunter_liurnia",
+  "carian_knight_bols",
+  "rennala",
+  "liurnia_dragon_smarag",
+  "royal_knight_loretta",
+  "radahn",
+  "ekzykes",
+  "draconic_tree_sentinel",
+  "ancestral_spirit",
+  "mimic_tear_boss",
+  "dragonkin_ainsel",
+  "fia_champion_echo",
+  "astel_bud",
+  "malenia_blade",
+  "elden_beast",
+  "hoarah_loux",
+  "placidusax",
+  "rykard_lord_blasphemy",
+  "throne_radagon",
+  "azula_maliketh",
+  "godskin_apostle",
+  "godskin_noble",
+  "commander_niall",
+  "elemer_briar",
+  "evergaol_astel",
+  "evergaol_fortissax",
+  "evergaol_nameless_champion",
+  "divine_tower_keeper",
+  "catacomb_burnt_spirit",
+  "gurranq_beast_clergyman",
+  "jarburg_great_jar",
 ];
 
 export const MONSTER_ARCHETYPES = [
-  "humanoide", "chevalier", "bete", "mortvivant",
-  "demon", "insecte", "geant", "mage",
-  "volant", "amas", "dragon", "construct",
-  "humanoide_aile_dansant", "chevalier_lourd_hallebarde",
+  "humanoide",
+  "chevalier",
+  "bete",
+  "mortvivant",
+  "demon",
+  "insecte",
+  "geant",
+  "mage",
+  "volant",
+  "amas",
+  "dragon",
+  "construct",
+  "humanoide_aile_dansant",
+  "chevalier_lourd_hallebarde",
   "bete_quadrupede_rampante",
   ...BOSS_ARCHETYPES,
 ];
@@ -333,11 +380,36 @@ export const getTintedSheet = async (archetype, tint, ramp) => {
 
 export const EFFECT_SHEETS = {
   // 7 cellules dans l'image, mais la derniere est vide : 6 frames utiles.
-  earth: { file: "assets/sprites/effects/earth.png", cell: 48, frames: 6, fps: 14 },
-  ice: { file: "assets/sprites/effects/ice.png", cell: 32, frames: 12, fps: 16 },
-  lightning: { file: "assets/sprites/effects/lightning.png", cell: 32, frames: 6, fps: 14 },
-  water: { file: "assets/sprites/effects/water.png", cell: 48, frames: 15, fps: 18 },
-  wind: { file: "assets/sprites/effects/wind.png", cell: 40, frames: 10, fps: 15 },
+  earth: {
+    file: "assets/sprites/effects/earth.png",
+    cell: 48,
+    frames: 6,
+    fps: 14,
+  },
+  ice: {
+    file: "assets/sprites/effects/ice.png",
+    cell: 32,
+    frames: 12,
+    fps: 16,
+  },
+  lightning: {
+    file: "assets/sprites/effects/lightning.png",
+    cell: 32,
+    frames: 6,
+    fps: 14,
+  },
+  water: {
+    file: "assets/sprites/effects/water.png",
+    cell: 48,
+    frames: 15,
+    fps: 18,
+  },
+  wind: {
+    file: "assets/sprites/effects/wind.png",
+    cell: 40,
+    frames: 10,
+    fps: 15,
+  },
 };
 
 /**
@@ -613,8 +685,14 @@ export const playEffectOnce = async (canvas, element, { scale = 3 } = {}) => {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(
         image,
-        frame * sheet.cell, 0, sheet.cell, sheet.cell,
-        0, 0, size, size,
+        frame * sheet.cell,
+        0,
+        sheet.cell,
+        sheet.cell,
+        0,
+        0,
+        size,
+        size,
       );
       requestAnimationFrame(step);
     };
@@ -674,7 +752,11 @@ export const playMonsterAnimation = (animator, name) => {
  * Raccourci : monte le heros correspondant aux stats dans un canvas et le
  * laisse en boucle d'attente.
  */
-export const mountHeroPortrait = (canvas, stats, { scale = 4, animation = "idle" } = {}) => {
+export const mountHeroPortrait = (
+  canvas,
+  stats,
+  { scale = 4, animation = "idle" } = {},
+) => {
   const heroId = getHeroIdForStats(stats);
   const sheet = HERO_SHEETS[heroId];
   const animator = new SpriteAnimator(canvas, { scale, fps: sheet.fps });

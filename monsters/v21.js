@@ -67,7 +67,10 @@ export const V21_MONSTERS = {
       }
       enemy._moltenSkin = false;
       enemy.armor = Math.max(100, enemy.armor - 30);
-      return { dmgMult: 1.4, msg: "Le vernis craque et libère une morsure en fusion." };
+      return {
+        dmgMult: 1.4,
+        msg: "Le vernis craque et libère une morsure en fusion.",
+      };
     },
   },
   praetor_fragment: {
@@ -81,17 +84,25 @@ export const V21_MONSTERS = {
     onHitEffect: { id: "BURN", duration: 2, chance: 0.35 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "Le fragment ouvre la gueule du volcan et vomit des éclats draconiques.",
+    flavorTextPhase2:
+      "Le fragment ouvre la gueule du volcan et vomit des éclats draconiques.",
     effectsPhase2: { id: "BURN", duration: 3, chance: 0.55 },
     onTurnAction: (enemy) => {
       enemy._phaseCounter = (enemy._phaseCounter || 0) + 1;
       if (enemy._phaseCounter % 3 === 1) {
-        return { msg: "Le fragment canalise une gerbe volcanique.", skipAttack: true };
+        return {
+          msg: "Le fragment canalise une gerbe volcanique.",
+          skipAttack: true,
+        };
       }
       if (enemy._phaseCounter % 3 === 2) {
         return { dmgMult: 1.55, msg: "Le magma jaillit dans un cône étroit." };
       }
-      return { dmgMult: 1.15, healAmount: 420, msg: "Le fragment dévore la lave et cicatrise son noyau." };
+      return {
+        dmgMult: 1.15,
+        healAmount: 420,
+        msg: "Le fragment dévore la lave et cicatrise son noyau.",
+      };
     },
   },
 
@@ -121,10 +132,16 @@ export const V21_MONSTERS = {
       enemy._stance = (enemy._stance || 0) + 1;
       if (enemy._stance % 2 === 1) {
         enemy.armor += 40;
-        return { msg: "Le colosse enfonce ses talons et verrouille sa posture.", skipAttack: true };
+        return {
+          msg: "Le colosse enfonce ses talons et verrouille sa posture.",
+          skipAttack: true,
+        };
       }
       enemy.armor = Math.max(160, enemy.armor - 40);
-      return { dmgMult: 1.8, msg: "Le colosse libère un coup de masse qui fend la neige." };
+      return {
+        dmgMult: 1.8,
+        msg: "Le colosse libère un coup de masse qui fend la neige.",
+      };
     },
   },
   fire_giant_shard: {
@@ -138,18 +155,28 @@ export const V21_MONSTERS = {
     onHitEffect: { id: "BURN", duration: 3, chance: 0.38 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
-    flavorTextPhase2: "L'éclat déchire la neige et lève un bras de braise antique.",
+    flavorTextPhase2:
+      "L'éclat déchire la neige et lève un bras de braise antique.",
     effectsPhase2: { id: "BURN", duration: 4, chance: 0.55 },
     onTurnAction: (enemy) => {
       enemy._pattern = (enemy._pattern || 0) + 1;
       if (enemy._pattern % 3 === 1) {
-        return { msg: "L'éclat écrase la neige et prépare un lancer incandescent.", skipAttack: true };
+        return {
+          msg: "L'éclat écrase la neige et prépare un lancer incandescent.",
+          skipAttack: true,
+        };
       }
       if (enemy._pattern % 3 === 2) {
-        return { dmgMult: 2.1, msg: "Le bras du géant catapulte un astre de braise." };
+        return {
+          dmgMult: 2.1,
+          msg: "Le bras du géant catapulte un astre de braise.",
+        };
       }
       enemy.armor += 25;
-      return { dmgMult: 1.15, msg: "Le géant s'ancre dans la glace et gagne en inertie." };
+      return {
+        dmgMult: 1.15,
+        msg: "Le géant s'ancre dans la glace et gagne en inertie.",
+      };
     },
   },
 
@@ -204,21 +231,34 @@ export const V21_MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.25 },
     hasSecondPhase: true,
     thresholdForPhase2: 0.45,
-    flavorTextPhase2: "L'avatar se fracture et la tempête révèle un cœur de relique noire.",
+    flavorTextPhase2:
+      "L'avatar se fracture et la tempête révèle un cœur de relique noire.",
     effectsPhase2: { id: "SCARLET_ROT", duration: 2, chance: 0.35 },
     onTurnAction: (enemy) => {
       enemy._stormCounter = (enemy._stormCounter || 0) + 1;
       if (enemy._stormCounter % 4 === 1) {
-        return { msg: "L'avatar compresse la foudre autour de sa relique.", skipAttack: true };
+        return {
+          msg: "L'avatar compresse la foudre autour de sa relique.",
+          skipAttack: true,
+        };
       }
       if (enemy._stormCounter % 4 === 2) {
-        return { dmgMult: 1.4, msg: "Une rafale entaille tout le champ de ruines." };
+        return {
+          dmgMult: 1.4,
+          msg: "Une rafale entaille tout le champ de ruines.",
+        };
       }
       if (enemy._stormCounter % 4 === 3) {
-        return { dmgMult: 2.05, msg: "La relique explose dans une descente céleste." };
+        return {
+          dmgMult: 2.05,
+          msg: "La relique explose dans une descente céleste.",
+        };
       }
       enemy.armor += 35;
-      return { msg: "Les pierres d'Azula tournent autour de l'avatar et le reforgent.", skipAttack: true };
+      return {
+        msg: "Les pierres d'Azula tournent autour de l'avatar et le reforgent.",
+        skipAttack: true,
+      };
     },
   },
 };

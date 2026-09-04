@@ -11,20 +11,40 @@
 // Les coordonnees sont [colonne, ligne], relevees a la main sur les planches.
 // Pour en changer une, ouvrir la planche concernee et compter les cellules.
 
-import { ITEMS } from "./item.js";
 import { ITEM_TYPES } from "./constants.js";
+import { ITEMS } from "./item.js";
 
 export const ICON_CELL = 16;
 
 /** Grille de chaque planche, en cellules. */
 export const ATLASES = {
-  weaponsBronze: { src: "assets/sprites/atlas/weapons-bronze.png", cols: 24, rows: 20 },
-  weaponsIron: { src: "assets/sprites/atlas/weapons-iron.png", cols: 24, rows: 20 },
-  weaponsSteel: { src: "assets/sprites/atlas/weapons-steel.png", cols: 24, rows: 20 },
-  weaponsGold: { src: "assets/sprites/atlas/weapons-gold.png", cols: 24, rows: 20 },
+  weaponsBronze: {
+    src: "assets/sprites/atlas/weapons-bronze.png",
+    cols: 24,
+    rows: 20,
+  },
+  weaponsIron: {
+    src: "assets/sprites/atlas/weapons-iron.png",
+    cols: 24,
+    rows: 20,
+  },
+  weaponsSteel: {
+    src: "assets/sprites/atlas/weapons-steel.png",
+    cols: 24,
+    rows: 20,
+  },
+  weaponsGold: {
+    src: "assets/sprites/atlas/weapons-gold.png",
+    cols: 24,
+    rows: 20,
+  },
   armours: { src: "assets/sprites/atlas/armours.png", cols: 9, rows: 19 },
   books: { src: "assets/sprites/atlas/books.png", cols: 14, rows: 12 },
-  accessories: { src: "assets/sprites/atlas/accessories.png", cols: 8, rows: 7 },
+  accessories: {
+    src: "assets/sprites/atlas/accessories.png",
+    cols: 8,
+    rows: 7,
+  },
   ui: { src: "assets/sprites/atlas/ui.png", cols: 6, rows: 3 },
   emblems: { src: "assets/sprites/atlas/emblems.png", cols: 6, rows: 2 },
   /*
@@ -34,7 +54,11 @@ export const ATLASES = {
    * pixel art que les accessoires — pas un SVG, qui serait la seule image
    * lisse au milieu de 164 icones.
    */
-  armourExtras: { src: "assets/sprites/atlas/armour-extras.png", cols: 2, rows: 1 },
+  armourExtras: {
+    src: "assets/sprites/atlas/armour-extras.png",
+    cols: 2,
+    rows: 1,
+  },
 };
 
 /**
@@ -45,7 +69,7 @@ const WEAPON_TIERS = [
   { maxLevel: 2, atlas: "weaponsBronze" },
   { maxLevel: 5, atlas: "weaponsIron" },
   { maxLevel: 8, atlas: "weaponsSteel" },
-  { maxLevel: Infinity, atlas: "weaponsGold" },
+  { maxLevel: Number.POSITIVE_INFINITY, atlas: "weaponsGold" },
 ];
 
 const weaponAtlasForLevel = (level) =>
@@ -326,7 +350,11 @@ export const getItemIcon = (itemId, level = 1) => {
   if (!itemId) return null;
 
   if (itemId === "fists") {
-    return { atlas: FISTS_ICON.atlas, col: FISTS_ICON.cell[0], row: FISTS_ICON.cell[1] };
+    return {
+      atlas: FISTS_ICON.atlas,
+      col: FISTS_ICON.cell[0],
+      row: FISTS_ICON.cell[1],
+    };
   }
 
   const item = ITEMS[itemId];
@@ -457,7 +485,11 @@ export const auditIcons = () => {
     }
     const atlas = ATLASES[icon.atlas];
     if (icon.col >= atlas.cols || icon.row >= atlas.rows) {
-      outOfBounds.push({ id: itemId, ...icon, atlasSize: [atlas.cols, atlas.rows] });
+      outOfBounds.push({
+        id: itemId,
+        ...icon,
+        atlasSize: [atlas.cols, atlas.rows],
+      });
     }
   });
 

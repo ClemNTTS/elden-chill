@@ -30,16 +30,26 @@ const profondeur = {};
   while (file.length) {
     const [id, d] = file.shift();
     const noter = (x) => {
-      if (x && (profondeur[x] === undefined || d < profondeur[x])) profondeur[x] = d;
+      if (x && (profondeur[x] === undefined || d < profondeur[x]))
+        profondeur[x] = d;
     };
-    for (const e of LOOT_TABLES[id] || []) { noter(e.id); noter(e.ashId); }
+    for (const e of LOOT_TABLES[id] || []) {
+      noter(e.id);
+      noter(e.ashId);
+    }
     for (const cle of ["monsters", "rareMonsters"]) {
       for (const m of BIOMES[id]?.[cle] || []) {
-        for (const drop of MONSTERS[m]?.drops || []) { noter(drop.id); noter(drop.ashId); }
+        for (const drop of MONSTERS[m]?.drops || []) {
+          noter(drop.id);
+          noter(drop.ashId);
+        }
       }
     }
     for (const n of BIOMES[id]?.unlocks || []) {
-      if (BIOMES[n] && !vus.has(n)) { vus.add(n); file.push([n, d + 1]); }
+      if (BIOMES[n] && !vus.has(n)) {
+        vus.add(n);
+        file.push([n, d + 1]);
+      }
     }
   }
 }
@@ -58,15 +68,20 @@ for (const [id, ash] of Object.entries(ASHES_OF_WAR)) {
 
 const totaux = {
   Arme: Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.WEAPON).length,
-  Armure: Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.ARMOR).length,
-  Accessoire: Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.ACCESSORY).length,
+  Armure: Object.values(ITEMS).filter((i) => i.type === ITEM_TYPES.ARMOR)
+    .length,
+  Accessoire: Object.values(ITEMS).filter(
+    (i) => i.type === ITEM_TYPES.ACCESSORY,
+  ).length,
   Cendre: Object.keys(ASHES_OF_WAR).length,
 };
 
 let total = 0;
 for (const [type, liste] of Object.entries(manquants)) {
   total += liste.length;
-  console.log(`${type.padEnd(12)} ${String(liste.length).padStart(3)} sans icone / ${totaux[type]}`);
+  console.log(
+    `${type.padEnd(12)} ${String(liste.length).padStart(3)} sans icone / ${totaux[type]}`,
+  );
 }
 console.log(NL + `${total} entrees affichent un carre hachure.` + NL);
 
@@ -76,12 +91,20 @@ for (const [type, liste] of Object.entries(manquants)) {
   const proches = liste.filter((x) => x.p !== undefined && x.p <= 4);
   console.log(`--- ${type} (${liste.length}) ---`);
   if (proches.length) {
-    console.log(`  Rencontres tot (a 4 biomes ou moins du depart), a traiter en premier :`);
-    for (const x of proches) console.log(`    ${String(x.p).padStart(2)}  ${x.nom.slice(0, 40).padEnd(42)} ${x.id}`);
+    console.log(
+      "  Rencontres tot (a 4 biomes ou moins du depart), a traiter en premier :",
+    );
+    for (const x of proches)
+      console.log(
+        `    ${String(x.p).padStart(2)}  ${x.nom.slice(0, 40).padEnd(42)} ${x.id}`,
+      );
   }
   const reste = liste.filter((x) => !proches.includes(x));
   if (tout) {
-    for (const x of reste) console.log(`    ${String(x.p ?? "--").padStart(2)}  ${x.nom.slice(0, 40).padEnd(42)} ${x.id}`);
+    for (const x of reste)
+      console.log(
+        `    ${String(x.p ?? "--").padStart(2)}  ${x.nom.slice(0, 40).padEnd(42)} ${x.id}`,
+      );
   } else if (reste.length) {
     console.log(`  (${reste.length} autres, relancer avec --liste)`);
   }
