@@ -263,6 +263,7 @@ import {
   upgradeStat,
 } from "./actions.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
+import { libellesDePhase } from "./boss-phases.js";
 import { encaisserFerveur, startExploration } from "./core.js";
 import {
   CRIT_PER_RANK,
@@ -286,7 +287,10 @@ import {
 import { CONTRACTS_MIN_LEVEL } from "./constants.js";
 import { REGLAGES_RARETE, progressionContrat } from "./contracts.js";
 import {
+  FERVEUR_PRIME_PAR_RANG,
+  FERVEUR_RANG_BUTIN,
   FERVEUR_RANG_MAX,
+  FERVEUR_RANG_RARETE,
   getFerveurMultDanger,
   getFerveurMultRunes,
   getFerveurRang,
@@ -294,6 +298,7 @@ import {
 import { panoplieEstActive } from "./loadouts.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
+  attachInfoTooltip,
   attachTooltipEvents,
   detachTooltipEvents,
   echapperHtml,
@@ -514,6 +519,31 @@ const updateContractDisplay = () => {
   }
 
   const part = Math.round(progressionContrat(contrat) * 100);
+
+  /*
+   * Marqueurs de tete : etape de chaine et echeance.
+   *
+   * Ils vont a cote de la rarete parce que ce sont les deux seules
+   * informations qui changent la DECISION du joueur — continuer ou repartir
+   * ailleurs — et qu'elles doivent se lire avant le texte, pas apres.
+   */
+  const marqueurs = [];
+  if (contrat.chaine) {
+    marqueurs.push(
+      `<span class="contract__chain">Chaine ${contrat.chaine.rang}/${contrat.chaine.sur}</span>`,
+    );
+  }
+  if (contrat.echeance > 0) {
+    const urgent = contrat.cyclesRestants <= 3;
+    marqueurs.push(
+      `<span class="contract__deadline${urgent ? " is-urgent" : ""}">${
+        contrat.expire
+          ? "Expire"
+          : `${contrat.cyclesRestants} cycle${contrat.cyclesRestants > 1 ? "s" : ""} restant${contrat.cyclesRestants > 1 ? "s" : ""}`
+      }</span>`,
+    );
+  }
+
   const recompenses = [];
   if (contrat.recompense.runes > 0) {
     recompenses.push(`${formatNumber(contrat.recompense.runes)} runes`);
@@ -527,10 +557,18 @@ const updateContractDisplay = () => {
     recompenses.push(`${contrat.recompense.niveau} niveau`);
   }
 
+  const etats = [
+    contrat.honore ? "is-done" : "",
+    contrat.expire ? "is-expired" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   corps.innerHTML = `
-    <article class="contract contract--${contrat.rarete}${contrat.honore ? " is-done" : ""}">
+    <article class="contract contract--${contrat.rarete}${etats ? ` ${etats}` : ""}">
       <header class="contract__head">
         <span class="contract__rarity">${REGLAGES_RARETE[contrat.rarete]?.libelle || contrat.rarete}</span>
+        ${marqueurs.join("")}
         <strong class="contract__title">${echapperHtml(contrat.titre)}</strong>
       </header>
       <p class="contract__text">${echapperHtml(contrat.texte)}</p>
@@ -539,12 +577,16 @@ const updateContractDisplay = () => {
         <div class="contract__progress-fill" style="width:${part}%"></div>
         <span class="contract__progress-text">${contrat.avancement} / ${contrat.objectif}</span>
       </div>
-      <p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>
+      ${
+        contrat.expire
+          ? '<p class="contract__expired-note">Le delai est passe. La recompense est perdue : demandez-en un autre.</p>'
+          : `<p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>`
+      }
       <div class="contract__actions">
         ${
           contrat.honore
             ? '<button type="button" id="contract-claim" class="contract__claim">Reclamer</button>'
-            : '<button type="button" id="contract-abandon" class="contract__abandon">Abandonner</button>'
+            : `<button type="button" id="contract-abandon" class="contract__abandon">${contrat.expire ? "Demander un autre contrat" : "Abandonner"}</button>`
         }
       </div>
     </article>
@@ -644,6 +686,38 @@ export const updateCycleDisplay = () => {
 };
 
 /*
+ * Banniere d'avis, en haut de page, au-dessus de tout.
+ *
+ * Elle vivait dans game.js sous le nom showBootNotice, pour les messages de
+ * chargement. Elle sert aussi aux annonces en cours de partie — un deblocage,
+ * par exemple — et actions.js ne peut pas importer game.js, qui est le point
+ * d'entree et cable `window` a l'import.
+ *
+ * On n'utilise pas ActionLog pour ca : le journal de combat n'existe pas au
+ * chargement, et il n'est pas visible depuis le camp.
+ *
+ * @param {string} text
+ * @param {"warn"|"danger"|"unlock"} tone
+ */
+export const afficherAvis = (text, tone = "warn") => {
+  const banner = document.createElement("div");
+  banner.className = `boot-notice boot-notice--${tone}`;
+
+  const message = document.createElement("p");
+  message.innerText = text;
+
+  const dismiss = document.createElement("button");
+  dismiss.type = "button";
+  dismiss.className = "boot-notice__close";
+  dismiss.setAttribute("aria-label", "Fermer l'avertissement");
+  dismiss.innerText = "Compris";
+  dismiss.addEventListener("click", () => banner.remove());
+
+  banner.append(message, dismiss);
+  document.body.prepend(banner);
+};
+
+/*
  * Bandeau de Ferveur.
  *
  * Il affiche la seule chose que le joueur doit peser pour decider de se
@@ -678,6 +752,56 @@ export const updateFerveurDisplay = () => {
   // Au-dela du plafond de prime, seule la menace continue de monter : il faut
   // que cela se voie sans lire les chiffres.
   banner.classList.toggle("is-overheated", rang >= FERVEUR_RANG_MAX);
+
+  /*
+   * Le bandeau montre trois nombres ; il n'expliquait pas ce qu'ils engagent.
+   * Or c'est la seule mecanique du jeu ou la mauvaise lecture coute une
+   * reserve entiere : un joueur qui croit ses runes en sécurité continue un
+   * cycle de trop. Le panneau dit ce qui est en jeu, ce qui le sauve, et ce
+   * que le rang suivant apporte.
+   *
+   * Recable a chaque rendu, avec les nombres du moment : le contenu est une
+   * fonction, donc relu a l'ouverture, mais le rang change entre deux cycles.
+   */
+  attachInfoTooltip(banner, () => explicationFerveur());
+};
+
+/** Contenu du panneau de Ferveur, calcule au moment de l'ouverture. */
+const explicationFerveur = () => {
+  const cycles = runtimeState.currentLoopCount || 0;
+  const rang = getFerveurRang(cycles);
+  const reserve = Math.floor(runtimeState.ferveurBank || 0);
+  const auPlafond = rang >= FERVEUR_RANG_MAX;
+
+  const lignes = [
+    "Chaque cycle boucle sans repli fait monter la Ferveur d'un rang.",
+    `<br><strong>${formatNumber(reserve)} runes sont en jeu.</strong> La prime ne va pas au coffre : elle s'accumule a part, <strong>versee au repli volontaire</strong> et <strong>entierement perdue a la mort</strong>.`,
+    "<br><small>Les runes de base, elles, restent securisees a chaque cycle : la Ferveur n'enleve rien, elle ajoute une mise.</small>",
+  ];
+
+  if (auPlafond) {
+    lignes.push(
+      `<br><strong style="color:var(--danger)">Rang ${FERVEUR_RANG_MAX}, le maximum.</strong> La prime ne monte plus, la menace continue. Chaque cycle de plus ne fait qu'augmenter ce que vous risquez.`,
+    );
+  } else {
+    const gain = Math.round(FERVEUR_PRIME_PAR_RANG * 100);
+    lignes.push(
+      `<br>Rang suivant : <strong>+${gain}% de prime</strong> contre <strong>+${Math.round((getFerveurMultDanger(cycles + 1) - getFerveurMultDanger(cycles)) * 100)}% de menace</strong>.`,
+    );
+  }
+
+  const paliers = [];
+  if (rang < FERVEUR_RANG_BUTIN) {
+    paliers.push(`rang ${FERVEUR_RANG_BUTIN} : un tirage de butin en plus`);
+  }
+  if (rang < FERVEUR_RANG_RARETE) {
+    paliers.push(`rang ${FERVEUR_RANG_RARETE} : butin plus rare`);
+  }
+  if (paliers.length) {
+    lignes.push(`<br><small>A venir — ${paliers.join(", ")}.</small>`);
+  }
+
+  return { title: `Ferveur ${rang}`, text: lignes.join("") };
 };
 
 const updateRuneDisplay = () => {
@@ -2730,7 +2854,16 @@ const updateEnemyIntentDisplay = () => {
    * Ils occupaient deux lignes, ce qui donnait cinq rangees a la lane de
    * l'ennemi contre trois au joueur : les barres de vie ne s'alignaient plus.
    */
+  /*
+   * Les comportements de seconde phase passent AVANT l'intention.
+   *
+   * L'intention decrit le prochain coup ; les comportements decrivent ce que
+   * le boss est devenu, et c'est ce qui explique pourquoi le combat s'est mis
+   * a mal tourner. Un joueur qui revient devant son ecran doit pouvoir le lire
+   * sans avoir vu passer la ligne de journal du franchissement.
+   */
   label.innerText = [
+    ...libellesDePhase(enemy),
     intent.label,
     intent.targetHint,
     intent.hazard ? HAZARD_LABELS[intent.hazard] : null,

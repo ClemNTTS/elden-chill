@@ -272,4 +272,229 @@ export const ASHES_OF_WAR = {
       return { msg: "Le voeu dore se referme sur vous." };
     },
   },
+  /* ================================================================== *
+   * Cendres de fin de partie                                           *
+   *                                                                    *
+   * Les dix-huit premieres couvrent la montee ; passe le niveau 100, le*
+   * joueur affrontait cinquante zones avec l'outillage du debut.       *
+   *                                                                    *
+   * DEUX REGLES ONT GOUVERNE CELLES-CI.                                *
+   *                                                                    *
+   * 1. Tout est exprime en POURCENTAGES ou en statistiques du joueur,  *
+   *    jamais en nombres fixes. Un boss de fin a 95 000 PV, un boss de *
+   *    debut en a 150 : une valeur ecrite en dur serait ridicule d'un  *
+   *    cote ou de l'autre, et il faudrait la reajuster a chaque ajout  *
+   *    de contenu.                                                     *
+   *                                                                    *
+   * 2. Chacune REPOND a quelque chose que la fin de partie oppose au   *
+   *    joueur — un comportement de seconde phase, un rang de Ferveur,  *
+   *    une armure devenue infranchissable. Une cendre qui se contente  *
+   *    de taper plus fort n'ajoute pas une decision, elle ajoute un    *
+   *    nombre.                                                         *
+   * ================================================================== */
+
+  /*
+   * Reponse a la carapace : le seul comportement de phase que rien ne
+   * traversait sans un investissement massif en Force.
+   */
+  order_decree: {
+    name: "Decret de l'Ordre",
+    description:
+      "Le prochain coup ignore l'armure adverse. Plus la cible est blindee, plus le decret pese.",
+    maxUses: 2,
+    effect: (stats, enemy) => {
+      /*
+       * L'armure est soustraite aux degats par performAttack ; on ne peut pas
+       * la contourner depuis ici. On la convertit donc en multiplicateur, ce
+       * qui revient au meme et reste lisible dans le journal.
+       */
+      const armure = Math.max(0, enemy?.armor || 0);
+      const frappe = Math.max(1, stats.strength || 1);
+      const ratio = Math.max(1.5, Math.min(5, 1 + armure / frappe));
+      return {
+        damageMult: ratio,
+        msg:
+          "Le decret tombe : l'armure ne compte plus (x" +
+          ratio.toFixed(1) +
+          ").",
+      };
+    },
+  },
+
+  /*
+   * Reponse a la regeneration et au drain. Sans elle, un boss qui se soigne
+   * plus vite qu'on ne le frappe est une impasse totale : aucune duree de
+   * combat n'en vient a bout, seul un meilleur build le peut. Cette cendre
+   * offre la deuxieme reponse.
+   */
+  death_seal: {
+    name: "Sceau de Mort",
+    description:
+      "Scelle les soins de la cible pendant 4 tours : regeneration, drain et absorption ne lui rendent plus rien.",
+    maxUses: 2,
+    effect: (_stats, enemy) => {
+      if (!enemy) return {};
+      enemy.soinsScelles = 4;
+      return { msg: enemy.name + " ne se refermera plus." };
+    },
+  },
+
+  /*
+   * Reponse a l'invocation. Les degats de zone existaient sans avoir jamais
+   * de moment ou ils sont indispensables : un boss qui se dedouble le leur
+   * donne, et cette cendre les rend accessibles a tous les archetypes.
+   */
+  broken_echo: {
+    name: "Echo brise",
+    description:
+      "Brise les echos : degats de zone egaux a 15% des PV restants de la cible principale.",
+    maxUses: 2,
+    effect: (stats, enemy) => {
+      const eclat = Math.floor(Math.max(0, enemy?.hp || 0) * 0.15);
+      stats.splashDamage += eclat;
+      return {
+        damageMult: 1.2,
+        msg: "L'echo se fend et retombe sur les siens (" + eclat + " de zone).",
+      };
+    },
+  },
+
+  /*
+   * Reponse a la malediction et a la mue. Un boss qui impose une affliction
+   * chaque tour finit par en empiler quatre : les resistances y repondent en
+   * amont, celle-ci y repond une fois qu'il est trop tard.
+   */
+  miquella_tear: {
+    name: "Larme de Miquella",
+    description: "Efface toutes vos afflictions et rend 35% de vos PV maximum.",
+    maxUses: 1,
+    effect: () => {
+      const purgees = gameState.playerEffects.length;
+      gameState.playerEffects.length = 0;
+
+      const pvMax = getHealth(getEffectiveStats().vigor);
+      healPlayer(Math.floor(pvMax * 0.35), pvMax);
+
+      return {
+        msg: purgees
+          ? "La larme dissout " +
+            purgees +
+            " affliction(s) et referme vos plaies."
+          : "La larme referme vos plaies.",
+      };
+    },
+  },
+
+  /*
+   * Recompense le pari de la Ferveur.
+   *
+   * Jusqu'ici la Ferveur ne payait qu'en runes : elle rendait le combat plus
+   * dur sans jamais rendre le joueur plus fort. Cette cendre convertit le rang
+   * en puissance, et donne une raison de plus d'enchainer un cycle — donc de
+   * laisser la reserve sur la table.
+   */
+  ashen_oath: {
+    name: "Serment cendreux",
+    description:
+      "Convertit votre rang de Ferveur en puissance : +25% de degats par rang, jusqu'a x3,5.",
+    maxUses: 2,
+    effect: () => {
+      const rang = Math.max(0, runtimeState.currentLoopCount || 0);
+      const ratio = Math.min(3.5, 1 + rang * 0.25);
+      return {
+        damageMult: ratio,
+        msg:
+          "Le serment se nourrit de votre ferveur (x" + ratio.toFixed(2) + ").",
+      };
+    },
+  },
+
+  /*
+   * La Vigueur ne servait qu'a encaisser. Elle devient une voie offensive —
+   * la seule qui frappe sans rien devoir a une arme.
+   */
+  beast_roar: {
+    name: "Rugissement bestial",
+    description:
+      "Change votre masse en menace : degats de zone egaux a 6% de vos PV maximum, et l'ennemi saigne.",
+    maxUses: 3,
+    effect: (stats) => {
+      const pvMax = getHealth(getEffectiveStats().vigor);
+      stats.splashDamage += Math.floor(pvMax * 0.06);
+      applyEffect(gameState.ennemyEffects, "BLEED", 4);
+      return { damageMult: 1.5, msg: "Le sanctuaire repond a votre cri." };
+    },
+  },
+
+  /*
+   * La Dexterite n'avait aucune cendre. Elle en recoit une qui joue son jeu :
+   * pas un gros coup, mais deux de plus.
+   */
+  blade_dance: {
+    name: "Danse des lames",
+    description:
+      "Deux attaques supplementaires au prochain tour, et le saignement pour les accompagner.",
+    maxUses: 2,
+    effect: () => {
+      runtimeState.nextNbAtkBonus += 2;
+      applyEffect(gameState.ennemyEffects, "BLEED", 3);
+      return { msg: "Vos lames se dedoublent." };
+    },
+  },
+
+  /*
+   * Contrepoint de l'Eruption de magma : celle-ci concentre au lieu de
+   * disperser. L'Intelligence avait de quoi nettoyer un groupe, rien pour
+   * abattre une cible unique.
+   */
+  comet_azur: {
+    name: "Comete d'Azur",
+    description:
+      "Un rayon continu sur une seule cible : degats doubles, plus 1% par point d'Intelligence, jusqu'a x6.",
+    maxUses: 1,
+    effect: (stats) => {
+      const ratio = Math.min(6, 2 + (stats.intelligence || 0) * 0.01);
+      return {
+        damageMult: ratio,
+        msg: "Le rayon ne faiblit pas (x" + ratio.toFixed(1) + ").",
+      };
+    },
+  },
+
+  /*
+   * Voie des afflictions. Les objets qui posent des statuts existent, mais
+   * aucune cendre n'en imposait DEUX : c'est la difference entre subir une
+   * resistance et la contourner.
+   */
+  elphael_sting: {
+    name: "Dard d'Elphael",
+    description:
+      "Putrefaction et saignement d'un seul geste, six cumuls chacun.",
+    maxUses: 2,
+    effect: () => {
+      applyEffect(gameState.ennemyEffects, "SCARLET_ROT", 6);
+      applyEffect(gameState.ennemyEffects, "BLEED", 6);
+      return { msg: "Le dard entre, et deux poisons le suivent." };
+    },
+  },
+
+  /*
+   * Voie defensive de fin de partie. Le Rempart Inebranlable donne 25
+   * d'armure, ce qui ne veut plus rien dire face a un boss qui frappe a 700 :
+   * celle-ci est proportionnelle, donc elle vieillit avec le contenu.
+   */
+  jar_vessel: {
+    name: "Vase des Geants",
+    description:
+      "Vous scelle dans la ceramique : armure augmentee de 40% de votre Vigueur pour le combat, et les ronces vous protegent.",
+    maxUses: 2,
+    effect: (stats) => {
+      const gain = Math.floor((stats.vigor || 0) * 0.4) + 30;
+      runtimeState.playerArmorDebuff -= gain;
+      applyEffect(gameState.playerEffects, "THORNS", 4);
+      return {
+        msg: "La ceramique se referme sur vous (+" + gain + " d'armure).",
+      };
+    },
+  },
 };

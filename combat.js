@@ -1,5 +1,10 @@
 import { ASHES_OF_WAR } from "./ashes.js";
 import { tickBiomeTraits } from "./biome-traits.js";
+import {
+  actionDePhase,
+  declencherPhase2,
+  riposteDePhase,
+} from "./boss-phases.js";
 import { handleDeath, handleVictory } from "./core.js";
 import { rollCrit } from "./crit.js";
 import { ITEMS } from "./item.js";
@@ -420,29 +425,49 @@ export function performAttack({
       });
     }
 
-    /* ================= PHASE CHECK ================= */
-    if (target?.hasSecondPhase && !target.isInSecondPhase) {
-      const maxHp = target.maxHp ?? target.hp;
-      const hpRatio = getEntityHp(target) / maxHp;
+    /* ================= SECONDE PHASE ================= */
+    /*
+     * Un seul point de controle, delegue a boss-phases.js.
+     *
+     * Il y en avait DEUX dans cette fonction, a soixante lignes d'ecart, avec
+     * deux implementations divergentes : la seconde ignorait l'esquive et le
+     * changement d'affliction. Elle ne tournait jamais — la premiere posait le
+     * drapeau — mais elle attendait qu'on la modifie seule.
+     */
+    const entreeEnPhase = declencherPhase2(target, getEntityHp(target));
+    if (entreeEnPhase) {
+      entreeEnPhase.messages.forEach((msg) =>
+        ActionLog(msg, "log-flavor-orange"),
+      );
+      /*
+       * Les echos rejoignent le groupe DERRIERE le boss : le premier de la
+       * liste est la cible et la tete d'affiche a l'ecran, et voir le boss
+       * remplace par sa propre copie au moment ou il se dedouble serait
+       * illisible.
+       */
+      if (entreeEnPhase.invocations.length && Array.isArray(targetGroup)) {
+        targetGroup.push(...entreeEnPhase.invocations);
+        updateHealthBars();
+        updateUI();
+      }
+    }
 
-      if (hpRatio <= target.thresholdForPhase2) {
-        target.isInSecondPhase = true;
-
-        if (target.dmgMultPhase2 && target.atk) {
-          target.atk *= target.dmgMultPhase2;
-        }
-
-        if (target.dodgePhase2) {
-          target.dodgeChance = target.dodgePhase2;
-        }
-
-        if (target.effectsPhase2) {
-          target.onHitEffect = target.effectsPhase2;
-        }
-
-        if (target.flavorTextPhase2) {
-          ActionLog(target.flavorTextPhase2, "log-flavor-orange");
-        }
+    /*
+     * Riposte : une part des degats encaisses revient a l'attaquant. Ne
+     * s'applique qu'au joueur — un ennemi qui se riposterait entre echos
+     * s'entretuerait tout seul.
+     */
+    if (isPlayer && finalDamage > 0) {
+      const retour = riposteDePhase(target, finalDamage);
+      if (retour.renvoi > 0) {
+        // Jamais mortelle : elle doit faire reflechir a la cadence, pas
+        // terminer une expedition sur un coup que le joueur a bien joue.
+        runtimeState.playerCurrentHp = Math.max(
+          1,
+          runtimeState.playerCurrentHp - retour.renvoi,
+        );
+        retour.messages.forEach((msg) => ActionLog(msg, "log-warning"));
+        updateHealthBars();
       }
     }
 
@@ -534,26 +559,30 @@ export function performAttack({
         }
       });
     }
-
-    // -------------------- PHASE CHECK --------------------
-    if (target.hasSecondPhase && !target.isInSecondPhase) {
-      const hpFraction = getEntityHp(target) / (target.maxHp ?? target.hp ?? 1);
-      if (hpFraction <= target.thresholdForPhase2) {
-        target.isInSecondPhase = true;
-        // Multiply damage if defined
-        if (target.dmgMultPhase2) {
-          if ("atk" in target) target.atk *= target.dmgMultPhase2;
-        }
-        // Display flavor text in combat log with a bright color
-        if (target.flavorTextPhase2) {
-          ActionLog(target.flavorTextPhase2, "log-flavor-orange"); // You can define this CSS class
-        }
-      }
-    }
   });
 }
 
 /* ================= REMAINING ENEMY MESSAGE HELPERS ================= */
+
+/*
+ * Soin d'un ennemi, point de passage unique.
+ *
+ * Trois chemins soignaient un ennemi — `onTurnAction`, la regeneration de
+ * phase et le drain — chacun avec son propre `Math.min(maxHp, ...)`. Le Sceau
+ * de Mort devait pouvoir les bloquer tous les trois : il ne pouvait pas y
+ * avoir trois endroits a penser, sinon la cendre aurait tenu sur deux des
+ * trois et personne ne l'aurait vu.
+ *
+ * @returns {number} ce qui a reellement ete rendu.
+ */
+const soignerEnnemi = (ennemi, montant) => {
+  if (!ennemi || !(montant > 0)) return 0;
+  if (ennemi.soinsScelles > 0) return 0;
+
+  const avant = ennemi.hp;
+  ennemi.hp = Math.min(ennemi.maxHp ?? ennemi.hp, ennemi.hp + montant);
+  return ennemi.hp - avant;
+};
 
 const countEnemyTypes = (enemies) => {
   const counts = {};
@@ -674,6 +703,9 @@ export const combatLoop = (sessionId) => {
           ashEffect = ash.effect(stats, runtimeState.currentEnemyGroup[0]);
           runtimeState.ashUsesLeft--;
           runtimeState.ashIsPrimed = false;
+          // Le contrat « Discipline » exige un cycle sans cendre : le drapeau
+          // est lu et remis a zero a la fermeture du cycle, dans core.js.
+          runtimeState.ashUsedThisLoop = true;
           playAshEffect(gameState.equippedAsh);
           playSfx("ash");
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
@@ -802,6 +834,18 @@ export const combatLoop = (sessionId) => {
             );
           }
 
+          /*
+           * Le sceau se consume au tour de l'ennemi, qu'il ait agi ou non :
+           * un boss etourdi ne doit pas faire durer la cendre gratuitement.
+           */
+          const scelle = runtimeState.currentEnemyGroup[0];
+          if (scelle?.soinsScelles > 0) {
+            scelle.soinsScelles -= 1;
+            if (scelle.soinsScelles === 0) {
+              ActionLog(`Le sceau se brise sur ${scelle.name}.`, "log-status");
+            }
+          }
+
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
             // Dexterite investie + esquive apportee par les objets, plafonnees
@@ -841,10 +885,58 @@ export const combatLoop = (sessionId) => {
               if (action.dmgMult) enemyDmgMult = action.dmgMult;
 
               if (action.healAmount) {
-                enemy.hp = Math.min(enemy.maxHp, enemy.hp + action.healAmount);
+                soignerEnnemi(enemy, action.healAmount);
                 updateHealthBars();
               }
             }
+
+            /*
+             * Comportements de seconde phase.
+             *
+             * Appliques APRES onTurnAction et sans l'ecraser : un boss peut
+             * porter les deux. onTurnAction reste l'echappatoire pour un
+             * comportement unique a un seul boss ; les comportements de phase
+             * sont ceux qu'on veut partager.
+             */
+            /*
+             * Chaque comportement est applique puis annonce, dans cet ordre :
+             * une action bloquee ne doit pas laisser son message derriere elle.
+             */
+            let drainDuTour = 0;
+            for (const entree of actionDePhase(enemy, playerObj)) {
+              let aAgi = false;
+
+              if (entree.healAmount > 0) {
+                const rendu = soignerEnnemi(enemy, entree.healAmount);
+                if (rendu > 0) {
+                  aAgi = true;
+                  updateHealthBars();
+                } else if (enemy.soinsScelles > 0) {
+                  ActionLog(
+                    `Le sceau tient : ${enemy.name} ne se referme pas.`,
+                    "log-status",
+                  );
+                }
+              }
+
+              entree.effets.forEach((effet) => {
+                applyEffect(gameState.playerEffects, effet.id, effet.duree);
+                aAgi = true;
+              });
+
+              if (entree.drain > 0) {
+                drainDuTour = Math.max(drainDuTour, entree.drain);
+                aAgi = true;
+              }
+
+              if (aAgi && entree.msg) {
+                ActionLog(entree.msg, "log-flavor-orange");
+              }
+            }
+
+            // Reference pour le drain : ce que le boss aura reellement fait
+            // passer, esquive et armure deduites.
+            const pvAvantAssaut = runtimeState.playerCurrentHp;
 
             // Enemy attacks the player
             for (let i = 0; i < loop; i++) {
@@ -868,6 +960,29 @@ export const combatLoop = (sessionId) => {
               runtimeState.currentEnemyGroup.forEach((enemy) => {
                 if (enemy.atk > getHealth(eff.vigor) * 0.15) triggerShake();
               });
+            }
+
+            /*
+             * Drain : le boss se nourrit de ce qu'il a fait passer, pas de ce
+             * qu'il a tente. Un coup esquive ou absorbe par l'armure ne le
+             * soigne de rien — c'est ce qui rend l'esquive et l'armure une
+             * reponse au comportement plutot qu'un simple ralentissement.
+             */
+            if (drainDuTour > 0) {
+              const inflige = Math.max(
+                0,
+                pvAvantAssaut - runtimeState.playerCurrentHp,
+              );
+              const vole = soignerEnnemi(
+                enemy,
+                Math.floor(inflige * drainDuTour),
+              );
+              if (vole > 0) {
+                ActionLog(
+                  `${enemy.name} se repait de ${formatNumber(vole)} points de vie.`,
+                  "log-warning",
+                );
+              }
             }
           }
 

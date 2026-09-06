@@ -70,6 +70,8 @@ export const ENDGAME_MONSTERS = {
     },
   },
   leyndell_erdtree_avatar: {
+    comportementsPhase2: ["regeneration"],
+    phaseRegen: 0.04,
     name: "Avatar de l'Arbre-Monde",
     hp: 27000,
     atk: 305,
@@ -144,6 +146,8 @@ export const ENDGAME_MONSTERS = {
     },
   },
   forbidden_gravekeeper: {
+    comportementsPhase2: ["malediction"],
+    phaseMalediction: { id: "DEATH_BLIGHT", duration: 2 },
     name: "Gardien des tombes interdites",
     hp: 30500,
     atk: 335,

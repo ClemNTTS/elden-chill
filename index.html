@@ -120,32 +120,40 @@
               </div>
 
               <!--
-                Contrat en cours. Place sur le Hub, avant les actions : c'est
-                ce que le joueur doit voir en revenant au camp pour savoir ou
-                repartir.
+                Colonne de droite, en face de l'equipement.
+                Le contrat et les actions sont deux cartes empilees plutot
+                qu'une carte etiree : un contrat tient en six lignes, et
+                l'etirer sur la hauteur de l'equipement laissait un grand vide
+                sous le bouton. Les actions viennent combler ce vide.
               -->
-              <div class="camp-panel contract-panel">
-                <div class="section-head">
-                  <div>
-                    <h3>Contrat en cours</h3>
-                    <p>Une raison de retourner ou vous etes deja passe.</p>
+              <div class="hub-side-stack">
+                <!--
+                  Contrat en cours. Place avant les actions : c'est ce que le
+                  joueur doit voir en revenant au camp pour savoir ou repartir.
+                -->
+                <div class="camp-panel contract-panel">
+                  <div class="section-head">
+                    <div>
+                      <h3>Contrat en cours</h3>
+                      <p>Une raison de retourner ou vous etes deja passe.</p>
+                    </div>
                   </div>
+                  <div id="contract-body"></div>
                 </div>
-                <div id="contract-body"></div>
-              </div>
 
-              <div class="camp-panel hub-actions-panel">
-                <div class="section-head">
-                  <div>
-                    <h3>Actions principales</h3>
-                    <p>Les raccourcis utiles sans bruit parasite.</p>
+                <div class="camp-panel hub-actions-panel">
+                  <div class="section-head">
+                    <div>
+                      <h3>Actions principales</h3>
+                      <p>Les raccourcis utiles sans bruit parasite.</p>
+                    </div>
                   </div>
-                </div>
-                <div class="hub-cta-grid">
-                  <button type="button" onclick="navigateTo('map')">Ouvrir la carte</button>
-                  <button type="button" onclick="navigateTo('inventory')">Voir l'inventaire</button>
-                  <button type="button" onclick="navigateTo('build')">Optimiser le build</button>
-                  <button type="button" onclick="navigateTo('options')">Options</button>
+                  <div class="hub-cta-grid">
+                    <button type="button" onclick="navigateTo('map')">Ouvrir la carte</button>
+                    <button type="button" onclick="navigateTo('inventory')">Voir l'inventaire</button>
+                    <button type="button" onclick="navigateTo('build')">Optimiser le build</button>
+                    <button type="button" onclick="navigateTo('options')">Options</button>
+                  </div>
                 </div>
               </div>
 

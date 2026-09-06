@@ -1,4 +1,4 @@
-export const PLAYER_PROFILE_VERSION = "2.5.0";
+export const PLAYER_PROFILE_VERSION = "3.0.0";
 /*
  * Plafond de niveau.
  *
@@ -53,7 +53,7 @@ export const DEFAULT_PLAYER_PROFILE = {
    * Contrats de zone. `actif` est le contrat en cours, `completed` le nombre
    * honore depuis la derniere renaissance — la Lame du Serment le lit.
    */
-  contracts: { actif: null, completed: 0, total: 0 },
+  contracts: { actif: null, completed: 0, total: 0, annonce: false },
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -357,6 +357,8 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
     0,
     Math.floor(Number(base.contracts.total) || 0),
   );
+  // Drapeau d'annonce du deblocage : un booleen, pas une progression.
+  base.contracts.annonce = !!base.contracts.annonce;
   // Le contrat lui-meme est normalise par contracts.js, que ce module ne peut
   // pas importer sans se donner une dependance. On garantit juste un objet.
   if (base.contracts.actif && typeof base.contracts.actif !== "object") {

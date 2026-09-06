@@ -29,6 +29,8 @@ export const runtimeState = {
   ferveurBank: 0,
   autoRestartDeaths: 0,
   ashUsesLeft: 0,
+  // Une cendre a-t-elle ete activee depuis le debut du cycle en cours ?
+  ashUsedThisLoop: false,
   ashIsPrimed: false,
   enemyIntent: null,
   combatFrozen: false,

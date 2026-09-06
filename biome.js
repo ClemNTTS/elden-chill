@@ -110,6 +110,7 @@ export const LOOT_TABLES = {
   ],
 
   mount_gelmir: [
+    { ashId: "order_decree", chance: 0.16 },
     { id: "gelmir_dragon_fang", chance: 0.22 },
     { id: "gelmir_dragon_hide", chance: 0.26 },
     { id: "gelmir_dragon_eye", chance: 0.12 },
@@ -118,6 +119,7 @@ export const LOOT_TABLES = {
   ],
 
   mountaintops: [
+    { ashId: "beast_roar", chance: 0.16 },
     { id: "giant_breaker_maul", chance: 0.2 },
     { id: "arena_colossus_plate", chance: 0.24 },
     { id: "arena_colossus_token", chance: 0.18 },
@@ -126,6 +128,7 @@ export const LOOT_TABLES = {
   ],
 
   leyndell_royal: [
+    { ashId: "comet_azur", chance: 0.16 },
     { id: "altus_exec_sigil", chance: 0.2 },
     { id: "talisman_posture", chance: 0.2 },
     { id: "arena_colossus_plate", chance: 0.18 },
@@ -133,6 +136,7 @@ export const LOOT_TABLES = {
   ],
 
   forbidden_land: [
+    { ashId: "death_seal", chance: 0.16 },
     { id: "talisman_wayfarer", chance: 0.22 },
     { id: "arena_colossus_token", chance: 0.18 },
     { id: "giant_breaker_maul", chance: 0.16 },
@@ -140,6 +144,7 @@ export const LOOT_TABLES = {
   ],
 
   consecrated_snowfield: [
+    { ashId: "blade_dance", chance: 0.16 },
     { id: "arena_colossus_plate", chance: 0.2 },
     { id: "talisman_posture", chance: 0.2 },
     { id: "talisman_blackrot", chance: 0.16 },
@@ -147,6 +152,7 @@ export const LOOT_TABLES = {
   ],
 
   mohgwyn_palace: [
+    { ashId: "elphael_sting", chance: 0.16 },
     { id: "azula_black_censer", chance: 0.2 },
     { id: "talisman_blackrot", chance: 0.2 },
     { id: "azula_black_veil", chance: 0.18 },
@@ -154,6 +160,7 @@ export const LOOT_TABLES = {
   ],
 
   miquella_haligtree: [
+    { ashId: "miquella_tear", chance: 0.16 },
     { id: "azula_black_idol", chance: 0.2 },
     { id: "azula_black_veil", chance: 0.2 },
     { id: "talisman_wayfarer", chance: 0.18 },
@@ -161,6 +168,7 @@ export const LOOT_TABLES = {
   ],
 
   crumbling_farum_azula: [
+    { ashId: "ashen_oath", chance: 0.16 },
     { id: "azula_black_censer", chance: 0.18 },
     { id: "azula_black_veil", chance: 0.24 },
     { id: "azula_black_idol", chance: 0.16 },
@@ -241,6 +249,7 @@ export const LOOT_TABLES = {
     { id: "rune_fragment", chance: 0.2 },
   ],
   giants_catacombs: [
+    { ashId: "jar_vessel", chance: 0.16 },
     { id: "zamor_ice_curved", chance: 0.22 },
     { id: "giant_crusher_plate", chance: 0.26 },
     { id: "zamor_ice_seal", chance: 0.16 },
@@ -260,6 +269,7 @@ export const LOOT_TABLES = {
     { id: "rune_fragment", chance: 0.2 },
   ],
   leyndell_ash: [
+    { ashId: "broken_echo", chance: 0.16 },
     { id: "ozz_grimoire", chance: 0.18 },
     { id: "all_knowing_helm", chance: 0.2 },
     { id: "ashen_capital_seal", chance: 0.15 },

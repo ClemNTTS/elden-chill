@@ -284,6 +284,19 @@ const ASH_CELLS = {
   colossus_roar: [4, 8],
   astral_shatter: [12, 10],
   rootward_vow: [8, 11],
+
+  /* Cendres de fin de partie. Cellules libres de la planche, verifiees par
+     tools/audit-icones-doublons.mjs : aucune n'est reprise d'une autre. */
+  order_decree: [2, 11],
+  death_seal: [5, 9],
+  broken_echo: [7, 7],
+  miquella_tear: [9, 10],
+  ashen_oath: [0, 11],
+  beast_roar: [13, 9],
+  blade_dance: [12, 6],
+  comet_azur: [2, 7],
+  elphael_sting: [5, 11],
+  jar_vessel: [11, 10],
 };
 
 /* ------------------------------------------------------------------ */
