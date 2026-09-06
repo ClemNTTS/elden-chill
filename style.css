@@ -534,6 +534,32 @@ button:disabled {
   gap: 18px;
 }
 
+/*
+ * Colonne de droite du Hub : contrat puis actions principales.
+ *
+ * Les deux cartes etaient des enfants directs de .hub-grid. Le contrat se
+ * retrouvait donc seul en face de l'equipement et, la grille etirant ses
+ * cellules, il prenait toute la hauteur de celui-ci pour n'afficher que six
+ * lignes — un grand vide sous le bouton « Abandonner ». Les actions, elles,
+ * atterrissaient a gauche sur la rangee suivante.
+ *
+ * Les empiler dans un conteneur unique rend a chaque carte sa hauteur de
+ * contenu. C'est le conteneur, et lui seul, qui s'etire sur la hauteur de la
+ * rangee : `flex: 0 0 auto` sur les cartes leur interdit de se partager
+ * l'espace restant, qui devient du vide sous la derniere plutot que du vide
+ * dans les deux.
+ */
+.hub-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.hub-side-stack > .camp-panel {
+  flex: 0 0 auto;
+}
+
 .hero-panel {
   display: flex;
   flex-direction: column;
@@ -3089,6 +3115,9 @@ button:disabled {
 
 .endgame-panel {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  /* Plus de voisin sur sa rangee depuis que le contrat et les actions sont
+     empiles a droite : il prend les deux colonnes. */
+  grid-column: 1 / -1;
 }
 
 .endgame-stats {
