@@ -5,6 +5,130 @@ export const ITEM_TYPES = {
 };
 
 export const ITEM_SETS = {
+  /* ================================================================
+     Panoplies de contrat.
+
+     Une par archetype de build. Leurs pieces ne tombent que des contrats
+     rares et legendaires : le bonus a trois pieces doit donc valoir l'effort,
+     sans quoi la promesse d'un butin exclusif reste une promesse.
+
+     Les bonus a 2 pieces restent volontairement modestes. Une panoplie de
+     contrat ne doit pas surclasser d'emblee un set gagne en fin de parcours :
+     elle propose une DIRECTION, et c'est la troisieme piece qui la paie.
+     ================================================================ */
+
+  OATHBOUND: {
+    name: "Serment du Mandataire",
+    bonuses: {
+      2: {
+        desc: "Force totale +12%.",
+        effect: (stats) => {
+          stats.strength *= 1.12;
+        },
+      },
+      3: {
+        desc: "Parole tenue : Force totale +25% et penetration d'armure +25.",
+        effect: (stats) => {
+          stats.strength *= 1.25;
+          stats.flatDamagePenetration += 25;
+        },
+      },
+    },
+  },
+
+  BOUNTY_HUNTER: {
+    name: "Livree du Chasseur de Primes",
+    bonuses: {
+      2: {
+        desc: "Dexterite totale +12% et Chance Crit +5%.",
+        effect: (stats) => {
+          stats.dexterity *= 1.12;
+          stats.critChance += 0.05;
+        },
+      },
+      3: {
+        desc: "Prime encaissee : +1 attaque par tour et +0.4x Degats Crit.",
+        effect: (stats) => {
+          // L'attaque supplementaire est le vrai gain : elle transforme le
+          // rythme du build au lieu d'ajouter un pourcentage de plus.
+          stats.attacksPerTurn += 1;
+          stats.critDamage += 0.4;
+        },
+      },
+    },
+  },
+
+  ARCHIVIST: {
+    name: "Charge de l'Archiviste",
+    bonuses: {
+      2: {
+        desc: "Intelligence totale +12%.",
+        effect: (stats) => {
+          stats.intelligence *= 1.12;
+        },
+      },
+      3: {
+        desc: "Jugement rendu : Intelligence +22% et degats de zone +50%.",
+        effect: (stats) => {
+          stats.intelligence *= 1.22;
+          stats.splashDamage = Math.floor(stats.splashDamage * 1.5);
+        },
+      },
+    },
+  },
+
+  MOURNER: {
+    name: "Veille des Endeuilles",
+    bonuses: {
+      2: {
+        desc: "Vigueur totale +12% et +40 Armure.",
+        effect: (stats) => {
+          stats.vigor *= 1.12;
+          stats.armor += 40;
+        },
+      },
+      3: {
+        desc: "Veille tenue : degats des boss reduits de 15% et soins recus +40%.",
+        effect: (stats) => {
+          // La mitigation de boss est ce dont un build vigueur manque le plus
+          // en fin de parcours : c'est la que sa survie decroche.
+          stats.bossMitigation += 0.15;
+          stats.healReceivedMult += 0.4;
+        },
+      },
+    },
+  },
+
+  SENTENCE: {
+    name: "Sentence Executoire",
+    bonuses: {
+      2: {
+        desc: "+6 a toutes les resistances et penetration d'armure +15.",
+        effect: (stats) => {
+          stats.flatDamagePenetration += 15;
+          stats.resistances.poison += 6;
+          stats.resistances.gel += 6;
+          stats.resistances.folie += 6;
+          stats.resistances.putrefaction += 6;
+        },
+      },
+      3: {
+        desc: "Peine appliquee : Force +18% et penetration d'armure +40.",
+        effect: (stats) => {
+          /*
+           * Pas de bonus d'application de statut ici, volontairement : les
+           * trois pieces en posent deja cinq par tour, et les afflictions sont
+           * plafonnees a six fois le coup qui les declenche (AFFLICTION_CAP).
+           * En ajouter aurait paye zero. La penetration, elle, augmente le coup
+           * de base — donc le plafond lui-meme.
+           */
+          stats.strength *= 1.18;
+          stats.flatDamagePenetration += 40;
+        },
+      },
+    },
+  },
+
   CARIAN_KNIGHT: {
     name: "Panoplie du Chevalier Carien",
     bonuses: {
@@ -593,4 +717,69 @@ export const HAZARD_LABELS = {
   gel: "Gel",
   folie: "Folie",
   putrefaction: "Putréfaction",
+};
+
+/*
+ * Identifiants du butin exclusif des contrats.
+ *
+ * Ici plutot que dans items/contracts.js pour une raison mecanique : cette
+ * table importe state.js, qui importe item.js, qui la reagrege — un module
+ * qui n'a besoin que des identifiants (actions.js, les tests) declenchait donc
+ * la chaine complete et tombait sur un `Cannot access before initialization`
+ * selon l'ordre de chargement.
+ *
+ * constants.js n'importe rien : la liste y est lisible depuis n'importe ou.
+ * Un test verifie qu'elle correspond exactement aux objets definis.
+ */
+export const CONTRACT_ITEM_IDS = [
+  // OATHBOUND - force
+  "oath_blade",
+  "oathbound_plate",
+  "seal_of_the_pact",
+  // BOUNTY_HUNTER - dexterite
+  "hunters_edge",
+  "quarry_stalkers_garb",
+  "ledger_of_debts",
+  // ARCHIVIST - intelligence
+  "writ_of_ruin",
+  "archivists_mantle",
+  "unsigned_clause",
+  // MOURNER - vigueur
+  "vigil_greatshield",
+  "mourners_veil",
+  "widows_token",
+  // SENTENCE - afflictions
+  "verdict_fang",
+  "plague_writ_shroud",
+  "bailiffs_brand",
+];
+
+/*
+ * Niveau a partir duquel les contrats de zone existent.
+ *
+ * POURQUOI PAS DES LE DEPART : un contrat renvoie le joueur dans une zone
+ * deja depassee. Avant d'avoir un front et un arriere, il n'a rien derriere
+ * lui — l'objectif se confond avec la progression normale et le systeme ne
+ * dit rien. A 100, la moitie des biomes est derriere le joueur et le detour
+ * devient un vrai choix.
+ *
+ * C'est la SEULE valeur a changer pour avancer ou reculer ce deblocage :
+ * actions.js et ui.js la lisent tous les deux.
+ */
+export const CONTRACTS_MIN_LEVEL = 100;
+
+/*
+ * Panoplie visee par archetype.
+ *
+ * Ici et pas dans items/contracts.js pour la meme raison mecanique que la
+ * liste ci-dessus : actions.js n'a besoin que de la correspondance, et la
+ * lire depuis la table d'objets rouvrait le cycle
+ * items/contracts.js -> state.js -> item.js -> items/contracts.js.
+ */
+export const SETS_PAR_ARCHETYPE = {
+  strength: "OATHBOUND",
+  dexterity: "BOUNTY_HUNTER",
+  intelligence: "ARCHIVIST",
+  vigor: "MOURNER",
+  afflictions: "SENTENCE",
 };

@@ -1,4 +1,5 @@
 import { applyTraitsToEnemy } from "./biome-traits.js";
+import { getFerveurMultDanger } from "./escalation.js";
 import { combatLoop } from "./combat.js";
 import { ITEMS } from "./item.js";
 import { MONSTERS } from "./monster.js";
@@ -56,12 +57,20 @@ function createEnemyInstance(template, multiplier) {
     randomMultiplier += Math.random();
   }
 
+  /*
+   * La Ferveur durcit les ennemis a mesure que les cycles s'enchainent, mais
+   * ne touche PAS a leurs runes : la contrepartie du danger passe entierement
+   * par la prime, qui est fragile. Gonfler aussi le gain de base reviendrait a
+   * offrir la moitie de la recompense sans risque.
+   */
+  const danger = getFerveurMultDanger(runtimeState.currentLoopCount);
+
   return applyTraitsToEnemy({
     ...template,
-    maxHp: Math.floor(template.hp * multiplier * randomMultiplier),
-    atk: Math.floor(template.atk * multiplier),
+    maxHp: Math.floor(template.hp * multiplier * randomMultiplier * danger),
+    atk: Math.floor(template.atk * multiplier * danger),
     runes: Math.floor(template.runes * multiplier * randomMultiplier),
-    hp: Math.floor(template.hp * multiplier * randomMultiplier),
+    hp: Math.floor(template.hp * multiplier * randomMultiplier * danger),
   });
 }
 

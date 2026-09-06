@@ -204,3 +204,27 @@ test("shared/ ne depend de rien", () => {
     );
   }
 });
+
+/*
+ * Les tables d'objets s'atteignent par item.js, jamais en direct.
+ *
+ * items/*.js importe state.js, qui importe item.js, qui reagrege items/*.js :
+ * le cycle est assume et fonctionne tant que item.js en est le point d'entree.
+ * Le jour ou un autre module importe items/quelque-chose.js directement, c'est
+ * LUI qui ouvre le cycle, et item.js se retrouve a etaler une table encore
+ * vide. C'est arrive : actions.js importait items/contracts.js, et la page
+ * entiere tombait sur "Cannot access 'CONTRACT_ITEMS' before initialization"
+ * avant meme d'afficher le camp — sans qu'aucun test ne bronche.
+ */
+test("seul item.js importe les tables de items/", () => {
+  const g = graphe();
+  for (const [module, cibles] of g) {
+    if (module === "item.js" || module.startsWith("items/")) continue;
+    const fautives = cibles.filter((c) => c.startsWith("items/"));
+    assert.deepEqual(
+      fautives,
+      [],
+      `${module} importe ${fautives.join(", ")} en direct : passez par item.js, sinon le cycle items/ -> state.js -> item.js s'ouvre du mauvais cote`,
+    );
+  }
+});

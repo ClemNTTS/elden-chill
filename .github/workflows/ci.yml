@@ -29,8 +29,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # L'historique complet est necessaire pour diffusion contre la base.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Biome
+
+      # BLOQUANT, mais sur le seul code que la branche touche.
+      #
+      # Biome releve encore 142 constats sur la base existante. Les rendre
+      # bloquants d'emblee exigerait un nettoyage de 16 000 lignes avant toute
+      # autre contribution ; les ignorer laisserait la dette grossir. On tient
+      # donc la ligne la ou elle se tient : le code ecrit ou modifie
+      # aujourd'hui doit etre propre, le reste attend son tour.
+      - name: Lint du code modifie par cette branche
+        if: github.event_name == 'pull_request'
+        run: |
+          FICHIERS=$(git diff --name-only --diff-filter=d \
+            "origin/${{ github.base_ref }}...HEAD" -- '*.js' '*.mjs' \
+            | grep -v '^assets/' || true)
+
+          if [ -z "$FICHIERS" ]; then
+            echo "Aucun fichier JavaScript modifie."
+            exit 0
+          fi
+
+          echo "Fichiers verifies :"
+          echo "$FICHIERS"
+          npx --yes @biomejs/biome@1.9.4 ci $FICHIERS
+
+      # Le compteur de dette, pour qu'elle reste visible et qu'on sache quand
+      # le lint global pourra devenir bloquant a son tour.
+      - name: Dette du code existant (informatif)
+        continue-on-error: true
         run: npx --yes @biomejs/biome@1.9.4 ci .

@@ -19,6 +19,14 @@ export const runtimeState = {
   playerCurrentHp: 0,
   currentCombatSession: 0,
   currentLoopCount: 0,
+  /*
+   * Reserve de Ferveur : la prime accumulee en enchainant les cycles.
+   *
+   * Elle vit dans runtimeState et NON dans gameState, volontairement : elle ne
+   * doit pas survivre a un rechargement de page. Une mise qu'on peut mettre a
+   * l'abri en fermant l'onglet ne serait plus une mise. Voir escalation.js.
+   */
+  ferveurBank: 0,
   autoRestartDeaths: 0,
   ashUsesLeft: 0,
   ashIsPrimed: false,

@@ -48,6 +48,12 @@ export const DEFAULT_PLAYER_PROFILE = {
     accessory: null,
   },
   inventory: [{ id: "fists", name: "poings", level: 10, count: 0 }],
+  loadouts: [],
+  /*
+   * Contrats de zone. `actif` est le contrat en cours, `completed` le nombre
+   * honore depuis la derniere renaissance — la Lame du Serment le lit.
+   */
+  contracts: { actif: null, completed: 0, total: 0 },
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -336,6 +342,26 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.codex = { ...base.codex, ...toObject(data.codex) };
   base.save = { ...base.save, ...toObject(data.save) };
   base.order = toArray(data.order, []);
+  /*
+   * Panoplies enregistrees. La normalisation fine vit dans loadouts.js — ce
+   * module doit rester sans dependance — on se contente ici de garantir un
+   * tableau.
+   */
+  base.loadouts = toArray(data.loadouts, []);
+  base.contracts = { ...base.contracts, ...toObject(data.contracts) };
+  base.contracts.completed = Math.max(
+    0,
+    Math.floor(Number(base.contracts.completed) || 0),
+  );
+  base.contracts.total = Math.max(
+    0,
+    Math.floor(Number(base.contracts.total) || 0),
+  );
+  // Le contrat lui-meme est normalise par contracts.js, que ce module ne peut
+  // pas importer sans se donner une dependance. On garantit juste un objet.
+  if (base.contracts.actif && typeof base.contracts.actif !== "object") {
+    base.contracts.actif = null;
+  }
 
   base.world.unlockedBiomes = toArray(
     base.world.unlockedBiomes,
