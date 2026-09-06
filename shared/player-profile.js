@@ -1,4 +1,4 @@
-export const PLAYER_PROFILE_VERSION = "2.5.0";
+export const PLAYER_PROFILE_VERSION = "3.0.0";
 /*
  * Plafond de niveau.
  *

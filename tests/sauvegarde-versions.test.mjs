@@ -51,6 +51,41 @@ test("une sauvegarde d'une version anterieure reste chargeable", () => {
   assert.equal(isCompatibleSaveVersion(PLAYER_PROFILE_VERSION), true);
 });
 
+/*
+ * Toutes les versions publiees doivent rester chargeables.
+ *
+ * C'est le test qui aurait evite le desastre de la 2.5 : le passage de 2.4.0 a
+ * 2.5.0 avait rendu chaque sauvegarde existante « incompatible », et les
+ * joueurs sont repartis niveau 0 sur tous leurs appareils. Toute nouvelle
+ * version publiee s'ajoute a cette liste ; si l'une d'elles cesse de passer,
+ * c'est qu'on vient de reproduire le bug.
+ */
+test("chaque version publiee du jeu reste chargeable", () => {
+  const PUBLIEES = ["2.0.0", "2.3.0", "2.3.1", "2.4.0", "2.5.0", "3.0.0"];
+  for (const version of PUBLIEES) {
+    assert.equal(
+      isCompatibleSaveVersion(version),
+      true,
+      `une sauvegarde ${version} est refusee par la version ${PLAYER_PROFILE_VERSION}`,
+    );
+  }
+});
+
+test("le jeu, son manifeste et le profil annoncent la meme version", async () => {
+  const fs = await import("node:fs");
+  const lire = (chemin) =>
+    JSON.parse(fs.readFileSync(new URL(chemin, import.meta.url), "utf8"))
+      .version;
+
+  /*
+   * version-check.js compare version.json au numero embarque dans le bundle
+   * pour detecter un deploiement. Si les deux divergent, chaque chargement
+   * croit qu'une mise a jour vient de sortir et recharge la page en boucle.
+   */
+  assert.equal(lire("../version.json"), PLAYER_PROFILE_VERSION);
+  assert.equal(lire("../package.json"), PLAYER_PROFILE_VERSION);
+});
+
 test("une sauvegarde plus recente que le code est refusee", () => {
   assert.equal(isCompatibleSaveVersion("9.9.9"), false);
 });

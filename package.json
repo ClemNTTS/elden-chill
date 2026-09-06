@@ -1,6 +1,6 @@
 {
   "name": "elden-chill",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "description": "Jeu de role incrementiel inspire d'Elden Ring, sans dependance ni build.",
