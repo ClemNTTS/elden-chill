@@ -294,25 +294,37 @@ const actifs = (ennemi) =>
     .filter(Boolean);
 
 /**
- * Action de phase pour le tour de l'ennemi.
+ * Actions de phase pour le tour de l'ennemi.
  *
- * Cumule ce que les comportements actifs demandent. Rien n'est applique ici :
- * un boss peut donc porter a la fois un `onTurnAction` ecrit a la main et des
- * comportements de phase sans que l'un ecrase l'autre.
+ * Rendue comme une LISTE et non comme un cumul aplati. La difference n'est pas
+ * cosmetique : un message doit pouvoir etre tu quand son action n'a rien fait.
+ * Le cumul aplati donnait « Le boss referme ses plaies » suivi de « Le sceau
+ * tient : il ne se referme pas », deux lignes qui se contredisent — parce que
+ * le message avait deja ete ecrit quand le soin s'est fait bloquer.
+ *
+ * Rien n'est applique ici : un boss peut donc porter a la fois un
+ * `onTurnAction` ecrit a la main et des comportements de phase, sans que l'un
+ * ecrase l'autre.
+ *
+ * @returns {Array<{id, msg, healAmount, effets, drain}>}
  */
 export const actionDePhase = (ennemi, joueur = null) => {
-  const cumul = { messages: [], healAmount: 0, effets: [], drain: 0 };
+  const entrees = [];
 
-  for (const comportement of actifs(ennemi)) {
+  for (const [id, comportement] of Object.entries(COMPORTEMENTS)) {
+    if (!(ennemi?.comportementsActifs || []).includes(id)) continue;
     const action = comportement.surTour?.(ennemi, joueur);
     if (!action) continue;
-    if (action.msg) cumul.messages.push(action.msg);
-    if (action.healAmount) cumul.healAmount += action.healAmount;
-    if (action.effets) cumul.effets.push(...action.effets);
-    if (action.drain) cumul.drain = Math.max(cumul.drain, action.drain);
+    entrees.push({
+      id,
+      msg: action.msg || null,
+      healAmount: action.healAmount || 0,
+      effets: action.effets || [],
+      drain: action.drain || 0,
+    });
   }
 
-  return cumul;
+  return entrees;
 };
 
 /**

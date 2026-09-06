@@ -126,9 +126,9 @@ test("la regeneration rend une part des PV maximum a chaque tour", () => {
     phaseRegen: 0.1,
   });
   bp.declencherPhase2(boss, 500);
-  assert.equal(bp.actionDePhase(boss).healAmount, 100);
+  assert.equal(bp.actionDePhase(boss)[0].healAmount, 100);
   // Toujours actif au tour suivant : ce n'est pas un effet d'entree.
-  assert.equal(bp.actionDePhase(boss).healAmount, 100);
+  assert.equal(bp.actionDePhase(boss)[0].healAmount, 100);
 });
 
 test("la malediction n'impose qu'un statut connu du jeu", () => {
@@ -137,14 +137,14 @@ test("la malediction n'impose qu'un statut connu du jeu", () => {
     phaseMalediction: { id: "SCARLET_ROT", duration: 3 },
   });
   bp.declencherPhase2(boss, 500);
-  const action = bp.actionDePhase(boss);
+  const [action] = bp.actionDePhase(boss);
   assert.deepEqual(action.effets, [{ id: "SCARLET_ROT", duree: 3 }]);
   assert.ok(STATUS_EFFECTS[action.effets[0].id], "statut inconnu du jeu");
 
   // Sans reglage, le comportement ne fabrique pas d'affliction fantome.
   const muet = bossLegacy({ comportementsPhase2: ["malediction"] });
   bp.declencherPhase2(muet, 500);
-  assert.deepEqual(bp.actionDePhase(muet).effets, []);
+  assert.deepEqual(bp.actionDePhase(muet), []);
 });
 
 test("la riposte est plafonnee et ne depend pas du coup recu", () => {
@@ -213,11 +213,33 @@ test("plusieurs comportements se cumulent sans s'ecraser", () => {
     phaseMalediction: { id: "BURN", duration: 2 },
   });
   bp.declencherPhase2(boss, 500);
-  const action = bp.actionDePhase(boss);
-  assert.equal(action.healAmount, 50);
-  assert.equal(action.drain, 0.4);
-  assert.equal(action.effets.length, 1);
-  assert.equal(action.messages.length, 3);
+  const entrees = bp.actionDePhase(boss);
+  assert.equal(entrees.length, 3, "un comportement, une entree");
+  assert.equal(entrees.find((e) => e.id === "regeneration").healAmount, 50);
+  assert.equal(entrees.find((e) => e.id === "drain").drain, 0.4);
+  assert.equal(entrees.find((e) => e.id === "malediction").effets.length, 1);
+  assert.ok(entrees.every((e) => e.msg));
+});
+
+/*
+ * Chaque action porte son propre message.
+ *
+ * Le cumul aplati les melangeait, et combat.js les ecrivait tous avant
+ * d'appliquer quoi que ce soit. Le Sceau de Mort bloquait alors la
+ * regeneration APRES que « le boss referme ses plaies » soit deja au journal :
+ * deux lignes qui se contredisent, sur le tour d'une cendre qui vient de
+ * couter une charge.
+ */
+test("chaque action de phase est identifiable, message compris", () => {
+  const boss = bossLegacy({
+    comportementsPhase2: ["regeneration", "drain"],
+    phaseRegen: 0.05,
+  });
+  bp.declencherPhase2(boss, 500);
+  for (const entree of bp.actionDePhase(boss)) {
+    assert.ok(entree.id, "action anonyme : son message ne peut pas etre tu");
+    assert.ok(bp.COMPORTEMENTS[entree.id], `${entree.id} : inconnu`);
+  }
 });
 
 /* ------------------------------------------------------------------ */

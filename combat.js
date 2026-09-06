@@ -564,6 +564,26 @@ export function performAttack({
 
 /* ================= REMAINING ENEMY MESSAGE HELPERS ================= */
 
+/*
+ * Soin d'un ennemi, point de passage unique.
+ *
+ * Trois chemins soignaient un ennemi — `onTurnAction`, la regeneration de
+ * phase et le drain — chacun avec son propre `Math.min(maxHp, ...)`. Le Sceau
+ * de Mort devait pouvoir les bloquer tous les trois : il ne pouvait pas y
+ * avoir trois endroits a penser, sinon la cendre aurait tenu sur deux des
+ * trois et personne ne l'aurait vu.
+ *
+ * @returns {number} ce qui a reellement ete rendu.
+ */
+const soignerEnnemi = (ennemi, montant) => {
+  if (!ennemi || !(montant > 0)) return 0;
+  if (ennemi.soinsScelles > 0) return 0;
+
+  const avant = ennemi.hp;
+  ennemi.hp = Math.min(ennemi.maxHp ?? ennemi.hp, ennemi.hp + montant);
+  return ennemi.hp - avant;
+};
+
 const countEnemyTypes = (enemies) => {
   const counts = {};
   enemies.forEach((e) => {
@@ -814,6 +834,18 @@ export const combatLoop = (sessionId) => {
             );
           }
 
+          /*
+           * Le sceau se consume au tour de l'ennemi, qu'il ait agi ou non :
+           * un boss etourdi ne doit pas faire durer la cendre gratuitement.
+           */
+          const scelle = runtimeState.currentEnemyGroup[0];
+          if (scelle?.soinsScelles > 0) {
+            scelle.soinsScelles -= 1;
+            if (scelle.soinsScelles === 0) {
+              ActionLog(`Le sceau se brise sur ${scelle.name}.`, "log-status");
+            }
+          }
+
           if (!enemyStatus.skipTurn) {
             const eff = getEffectiveStats();
             // Dexterite investie + esquive apportee par les objets, plafonnees
@@ -853,7 +885,7 @@ export const combatLoop = (sessionId) => {
               if (action.dmgMult) enemyDmgMult = action.dmgMult;
 
               if (action.healAmount) {
-                enemy.hp = Math.min(enemy.maxHp, enemy.hp + action.healAmount);
+                soignerEnnemi(enemy, action.healAmount);
                 updateHealthBars();
               }
             }
@@ -866,17 +898,41 @@ export const combatLoop = (sessionId) => {
              * comportement unique a un seul boss ; les comportements de phase
              * sont ceux qu'on veut partager.
              */
-            const phase = actionDePhase(enemy, playerObj);
-            phase.messages.forEach((msg) =>
-              ActionLog(msg, "log-flavor-orange"),
-            );
-            if (phase.healAmount > 0) {
-              enemy.hp = Math.min(enemy.maxHp, enemy.hp + phase.healAmount);
-              updateHealthBars();
+            /*
+             * Chaque comportement est applique puis annonce, dans cet ordre :
+             * une action bloquee ne doit pas laisser son message derriere elle.
+             */
+            let drainDuTour = 0;
+            for (const entree of actionDePhase(enemy, playerObj)) {
+              let aAgi = false;
+
+              if (entree.healAmount > 0) {
+                const rendu = soignerEnnemi(enemy, entree.healAmount);
+                if (rendu > 0) {
+                  aAgi = true;
+                  updateHealthBars();
+                } else if (enemy.soinsScelles > 0) {
+                  ActionLog(
+                    `Le sceau tient : ${enemy.name} ne se referme pas.`,
+                    "log-status",
+                  );
+                }
+              }
+
+              entree.effets.forEach((effet) => {
+                applyEffect(gameState.playerEffects, effet.id, effet.duree);
+                aAgi = true;
+              });
+
+              if (entree.drain > 0) {
+                drainDuTour = Math.max(drainDuTour, entree.drain);
+                aAgi = true;
+              }
+
+              if (aAgi && entree.msg) {
+                ActionLog(entree.msg, "log-flavor-orange");
+              }
             }
-            phase.effets.forEach((effet) => {
-              applyEffect(gameState.playerEffects, effet.id, effet.duree);
-            });
 
             // Reference pour le drain : ce que le boss aura reellement fait
             // passer, esquive et armure deduites.
@@ -912,14 +968,16 @@ export const combatLoop = (sessionId) => {
              * soigne de rien — c'est ce qui rend l'esquive et l'armure une
              * reponse au comportement plutot qu'un simple ralentissement.
              */
-            if (phase.drain > 0) {
+            if (drainDuTour > 0) {
               const inflige = Math.max(
                 0,
                 pvAvantAssaut - runtimeState.playerCurrentHp,
               );
-              const vole = Math.floor(inflige * phase.drain);
+              const vole = soignerEnnemi(
+                enemy,
+                Math.floor(inflige * drainDuTour),
+              );
               if (vole > 0) {
-                enemy.hp = Math.min(enemy.maxHp, enemy.hp + vole);
                 ActionLog(
                   `${enemy.name} se repait de ${formatNumber(vole)} points de vie.`,
                   "log-warning",
