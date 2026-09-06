@@ -328,6 +328,13 @@ const reportSaveLoad = (report) => {
     return;
   }
 
+  if (report.status === "recovered-quarantine") {
+    showBootNotice(
+      "Votre progression avait ete mise de cote a tort par une precedente mise a jour du jeu. Elle vient d'etre rendue : verifiez votre niveau et votre inventaire.",
+    );
+    return;
+  }
+
   const detail = SAVE_WARNING_MESSAGES[report.reason] || "";
 
   if (report.status === "restored-backup") {

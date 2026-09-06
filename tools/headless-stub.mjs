@@ -85,11 +85,26 @@ export const mountDomStub = () => {
     documentElement: inertElement,
     activeElement: null,
   };
+  /*
+   * Un vrai stockage en memoire, pas un bouchon inerte.
+   *
+   * Le chargement de sauvegarde est precisement ce qu'on veut pouvoir tester :
+   * avec un getItem() qui rend toujours null, aucun test ne pouvait faire la
+   * difference entre "sauvegarde relue" et "partie neuve".
+   */
+  const memoire = new Map();
   globalThis.localStorage = {
-    getItem: () => null,
-    setItem: noop,
-    removeItem: noop,
-    clear: noop,
+    getItem: (key) =>
+      memoire.has(String(key)) ? memoire.get(String(key)) : null,
+    setItem: (key, value) => {
+      memoire.set(String(key), String(value));
+    },
+    removeItem: (key) => {
+      memoire.delete(String(key));
+    },
+    clear: () => {
+      memoire.clear();
+    },
   };
   globalThis.sessionStorage = globalThis.localStorage;
   globalThis.Image = class {

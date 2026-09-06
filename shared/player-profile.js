@@ -48,6 +48,12 @@ export const DEFAULT_PLAYER_PROFILE = {
     accessory: null,
   },
   inventory: [{ id: "fists", name: "poings", level: 10, count: 0 }],
+  loadouts: [],
+  /*
+   * Contrats de zone. `actif` est le contrat en cours, `completed` le nombre
+   * honore depuis la derniere renaissance — la Lame du Serment le lit.
+   */
+  contracts: { actif: null, completed: 0, total: 0 },
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -230,8 +236,56 @@ export const getVersionLine = (version) => {
   return String(version).split(".").slice(0, 2).join(".");
 };
 
-export const isCompatibleSaveVersion = (version) =>
-  getVersionLine(version) === getVersionLine(PLAYER_PROFILE_VERSION);
+/** Decoupe "2.4.1" en [2, 4, 1], en comblant les segments manquants par 0. */
+const numeroDeVersion = (version) => {
+  const parts = String(version || "")
+    .split(".")
+    .map((part) => Number.parseInt(part, 10));
+  return [0, 1, 2].map((i) => (Number.isFinite(parts[i]) ? parts[i] : 0));
+};
+
+/**
+ * Compare deux versions. Renvoie -1, 0 ou 1.
+ */
+export const comparerVersions = (a, b) => {
+  const gauche = numeroDeVersion(a);
+  const droite = numeroDeVersion(b);
+  for (let i = 0; i < 3; i += 1) {
+    if (gauche[i] !== droite[i]) return gauche[i] < droite[i] ? -1 : 1;
+  }
+  return 0;
+};
+
+/*
+ * Compatibilite d'une sauvegarde.
+ *
+ * ANCIENNE REGLE, ET POURQUOI ELLE ETAIT FAUSSE : on exigeait la meme ligne
+ * `major.minor`. Chaque montee de version du jeu — 2.4 vers 2.5, par exemple —
+ * rendait donc TOUTES les sauvegardes existantes "incompatibles". Elles etaient
+ * mises en quarantaine et le joueur repartait niveau 0, sur chacun de ses
+ * appareils, sans avoir rien efface. C'est exactement ce qui s'est produit.
+ *
+ * REGLE ACTUELLE : une sauvegarde plus ancienne ou egale est acceptee, puis
+ * remise a niveau. C'est sans risque : normalizePlayerProfile() reconstruit le
+ * profil champ par champ sur les valeurs par defaut et assainit tout ce qui
+ * vient de la sauvegarde — un champ absent d'une vieille save prend sa valeur
+ * par defaut, il ne casse rien.
+ *
+ * Une sauvegarde PLUS RECENTE que le code reste refusee : elle peut contenir
+ * une progression que cette version ne sait pas representer, et l'ouvrir la
+ * tronquerait silencieusement. Ce cas arrive quand un navigateur garde un
+ * bundle en cache apres un deploiement.
+ *
+ * Une rupture de format volontaire, si elle arrive un jour, se declare en
+ * relevant MIN_SUPPORTED_SAVE_VERSION — jamais en bougeant le numero du jeu.
+ */
+export const MIN_SUPPORTED_SAVE_VERSION = "2.0.0";
+
+export const isCompatibleSaveVersion = (version) => {
+  if (!version) return false;
+  if (comparerVersions(version, MIN_SUPPORTED_SAVE_VERSION) < 0) return false;
+  return comparerVersions(version, PLAYER_PROFILE_VERSION) <= 0;
+};
 
 export const ensureSaveIdentity = (data, fallbackProfileId = null) => {
   if (!data.save) data.save = {};
@@ -288,6 +342,26 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   base.codex = { ...base.codex, ...toObject(data.codex) };
   base.save = { ...base.save, ...toObject(data.save) };
   base.order = toArray(data.order, []);
+  /*
+   * Panoplies enregistrees. La normalisation fine vit dans loadouts.js — ce
+   * module doit rester sans dependance — on se contente ici de garantir un
+   * tableau.
+   */
+  base.loadouts = toArray(data.loadouts, []);
+  base.contracts = { ...base.contracts, ...toObject(data.contracts) };
+  base.contracts.completed = Math.max(
+    0,
+    Math.floor(Number(base.contracts.completed) || 0),
+  );
+  base.contracts.total = Math.max(
+    0,
+    Math.floor(Number(base.contracts.total) || 0),
+  );
+  // Le contrat lui-meme est normalise par contracts.js, que ce module ne peut
+  // pas importer sans se donner une dependance. On garantit juste un objet.
+  if (base.contracts.actif && typeof base.contracts.actif !== "object") {
+    base.contracts.actif = null;
+  }
 
   base.world.unlockedBiomes = toArray(
     base.world.unlockedBiomes,

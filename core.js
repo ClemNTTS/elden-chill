@@ -1,4 +1,11 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import {
+  getFerveurBoostRarete,
+  getFerveurLibelle,
+  getFerveurRang,
+  getFerveurTiragesButin,
+  getPrimeFerveur,
+} from "./escalation.js";
 import { getTraitRunBuffs } from "./biome-traits.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { ITEMS } from "./item.js";
@@ -22,6 +29,7 @@ import {
   getHealth,
   runtimeState,
 } from "./state.js";
+import { proposerContrat, signalerContrat } from "./actions.js";
 import {
   addJournalEntry,
   applyPreparationLoadout,
@@ -150,7 +158,9 @@ const dropItem = (itemId) => {
 };
 
 const getWeightedDrop = (lootTable) => {
-  const rarityBoost = getRunModifier("lootRarityBoost", 0);
+  const rarityBoost =
+    getRunModifier("lootRarityBoost", 0) +
+    getFerveurBoostRarete(runtimeState.currentLoopCount);
   const weightedLoot = lootTable.map((item) => {
     const rarityWeight = getItemRarityWeight(getItemRarity(item.id || ""));
     return {
@@ -182,6 +192,14 @@ export const handleDeath = () => {
   );
   const biomeAtDeath = gameState.world.currentBiome;
   gameState.runes.carried = 0;
+  // La reserve de Ferveur part avec l'expedition : c'est tout l'enjeu.
+  if (runtimeState.ferveurBank > 0) {
+    ActionLog(
+      `Ferveur perdue : ${formatNumber(Math.floor(runtimeState.ferveurBank))} runes de prime s'evanouissent.`,
+      "log-crit",
+    );
+    runtimeState.ferveurBank = 0;
+  }
   gameState.world.isExploring = false;
   gameState.playerEffects = [];
   gameState.ennemyEffects = [];
@@ -274,8 +292,24 @@ export const handleDrops = (sessionId) => {
     }
     const runesAwarded = Math.floor(enemy.runes * intBonus) || 1;
     gameState.runes.carried += Math.floor(runesAwarded);
+    /*
+     * La prime de Ferveur ne passe PAS par runes.carried : celles-ci sont
+     * encaissees a chaque cycle nettoye, ce qui la mettrait aussitot a l'abri
+     * et supprimerait le pari. Elle attend dans une reserve a part, versee au
+     * repli volontaire et perdue a la mort. Voir escalation.js.
+     */
+    signalerContrat("monstre", 1, gameState.world.currentBiome);
+    if (enemy.isRare) signalerContrat("rare", 1, gameState.world.currentBiome);
+    if (enemy.isBoss) signalerContrat("boss", 1, gameState.world.currentBiome);
+
+    const prime = getPrimeFerveur(runesAwarded, runtimeState.currentLoopCount);
+    if (prime > 0) {
+      runtimeState.ferveurBank += prime;
+    }
     ActionLog(
-      `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes)`,
+      `${enemy.name} a été vaincu ! (+${formatNumber(runesAwarded)} runes${
+        prime > 0 ? ` · +${formatNumber(prime)} en Ferveur` : ""
+      })`,
       "log-runes",
     );
     if (enemy.isRare && enemy.drops) {
@@ -301,6 +335,31 @@ export const handleDrops = (sessionId) => {
     runtimeState.areaCleared = true;
   }
   runtimeState.defeatedEnemies = []; // Clear after processing
+};
+
+/**
+ * Verse la reserve de Ferveur au coffre. A n'appeler que sur un repli
+ * VOLONTAIRE : c'est la seule facon de securiser la prime.
+ */
+export const encaisserFerveur = (raison = "Repli") => {
+  const montant = Math.floor(runtimeState.ferveurBank || 0);
+  if (montant <= 0) {
+    runtimeState.ferveurBank = 0;
+    return 0;
+  }
+  gameState.runes.banked += montant;
+  runtimeState.ferveurBank = 0;
+  ActionLog(
+    `${raison} : ${formatNumber(montant)} runes de Ferveur mises a l'abri.`,
+    "log-runes",
+  );
+  addJournalEntry(
+    "checkpoint",
+    "Ferveur encaissee",
+    `Vous rentrez avec ${formatNumber(montant)} runes de prime.`,
+    gameState.world.currentBiome,
+  );
+  return montant;
 };
 
 export const handleVictory = (sessionId) => {
@@ -423,7 +482,9 @@ export const handleVictory = (sessionId) => {
        * 2.2 se lit donc : deux objets garantis, plus 20% de chance d'un
        * troisieme.
        */
-      const tirages = Math.max(1, getRunModifier("lootChanceMult", 1));
+      const tirages =
+        Math.max(1, getRunModifier("lootChanceMult", 1)) +
+        getFerveurTiragesButin(runtimeState.currentLoopCount);
       const garantis = Math.floor(tirages);
       const total = garantis + (Math.random() < tirages - garantis ? 1 : 0);
 
@@ -446,6 +507,16 @@ export const handleVictory = (sessionId) => {
     }
 
     runtimeState.currentLoopCount++;
+    signalerContrat("cycle", 1, gameState.world.currentBiome);
+    /*
+     * La Ferveur se signale en PALIER atteint et non en increment : c'est un
+     * rang courant, pas un cumul. avancerContrat le sait et prend le maximum.
+     */
+    signalerContrat(
+      "ferveur",
+      getFerveurRang(runtimeState.currentLoopCount),
+      gameState.world.currentBiome,
+    );
     gameState.world.progress = 0;
     gameState.world.checkpointReached = false;
     // Un cycle boucle : l'expedition progresse, le garde-fou repart de zero.
@@ -464,6 +535,7 @@ export const handleVictory = (sessionId) => {
         `Objectif de ${stopAt} cycle(s) atteint : repli au camp.`,
         "log-crit",
       );
+      encaisserFerveur("Objectif de cycles atteint");
       gameState.world.isExploring = false;
       clearRunBuffs();
       saveGame();
@@ -473,6 +545,12 @@ export const handleVictory = (sessionId) => {
     }
 
     ActionLog(`--- DÉBUT DU CYCLE ${runtimeState.currentLoopCount + 1} ---`);
+    if (runtimeState.currentLoopCount > 0) {
+      ActionLog(
+        getFerveurLibelle(runtimeState.currentLoopCount),
+        "log-ash-activation",
+      );
+    }
 
     delayedSetTimeout(() => {
       updateStepper();

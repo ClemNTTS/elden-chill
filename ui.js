@@ -245,15 +245,25 @@ import {
 import { playSfx, primeSfx, setSfxVolume } from "./sfx.js";
 
 import {
+  abandonnerContrat,
+  chargerPanoplie,
+  contratsDebloques,
+  effacerPanoplie,
+  enregistrerPanoplie,
   equipItem,
+  getContratActif,
   getMultiUpgradeCost,
+  getPanoplies,
   getUpgradeCost,
+  proposerContrat,
+  reclamerContrat,
+  renommerPanoplie,
   selectBlessing,
   selectPreparationConsumable,
   upgradeStat,
 } from "./actions.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
-import { startExploration } from "./core.js";
+import { encaisserFerveur, startExploration } from "./core.js";
 import {
   CRIT_PER_RANK,
   LEVELS_PER_CRIT_POINT,
@@ -273,6 +283,15 @@ import {
   getHealth,
   runtimeState,
 } from "./state.js";
+import { CONTRACTS_MIN_LEVEL } from "./constants.js";
+import { REGLAGES_RARETE, progressionContrat } from "./contracts.js";
+import {
+  FERVEUR_RANG_MAX,
+  getFerveurMultDanger,
+  getFerveurMultRunes,
+  getFerveurRang,
+} from "./escalation.js";
+import { panoplieEstActive } from "./loadouts.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
   attachTooltipEvents,
@@ -456,6 +475,162 @@ export const formatNumber = (num) => {
   return num.toString();
 };
 
+/*
+ * Contrat en cours.
+ *
+ * Une seule carte, qui doit repondre a trois questions en un coup d'oeil : ou
+ * aller, combien il reste, et ce que ca paie. Le bouton change de nature selon
+ * l'etat — reclamer quand c'est fini, abandonner sinon — plutot que d'afficher
+ * en permanence deux actions dont une seule est jamais pertinente.
+ */
+const updateContractDisplay = () => {
+  const corps = document.getElementById("contract-body");
+  if (!corps) return;
+
+  /*
+   * Tant que les contrats sont verrouilles, le panneau entier disparait du
+   * Hub. Un panneau grise qui annonce "revenez au niveau 100" occuperait la
+   * place la plus visible du camp pendant les cent premiers niveaux pour ne
+   * rien dire d'actionnable ; le systeme se decouvre le jour ou il sert.
+   */
+  const panneau = corps.closest(".contract-panel");
+  if (!contratsDebloques()) {
+    if (panneau) panneau.hidden = true;
+    corps.innerHTML = "";
+    return;
+  }
+  if (panneau) panneau.hidden = false;
+
+  const contrat = getContratActif();
+
+  if (!contrat) {
+    corps.innerHTML = `
+      <p class="contract-empty">Aucun contrat en cours.</p>
+      <button type="button" id="contract-new">Demander un contrat</button>
+    `;
+    const btn = document.getElementById("contract-new");
+    if (btn) btn.onclick = () => proposerContrat();
+    return;
+  }
+
+  const part = Math.round(progressionContrat(contrat) * 100);
+  const recompenses = [];
+  if (contrat.recompense.runes > 0) {
+    recompenses.push(`${formatNumber(contrat.recompense.runes)} runes`);
+  }
+  if (contrat.recompense.objet) {
+    const nom =
+      ITEMS[contrat.recompense.objet]?.name || contrat.recompense.objet;
+    recompenses.push(`${nom} (exclusif)`);
+  }
+  if (contrat.recompense.niveau > 0) {
+    recompenses.push(`${contrat.recompense.niveau} niveau`);
+  }
+
+  corps.innerHTML = `
+    <article class="contract contract--${contrat.rarete}${contrat.honore ? " is-done" : ""}">
+      <header class="contract__head">
+        <span class="contract__rarity">${REGLAGES_RARETE[contrat.rarete]?.libelle || contrat.rarete}</span>
+        <strong class="contract__title">${echapperHtml(contrat.titre)}</strong>
+      </header>
+      <p class="contract__text">${echapperHtml(contrat.texte)}</p>
+      <div class="contract__progress" role="progressbar"
+           aria-valuenow="${contrat.avancement}" aria-valuemin="0" aria-valuemax="${contrat.objectif}">
+        <div class="contract__progress-fill" style="width:${part}%"></div>
+        <span class="contract__progress-text">${contrat.avancement} / ${contrat.objectif}</span>
+      </div>
+      <p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>
+      <div class="contract__actions">
+        ${
+          contrat.honore
+            ? '<button type="button" id="contract-claim" class="contract__claim">Reclamer</button>'
+            : '<button type="button" id="contract-abandon" class="contract__abandon">Abandonner</button>'
+        }
+      </div>
+    </article>
+  `;
+
+  const claim = document.getElementById("contract-claim");
+  if (claim) claim.onclick = () => reclamerContrat();
+  const abandon = document.getElementById("contract-abandon");
+  if (abandon) abandon.onclick = () => abandonnerContrat();
+};
+
+/*
+ * Panoplies enregistrees.
+ *
+ * Trois cartes. Une panoplie remplie montre son nom, ses pieces et deux
+ * actions ; un emplacement vide ne montre qu'un bouton d'enregistrement, pour
+ * qu'un joueur qui n'utilise pas la fonction ne paie pas trois cartes de
+ * hauteur — la contrainte vient du telephone, ou l'ecran de build est deja
+ * long.
+ */
+const updateLoadoutsDisplay = () => {
+  const liste = document.getElementById("loadouts-list");
+  if (!liste) return;
+
+  const panoplies = getPanoplies();
+  liste.innerHTML = "";
+
+  panoplies.forEach((panoplie, index) => {
+    const carte = document.createElement("div");
+    carte.className = "loadout";
+    const active = panoplieEstActive(panoplie, gameState);
+    if (panoplie.vide) carte.classList.add("is-empty");
+    if (active) carte.classList.add("is-active");
+
+    if (panoplie.vide) {
+      carte.innerHTML = `
+        <button type="button" class="loadout__save-empty" data-index="${index}">
+          + Enregistrer le build actuel
+        </button>
+      `;
+    } else {
+      const pieces = ["weapon", "armor", "accessory"]
+        .map((cle) => panoplie[cle])
+        .filter(Boolean)
+        .map((id) => ITEMS[id]?.name || id);
+      if (panoplie.ash) {
+        pieces.push(ASHES_OF_WAR[panoplie.ash]?.name || panoplie.ash);
+      }
+
+      carte.innerHTML = `
+        <div class="loadout__head">
+          <strong class="loadout__name">${echapperHtml(panoplie.nom)}</strong>
+          ${active ? '<span class="loadout__badge">Equipee</span>' : ""}
+        </div>
+        <p class="loadout__pieces">${
+          pieces.length
+            ? echapperHtml(pieces.join(" · "))
+            : "<em>Aucune piece</em>"
+        }</p>
+        <div class="loadout__actions">
+          <button type="button" class="loadout__load" data-index="${index}" ${
+            active ? "disabled" : ""
+          }>Equiper</button>
+          <button type="button" class="loadout__save" data-index="${index}" title="Remplacer par l'equipement actuel">Ecraser</button>
+          <button type="button" class="loadout__rename" data-index="${index}" title="Renommer">Renommer</button>
+          <button type="button" class="loadout__clear" data-index="${index}" title="Effacer">Effacer</button>
+        </div>
+      `;
+    }
+
+    liste.appendChild(carte);
+  });
+
+  // Delegation : les cartes sont reconstruites a chaque rendu, un ecouteur par
+  // bouton fuirait a chaque passage.
+  liste.onclick = (e) => {
+    const btn = e.target.closest("button[data-index]");
+    if (!btn) return;
+    const index = Number(btn.dataset.index);
+    if (btn.classList.contains("loadout__load")) chargerPanoplie(index);
+    else if (btn.classList.contains("loadout__rename")) renommerPanoplie(index);
+    else if (btn.classList.contains("loadout__clear")) effacerPanoplie(index);
+    else enregistrerPanoplie(index);
+  };
+};
+
 export const updateCycleDisplay = () => {
   const el = document.getElementById("cycle-count");
   if (!el) return;
@@ -465,6 +640,44 @@ export const updateCycleDisplay = () => {
   } else {
     el.innerText = "";
   }
+  updateFerveurDisplay();
+};
+
+/*
+ * Bandeau de Ferveur.
+ *
+ * Il affiche la seule chose que le joueur doit peser pour decider de se
+ * replier : combien est en jeu, et ce qu'il en coute de continuer. Le rang
+ * seul ne suffirait pas — c'est le montant de la reserve qui rend la decision
+ * concrete.
+ */
+export const updateFerveurDisplay = () => {
+  const banner = document.getElementById("ferveur-banner");
+  if (!banner) return;
+
+  const cycles = runtimeState.currentLoopCount || 0;
+  const rang = getFerveurRang(cycles);
+  const reserve = Math.floor(runtimeState.ferveurBank || 0);
+
+  if (rang <= 0 && reserve <= 0) {
+    banner.classList.add("is-hidden");
+    return;
+  }
+  banner.classList.remove("is-hidden");
+
+  const prime = Math.round((getFerveurMultRunes(cycles) - 1) * 100);
+  const danger = Math.round((getFerveurMultDanger(cycles) - 1) * 100);
+
+  const rankEl = document.getElementById("ferveur-rank");
+  if (rankEl) {
+    rankEl.innerText = `Ferveur ${rang} · +${prime}% prime · +${danger}% menace`;
+  }
+  const bankEl = document.getElementById("ferveur-bank");
+  if (bankEl) bankEl.innerText = formatNumber(reserve);
+
+  // Au-dela du plafond de prime, seule la menace continue de monter : il faut
+  // que cela se voie sans lire les chiffres.
+  banner.classList.toggle("is-overheated", rang >= FERVEUR_RANG_MAX);
 };
 
 const updateRuneDisplay = () => {
@@ -1936,6 +2149,10 @@ const renderWorldMap = (visibleIds) => {
             // couleur qui portent l'information, pas le libelle.
             width: 30,
             height: 30,
+            // "border-color" et "border-width" etaient declares deux fois dans
+            // cet objet. Les premieres valeurs etaient mortes : en JavaScript
+            // la derniere occurrence gagne, l'anneau faisait donc bien 5 et non
+            // 4. Le rendu est inchange, seules les lignes sans effet partent.
             "border-color": accent,
             "border-width": 5,
             "font-size": 12,
@@ -2570,10 +2787,23 @@ const updateInventoryDisplay = () => {
 
   // 3. On utilise sortedInventory au lieu de gameState.inventory pour l'affichage
   sortedInventory.forEach((item) => {
+    const itemData = ITEMS[item.id];
+    /*
+     * Une entree dont l'identifiant n'existe plus dans ITEMS faisait planter
+     * tout l'affichage de l'inventaire sur `itemData.type`, et avec lui le
+     * reste de updateUI().
+     *
+     * Le cas se produit sans tricherie : un objet retire du jeu entre deux
+     * versions reste dans les sauvegardes existantes. La normalisation de
+     * shared/player-profile.js valide la FORME des identifiants, pas leur
+     * existence — elle ne peut pas importer item.js sans cycle. On ignore donc
+     * l'entree ici plutot que d'emporter l'ecran avec elle.
+     */
+    if (!itemData) return;
+
     const itemDiv = document.createElement("div");
     itemDiv.className = "inventory-item";
 
-    const itemData = ITEMS[item.id];
     const slotKey = typeToSlotKey[itemData.type];
 
     if (slotKey) {
@@ -2810,6 +3040,8 @@ export const updateUI = () => {
   updateScreenState();
   updateNavState();
   updateRuneDisplay();
+  updateLoadoutsDisplay();
+  updateContractDisplay();
   updateStatDisplay();
   updateEquipmentDisplay();
   updateInventoryEquippedDisplay();
@@ -2867,6 +3099,14 @@ export const toggleView = (view) => {
     clearEventBanner();
     clearRunBuffs();
     runtimeState.enemyIntent = null;
+    /*
+     * Repli VOLONTAIRE : c'est le seul moment ou la reserve de Ferveur est
+     * mise a l'abri. Le versement precede l'encaissement des runes portees
+     * pour que le journal se lise dans l'ordre du geste. Voir escalation.js.
+     */
+    if (gameState.world.isExploring) {
+      encaisserFerveur("Repli au camp");
+    }
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
     const layout = ensureBattleLogLayout();
