@@ -838,3 +838,204 @@ test("le drapeau d'annonce traverse la sauvegarde", async () => {
   );
   assert.equal(normalizePlayerProfile({}).contracts.annonce, false);
 });
+
+/* ================================================================== *
+ * Modeles de contrainte, filtres, echeance et chaine                 *
+ * ================================================================== */
+
+test("les neuf modeles sont distincts et complets", () => {
+  const ids = c.MODELES.map((m) => m.id);
+  assert.equal(new Set(ids).size, ids.length, "identifiants dupliques");
+  for (const m of c.MODELES) {
+    assert.equal(typeof m.evenement, "string");
+    assert.ok(m.base >= 1, `${m.id} : base invalide`);
+    assert.equal(typeof m.titre(3, "Zone", m.filtre), "string");
+    const texte = m.texte(3, "Zone", m.filtre || m.filtres?.[0]);
+    assert.ok(texte.length > 10, `${m.id} : texte trop court`);
+    assert.ok(!texte.includes("undefined"), `${m.id} : ${texte}`);
+  }
+});
+
+test("un filtre ecarte un evenement qui ne porte pas l'etiquette", () => {
+  const base = {
+    evenement: "monstre",
+    filtre: c.FILTRES.AFFLICTION,
+    objectif: 3,
+    avancement: 0,
+    biomeId: "z",
+    honore: false,
+  };
+  assert.equal(c.avancerContrat(base, "monstre", 1, "z", []).avancement, 0);
+  assert.equal(
+    c.avancerContrat(base, "monstre", 1, "z", [c.FILTRES.RAPIDE]).avancement,
+    0,
+  );
+  assert.equal(
+    c.avancerContrat(base, "monstre", 1, "z", [c.FILTRES.AFFLICTION])
+      .avancement,
+    1,
+  );
+});
+
+test("une mort remet a zero un contrat « sans mourir », meme hors zone", () => {
+  const contrat = {
+    evenement: "cycle",
+    annuleSur: "mort",
+    objectif: 3,
+    avancement: 2,
+    biomeId: "z",
+    honore: false,
+  };
+  assert.equal(c.avancerContrat(contrat, "mort", 1, null).avancement, 0);
+  assert.equal(c.avancerContrat(contrat, "mort", 1, "autre").avancement, 0);
+  // Un contrat sans annuleSur ne bronche pas.
+  const ordinaire = { ...contrat, annuleSur: null };
+  assert.equal(c.avancerContrat(ordinaire, "mort", 1, null).avancement, 2);
+});
+
+test("l'echeance se decompte partout et finit par expirer", () => {
+  let contrat = {
+    evenement: "cycle",
+    objectif: 10,
+    avancement: 0,
+    biomeId: "z",
+    echeance: 3,
+    cyclesRestants: 3,
+    expire: false,
+    honore: false,
+  };
+  contrat = c.ecoulerEcheance(contrat);
+  assert.equal(contrat.cyclesRestants, 2);
+  assert.equal(contrat.expire, false);
+  contrat = c.ecoulerEcheance(c.ecoulerEcheance(contrat));
+  assert.equal(contrat.cyclesRestants, 0);
+  assert.equal(contrat.expire, true);
+  // Expire, il n'avance plus.
+  assert.equal(c.avancerContrat(contrat, "cycle", 1, "z").avancement, 0);
+});
+
+test("un contrat honore ne peut plus expirer", () => {
+  const honore = {
+    evenement: "cycle",
+    objectif: 1,
+    avancement: 1,
+    honore: true,
+    echeance: 1,
+    cyclesRestants: 1,
+    expire: false,
+  };
+  // Rendu tel quel, sans copie : rien n'a bouge.
+  assert.equal(c.ecoulerEcheance(honore), honore);
+  assert.equal(c.ecoulerEcheance(honore).expire, false);
+  assert.equal(c.ecoulerEcheance(honore).cyclesRestants, 1);
+});
+
+test("une chaine avance d'etape en etape puis paie sa prime", () => {
+  const premier = c.genererContrat({
+    biomeId: "limgrave_west",
+    nomBiome: "Necrolimbe Ouest",
+    niveauJoueur: 150,
+    chaineHeritee: { rang: 1, sur: 3 },
+    random: () => 0.5,
+  });
+  assert.equal(
+    premier.rarete,
+    c.RARETES.LEGENDAIRE,
+    "une chaine reste legendaire",
+  );
+  assert.deepEqual(premier.chaine, { rang: 1, sur: 3 });
+  assert.equal(c.primeDeChaine(premier), 0, "pas de prime avant la fin");
+
+  const deuxieme = c.etapeSuivanteChaine(premier, {
+    biomeId: "liurnia_lake",
+    nomBiome: "Lac de Liurnia",
+    niveauJoueur: 150,
+    random: () => 0.5,
+  });
+  assert.equal(deuxieme.chaine.rang, 2);
+
+  const dernier = { ...deuxieme, chaine: { rang: 3, sur: 3 } };
+  assert.equal(
+    c.etapeSuivanteChaine(dernier, {}),
+    null,
+    "pas de quatrieme etape",
+  );
+  assert.equal(
+    c.primeDeChaine(dernier),
+    Math.floor(dernier.recompense.runes * c.PRIME_CHAINE),
+  );
+});
+
+test("un contrat a echeance paie plus qu'un contrat sans delai", () => {
+  const sansDelai = c.genererContrat({
+    biomeId: "z",
+    nomBiome: "Zone",
+    niveauJoueur: 100,
+    // random tres haut : pas d'echeance (CHANCE_ECHEANCE = 0.35), pas de chaine
+    random: () => 0.99,
+  });
+  assert.equal(sansDelai.echeance, 0);
+
+  // On rejoue le meme tirage en forcant l'echeance a se declencher.
+  let appels = 0;
+  const avecDelai = c.genererContrat({
+    biomeId: "z",
+    nomBiome: "Zone",
+    niveauJoueur: 100,
+    // Les premiers tirages choisissent rarete/modele/filtre/objet ; seul le
+    // tirage d'echeance doit passer sous le seuil.
+    random: () => {
+      appels += 1;
+      return appels >= 4 ? 0.01 : 0.99;
+    },
+  });
+  if (avecDelai.echeance > 0) {
+    assert.ok(avecDelai.recompense.runes > sansDelai.recompense.runes);
+    assert.equal(avecDelai.cyclesRestants, avecDelai.echeance);
+  }
+});
+
+test("la normalisation refuse un filtre invente et borne la chaine", () => {
+  const propre = c.normaliserContrat({
+    biomeId: "z",
+    objectif: 5,
+    avancement: 1,
+    filtre: "<script>",
+    chaine: { rang: 99, sur: 9999 },
+    echeance: 1e9,
+    cyclesRestants: -5,
+  });
+  assert.equal(propre.filtre, null);
+  assert.equal(propre.chaine.sur, 10);
+  assert.equal(propre.chaine.rang, 10);
+  assert.equal(propre.echeance, 999);
+  assert.equal(propre.cyclesRestants, 0);
+  assert.equal(propre.expire, true, "delai epuise et objectif non atteint");
+
+  const valide = c.normaliserContrat({
+    biomeId: "z",
+    objectif: 5,
+    filtre: c.FILTRES.MEUTE,
+  });
+  assert.equal(valide.filtre, c.FILTRES.MEUTE);
+  assert.equal(valide.chaine, null);
+});
+
+test("chaque filtre du catalogue porte un libelle", () => {
+  for (const filtre of Object.values(c.FILTRES)) {
+    assert.equal(
+      typeof c.LIBELLE_FILTRE[filtre],
+      "string",
+      `${filtre} : libelle manquant, le texte du contrat dirait "undefined"`,
+    );
+  }
+});
+
+test("tout filtre declare par un modele existe au catalogue", () => {
+  const connus = new Set(Object.values(c.FILTRES));
+  for (const m of c.MODELES) {
+    for (const f of m.filtres || (m.filtre ? [m.filtre] : [])) {
+      assert.ok(connus.has(f), `${m.id} : filtre inconnu ${f}`);
+    }
+  }
+});

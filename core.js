@@ -30,6 +30,7 @@ import {
   runtimeState,
 } from "./state.js";
 import { proposerContrat, signalerContrat } from "./actions.js";
+import { FILTRES } from "./contracts.js";
 import {
   addJournalEntry,
   applyPreparationLoadout,
@@ -91,10 +92,41 @@ function delayedSetTimeout(fn, ms) {
   return setTimeout(fn, delay);
 }
 
+/*
+ * Etiquettes d'un ennemi abattu.
+ *
+ * Ce sont les seules « familles » que les fiches de monstres decrivent
+ * reellement : une affliction posee au contact, une attaque multiple, un
+ * groupe. On ne fabrique pas de taxonomie par-dessus les donnees — un
+ * archetype invente ici devrait etre maintenu a la main pour 225 monstres.
+ *
+ * `tailleDuGroupe` vient de la rencontre, pas de la fiche : c'est le spawn qui
+ * decide si la creature arrive seule ou accompagnee.
+ */
+const etiquettesEnnemi = (enemy, tailleDuGroupe = 1) => {
+  const tags = [];
+  if (enemy.onHitEffect) tags.push(FILTRES.AFFLICTION);
+  if ((enemy.specificStats?.attacksPerTurn || enemy.attacksPerTurn || 1) > 1) {
+    tags.push(FILTRES.RAPIDE);
+  }
+  if (tailleDuGroupe >= 3) tags.push(FILTRES.MEUTE);
+  return tags;
+};
+
 const dropItem = (itemId) => {
   const itemTemplate = ITEMS[itemId];
   if (!itemTemplate) return;
   const inventoryItem = gameState.inventory.find((item) => item.id === itemId);
+
+  /*
+   * Le contrat « depeceur » compte les objets tombes par rarete. On signale
+   * AVANT de trancher entre premiere trouvaille et doublon : un contrat de
+   * butin compte ce qui tombe, pas ce qui est nouveau — sinon un joueur bien
+   * equipe ne pourrait plus jamais l'honorer.
+   */
+  signalerContrat("butin", 1, gameState.world.currentBiome, [
+    getItemRarity(itemId),
+  ]);
 
   if (!inventoryItem) {
     gameState.inventory.push({
@@ -200,6 +232,8 @@ export const handleDeath = () => {
     );
     runtimeState.ferveurBank = 0;
   }
+  // Annule les contrats « sans mourir », ou qu'on soit tombe.
+  signalerContrat("mort", 1, null);
   gameState.world.isExploring = false;
   gameState.playerEffects = [];
   gameState.ennemyEffects = [];
@@ -298,7 +332,12 @@ export const handleDrops = (sessionId) => {
      * et supprimerait le pari. Elle attend dans une reserve a part, versee au
      * repli volontaire et perdue a la mort. Voir escalation.js.
      */
-    signalerContrat("monstre", 1, gameState.world.currentBiome);
+    signalerContrat(
+      "monstre",
+      1,
+      gameState.world.currentBiome,
+      etiquettesEnnemi(enemy, runtimeState.defeatedEnemies.length),
+    );
     if (enemy.isRare) signalerContrat("rare", 1, gameState.world.currentBiome);
     if (enemy.isBoss) signalerContrat("boss", 1, gameState.world.currentBiome);
 
@@ -507,7 +546,16 @@ export const handleVictory = (sessionId) => {
     }
 
     runtimeState.currentLoopCount++;
-    signalerContrat("cycle", 1, gameState.world.currentBiome);
+    /*
+     * Un cycle boucle sans qu'aucune cendre n'ait ete activee vaut une
+     * etiquette : c'est ce qui fait avancer le contrat « Discipline », sans
+     * qu'il faille un evenement de plus dans la boucle.
+     */
+    const etiquettesCycle = runtimeState.ashUsedThisLoop
+      ? []
+      : [FILTRES.SANS_CENDRE];
+    runtimeState.ashUsedThisLoop = false;
+    signalerContrat("cycle", 1, gameState.world.currentBiome, etiquettesCycle);
     /*
      * La Ferveur se signale en PALIER atteint et non en increment : c'est un
      * rang courant, pas un cumul. avancerContrat le sait et prend le maximum.
@@ -718,6 +766,7 @@ export const startExploration = (biomeId) => {
     ? selectedAsh.maxUses + getRebirthAshBonus()
     : 0;
   runtimeState.ashIsPrimed = false;
+  runtimeState.ashUsedThisLoop = false;
   runtimeState.nextNbAtkBonus = 0;
   applyPreparationLoadout();
   // Apres applyPreparationLoadout, qui vide activeRunBuffs.

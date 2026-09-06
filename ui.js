@@ -518,6 +518,31 @@ const updateContractDisplay = () => {
   }
 
   const part = Math.round(progressionContrat(contrat) * 100);
+
+  /*
+   * Marqueurs de tete : etape de chaine et echeance.
+   *
+   * Ils vont a cote de la rarete parce que ce sont les deux seules
+   * informations qui changent la DECISION du joueur — continuer ou repartir
+   * ailleurs — et qu'elles doivent se lire avant le texte, pas apres.
+   */
+  const marqueurs = [];
+  if (contrat.chaine) {
+    marqueurs.push(
+      `<span class="contract__chain">Chaine ${contrat.chaine.rang}/${contrat.chaine.sur}</span>`,
+    );
+  }
+  if (contrat.echeance > 0) {
+    const urgent = contrat.cyclesRestants <= 3;
+    marqueurs.push(
+      `<span class="contract__deadline${urgent ? " is-urgent" : ""}">${
+        contrat.expire
+          ? "Expire"
+          : `${contrat.cyclesRestants} cycle${contrat.cyclesRestants > 1 ? "s" : ""} restant${contrat.cyclesRestants > 1 ? "s" : ""}`
+      }</span>`,
+    );
+  }
+
   const recompenses = [];
   if (contrat.recompense.runes > 0) {
     recompenses.push(`${formatNumber(contrat.recompense.runes)} runes`);
@@ -531,10 +556,18 @@ const updateContractDisplay = () => {
     recompenses.push(`${contrat.recompense.niveau} niveau`);
   }
 
+  const etats = [
+    contrat.honore ? "is-done" : "",
+    contrat.expire ? "is-expired" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   corps.innerHTML = `
-    <article class="contract contract--${contrat.rarete}${contrat.honore ? " is-done" : ""}">
+    <article class="contract contract--${contrat.rarete}${etats ? ` ${etats}` : ""}">
       <header class="contract__head">
         <span class="contract__rarity">${REGLAGES_RARETE[contrat.rarete]?.libelle || contrat.rarete}</span>
+        ${marqueurs.join("")}
         <strong class="contract__title">${echapperHtml(contrat.titre)}</strong>
       </header>
       <p class="contract__text">${echapperHtml(contrat.texte)}</p>
@@ -543,12 +576,16 @@ const updateContractDisplay = () => {
         <div class="contract__progress-fill" style="width:${part}%"></div>
         <span class="contract__progress-text">${contrat.avancement} / ${contrat.objectif}</span>
       </div>
-      <p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>
+      ${
+        contrat.expire
+          ? '<p class="contract__expired-note">Le delai est passe. La recompense est perdue : demandez-en un autre.</p>'
+          : `<p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>`
+      }
       <div class="contract__actions">
         ${
           contrat.honore
             ? '<button type="button" id="contract-claim" class="contract__claim">Reclamer</button>'
-            : '<button type="button" id="contract-abandon" class="contract__abandon">Abandonner</button>'
+            : `<button type="button" id="contract-abandon" class="contract__abandon">${contrat.expire ? "Demander un autre contrat" : "Abandonner"}</button>`
         }
       </div>
     </article>

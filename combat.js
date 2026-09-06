@@ -674,6 +674,9 @@ export const combatLoop = (sessionId) => {
           ashEffect = ash.effect(stats, runtimeState.currentEnemyGroup[0]);
           runtimeState.ashUsesLeft--;
           runtimeState.ashIsPrimed = false;
+          // Le contrat « Discipline » exige un cycle sans cendre : le drapeau
+          // est lu et remis a zero a la fermeture du cycle, dans core.js.
+          runtimeState.ashUsedThisLoop = true;
           playAshEffect(gameState.equippedAsh);
           playSfx("ash");
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");

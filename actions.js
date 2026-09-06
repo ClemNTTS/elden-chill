@@ -14,8 +14,11 @@ import {
 } from "./constants.js";
 import {
   avancerContrat,
+  ecoulerEcheance,
+  etapeSuivanteChaine,
   genererContrat,
   normaliserContrat,
+  primeDeChaine,
 } from "./contracts.js";
 import { addJournalEntry } from "./systems.js";
 import { startExploration } from "./core.js";
@@ -520,6 +523,13 @@ export const proposerContrat = (zonePreferee = null) => {
 export const abandonnerContrat = () => {
   const etat = getEtatContrats();
   if (!etat.actif) return;
+  // Un contrat expire n'a plus rien a perdre : on ne demande pas confirmation
+  // pour jeter ce qui est deja mort.
+  if (etat.actif.expire) {
+    etat.actif = null;
+    proposerContrat();
+    return;
+  }
   if (
     !confirm(
       `Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`,
@@ -585,6 +595,17 @@ export const reclamerContrat = () => {
     }
   }
 
+  /*
+   * Chaine achevee : la prime finale tombe en plus de la recompense d'etape.
+   * C'est elle qui paie la duree — sans quoi une chaine ne serait que trois
+   * contrats a la suite, ce que le renouvellement automatique donne deja.
+   */
+  const prime = primeDeChaine(contrat);
+  if (prime > 0) {
+    gameState.runes.banked += prime;
+    ActionLog(`CHAINE ACHEVEE : +${prime} runes de prime.`, "log-crit");
+  }
+
   etat.completed = (etat.completed || 0) + 1;
   etat.total = (etat.total || 0) + 1;
   etat.actif = null;
@@ -592,13 +613,54 @@ export const reclamerContrat = () => {
   addJournalEntry(
     "checkpoint",
     "Contrat honore",
-    `${contrat.titre} (${contrat.rarete}).`,
+    contrat.chaine
+      ? `${contrat.titre} — etape ${contrat.chaine.rang}/${contrat.chaine.sur}.`
+      : `${contrat.titre} (${contrat.rarete}).`,
     contrat.biomeId,
   );
+
+  /*
+   * Etape suivante d'une chaine, dans une AUTRE zone : une chaine qui se
+   * deroulerait sur place ne serait qu'un contrat decoupe en trois.
+   */
+  const suite = contrat.chaine ? tirerEtapeSuivante(contrat) : null;
+  if (suite) {
+    etat.actif = suite;
+    ActionLog(
+      `CHAINE : etape ${suite.chaine.rang}/${suite.chaine.sur} — ${suite.titre}.`,
+      "log-crit",
+    );
+    saveGame("etape_chaine");
+    updateUI();
+    return;
+  }
 
   // Renouvellement immediat : le joueur ne doit jamais se retrouver sans
   // contrat, c'est ce qui fait de ce systeme une boucle et non une liste.
   proposerContrat();
+};
+
+/*
+ * Etape suivante d'une chaine, ancree ailleurs.
+ *
+ * Si le joueur n'a debloque qu'une seule zone, on ne peut pas changer de
+ * region : la chaine y reste plutot que de s'interrompre. Le cas est theorique
+ * — les contrats n'existent qu'a partir du niveau 100 — mais une chaine qui
+ * s'evapore serait pire qu'une chaine repetitive.
+ */
+const tirerEtapeSuivante = (contrat) => {
+  const zones = zonesEligibles();
+  const ailleurs = zones.filter((id) => id !== contrat.biomeId);
+  const pool = ailleurs.length > 0 ? ailleurs : zones;
+  if (pool.length === 0) return null;
+
+  const biomeId = pool[Math.floor(Math.random() * pool.length)];
+  return etapeSuivanteChaine(contrat, {
+    biomeId,
+    nomBiome: BIOMES[biomeId]?.name || biomeId,
+    niveauJoueur: gameState.stats.level || 1,
+    objetsExclusifs: poolRecompense(),
+  });
 };
 
 /**
@@ -609,13 +671,46 @@ export const reclamerContrat = () => {
  * le joueur reclame lui-meme, pour que la recompense soit un moment et non
  * une ligne de journal noyee dans un combat.
  */
-export const signalerContrat = (evenement, quantite = 1, biomeId = null) => {
+export const signalerContrat = (
+  evenement,
+  quantite = 1,
+  biomeId = null,
+  etiquettes = [],
+) => {
   if (!contratsDebloques()) return;
   const etat = getEtatContrats();
   if (!etat.actif || etat.actif.honore) return;
 
   const avant = etat.actif.avancement;
-  etat.actif = avancerContrat(etat.actif, evenement, quantite, biomeId);
+  etat.actif = avancerContrat(
+    etat.actif,
+    evenement,
+    quantite,
+    biomeId,
+    etiquettes,
+  );
+
+  // Une annulation se dit : sinon le compteur repart de zero sans un mot et le
+  // joueur croit a un bug.
+  if (etat.actif.avancement === 0 && avant > 0) {
+    ActionLog(`CONTRAT REMIS A ZERO : ${etat.actif.titre}.`, "log-crit");
+  }
+
+  /*
+   * L'echeance se decompte sur TOUT cycle, meme hors de la zone visee — c'est
+   * ce qui la rend contraignante. Elle est traitee apres l'avancement : un
+   * cycle qui honore le contrat au dernier moment doit compter.
+   */
+  if (evenement === "cycle") {
+    const avantExpiration = etat.actif.expire;
+    etat.actif = ecoulerEcheance(etat.actif);
+    if (etat.actif.expire && !avantExpiration) {
+      ActionLog(
+        `CONTRAT EXPIRE : ${etat.actif.titre}. Demandez-en un autre au camp.`,
+        "log-event",
+      );
+    }
+  }
 
   if (etat.actif.honore && avant < etat.actif.objectif) {
     ActionLog(
