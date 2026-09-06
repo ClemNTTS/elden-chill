@@ -1815,6 +1815,12 @@ button:disabled {
   border-left: 4px solid var(--info);
 }
 
+/* Un deblocage n'est pas un avertissement : il se lit en accent, pas en rouge.
+   Meme forme que les deux autres tons, seule la couleur du liseret change. */
+.boot-notice--unlock {
+  border-left: 4px solid var(--accent);
+}
+
 .boot-notice--danger {
   border-left: 4px solid var(--danger);
 }
@@ -3718,6 +3724,12 @@ button:disabled {
 
 .ferveur-banner.is-hidden {
   display: none;
+}
+
+/* Le bandeau porte une explication : le curseur doit le dire, sinon personne
+   ne pense a le survoler. */
+.ferveur-banner {
+  cursor: help;
 }
 
 .ferveur-banner__rank {

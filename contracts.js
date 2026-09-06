@@ -1,3 +1,5 @@
+import { FERVEUR_RANG_MAX } from "./escalation.js";
+
 /*
  * Contrats de zone : un objectif a la fois, renouvele des qu'il est honore.
  *
@@ -122,8 +124,21 @@ export const MODELES = [
   {
     id: "ferveur",
     evenement: "ferveur",
-    base: 3,
+    base: 2,
     minRarete: RARETES.RARE,
+    /*
+     * Un objectif de Ferveur ne peut pas depasser le rang maximum.
+     *
+     * Sans ce plafond, le contrat legendaire demandait 3 x 5 = 15 alors que
+     * getFerveurRang() borne le rang a FERVEUR_RANG_MAX (10) : l'objectif etait
+     * litteralement impossible a honorer, et le contrat le plus rare du jeu
+     * etait le seul a ne jamais pouvoir tomber. Rien ne le signalait, puisque
+     * la barre montait normalement jusqu'a 10 avant de se figer.
+     *
+     * La base descend de 3 a 2 pour que le plafond ne vienne pas ecraser la
+     * difference entre rare et legendaire : 5 contre 10, au lieu de 8 contre 10.
+     */
+    plafond: FERVEUR_RANG_MAX,
     titre: (n, zone) => `Ferveur tenue a ${zone}`,
     texte: (n, zone) =>
       `Atteignez le rang de Ferveur ${n} sans quitter ${zone}.`,
@@ -215,9 +230,9 @@ export const genererContrat = ({
     candidats[Math.floor(random() * candidats.length)] || MODELES[0];
   const reglages = REGLAGES_RARETE[rarete];
 
-  const objectif = Math.max(
-    1,
-    Math.round(modele.base * reglages.facteurObjectif),
+  const objectif = Math.min(
+    modele.plafond ?? Number.POSITIVE_INFINITY,
+    Math.max(1, Math.round(modele.base * reglages.facteurObjectif)),
   );
   const zone = nomBiome || biomeId;
 

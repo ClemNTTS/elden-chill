@@ -11,6 +11,7 @@ import {
   startTrial,
   upgradeStat,
   upgradeStatMultiple,
+  verifierDeblocageContrats,
 } from "./actions.js";
 import { BIOMES } from "./biome.js";
 import { startExploration } from "./core.js";
@@ -24,6 +25,7 @@ import {
 import { enqueueDevSpawn } from "./spawn.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
 import {
+  afficherAvis,
   createFireParticles,
   hideTooltip,
   initCampParallax,
@@ -298,27 +300,11 @@ const SAVE_WARNING_MESSAGES = {
     "Votre sauvegarde provient d'une version incompatible du jeu.",
 };
 
-/**
- * Banniere de demarrage. On n'utilise pas ActionLog ici : le journal de combat
- * n'existe pas encore au chargement, le message serait perdu.
+/*
+ * La banniere elle-meme vit dans ui.js : elle sert aussi aux annonces en cours
+ * de partie, et actions.js ne peut pas importer game.js.
  */
-const showBootNotice = (text, tone = "warn") => {
-  const banner = document.createElement("div");
-  banner.className = `boot-notice boot-notice--${tone}`;
-
-  const message = document.createElement("p");
-  message.innerText = text;
-
-  const dismiss = document.createElement("button");
-  dismiss.type = "button";
-  dismiss.className = "boot-notice__close";
-  dismiss.setAttribute("aria-label", "Fermer l'avertissement");
-  dismiss.innerText = "Compris";
-  dismiss.addEventListener("click", () => banner.remove());
-
-  banner.append(message, dismiss);
-  document.body.prepend(banner);
-};
+const showBootNotice = afficherAvis;
 
 const reportSaveLoad = (report) => {
   if (report.status === "loaded" || report.status === "fresh") return;
@@ -362,6 +348,10 @@ window.onload = () => {
   setAudioListener();
   updateUI();
   reportSaveLoad(report);
+  // Un joueur deja au-dela du seuil quand cette version arrive doit apprendre
+  // que les contrats existent : le controle n'est pas seulement fait a la
+  // montee de niveau.
+  verifierDeblocageContrats();
 
   const startAudioOnInteraction = () => {
     playCampMusic();

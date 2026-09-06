@@ -406,6 +406,30 @@ export const showAshTooltip = (e, ashId) => {
   moveTooltip(e);
 };
 
+/*
+ * Panneau d'explication libre.
+ *
+ * showTooltip et showAshTooltip savent decrire un objet ou une cendre. Rien ne
+ * savait expliquer une MECANIQUE — la Ferveur affichait trois nombres sans
+ * jamais dire ce qu'ils engagent, alors que c'est sur eux que repose la
+ * decision de se replier.
+ *
+ * `contenu` est appele a chaque ouverture et non lu une fois pour toutes : les
+ * nombres d'une mecanique bougent entre deux survols.
+ */
+export const showInfoTooltip = (e, contenu) => {
+  const tooltip = document.getElementById("tooltip");
+  const data = typeof contenu === "function" ? contenu() : contenu;
+  if (!data) return;
+
+  tooltip.innerHTML = `
+    <strong style="color:var(--hover-btn)">${echapperHtml(data.title)}</strong><br>
+    <small style="color:beige;">${data.text}</small>
+  `;
+  tooltip.classList.remove("tooltip-hidden");
+  moveTooltip(e);
+};
+
 export const moveTooltip = (e) => {
   const tooltip = document.getElementById("tooltip");
   if (tooltip.classList.contains("tooltip-hidden")) return;
@@ -471,14 +495,27 @@ export const detachTooltipEvents = (element) => {
 };
 
 export const attachTooltipEvents = (element, itemOrId, isAsh = false) => {
-  if (!element) return;
-  bindGlobalTooltipDismiss();
-  detachTooltipEvents(element);
-
   const show = (e) =>
     isAsh
       ? showAshTooltip(e, itemOrId)
       : showItemComparisonTooltip(e, itemOrId);
+  cablerPanneau(element, show);
+};
+
+/**
+ * Cable un panneau d'explication de mecanique sur un element.
+ * @param {Element} element
+ * @param {function|object} contenu {title, text}, ou une fonction qui le rend
+ */
+export const attachInfoTooltip = (element, contenu) => {
+  cablerPanneau(element, (e) => showInfoTooltip(e, contenu));
+};
+
+/* Cablage commun : souris au survol, tactile a l'appui maintenu. */
+const cablerPanneau = (element, show) => {
+  if (!element) return;
+  bindGlobalTooltipDismiss();
+  detachTooltipEvents(element);
 
   // Souris : survol classique. Filtre sur pointerType, sans quoi le faux
   // survol emis apres un tap rouvrirait le panneau (voir plus haut).

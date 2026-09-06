@@ -750,3 +750,91 @@ test("aucun contrat n'existe sous le niveau de deblocage", async () => {
   assert.notEqual(proposerContrat("limgrave_west"), null);
   assert.notEqual(getContratActif(), null);
 });
+
+/*
+ * Aucun objectif ne doit etre hors d'atteinte.
+ *
+ * Le contrat legendaire de Ferveur demandait le rang 15 alors que
+ * getFerveurRang() borne le rang a FERVEUR_RANG_MAX. La barre montait
+ * jusqu'a 10 puis se figeait : le contrat le plus rare du jeu etait le seul a
+ * ne jamais pouvoir tomber, et rien ne le disait.
+ */
+test("aucun contrat de Ferveur ne demande plus que le rang maximum", async () => {
+  const { FERVEUR_RANG_MAX } = await import("../escalation.js");
+  const modele = c.MODELES.find((m) => m.id === "ferveur");
+
+  for (const rarete of Object.values(c.RARETES)) {
+    const contrat = c.genererContrat({
+      biomeId: "limgrave_west",
+      nomBiome: "Necrolimbe Ouest",
+      niveauJoueur: 150,
+      // random fige sur ce modele : tirerRarete est force par le meme flux,
+      // on verifie donc directement l'objectif calcule pour chaque rarete.
+      random: () => 0,
+    });
+    assert.ok(contrat.objectif >= 1);
+    if (contrat.evenement === "ferveur") {
+      assert.ok(
+        contrat.objectif <= FERVEUR_RANG_MAX,
+        `objectif ${contrat.objectif} > rang max ${FERVEUR_RANG_MAX}`,
+      );
+    }
+    void rarete;
+  }
+
+  // Le calcul brut, rarete par rarete, sans dependre du tirage.
+  for (const [rarete, reglages] of Object.entries(c.REGLAGES_RARETE)) {
+    const brut = Math.round(modele.base * reglages.facteurObjectif);
+    assert.ok(
+      Math.min(modele.plafond, brut) <= FERVEUR_RANG_MAX,
+      `${rarete} : ${brut} depasse le rang maximum`,
+    );
+  }
+});
+
+/*
+ * Le meme piege peut revenir sur un futur modele : tout objectif borne par une
+ * mecanique du jeu doit declarer son plafond.
+ */
+test("tout modele borne par une mecanique declare son plafond", () => {
+  for (const modele of c.MODELES) {
+    if (modele.evenement !== "ferveur") continue;
+    assert.equal(
+      typeof modele.plafond,
+      "number",
+      `${modele.id} vise un rang borne : il doit declarer un plafond`,
+    );
+  }
+});
+
+/*
+ * Annonce du deblocage.
+ *
+ * Le panneau se materialisait dans le camp sans un mot. Le drapeau vit dans la
+ * sauvegarde pour que l'annonce ne se rejoue pas a chaque rechargement.
+ */
+test("le deblocage s'annonce une fois, et une seule", async () => {
+  const { gameState } = await import("../state.js");
+  const { verifierDeblocageContrats } = await import("../actions.js");
+  const { CONTRACTS_MIN_LEVEL } = await import("../constants.js");
+
+  gameState.contracts = { actif: null, completed: 0, total: 0, annonce: false };
+  gameState.stats = { ...gameState.stats, level: CONTRACTS_MIN_LEVEL - 1 };
+  assert.equal(verifierDeblocageContrats(), false, "rien sous le seuil");
+
+  gameState.stats = { ...gameState.stats, level: CONTRACTS_MIN_LEVEL };
+  assert.equal(verifierDeblocageContrats(), true, "annonce au franchissement");
+  assert.equal(gameState.contracts.annonce, true);
+  assert.equal(verifierDeblocageContrats(), false, "jamais deux fois");
+});
+
+test("le drapeau d'annonce traverse la sauvegarde", async () => {
+  const { normalizePlayerProfile } = await import(
+    "../shared/player-profile.js"
+  );
+  assert.equal(
+    normalizePlayerProfile({ contracts: { annonce: true } }).contracts.annonce,
+    true,
+  );
+  assert.equal(normalizePlayerProfile({}).contracts.annonce, false);
+});

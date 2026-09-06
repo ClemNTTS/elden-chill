@@ -40,7 +40,7 @@ import {
 } from "./rebirth.js";
 import { clearSaveStorage, saveGame, suspendreSauvegarde } from "./save.js";
 import { gameState, runtimeState } from "./state.js";
-import { updateUI } from "./ui.js";
+import { afficherAvis, updateUI } from "./ui.js";
 
 /*
  * Le critique n'est plus achetable avec des runes et ne consomme plus de
@@ -236,6 +236,7 @@ export const upgradeStat = (statName) => {
     gameState.stats.level++;
     gameState.stats.runesSpent = Math.floor(gameState.stats.runesSpent + cost);
     saveGame("upgrade_stat");
+    verifierDeblocageContrats();
     updateUI();
   } else {
     alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
@@ -268,6 +269,7 @@ export const upgradeStatMultiple = (statName, count) => {
       gameState.stats.runesSpent + totalCost,
     );
     saveGame("upgrade_stat_multiple");
+    verifierDeblocageContrats();
     updateUI();
   } else {
     alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
@@ -354,6 +356,44 @@ export const getEtatContrats = () => {
  */
 export const contratsDebloques = () =>
   (gameState.stats?.level || 0) >= CONTRACTS_MIN_LEVEL;
+
+/*
+ * Annonce du deblocage, une fois et une seule.
+ *
+ * Sans elle, les contrats apparaissaient en silence : le panneau se
+ * materialisait dans le camp entre deux passages, et rien ne disait au joueur
+ * ce que c'etait ni pourquoi c'etait la maintenant.
+ *
+ * Le drapeau vit dans gameState.contracts, donc il voyage avec la sauvegarde :
+ * l'annonce ne se rejoue pas a chaque rechargement. Un joueur deja au-dela du
+ * seuil au moment ou cette version arrive la verra une fois au demarrage
+ * suivant — c'est voulu, la fonctionnalite est neuve pour lui aussi.
+ *
+ * Appelee depuis les trois endroits ou un niveau se gagne, et au chargement.
+ * Volontairement pas depuis updateUI() : une fonction de rendu ne doit pas
+ * ecrire dans la sauvegarde.
+ */
+export const verifierDeblocageContrats = () => {
+  if (!contratsDebloques()) return false;
+  const etat = getEtatContrats();
+  if (etat.annonce) return false;
+
+  etat.annonce = true;
+  addJournalEntry(
+    "quete",
+    "Contrats de zone",
+    `Niveau ${CONTRACTS_MIN_LEVEL} atteint : les zones deja traversees redeviennent utiles.`,
+  );
+  afficherAvis(
+    `Niveau ${CONTRACTS_MIN_LEVEL} : vous debloquez les CONTRATS DE ZONE. ` +
+      "Un objectif a la fois, dans une region que vous avez deja traversee, " +
+      "paye en runes, en equipement exclusif et — pour les legendaires — en niveau. " +
+      "Le panneau vous attend sur le Hub.",
+    "unlock",
+  );
+  saveGame("deblocage_contrats");
+  return true;
+};
 
 /** Le contrat en cours, ou null tant que les contrats sont verrouilles. */
 export const getContratActif = () =>
