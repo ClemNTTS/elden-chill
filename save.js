@@ -24,7 +24,8 @@ const CLIENT_PREF_KEYS = ["ui", "save.audioVolume", "save.useOfflineTime"];
 /**
  * Resultat du dernier loadGame(), pour que l'UI puisse prevenir le joueur
  * quand une sauvegarde a ete refusee ou restauree depuis la copie de secours.
- * status : "fresh" | "loaded" | "restored-backup" | "migrated-legacy" | "rejected"
+ * status : "fresh" | "loaded" | "restored-backup" | "migrated-legacy"
+ *       | "recovered-quarantine" | "rejected"
  */
 export const lastLoadReport = {
   status: "fresh",
@@ -160,6 +161,35 @@ export const loadGame = () => {
   const primary = readSealedSlot(SAVE_NAME);
 
   if (primary?.profile) {
+    /*
+     * Cas du joueur deja touche par le bug de version.
+     *
+     * Son ancienne progression dort en quarantaine et l'emplacement principal
+     * contient la partie neuve creee par le demarrage rate. Le chargement
+     * reussit donc, et sans ce test le repechage plus bas ne serait jamais
+     * atteint. On ne substitue que si la partie en place est vierge : dans ce
+     * cas il n'y a rigoureusement rien a perdre.
+     */
+    if (estPartieVierge(primary.profile)) {
+      // La quarantaine d'abord : c'est la copie posee par le refus lui-meme.
+      // La copie de secours ensuite, au cas ou la rotation l'ait epargnee.
+      const repechee = [
+        repecherQuarantaine(),
+        readSealedSlot(SAVE_BACKUP_NAME)?.profile || null,
+      ].find((candidat) => candidat && !estPartieVierge(candidat));
+
+      if (repechee) {
+        hydrate(repechee);
+        clearQuarantinedSave();
+        saveGame("repechage-quarantaine");
+        lastLoadReport.status = "recovered-quarantine";
+        console.info(
+          "[save] partie vierge par-dessus une sauvegarde en quarantaine : progression rendue",
+        );
+        return lastLoadReport;
+      }
+    }
+
     hydrate(primary.profile);
     lastLoadReport.status = "loaded";
     return lastLoadReport;
@@ -203,9 +233,62 @@ export const loadGame = () => {
     console.warn("[save] sauvegarde refusee et mise de cote :", primary.error);
   }
 
+  /*
+   * Repechage de la quarantaine.
+   *
+   * Les versions 2.4 et 2.5 refusaient toute sauvegarde d'une autre ligne
+   * `major.minor` : une simple montee de version mettait la progression de
+   * chaque joueur en quarantaine et le renvoyait au niveau 0. La regle est
+   * corrigee dans player-profile.js, mais les sauvegardes deja mises de cote
+   * dorment toujours dans le stockage local. On les relit ici avec la regle
+   * actuelle, et si elles s'ouvrent, on rend la progression.
+   *
+   * Ce repechage n'a lieu QUE quand il n'y a rien d'autre a charger : il ne
+   * peut donc jamais ecraser une partie en cours.
+   */
+  const repechee = repecherQuarantaine();
+  if (repechee) {
+    hydrate(repechee);
+    clearQuarantinedSave();
+    saveGame("repechage-quarantaine");
+    lastLoadReport.status = "recovered-quarantine";
+    lastLoadReport.reason = primary?.error || null;
+    console.info(
+      "[save] sauvegarde mise en quarantaine par une ancienne version, repechee",
+    );
+    return lastLoadReport;
+  }
+
   // Etat neuf.
   hydrate(normalizePlayerProfile({}));
   return lastLoadReport;
+};
+
+/**
+ * Une partie qu'on peut ecraser sans rien perdre : aucun niveau, aucune rune,
+ * aucun boss tombe.
+ */
+const estPartieVierge = (profile) =>
+  (profile?.stats?.level || 0) === 0 &&
+  (profile?.runes?.banked || 0) === 0 &&
+  (profile?.runes?.carried || 0) === 0 &&
+  (profile?.world?.defeatedBosses?.length || 0) === 0;
+
+/**
+ * Relit la sauvegarde mise en quarantaine avec les regles de compatibilite
+ * actuelles.
+ * @returns {object | null} le profil normalise, ou null si rien de lisible.
+ */
+const repecherQuarantaine = () => {
+  const mise = readJson(SAVE_QUARANTINE_NAME);
+  const raw = mise?.payload;
+  if (typeof raw !== "string" || !raw) return null;
+
+  const opened = openSave(raw);
+  if (!opened.ok) return null;
+  if (!isCompatibleSaveVersion(opened.data?.save?.version)) return null;
+
+  return normalizePlayerProfile(opened.data);
 };
 
 /*
@@ -398,11 +481,20 @@ export const saveGame = (reason = "autosave") => {
 
     const sealed = sealSave(gameState);
 
-    // Rotation : l'enveloppe courante devient la copie de secours seulement
-    // apres qu'on a produit la nouvelle, jamais avant.
+    /*
+     * Rotation : l'enveloppe courante devient la copie de secours seulement
+     * apres qu'on a produit la nouvelle, jamais avant.
+     *
+     * On ne fait tourner qu'une enveloppe qu'on sait relire. Sinon, apres un
+     * demarrage sur sauvegarde refusee, les deux emplacements finissaient
+     * occupes par de l'etat neuf en moins d'une minute : la copie de secours
+     * perdait la seule version encore valable qu'elle detenait.
+     */
     const previous = localStorage.getItem(SAVE_NAME);
     localStorage.setItem(SAVE_NAME, sealed);
-    if (previous) localStorage.setItem(SAVE_BACKUP_NAME, previous);
+    if (previous && openSave(previous).ok) {
+      localStorage.setItem(SAVE_BACKUP_NAME, previous);
+    }
 
     setSaveMeta({
       reason,
