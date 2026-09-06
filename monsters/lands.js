@@ -209,6 +209,8 @@ export const LANDS_MONSTERS = {
     ],
   },
   godskin_noble: {
+    comportementsPhase2: ["regeneration"],
+    phaseRegen: 0.05,
     name: "Noble Godskin",
     hp: 16500,
     atk: 169,
@@ -275,6 +277,8 @@ export const LANDS_MONSTERS = {
     ],
   },
   rykard_lord_blasphemy: {
+    comportementsPhase2: ["drain", "malediction"],
+    phaseMalediction: { id: "BURN", duration: 3 },
     name: "Rykard, Seigneur de la Blasphemie",
     hp: 20500,
     atk: 209,
@@ -603,6 +607,8 @@ export const LANDS_MONSTERS = {
     },
   },
   placidusax: {
+    comportementsPhase2: ["carapace", "mue"],
+    phaseMue: { id: "DEATH_BLIGHT", duration: 3, chance: 0.4 },
     name: "Placidusax, Dragon-Seigneur",
     hp: 59000,
     atk: 610,
@@ -679,6 +685,8 @@ export const LANDS_MONSTERS = {
     },
   },
   hoarah_loux: {
+    comportementsPhase2: ["frenesie", "riposte"],
+    phaseRiposte: 0.12,
     name: "Hoarah Loux, Conquerant",
     hp: 68000,
     atk: 702,
@@ -754,6 +762,9 @@ export const LANDS_MONSTERS = {
     },
   },
   elden_beast: {
+    comportementsPhase2: ["regeneration", "mue"],
+    phaseRegen: 0.03,
+    phaseMue: { id: "MADNESS", duration: 3, chance: 0.45 },
     name: "Bete d'Elden",
     hp: 78000,
     atk: 807,

@@ -263,6 +263,7 @@ import {
   upgradeStat,
 } from "./actions.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
+import { libellesDePhase } from "./boss-phases.js";
 import { encaisserFerveur, startExploration } from "./core.js";
 import {
   CRIT_PER_RANK,
@@ -2853,7 +2854,16 @@ const updateEnemyIntentDisplay = () => {
    * Ils occupaient deux lignes, ce qui donnait cinq rangees a la lane de
    * l'ennemi contre trois au joueur : les barres de vie ne s'alignaient plus.
    */
+  /*
+   * Les comportements de seconde phase passent AVANT l'intention.
+   *
+   * L'intention decrit le prochain coup ; les comportements decrivent ce que
+   * le boss est devenu, et c'est ce qui explique pourquoi le combat s'est mis
+   * a mal tourner. Un joueur qui revient devant son ecran doit pouvoir le lire
+   * sans avoir vu passer la ligne de journal du franchissement.
+   */
   label.innerText = [
+    ...libellesDePhase(enemy),
     intent.label,
     intent.targetHint,
     intent.hazard ? HAZARD_LABELS[intent.hazard] : null,

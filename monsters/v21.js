@@ -74,6 +74,9 @@ export const V21_MONSTERS = {
     },
   },
   praetor_fragment: {
+    comportementsPhase2: ["invocation"],
+    phaseInvocations: 3,
+    phasePuissanceEcho: 0.15,
     name: "Fragment du Prêteur",
     hp: 19883,
     atk: 187,
@@ -145,6 +148,8 @@ export const V21_MONSTERS = {
     },
   },
   fire_giant_shard: {
+    comportementsPhase2: ["riposte"],
+    phaseRiposte: 0.18,
     name: "Éclat du Géant de feu",
     hp: 35200,
     atk: 368,
@@ -221,6 +226,7 @@ export const V21_MONSTERS = {
     },
   },
   azula_tempest_avatar: {
+    comportementsPhase2: ["frenesie"],
     name: "Avatar des tempêtes d'Azula",
     hp: 44800,
     atk: 392,

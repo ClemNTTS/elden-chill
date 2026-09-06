@@ -40,6 +40,7 @@ export const MONSTERS = {
     ],
   },
   troll1_boss: {
+    comportementsPhase2: ["frenesie"],
     name: "Troll des Collines",
     hp: 147,
     atk: 15,
@@ -163,6 +164,21 @@ export const MONSTERS = {
     isBoss: true,
     dodgeChance: 0.2,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.333 },
+    /*
+     * Ecriture moderne des secondes phases : un seul objet au lieu de six
+     * champs epars. Les boss anterieurs gardent la leur, boss-phases.js lit
+     * les deux — voir lirePhase2().
+     *
+     * Margit est le premier boss principal a n'en avoir jamais eu. C'est aussi
+     * le bon endroit pour apprendre la mecanique : un seul comportement,
+     * lisible, sur un boss qu'on rencontre tot.
+     */
+    phase2: {
+      seuil: 0.5,
+      texte: "Margit degaine sa dague de lumiere. Le rythme change.",
+      multDegats: 1.2,
+      comportements: ["frenesie"],
+    },
   },
   // === LIMGRAVE LAKE===
   noble_sword: {
@@ -403,6 +419,11 @@ export const MONSTERS = {
   },
 
   grafted_scion: {
+    comportementsPhase2: ["invocation"],
+
+    phaseInvocations: 2,
+
+    phasePuissanceEcho: 0.2,
     name: "Rejeton Greffé",
     hp: 412,
     atk: 35,
@@ -435,6 +456,7 @@ export const MONSTERS = {
   },
 
   godrick: {
+    comportementsPhase2: ["carapace"],
     name: "Godrick le Greffé",
     hp: 920,
     atk: 38,
@@ -578,6 +600,7 @@ export const MONSTERS = {
   },
 
   red_wolf_radagon: {
+    comportementsPhase2: ["frenesie"],
     name: "Loup Rouge de Radagon",
     hp: 916,
     atk: 41,
@@ -593,6 +616,7 @@ export const MONSTERS = {
 
   // --- BOSS DE LIURNIA EST ---
   bell_bearing_hunter_liurnia: {
+    comportementsPhase2: ["drain"],
     name: "Chasseur de Perles de Liurnia",
     hp: 1200,
     atk: 62,
@@ -672,6 +696,13 @@ export const MONSTERS = {
   },
 
   rennala: {
+    comportementsPhase2: ["regeneration", "invocation"],
+
+    phaseRegen: 0.03,
+
+    phaseInvocations: 2,
+
+    phasePuissanceEcho: 0.2,
     name: "Rennala, Reine de la Pleine Lune",
     hp: 1700,
     atk: 63,
@@ -884,6 +915,7 @@ export const MONSTERS = {
   },
 
   draconic_tree_sentinel: {
+    comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
     hp: 8500,
     atk: 165,
