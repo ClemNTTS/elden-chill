@@ -25,6 +25,30 @@ export const STACKING_EFFECTS = new Set([
   "DEATH_BLIGHT",
 ]);
 
+/**
+ * Ce qu'une affliction doit afficher : rien si elle est eteinte, sinon le
+ * nombre a mettre sur la pastille.
+ *
+ * Vit ici, avec STACKING_EFFECTS, et non dans ui.js : l'affichage nommait
+ * BLEED et FROSTBITE en dur, si bien que la folie et le fleau mortel, ajoutes
+ * ensuite au meme jeu de cumuls, affichaient "undefined" et ne disparaissaient
+ * jamais de la barre. La question « cumuls ou duree ? » n'a qu'une reponse,
+ * elle ne doit exister qu'a un seul endroit.
+ *
+ * Une duree de 50 ou plus est un passif : on n'affiche pas de compteur.
+ */
+export const decrireAffliction = (effet) => {
+  if (STACKING_EFFECTS.has(effet.id)) {
+    const cumuls = effet.stacks || 0;
+    return cumuls > 0
+      ? { visible: true, compteur: String(cumuls) }
+      : { visible: false };
+  }
+  const duree = effet.duration || 0;
+  if (duree <= 0) return { visible: false };
+  return { visible: true, compteur: duree >= 50 ? "" : String(duree) };
+};
+
 export const applyEffect = (targetEffects, effectId, value) => {
   if (!targetEffects.__owner) {
     targetEffects.__owner = true;

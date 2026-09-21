@@ -90,6 +90,25 @@ export const STATUS_EFFECTS = {
       };
     },
   },
+  /*
+   * Putrefaction. 5% des points de vie maximum par tour.
+   *
+   * SUBIE par le joueur, elle reste a 5% pleins, attenues par la resistance :
+   * c'est une menace, et elle est calibree comme telle.
+   *
+   * INFLIGEE a un ennemi, elle est plafonnee par rapport au coup du joueur,
+   * comme la gelure et le fleau mortel le sont deja (voir AFFLICTION_CAP dans
+   * combat.js). Elle y avait echappe, et c'est la seule affliction que rien ne
+   * bornait : sa part des degats passait de 29% sur le boss d'Altus a 71% sur
+   * la Bete d'Elden, sur le MEME build, uniquement parce que le boss a plus de
+   * vie. Tous les archetypes convergeaient donc vers une arme a putrefaction,
+   * quitte a abandonner une arme trois fois plus forte au corps a corps :
+   * l'affliction ne recompensait plus le build, elle le remplacait.
+   *
+   * Le plafond est a la moitie du coup, la ou la gelure accepte six fois le
+   * sien : la gelure eclate une fois tous les dix cumuls, la putrefaction
+   * tique a chaque tour. A cadence egale, les deux se valent.
+   */
   SCARLET_ROT: {
     id: "SCARLET_ROT",
     name: "Putréfaction",
@@ -97,6 +116,10 @@ export const STATUS_EFFECTS = {
     onTurnStart: (entity) => {
       const baseDamage = Math.max(2, Math.floor((entity.maxHp || 100) * 0.05));
       const isPlayer = Object.hasOwn(entity, "currentHp");
+      // Au tout premier tour, le joueur n'a pas encore frappe : faute de
+      // reference, l'affliction tique a plein. Elle sera bornee des le tour
+      // suivant.
+      const reference = runtimeState.degatsJoueurDuTour;
       const damage = isPlayer
         ? Math.max(
             1,
@@ -106,7 +129,9 @@ export const STATUS_EFFECTS = {
                   Math.min(0.65, getResistanceForEffect("SCARLET_ROT") * 0.08)),
             ),
           )
-        : baseDamage;
+        : reference > 0
+          ? Math.max(2, Math.min(baseDamage, Math.floor(reference * 0.5)))
+          : baseDamage;
 
       if (isPlayer) {
         entity.currentHp -= damage;
