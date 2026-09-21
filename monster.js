@@ -5,6 +5,7 @@ hp d'origine divisé par 10 pour les mobs. pour les normaux, un multiplicateur d
 mobs normaux ont un drop de rune de base egal au minimum in game. les Rares ont un tier. Les boss sont divisé par 10. Exception si le monstre n est normalement pas un boss, tiraité au cas par cas.
 */
 import { V21_MONSTERS } from "./monsters/v21.js";
+import { getEffectiveStats } from "./state.js";
 
 export const MONSTERS = {
   // === LIMGRAVE WEST===
