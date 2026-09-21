@@ -31,6 +31,7 @@ import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 
 const { playerDamagePerTurn } = await import("./simulate-balance.mjs");
+const { degatsAfflictions } = await import("./mesure-boss.mjs");
 const { gameState, getEffectiveStats, getHealth } = await import("../state.js");
 const { syncCritStats, getCritPointsTotal, CRIT_MAX_RANK } = await import(
   "../crit.js"
@@ -136,62 +137,12 @@ const composer = (modeleId) => {
 /* ------------------------------------------------------------------ */
 
 /*
- * Les mesurer change le verdict, et pas a la marge : sur un boss a forte vie
- * elles pesent plus que le coup lui-meme. Les ignorer rendait le banc si
- * pessimiste qu'aucun equipement ne passait.
- *
- * Sont modelisees celles qui infligent des degats par tour ou par seuil :
- * putrefaction, poison, gelure. Le saignement et la folie, qui dependent de
- * jets a l'impact, sont laisses de cote : le banc reste donc un peu pessimiste.
+ * Le detail vit dans mesure-boss.mjs, avec la mesure des boss : les deux bancs
+ * doivent compter les afflictions de la meme facon, sinon leurs verdicts
+ * cessent d'etre comparables.
  */
-const afflictionsDeLArme = () => {
-  const arme = ITEMS[gameState.equipped.weapon];
-  if (!arme) return [];
-  const source = [
-    typeof arme.funcOnHit === "function" ? arme.funcOnHit.toString() : "",
-    arme.onHitEffect ? JSON.stringify(arme.onHitEffect) : "",
-  ].join(" ");
-  const posees = [];
-  for (const id of ["SCARLET_ROT", "POISON", "FROSTBITE"]) {
-    if (!source.includes(id)) continue;
-    // A defaut de lire le jet exact, on prend une chance prudente de 30%.
-    const chance = arme.onHitEffect?.chance ?? 0.3;
-    posees.push({ id, chance });
-  }
-  return posees;
-};
-
-const AFFLICTIONS = afflictionsDeLArme();
-
-/** Degats d'affliction esperes par tour contre une cible donnee. */
-const degatsAfflictions = (cible, coupDuTour, estBoss) => {
-  if (AFFLICTIONS.length === 0) return 0;
-  const attaques = (eff.attacksPerTurn || 1) + (eff.extraAttackChance || 0);
-  let total = 0;
-  for (const { id, chance } of AFFLICTIONS) {
-    // Presence : au moins une application dans le tour, portee par la duree.
-    const pose = 1 - (1 - chance) ** Math.max(1, attaques);
-    const presence = Math.min(1, pose * 2);
-    if (id === "SCARLET_ROT") {
-      // Plafonnee a la moitie du coup depuis le correctif.
-      total +=
-        Math.min(Math.floor(cible.maxHp * 0.05), Math.floor(coupDuTour * 0.5)) *
-        presence;
-    } else if (id === "POISON") {
-      total +=
-        Math.floor(cible.maxHp * 0.01 + (eff.intelligence || 0) * 0.5) *
-        presence;
-    } else if (id === "FROSTBITE") {
-      // Un palier tous les dix cumuls, donc environ un cinquieme de tour.
-      const palier = Math.min(
-        Math.floor(cible.maxHp * 0.1) + 30,
-        coupDuTour * 6,
-      );
-      total += ((estBoss ? palier * 0.7 : palier) / 5) * presence;
-    }
-  }
-  return Math.floor(total);
-};
+const degatsAfflictionsContre = (cible, coupDuTour, estBoss) =>
+  degatsAfflictions(eff, gameState.equipped.weapon, cible, coupDuTour, estBoss);
 
 /* ------------------------------------------------------------------ */
 /* Un combat                                                          */
@@ -220,7 +171,7 @@ const combattre = (groupe, pv, armurePhase2 = null, seuilPhase2 = 0) => {
     const inflige = playerDamagePerTurn(eff, armure, vivants);
     devant.hp -=
       Math.floor(inflige * (1 - devant.esquive)) +
-      degatsAfflictions(devant, inflige, armurePhase2 !== null);
+      degatsAfflictionsContre(devant, inflige, armurePhase2 !== null);
     restant = groupe.reduce((n, e) => n + Math.max(0, e.hp), 0);
     if (restant <= 0) break;
 

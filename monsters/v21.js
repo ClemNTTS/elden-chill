@@ -1,8 +1,22 @@
 export const V21_MONSTERS = {
+  /*
+   * 148 d'attaque en deux coups, soit 296 par tour, quand les monstres
+   * standard de son palier — Ainsel, Profondeurs de la Souche, tous recommandes
+   * au meme niveau — en font 62 a 98. Trois a quatre fois le tarif, et jamais
+   * releve : la courbe des boss est verifiee, celle des monstres ne l'etait pas.
+   *
+   * C'est lui, et non le boss, qui rendait la traversee du Plateau d'Altus
+   * impossible : le banc de biome mesurait 416 points de vie perdus par groupe
+   * pour une reserve de 1965, soit une mort avant meme d'atteindre le boss.
+   *
+   * Il garde ses deux attaques, qui sont son identite, a 75 chacune. 150 par
+   * tour reste le plus gros cogneur de son palier — il se presente seul quand
+   * les autres viennent a deux ou trois.
+   */
   altus_praetor_guard: {
     name: "Gardien prétorien d'Altus",
     hp: 1800,
-    atk: 148,
+    atk: 75,
     armor: 180,
     runes: 9800,
     specificStats: { attacksPerTurn: 2 },

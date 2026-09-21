@@ -61,7 +61,6 @@ const plafondDevant = (index) =>
  * referme derriere lui.
  */
 const DEROGATIONS = new Set([
-  "altus_plateau",
   "mount_gelmir",
   "volcano_manor",
   "rykard_lair",
@@ -125,17 +124,19 @@ test("une derogation levee doit sortir de la liste", () => {
   assert.deepEqual(aRetirer, []);
 });
 
-test("le mur d'Altus est bien la ou on le croit", () => {
+test("le Plateau d'Altus est revenu dans les clous", () => {
   /*
-   * Ce cas n'est pas un garde-fou, c'est une mesure ecrite noir sur blanc :
-   * il documente l'ecart au moment ou le test est ajoute, pour qu'une
-   * correction future se voie dans le diff plutot que dans un souvenir.
+   * Le mur qui a motive tout ce garde-fou. Il valait survie 140 pour un
+   * plafond de 165 : on entrait dans la zone qui debloque les niveaux en ayant
+   * besoin du haut de la fourchette qu'elle debloque. Ce cas est nomme pour
+   * qu'une regression dessus se lise dans le rapport de test, pas dans une
+   * ligne perdue d'une liste.
    */
   const altus = mesures.find((m) => m.biomeId === "altus_plateau");
   const survie = altus.survie ?? NIVEAU_MAX_MESURE + 1;
   assert.equal(altus.plafond, 165);
   assert.ok(
-    survie > surviePlafonnee(altus.plafond),
-    `Altus : survie ${survie} pour un plafond de ${altus.plafond}`,
+    survie <= surviePlafonnee(altus.plafond),
+    `Altus : survie ${survie} pour une limite de ${surviePlafonnee(altus.plafond)}`,
   );
 });

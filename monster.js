@@ -915,14 +915,27 @@ export const MONSTERS = {
     drops: [{ id: "sentinel_greatshield_talisman", chance: 0.7 }],
   },
 
+  /*
+   * Ramene sur la courbe : 8500 pv / 165 atk / 250 armure.
+   *
+   * C'etait la seule marche a x5,00 en points de vie d'un boss principal au
+   * suivant, quand toutes les autres valent x1,0 a x1,4 — et elle tombait
+   * juste la ou le plafond de niveau, lui, n'avance que de 20. Un joueur
+   * plafonne a 165 avait besoin de 140 pour survivre et de 200 pour etre a
+   * l'aise : la zone qui debloque les niveaux exigeait le haut de la fourchette
+   * qu'elle debloque.
+   *
+   * Voir tests/plafond-progression.test.mjs, qui interdit desormais qu'un boss
+   * principal reclame plus de 80% du plafond disponible a son etape.
+   */
   draconic_tree_sentinel: {
     comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
-    hp: 8500,
-    atk: 165,
+    hp: 6500,
+    atk: 150,
     runes: 52000,
     isBoss: true,
-    armor: 250,
+    armor: 225,
     hasSecondPhase: true,
     thresholdForPhase2: 0.5,
     flavorTextPhase2:
