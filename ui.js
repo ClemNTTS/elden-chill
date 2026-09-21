@@ -296,6 +296,7 @@ import {
   getFerveurRang,
 } from "./escalation.js";
 import { panoplieEstActive } from "./loadouts.js";
+import { decrireAffliction } from "./status-apply.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
   attachInfoTooltip,
@@ -2998,18 +2999,13 @@ export const updateStatusIcons = () => {
   const renderStatus = (eff) => {
     const data = STATUS_EFFECTS[eff.id];
     if (!data) return "";
-    if (eff.id !== "BLEED" && eff.id !== "FROSTBITE" && eff.duration <= 0)
-      return "";
-    if ((eff.id === "BLEED" || eff.id === "FROSTBITE") && eff.stacks <= 0)
-      return "";
 
-    let text = "";
-    if (eff.id === "BLEED" || eff.id === "FROSTBITE") {
-      text = ` (${eff.stacks})`;
-    } else {
-      // Si la durÃ©e est >= 50, on considÃ¨re que c'est un passif et on n'affiche pas de chiffre
-      text = eff.duration >= 50 ? "" : ` (${eff.duration})`;
-    }
+    // Cumuls ou duree : la reponse vit dans status-apply.js, aux cotes de
+    // STACKING_EFFECTS, pour ne pas se desynchroniser a la prochaine
+    // affliction ajoutee.
+    const affichage = decrireAffliction(eff);
+    if (!affichage.visible) return "";
+    const text = affichage.compteur ? ` (${affichage.compteur})` : "";
 
     // Icone + compteur, plutot que le nom de l'effet en pastille coloree :
     // en combat la place est comptee et huit noms ecrits saturaient la ligne.
