@@ -35,7 +35,7 @@ const { MONSTERS } = await import("../monster.js");
 const { BIOME_GUIDE } = await import("../world-map.js");
 
 /** Niveau au-dela duquel le balayage abandonne. */
-export const NIVEAU_MAX_MESURE = 220;
+export const NIVEAU_MAX_MESURE = 500;
 
 /*
  * L'equipement reellement porte par le joueur qui a fourni les releves, dans

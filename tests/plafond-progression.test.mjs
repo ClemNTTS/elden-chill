@@ -52,26 +52,16 @@ const plafondDevant = (index) =>
 /*
  * DEROGATIONS A RESORBER.
  *
- * Ces boss sont hors de portee du plafond aujourd'hui : c'est le mur qui a
- * motive ce test, pas un choix. La liste est la pour que le test protege le
- * reste de la trame en attendant, PAS pour rendre la situation acceptable.
+ * La liste est vide, et c'est le but : chaque boss principal du jeu tient
+ * desormais sous le plafond disponible a son etape. Elle reste en place parce
+ * qu'elle est le mecanisme de sortie de secours — un boss ajoute demain qui ne
+ * rentre pas doit pouvoir etre cite ici EXPLICITEMENT, avec une raison, plutot
+ * que de faire desactiver le test.
  *
- * Elle ne doit que retrecir. Le test echoue aussi si un boss cite ici est
- * revenu dans les clous : on retire alors sa ligne, et le garde-fou se
- * referme derriere lui.
+ * Elle ne doit que retrecir. Le test echoue aussi quand un boss cite revient
+ * dans les clous, pour qu'on retire sa ligne.
  */
-const DEROGATIONS = new Set([
-  "mount_gelmir",
-  "volcano_manor",
-  "rykard_lair",
-  "leyndell_royal",
-  "forbidden_land",
-  "mountaintops",
-  "crumbling_farum_azula",
-  "farum_azula_deep",
-  "leyndell_ash",
-  "erdtree_throne",
-]);
+const DEROGATIONS = new Set([]);
 
 const mesures = MAIN_BOSS_BIOMES.map((biomeId, index) => {
   const biome = BIOMES[biomeId];
