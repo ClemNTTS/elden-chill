@@ -118,20 +118,31 @@ export function setGameState(newState) {
 /*
  * Courbe d'attaques supplementaires de la dexterite.
  *
- * Elle est convexe, et ce n'est pas cosmetique. Les degats par tour valent
- * `attaques x force` : avec un diviseur lineaire, ce produit de deux termes
- * lineaires culmine mecaniquement au milieu du budget. Mesure faite avec
- * l'ancien diviseur de 40 — l'optimum tombait a 76 de dexterite, ce qui
- * rendait un investissement *principalement* en dexterite moins bon qu'un
- * demi-investissement. L'exact inverse de l'intention.
+ * Elle reste convexe, et ce n'est pas cosmetique : les degats par tour valent
+ * `attaques x force`, et avec une courbe lineaire ce produit de deux termes
+ * culmine au milieu du budget — l'optimum tombait a 76 de dexterite, ce qui
+ * rendait un investissement principalement en dexterite moins bon qu'un
+ * demi-investissement. L'exact inverse de l'intention. L'exposant reste donc
+ * au-dessus de 1, et l'optimum de repartition demeure a l'engagement complet.
  *
- * L'exposant deplace l'optimum a 112 sans toucher au pic (263 contre 270
- * degats par tour), affaiblit nettement la dexterite precoce (1,15 attaque a
- * 20 points contre 1,50 avant) et recompense enfin l'engagement complet
- * (5,97 attaques a 150 contre 4,75).
+ * MAIS 60 / 1,75 EN FAISAIT TROP. Les attaques multiplient les degats
+ * physiques quand la force et l'intelligence n'apportent qu'un additif : la
+ * dexterite n'etait pas en avance d'un cran, elle etait sur une autre courbe.
+ * Mesure a equipement optimal contre 250 d'armure, force ramenee a 1 :
+ *
+ *   avant   niveau 165 : force 1,00  dexterite 2,09  intelligence 0,66
+ *           niveau 220 : force 1,00  dexterite 2,78  intelligence 0,60
+ *
+ * L'ecart se CREUSAIT avec le niveau, parce que les attaques continuaient de
+ * monter (4,12 puis 6,20) pendant que les deux autres axes progressaient
+ * lineairement. Un ecart qui grandit n'est pas un desequilibre a corriger d'un
+ * coefficient, c'est une courbe a changer.
+ *
+ *   apres   niveau 165 : force 1,00  dexterite 1,15  intelligence 1,17
+ *           niveau 220 : force 1,00  dexterite 1,27  intelligence 0,85
  */
-export const DEX_ATTACK_DIVISOR = 60;
-export const DEX_ATTACK_EXPONENT = 1.75;
+export const DEX_ATTACK_DIVISOR = 95;
+export const DEX_ATTACK_EXPONENT = 1.25;
 
 /** Attaques supplementaires apportees par la dexterite, partie decimale incluse. */
 export const getDexExtraAttacks = (dexterity = 0) =>
@@ -154,16 +165,19 @@ export const INT_RUNE_CAP = 1.5;
  * ni la dexterite n'occupent — les deux voient leurs degats divises par
  * l'armure de la cible, qui monte a 620 en fin de parcours.
  *
- * Le coefficient est calibre pour la parite a budget plein contre une cible
- * d'armure moyenne : a 150 d'intelligence, 120 de degats magiques plus 14 de
- * physique derive, contre 150 pour un build force pur.
+ * Le coefficient vise la parite a budget plein contre une cible d'armure
+ * moyenne. A 0,6 il ne l'atteignait pas : l'intelligence plafonnait a 0,60 de
+ * ce que produit un build force, parce que la magie ne se lance qu'une fois
+ * par tour quand le physique est multiplie par les attaques. Le porter a 1,1
+ * la ramene dans la bande des deux autres axes — voir la mesure au-dessus de
+ * DEX_ATTACK_DIVISOR, les deux reglages ont ete calibres ensemble.
  *
  * La penetration en pourcentage a ete ecartee volontairement : les objets en
  * cumulent deja jusqu'a 0,9, et `armor` est clampe a 1 dans combat.js. Un
  * bonus de stat par-dessus aurait fait franchir 100% et multiplie les degats
  * par cent.
  */
-export const INT_MAGIC_PER_POINT = 0.6;
+export const INT_MAGIC_PER_POINT = 1.1;
 export const getMagicDamage = (intelligence = 0) =>
   Math.floor(Math.max(0, intelligence) * INT_MAGIC_PER_POINT);
 
