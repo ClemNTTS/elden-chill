@@ -7,7 +7,26 @@ export const PLAYER_PROFILE_VERSION = "3.0.0";
  * par biome. Le relever sans ajouter de contenu aurait casse la courbe de
  * cout, qui croit en carre du niveau.
  */
-export const MAX_LEVEL = 220;
+/*
+ * Niveau maximum absolu, renaissance exclue.
+ *
+ * Il valait 220, et la progression du plafond (25 + 20 par boss principal)
+ * atteignait ce chiffre des le onzieme boss sur dix-huit. Les sept derniers se
+ * partageaient donc le MEME plafond pendant que leur difficulte, elle,
+ * continuait de monter : la trame se fermait mecaniquement.
+ *
+ * 365 est exactement ce que 25 + 20 x 17 donne au dernier boss. Le plafond
+ * accompagne desormais la trame jusqu'au bout au lieu de s'arreter aux deux
+ * tiers, sans qu'aucune autre constante ne bouge.
+ *
+ * La renaissance ne pouvait pas servir de porte de sortie : elle s'ouvre en
+ * abattant la Bete d'Elden, c'est-a-dire le dernier boss du tiers concerne.
+ *
+ * COUT : atteindre 365 demande environ 1,39 milliard de runes contre 251
+ * millions pour 220, la courbe de cout etant quadratique en niveau. C'est le
+ * prix a surveiller en jeu — voir les notes du PR.
+ */
+export const MAX_LEVEL = 365;
 export const MAX_OFFLINE_TIME_BANK = 3600;
 
 /** Ecrans du camp, dans l'ordre de la navigation. Source unique : la

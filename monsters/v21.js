@@ -1,8 +1,22 @@
 export const V21_MONSTERS = {
+  /*
+   * 148 d'attaque en deux coups, soit 296 par tour, quand les monstres
+   * standard de son palier — Ainsel, Profondeurs de la Souche, tous recommandes
+   * au meme niveau — en font 62 a 98. Trois a quatre fois le tarif, et jamais
+   * releve : la courbe des boss est verifiee, celle des monstres ne l'etait pas.
+   *
+   * C'est lui, et non le boss, qui rendait la traversee du Plateau d'Altus
+   * impossible : le banc de biome mesurait 416 points de vie perdus par groupe
+   * pour une reserve de 1965, soit une mort avant meme d'atteindre le boss.
+   *
+   * Il garde ses deux attaques, qui sont son identite, a 75 chacune. 150 par
+   * tour reste le plus gros cogneur de son palier — il se presente seul quand
+   * les autres viennent a deux ou trois.
+   */
   altus_praetor_guard: {
     name: "Gardien prétorien d'Altus",
     hp: 1800,
-    atk: 148,
+    atk: 75,
     armor: 180,
     runes: 9800,
     specificStats: { attacksPerTurn: 2 },
@@ -78,9 +92,9 @@ export const V21_MONSTERS = {
     phaseInvocations: 3,
     phasePuissanceEcho: 0.15,
     name: "Fragment du Prêteur",
-    hp: 19883,
-    atk: 187,
-    armor: 225,
+    hp: 10439,
+    atk: 98,
+    armor: 158,
     runes: 132000,
     isBoss: true,
     specificStats: { attacksPerTurn: 2 },
@@ -151,9 +165,9 @@ export const V21_MONSTERS = {
     comportementsPhase2: ["riposte"],
     phaseRiposte: 0.18,
     name: "Éclat du Géant de feu",
-    hp: 35200,
-    atk: 368,
-    armor: 240,
+    hp: 24640,
+    atk: 258,
+    armor: 168,
     runes: 188000,
     isBoss: true,
     specificStats: { attacksPerTurn: 1 },
@@ -228,9 +242,9 @@ export const V21_MONSTERS = {
   azula_tempest_avatar: {
     comportementsPhase2: ["frenesie"],
     name: "Avatar des tempêtes d'Azula",
-    hp: 44800,
-    atk: 392,
-    armor: 255,
+    hp: 21280,
+    atk: 186,
+    armor: 179,
     runes: 255000,
     isBoss: true,
     specificStats: { attacksPerTurn: 2, critChance: 0.12 },

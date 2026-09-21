@@ -19,9 +19,9 @@
 import { mountDomStub } from "./headless-stub.mjs";
 mountDomStub();
 
-const { BUILDS, applyBuild, playerDamagePerTurn, enemyDamagePerTurn } =
-  await import("./simulate-balance.mjs");
-const { gameState, getEffectiveStats, getHealth } = await import("../state.js");
+const { niveauPourMarge, palierPour, PALIERS } = await import(
+  "./mesure-boss.mjs"
+);
 const { MONSTERS } = await import("../monster.js");
 const { BIOMES } = await import("../biome.js");
 const { BIOME_GUIDE } = await import("../world-map.js");
@@ -32,100 +32,14 @@ const niveauObjet = Number(
 );
 
 /*
- * L'equipement reellement porte par le joueur qui a fourni les releves, dans
- * l'ordre ou il l'a adopte. Chaque palier vaut a partir du biome indique.
+ * L'equipement de reference, l'ordre de progression et la mesure de marge
+ * vivent dans mesure-boss.mjs : un test s'en sert aussi, et deux copies de la
+ * meme regle divergent toujours. Voir PALIERS et niveauPourMarge.
  */
-const PALIERS = [
-  { des: "limgrave_west", arme: "kama", armure: null, accessoire: null },
-  {
-    des: "limgrave_north",
-    arme: "kama",
-    armure: "alchimist_suit",
-    accessoire: "scholars_ring",
-  },
-  {
-    des: "stormwind_castle",
-    arme: "queen_staff",
-    armure: "alchimist_suit",
-    accessoire: "troll_necklace",
-  },
-  {
-    des: "liurnia_south",
-    arme: "carian_glintstone_staff",
-    armure: "carian_knight_armor",
-    accessoire: "troll_necklace",
-  },
-  {
-    des: "raya_lucaria_academy",
-    arme: "carian_glintstone_staff",
-    armure: "carian_knight_armor",
-    accessoire: "godrick_great_rune",
-  },
-  {
-    des: "nokron",
-    arme: "carian_glintstone_staff",
-    armure: "carian_knight_armor",
-    accessoire: "moon_of_nokstella",
-  },
-];
 
-/* Ordre de progression, pour savoir quel palier s'applique. */
-const ordre = Object.keys(BIOMES);
-const rangDe = (id) => {
-  const i = ordre.indexOf(id);
-  return i === -1 ? 1e9 : i;
-};
-const palierPour = (biomeId) => {
-  let choisi = PALIERS[0];
-  for (const p of PALIERS) if (rangDe(p.des) <= rangDe(biomeId)) choisi = p;
-  return choisi;
-};
-
-const equiper = (palier) => {
-  const porte = [palier.arme, palier.armure, palier.accessoire].filter(Boolean);
-  gameState.inventory = porte.map((id) => ({
-    id,
-    name: id,
-    level: niveauObjet,
-    count: 0,
-  }));
-  gameState.equipped = {
-    weapon: palier.arme,
-    armor: palier.armure,
-    accessory: palier.accessoire,
-  };
-};
-
-/* Marge = combien de fois le joueur survit au temps qu'il met a tuer. */
-const margeContre = (boss, niveau, palier) => {
-  applyBuild(BUILDS.int, niveau);
-  equiper(palier);
-  let eff;
-  try {
-    eff = getEffectiveStats();
-  } catch {
-    return 0;
-  }
-  const pv = getHealth(eff.vigor);
-  const degatsJoueur = Math.max(1, playerDamagePerTurn(eff, boss.armor || 100));
-  const toursPourTuer = boss.hp / degatsJoueur;
-  const degatsSubis = Math.max(1, enemyDamagePerTurn(eff, boss));
-  return pv / degatsSubis / toursPourTuer;
-};
-
-/*
- * Une colonne "meilleur equipement disponible" a ete tentee puis retiree.
- * equipBest attribue le niveau 8 a tout l'inventaire : un personnage de niveau
- * 1 portant cinq objets de fin de partie battait Rennala, et la colonne
- * affichait "1". Une mesure fausse est pire qu'une mesure absente.
- */
-const MAX = 220;
-const niveauPour = (mesure, seuil) => {
-  for (let n = 1; n <= MAX; n += 1) {
-    if (mesure(n) >= seuil) return n;
-  }
-  return null;
-};
+const margePalier = (biomeId) => palierPour(biomeId);
+const niveauPour = (boss, seuil, biomeId) =>
+  niveauPourMarge(boss, seuil, margePalier(biomeId), niveauObjet);
 
 /* Les releves de terrain, pour mesurer le biais du modele. */
 const RELEVES = {
@@ -141,9 +55,8 @@ const lignes = [];
 for (const [biomeId, biome] of Object.entries(BIOMES)) {
   const boss = MONSTERS[biome.boss];
   if (!boss) continue;
-  const palier = palierPour(biomeId);
-  const survie = niveauPour((n) => margeContre(boss, n, palier), 1.0);
-  const confort = niveauPour((n) => margeContre(boss, n, palier), 2.0);
+  const survie = niveauPour(boss, 1.0, biomeId);
+  const confort = niveauPour(boss, 2.0, biomeId);
   const bande = BIOME_GUIDE[biomeId]?.recommendedLevel ?? null;
   lignes.push({
     biomeId,
