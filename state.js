@@ -37,6 +37,16 @@ export const runtimeState = {
   playerArmorDebuff: 0,
   nextAtkMultBonus: 1,
   nextNbAtkBonus: 0,
+  /*
+   * Total inflige par le joueur pendant son dernier tour d'attaques.
+   *
+   * Sert de reference aux afflictions qui tiquent HORS d'une attaque, la
+   * putrefaction en tete : elles se plafonnent par rapport au coup du joueur,
+   * comme la gelure et le fleau mortel le font deja avec `damage`, sauf
+   * qu'elles n'ont pas cette valeur sous la main au moment de leur tour.
+   * Remis a zero au debut de chaque tour du joueur.
+   */
+  degatsJoueurDuTour: 0,
   usedRenaissance: false,
   usedAbsolution: false,
   filterChanged: false,

@@ -381,6 +381,8 @@ export function performAttack({
       }
     }
 
+    if (isPlayer) runtimeState.degatsJoueurDuTour += finalDamage;
+
     setEntityHp(target, getEntityHp(target) - finalDamage);
 
     // Animations : l'attaquant frappe, la cible encaisse. Si le coup est
@@ -711,6 +713,10 @@ export const combatLoop = (sessionId) => {
           ActionLog(`CENDRE : ${ash.name} activée !`, "log-ash-activation");
           if (ashEffect.msg) ActionLog(ashEffect.msg, "log-status");
         }
+
+        // Nouveau tour du joueur : la reference de degats des afflictions
+        // repart de zero (voir runtimeState.degatsJoueurDuTour).
+        runtimeState.degatsJoueurDuTour = 0;
 
         // La fraction de dexterite non convertie en attaque entiere se joue
         // ici, une fois par tour.
