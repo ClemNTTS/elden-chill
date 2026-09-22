@@ -64,11 +64,19 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "FESTIVAL",
     description:
-      "Vos propres cumuls de Folie vous nourrissent : +2 de Force par cumul " +
-      "porté <em style='color: grey;'>(+1 tous les 3 Niv)</em>.",
+      "Se nourrit de la Folie de votre proie : +2 de Force par cumul porte " +
+      "par votre cible <em style='color: grey;'>(+1 tous les 3 Niv)</em>.",
+    /*
+     * L'ancienne version lisait les cumuls du JOUEUR : rien dans le jeu ne
+     * lui en donne jamais, la faucille du celebrant (meme set) les pose sur
+     * l'ENNEMI. Le grelot etait donc mort depuis toujours. Il lit maintenant
+     * la meme cible que la faucille frappe : plus elle a affole sa proie,
+     * plus le grelot paie, sans qu'il faille inventer une source de Folie
+     * cote joueur.
+     */
     applyMult: (stats, itemLevel) => {
       const stacks =
-        gameState.playerEffects.find((e) => e.id === "MADNESS")?.stacks || 0;
+        gameState.ennemyEffects?.find((e) => e.id === "MADNESS")?.stacks || 0;
       stats.strength += stacks * (2 + Math.floor(itemLevel / 3));
     },
   },

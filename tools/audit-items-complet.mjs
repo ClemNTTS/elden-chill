@@ -119,6 +119,13 @@ gameState.playerEffects = [
   { id: "POISON", duration: 3 },
   { id: "FROSTBITE", stacks: 3, duration: 3 },
 ];
+/*
+ * Meme sonde, cote ennemi : le Grelot affolant lit desormais les cumuls de
+ * Folie de sa CIBLE (la faucille du celebrant, meme set, ne les pose jamais
+ * sur le joueur). Sans ca, il retombait dans le meme piege que ci-dessus,
+ * juste sur l'autre tableau d'effets.
+ */
+gameState.ennemyEffects = [{ id: "MADNESS", stacks: 4, duration: 3 }];
 
 Object.assign(gameState.stats, {
   level: 100,
