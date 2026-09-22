@@ -694,6 +694,39 @@ export const ITEM_SETS = {
       },
     },
   },
+
+  /*
+   * ECONOME (contrat) — le seul set qui ne cible AUCUN archetype.
+   *
+   * Ses trois pieces convertissent les runes PORTEES (gameState.runes.carried)
+   * en Force et en Armure — une ressource que Force, Dexterite, Intelligence
+   * et Vigueur possedent toutes egalement, donc aucun archetype n'y est
+   * structurellement favorise. Propose a TOUT joueur en plus de son set
+   * d'archetype habituel (voir poolRecompense dans actions.js), jamais a la
+   * place.
+   *
+   * Le bonus a 3 pieces (declenchement sur mort imminente, une fois par
+   * expedition) ne peut pas vivre ici : ce module n'importe rien, et
+   * l'`effect` d'un bonus de set ne recoit que les stats, jamais gameState.
+   * Il vit donc dans la Bourse plombee elle-meme (items/contracts.js), qui
+   * verifie elle-meme que les trois pieces sont portees. Seul le texte
+   * d'affichage est ici.
+   */
+  ECONOME: {
+    name: "Bourse de l'Avare",
+    bonuses: {
+      2: {
+        desc: "+10% de runes gagnees.",
+        effect: (stats) => {
+          stats.runeGainMult += 0.1;
+        },
+      },
+      3: {
+        desc: "Absolution du Grippe-sou : une fois par expedition, si vous alliez mourir, la moitie de vos runes portees vous sauve la vie a la place.",
+        // Pas d'effect() : voir le commentaire ci-dessus.
+      },
+    },
+  },
 };
 
 /*
@@ -752,6 +785,10 @@ export const CONTRACT_ITEM_IDS = [
   "verdict_fang",
   "plague_writ_shroud",
   "bailiffs_brand",
+  // ECONOME - universel, propose a tout archetype (voir SETS_PAR_ARCHETYPE)
+  "miser_blade",
+  "miser_plate",
+  "leaded_purse",
 ];
 
 /*
@@ -783,3 +820,10 @@ export const SETS_PAR_ARCHETYPE = {
   vigor: "MOURNER",
   afflictions: "SENTENCE",
 };
+
+/*
+ * ECONOME n'apparait PAS ci-dessus, volontairement : ce n'est le set d'AUCUN
+ * archetype, celui de TOUS. poolRecompense() (actions.js) l'ajoute en plus du
+ * set cible par cette table, jamais a sa place.
+ */
+export const SET_UNIVERSEL = "ECONOME";

@@ -32,7 +32,7 @@ const { gameState, getEffectiveStats, getHealth } = await import("../state.js");
 const { BIOMES } = await import("../biome.js");
 const { ITEMS } = await import("../item.js");
 const { MONSTERS } = await import("../monster.js");
-const { BIOME_GUIDE } = await import("../world-map.js");
+const { BIOME_GUIDE, getBiomeGraphDepth } = await import("../world-map.js");
 
 /** Niveau au-dela duquel le balayage abandonne. */
 export const NIVEAU_MAX_MESURE = 500;
@@ -76,18 +76,25 @@ export const PALIERS = [
 ];
 
 /*
- * Le rang d'un biome se lit sur son niveau recommande, PAS sur sa position
- * dans biome.js. L'ordre de declaration place le Plateau d'Altus, qui se joue
- * vers 160, avant Nokron, qui se joue vers 116 : choisir le palier
- * d'equipement avec cet ordre-la revenait a opposer le boss d'Altus a
- * l'equipement de l'Academie, deux chapitres trop tot.
+ * Le rang d'un biome se lit sur sa PROFONDEUR DANS LE GRAPHE de deblocage.
+ *
+ * Il se lisait sur le niveau recommande, et c'etait le dernier fil de la
+ * boucle : les bandes recommandees etaient generees a partir de mesures qui
+ * choisissaient leur equipement... a partir des bandes. Le systeme se
+ * definissait lui-meme et ne pouvait etre ni verifie ni corrige.
+ *
+ * La profondeur, elle, ne depend d'aucune mesure : c'est la structure du jeu.
+ * Un biome qu'on ne peut atteindre qu'apres six autres se joue apres eux,
+ * quelle que soit la difficulte qu'on lui prete.
+ *
+ * L'ordre de declaration dans biome.js ne convient pas non plus : il place le
+ * Plateau d'Altus avant Nokron, qui se joue trente niveaux plus tot.
  */
 const ordre = Object.keys(BIOMES);
+const profondeurs = new Map();
 const rangDe = (id) => {
-  const bande = BIOME_GUIDE[id]?.recommendedLevel?.[0];
-  if (typeof bande === "number") return bande;
-  const i = ordre.indexOf(id);
-  return i === -1 ? 1e9 : i;
+  if (!BIOMES[id]) return 1e9;
+  return getBiomeGraphDepth(id, profondeurs);
 };
 
 /*

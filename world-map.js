@@ -1,10 +1,24 @@
 import { BIOMES } from "./biome.js";
+import {
+  LEVEL_CAP_BASE,
+  LEVEL_PER_MAIN_BOSS,
+  MAIN_BOSS_BIOMES,
+} from "./rebirth.js";
+import { MAX_LEVEL } from "./shared/player-profile.js";
+
+/*
+ * Part du plafond que la bande recommandee garantit.
+ *
+ * Meme valeur que PART_DU_PLAFOND dans tests/plafond-progression.test.mjs : le
+ * test exige qu'un boss soit battable a 80% du plafond, la bande annonce donc
+ * ce meme 80%. Promesse et verification disent la meme chose.
+ */
+const PART_GARANTIE = 0.8;
 
 export const BIOME_GUIDE = {
   limgrave_west: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    recommendedLevel: [6, 12],
     danger: "Faible",
     focus: "Prise en main, premiers builds, survie simple.",
     pathRole: "Point de depart",
@@ -12,7 +26,6 @@ export const BIOME_GUIDE = {
   limgrave_east: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    recommendedLevel: [15, 24],
     danger: "Modere",
     focus: "Premiers duels solides, montee dex/bleed.",
     pathRole: "Route agressive",
@@ -20,7 +33,6 @@ export const BIOME_GUIDE = {
   limgrave_north: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    recommendedLevel: [22, 29],
     danger: "Modere",
     focus: "Verrou de progression vers le premier grand chateau.",
     pathRole: "Route principale",
@@ -28,7 +40,6 @@ export const BIOME_GUIDE = {
   limgrave_lake: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    recommendedLevel: [29, 36],
     danger: "Modere",
     focus: "Option feu/intelligence et dragon precoce.",
     pathRole: "Detour optionnel",
@@ -36,7 +47,6 @@ export const BIOME_GUIDE = {
   weeping_peninsula: {
     chapter: "Chapitre II",
     region: "Sud",
-    recommendedLevel: [27, 35],
     danger: "Modere",
     focus: "Transition vers le tier 3, debut des builds givre.",
     pathRole: "Branche sud",
@@ -44,7 +54,6 @@ export const BIOME_GUIDE = {
   morne_castle: {
     chapter: "Chapitre II",
     region: "Sud",
-    recommendedLevel: [39, 57],
     danger: "Eleve",
     focus: "Test force/bleed, gain d'armes lourdes.",
     pathRole: "Cul-de-sac rentable",
@@ -52,7 +61,6 @@ export const BIOME_GUIDE = {
   enter_stormwind_castle: {
     chapter: "Chapitre II",
     region: "Voile Orage",
-    recommendedLevel: [33, 46],
     danger: "Eleve",
     focus: "Porte de Stormveil, combat plus technique.",
     pathRole: "Route principale",
@@ -60,7 +68,6 @@ export const BIOME_GUIDE = {
   stormwind_castle: {
     chapter: "Chapitre II",
     region: "Voile Orage",
-    recommendedLevel: [26, 36],
     danger: "Eleve",
     focus: "Premier gros check d'endurance et d'armure.",
     pathRole: "Boss gate majeur",
@@ -68,7 +75,6 @@ export const BIOME_GUIDE = {
   caelid_west: {
     chapter: "Chapitre II",
     region: "Caelid",
-    recommendedLevel: [49, 68],
     danger: "Eleve",
     focus: "Zone risk/reward, statuts et armures denses.",
     pathRole: "Detour risqué",
@@ -76,7 +82,6 @@ export const BIOME_GUIDE = {
   liurnia_south: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    recommendedLevel: [45, 62],
     danger: "Eleve",
     focus: "Ouverture caster et multi-builds de midgame.",
     pathRole: "Route principale",
@@ -84,7 +89,6 @@ export const BIOME_GUIDE = {
   liurnia_west: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    recommendedLevel: [48, 65],
     danger: "Eleve",
     focus: "Route carienne, tank/mage hybride.",
     pathRole: "Branche ouest",
@@ -92,7 +96,6 @@ export const BIOME_GUIDE = {
   liurnia_east: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    recommendedLevel: [50, 67],
     danger: "Eleve",
     focus: "Route marais, vigueur et penetration.",
     pathRole: "Branche est",
@@ -100,7 +103,6 @@ export const BIOME_GUIDE = {
   liurnia_marsh: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    recommendedLevel: [50, 70],
     danger: "Tres eleve",
     focus: "Dragon optionnel tres rentable pour les mages.",
     pathRole: "Boss optionnel",
@@ -108,7 +110,6 @@ export const BIOME_GUIDE = {
   raya_lucaria_academy: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    recommendedLevel: [52, 70],
     danger: "Tres eleve",
     focus: "Pivot midgame, sets academie et crystal.",
     pathRole: "Route principale",
@@ -116,7 +117,6 @@ export const BIOME_GUIDE = {
   caria_mansion: {
     chapter: "Chapitre IV",
     region: "Nord des lacs",
-    recommendedLevel: [90, 110],
     danger: "Tres eleve",
     focus: "Monte en puissance controle/givre.",
     pathRole: "Branche ouest",
@@ -124,7 +124,6 @@ export const BIOME_GUIDE = {
   caelid_south: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    recommendedLevel: [64, 84],
     danger: "Tres eleve",
     focus: "Endurance sous pression et packs brutaux.",
     pathRole: "Route alternative",
@@ -132,7 +131,6 @@ export const BIOME_GUIDE = {
   caelid_dragonbarrow: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    recommendedLevel: [120, 155],
     danger: "Tres eleve",
     focus: "Dragon optionnel et loot corruption.",
     pathRole: "Boss optionnel",
@@ -140,7 +138,6 @@ export const BIOME_GUIDE = {
   siofra_river: {
     chapter: "Chapitre IV",
     region: "Souterrain",
-    recommendedLevel: [79, 103],
     danger: "Tres eleve",
     focus: "Route controle/stun et sustain.",
     pathRole: "Branche souterraine",
@@ -148,7 +145,6 @@ export const BIOME_GUIDE = {
   redmane_castle: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    recommendedLevel: [117, 150],
     danger: "Tres eleve",
     focus: "Grand mur de puissance physique.",
     pathRole: "Route principale bis",
@@ -156,7 +152,6 @@ export const BIOME_GUIDE = {
   nokron: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    recommendedLevel: [116, 150],
     danger: "Tres eleve",
     focus: "Pivot late midgame, builds polymorphes.",
     pathRole: "Noeud de bascule",
@@ -164,7 +159,6 @@ export const BIOME_GUIDE = {
   ainsel_river: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    recommendedLevel: [155, 194],
     danger: "Tres eleve",
     focus: "Nouvelle route astrale dex/int a haut tempo.",
     pathRole: "Nouvelle branche v2",
@@ -172,7 +166,6 @@ export const BIOME_GUIDE = {
   deeproot_depths: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    recommendedLevel: [160, 202],
     danger: "Tres eleve",
     focus: "Tank/sustain et armures vivantes.",
     pathRole: "Nouvelle branche v2",
@@ -180,7 +173,6 @@ export const BIOME_GUIDE = {
   rotlake: {
     chapter: "Chapitre VI",
     region: "Souterrain",
-    recommendedLevel: [125, 147],
     danger: "Extrem",
     focus: "Endgame optionnel axe statuts et survie active.",
     pathRole: "Detour v2 endgame",
@@ -188,7 +180,6 @@ export const BIOME_GUIDE = {
   altus_plateau: {
     chapter: "Chapitre VI",
     region: "Altus",
-    recommendedLevel: [160, 200],
     danger: "Extrem",
     focus: "Frontiere du late game terrestre.",
     pathRole: "Route principale",
@@ -197,7 +188,6 @@ export const BIOME_GUIDE = {
   mount_gelmir: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    recommendedLevel: [150, 189],
     danger: "Extrem",
     focus: "Volcan, venins et predateurs draconiques en crescendo.",
     pathRole: "Route principale",
@@ -206,7 +196,6 @@ export const BIOME_GUIDE = {
   mountaintops: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    recommendedLevel: [176, 214],
     danger: "Extrem",
     focus: "Glace, posture et geants. Un mur de lecture et de tempo.",
     pathRole: "Route principale",
@@ -215,7 +204,6 @@ export const BIOME_GUIDE = {
   crumbling_farum_azula: {
     chapter: "Chapitre IX",
     region: "Azula",
-    recommendedLevel: [201, 220],
     danger: "Abyssal",
     focus: "Ruines suspendues, tempetes sacrileges et reliques noires.",
     pathRole: "Fin de route terrestre",
@@ -233,7 +221,6 @@ export const BIOME_GUIDE = {
   leyndell_royal: {
     chapter: "Chapitre VIII",
     region: "Leyndell",
-    recommendedLevel: [176, 208],
     danger: "Extreme",
     focus: "Capitale doree, gardes royaux et longues avenues.",
     pathRole: "Route royale",
@@ -241,7 +228,6 @@ export const BIOME_GUIDE = {
   forbidden_land: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    recommendedLevel: [179, 214],
     danger: "Extreme",
     focus: "Col battu par les vents avant les sommets.",
     pathRole: "Passage vers les Cimes",
@@ -249,7 +235,6 @@ export const BIOME_GUIDE = {
   consecrated_snowfield: {
     chapter: "Chapitre IX",
     region: "Cimes",
-    recommendedLevel: [192, 220],
     danger: "Extreme",
     focus: "Plaine blanche ou l'on ne voit pas a dix pas.",
     pathRole: "Route cachee",
@@ -257,7 +242,6 @@ export const BIOME_GUIDE = {
   mohgwyn_palace: {
     chapter: "Chapitre IX",
     region: "Souterrain",
-    recommendedLevel: [198, 220],
     danger: "Abyssal",
     focus: "Lac de sang sous une lune rouge.",
     pathRole: "Detour sanglant",
@@ -265,7 +249,6 @@ export const BIOME_GUIDE = {
   miquella_haligtree: {
     chapter: "Chapitre IX",
     region: "Arbre Sacre",
-    recommendedLevel: [208, 220],
     danger: "Abyssal",
     focus: "Ramures suspendues et gardiens putrides.",
     pathRole: "Voie alternative vers Azula",
@@ -275,7 +258,6 @@ export const BIOME_GUIDE = {
   dominula_village: {
     chapter: "Chapitre VI",
     region: "Altus",
-    recommendedLevel: [147, 184],
     danger: "Eleve",
     focus:
       "Un village en fete. Les tambours accelerent et ne s'arretent jamais.",
@@ -285,7 +267,6 @@ export const BIOME_GUIDE = {
   shaded_castle: {
     chapter: "Chapitre VI",
     region: "Altus",
-    recommendedLevel: [138, 172],
     danger: "Eleve",
     focus: "Un chateau noye dans une brume qui ronge les poumons.",
     pathRole: "Route vers Gelmir",
@@ -294,7 +275,6 @@ export const BIOME_GUIDE = {
   volcano_manor: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    recommendedLevel: [166, 192],
     danger: "Tres eleve",
     focus: "On y signe des contrats. On y paie bien, on n'y soigne personne.",
     pathRole: "Coeur du Mont Gelmir",
@@ -303,7 +283,6 @@ export const BIOME_GUIDE = {
   rykard_lair: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    recommendedLevel: [173, 198],
     danger: "Tres eleve",
     focus: "Une fosse de magma et ce qui reste d'un dieu dedans.",
     pathRole: "Fin du Mont Gelmir",
@@ -312,7 +291,6 @@ export const BIOME_GUIDE = {
   divine_tower: {
     chapter: "Chapitre VIII",
     region: "Leyndell",
-    recommendedLevel: [185, 211],
     danger: "Extreme",
     focus: "La Tour coupe le lien a la Grace. Aucun soin ne fonctionne dedans.",
     pathRole: "Detour de Leyndell",
@@ -321,7 +299,6 @@ export const BIOME_GUIDE = {
   castle_sol: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    recommendedLevel: [192, 217],
     danger: "Extreme",
     focus: "Une nuit qui ne finit pas. On ne voit pas venir les coups.",
     pathRole: "Route du nord",
@@ -330,7 +307,6 @@ export const BIOME_GUIDE = {
   giants_catacombs: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    recommendedLevel: [198, 220],
     danger: "Extreme",
     focus: "Des braises qui couvent depuis la guerre des Geants.",
     pathRole: "Avant les Cimes",
@@ -339,7 +315,6 @@ export const BIOME_GUIDE = {
   elphael: {
     chapter: "Chapitre IX",
     region: "Arbre Sacre",
-    recommendedLevel: [217, 220],
     danger: "Abyssal",
     focus: "Les spores tombent en continu. Elle vous attend au bout.",
     pathRole: "Coeur de l'Arbre Sacre",
@@ -348,7 +323,6 @@ export const BIOME_GUIDE = {
   farum_azula_deep: {
     chapter: "Chapitre IX",
     region: "Farum Azula",
-    recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Sous les ruines, une tempete qui dure depuis avant l'Arbre.",
     pathRole: "Vers le chapitre X",
@@ -357,7 +331,6 @@ export const BIOME_GUIDE = {
   leyndell_ash: {
     chapter: "Chapitre X",
     region: "Leyndell",
-    recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "La capitale ensevelie sous la cendre. Elle ronge les armures.",
     pathRole: "Avant-derniere etape",
@@ -366,7 +339,6 @@ export const BIOME_GUIDE = {
   erdtree_throne: {
     chapter: "Chapitre X",
     region: "Arbre-Monde",
-    recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Le terme de la route. On n'en repart pas en arriere.",
     pathRole: "Terminus",
@@ -375,7 +347,6 @@ export const BIOME_GUIDE = {
   bestial_sanctum: {
     chapter: "Annexe",
     region: "Tertre Draconique",
-    recommendedLevel: [172, 217],
     danger: "Eleve",
     focus:
       "Gurranq echange des racines de mort contre du butin. Aucune elite ici.",
@@ -385,7 +356,6 @@ export const BIOME_GUIDE = {
   jarburg: {
     chapter: "Annexe",
     region: "Liurnia",
-    recommendedLevel: [40, 53],
     danger: "Faible",
     focus: "Des jarres creuses et pleines de runes. Elles se brisent vite.",
     pathRole: "Zone de runes",
@@ -394,7 +364,6 @@ export const BIOME_GUIDE = {
   evergaol_champions: {
     chapter: "Annexe",
     region: "Enclos",
-    recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Quatre champions a la suite, sans repos et sans soin.",
     pathRole: "Defi de fin de partie",
@@ -421,9 +390,9 @@ export function getBiomeGraphDepth(biomeId, seen = new Map()) {
 }
 
 export function getBiomePowerBand(biomeId) {
-  const guide = BIOME_GUIDE[biomeId];
-  if (!guide) return "Inconnu";
-  return `Niv. ${guide.recommendedLevel[0]}-${guide.recommendedLevel[1]}`;
+  if (!BIOME_GUIDE[biomeId]) return "Inconnu";
+  const [bas, haut] = getBandeRecommandee(biomeId);
+  return `Niv. ${bas}-${haut}`;
 }
 
 export function getBiomeDangerClass(biomeId) {
@@ -493,13 +462,11 @@ export const PALIERS_DANGER = [
  * l'axe — utile pour nuancer une couleur sans redecouper les paliers.
  */
 export function getDangerRelatif(biomeId, niveauJoueur = 0) {
-  const guide = BIOME_GUIDE[biomeId];
-  const bande = guide?.recommendedLevel;
-  if (!bande) {
-    return { libelle: guide?.danger || "Inconnu", cle: "inconnu", t: 0 };
+  if (!BIOME_GUIDE[biomeId]) {
+    return { libelle: "Inconnu", cle: "inconnu", t: 0 };
   }
 
-  const [bas] = bande;
+  const [bas] = getBandeRecommandee(biomeId);
   const pas = Math.max(8, bas * 0.15);
   const t = (Math.max(0, niveauJoueur) - bas) / pas;
 
@@ -674,4 +641,141 @@ export function calculerPositionsCarte(biomeIds) {
   }
 
   return positions;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bande de niveau recommandee                                        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * La bande n'est plus ECRITE, elle se DEDUIT.
+ *
+ * Elle etait stockee sur chaque biome, generee par un outil qui la mesurait...
+ * avec un equipement choisi d'apres la bande. Le systeme se definissait
+ * lui-meme : impossible a verifier, impossible a corriger sans tout deplacer,
+ * et perime des qu'on touchait a un monstre. Apres le reequilibrage de cette
+ * session, trois zones jouees au niveau 185 — l'une traversee a 95% des points
+ * de vie, l'autre a 48%, la troisieme mortelle — annoncaient toutes la meme
+ * bande.
+ *
+ * Deux ancres, et aucune n'est une mesure :
+ *
+ *   TRAME PRINCIPALE — le plafond de niveau. `LEVEL_CAP_BASE + 20 par boss`
+ *   est la seule grandeur du systeme qui soit une DECISION. La bande devient
+ *   [80% du plafond, plafond] : elle dit au joueur ce que le jeu lui garantit
+ *   a cette etape, et c'est exactement ce que le garde-fou de progression
+ *   exige par ailleurs. La bande et le test disent desormais la meme chose, ils
+ *   ne peuvent plus diverger.
+ *
+ *   ZONES ANNEXES — le graphe de deblocage. Une zone facultative se visite
+ *   juste apres celle qui l'ouvre : elle herite de sa bande. Structurel, pas
+ *   mesure.
+ *
+ * La mesure, elle, cesse d'ecrire et devient un audit : tools/banc-boss.mjs
+ * compare la difficulte reelle a la bande deduite, et les tests de budget
+ * verifient que le contenu tient la promesse. La mesure verifie la conception,
+ * elle ne la redige plus.
+ */
+/*
+ * Zones dont la place dans le graphe ment sur leur difficulte.
+ *
+ * Le Tertre Draconique s'ouvre a trois sauts du depart par la branche de
+ * Caelid, mais c'est un « boss optionnel » concu pour le milieu de partie :
+ * la deduction lui donnait le niveau 68, pour un contenu qui en demande plus
+ * du double. Aucun facteur ne rattrapait l'ecart — son boss restait invincible
+ * jusqu'a x0,30.
+ *
+ * L'exception est declaree ici, avec sa raison, plutot que d'etre noyee dans
+ * une regle plus compliquee. Une carte a le droit d'avoir des raccourcis
+ * traitres ; elle doit juste le dire.
+ */
+const CHAPITRE_IMPOSE = {
+  // Le dragon de Caelid : accessible tot, calibre pour bien plus tard.
+  caelid_dragonbarrow: 6,
+};
+
+const bandesMemo = new Map();
+
+const construireBandes = () => {
+  if (bandesMemo.size) return bandesMemo;
+
+  // Ancre 1 : la trame principale suit le plafond, etape par etape.
+  MAIN_BOSS_BIOMES.forEach((id, index) => {
+    const plafond = Math.min(
+      MAX_LEVEL,
+      LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * index,
+    );
+    bandesMemo.set(id, [Math.floor(plafond * PART_GARANTIE), plafond]);
+  });
+
+  // Ancre 2 : une annexe herite du biome qui l'ouvre. On les parcourt par
+  // profondeur croissante pour qu'un parent soit toujours resolu avant son
+  // enfant.
+  const parents = new Map();
+  for (const [id, biome] of Object.entries(BIOMES)) {
+    for (const suivant of biome.unlocks || []) {
+      if (!parents.has(suivant)) parents.set(suivant, []);
+      parents.get(suivant).push(id);
+    }
+  }
+  const memo = new Map();
+  const restants = Object.keys(BIOME_GUIDE)
+    .filter((id) => !bandesMemo.has(id))
+    .sort((a, b) => getBiomeGraphDepth(a, memo) - getBiomeGraphDepth(b, memo));
+
+  for (const id of restants) {
+    const impose = CHAPITRE_IMPOSE[id];
+    if (impose !== undefined) {
+      const plafond = Math.min(
+        MAX_LEVEL,
+        LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * impose,
+      );
+      bandesMemo.set(id, [Math.floor(plafond * PART_GARANTIE), plafond]);
+      continue;
+    }
+    const resolus = (parents.get(id) || []).filter((p) => bandesMemo.has(p));
+    if (resolus.length === 0) {
+      // Aucun parent connu : c'est un point de depart.
+      bandesMemo.set(id, [
+        Math.floor(LEVEL_CAP_BASE * PART_GARANTIE),
+        LEVEL_CAP_BASE,
+      ]);
+      continue;
+    }
+    // Plusieurs chemins y menent : on retient le plus tardif, celui par lequel
+    // un joueur y arrivera en pratique s'il suit la trame.
+    const tardif = resolus.reduce((a, b) =>
+      bandesMemo.get(a)[0] >= bandesMemo.get(b)[0] ? a : b,
+    );
+
+    /*
+     * Chaque saut AVANCE la bande.
+     *
+     * Heriter telle quelle de la bande du parent paraissait suffisant, et
+     * donnait n'importe quoi sur les chaines annexes : le Sud de Caelid, a
+     * trois sauts du depart, remontait jusqu'a Necrolimbe et se retrouvait
+     * annonce au niveau 25 pour un contenu qui en demande 64. Une branche qui
+     * s'eloigne doit monter comme la trame monte.
+     *
+     * Le pas est celui d'un boss principal, ramene a la part garantie : un
+     * saut de graphe vaut a peu pres une etape de campagne.
+     */
+    const bonds = Math.max(
+      1,
+      getBiomeGraphDepth(id, memo) - getBiomeGraphDepth(tardif, memo),
+    );
+    const pas = Math.round(LEVEL_PER_MAIN_BOSS * PART_GARANTIE) * bonds;
+    const [bas, haut] = bandesMemo.get(tardif);
+    bandesMemo.set(id, [
+      Math.min(Math.floor(MAX_LEVEL * PART_GARANTIE), bas + pas),
+      Math.min(MAX_LEVEL, haut + pas),
+    ]);
+  }
+
+  return bandesMemo;
+};
+
+/** Bande de niveau recommandee pour ce biome, deduite et jamais stockee. */
+export function getBandeRecommandee(biomeId) {
+  return construireBandes().get(biomeId) || [1, LEVEL_CAP_BASE];
 }

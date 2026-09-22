@@ -5,7 +5,7 @@ import {
   ITEM_TYPES,
   SETS_PAR_ARCHETYPE,
 } from "../constants.js";
-import { gameState, healPlayer, runtimeState } from "../state.js";
+import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
 import { ActionLog } from "../ui-action-log.js";
 
 /*
@@ -61,6 +61,39 @@ const bonusSerment = () => {
   if (!contrat || contrat.honore) return 0;
   return SERMENT_PAR_RARETE[contrat.rarete] || 0;
 };
+
+/*
+ * AVARE (ECONOME) — le seul set qui ne cible AUCUN archetype.
+ *
+ * Convertit les runes PORTEES (non depensees, gameState.runes.carried) en
+ * Force et en Armure — une ressource que Force, Dexterite, Intelligence et
+ * Vigueur possedent toutes egalement, donc aucun archetype n'y est
+ * structurellement favorise. Propose a TOUT joueur en plus de son set
+ * d'archetype habituel (voir poolRecompense dans actions.js), jamais a la
+ * place — voir SETS_PAR_ARCHETYPE et SET_UNIVERSEL dans constants.js.
+ *
+ * Le risque n'est pas invente : handleDeath() vide deja les runes portees a
+ * zero (core.js), exactement comme la Ferveur (escalation.js) — "la reserve
+ * part avec l'expedition, c'est tout l'enjeu". L'Avare applique le meme
+ * principe directement aux runes.
+ *
+ * PLAFONNE PAR TRANCHES, comme toute conversion depuis une grandeur qui
+ * grandit sans borne avec la progression (voir le commentaire au-dessus de
+ * SCARLET_ROT dans status.js) : sans plafond, les runes portees en fin de
+ * partie ecraseraient les quatre autres panoplies de contrat.
+ */
+const tranchesRunes = (parPalier, plafondTranches) =>
+  Math.min(
+    plafondTranches,
+    Math.floor((gameState.runes?.carried || 0) / parPalier),
+  );
+
+/** Identifiants des trois pieces : verifie la panoplie complete sans
+ *  importer ITEMS, qui reimporte ce module (voir l'en-tete de item.js). */
+const PIECES_AVARE = ["miser_blade", "miser_plate", "leaded_purse"];
+const porteAvareComplet = () =>
+  Object.values(gameState.equipped).filter((id) => PIECES_AVARE.includes(id))
+    .length === 3;
 
 export const CONTRACT_ITEMS = {
   /* ================================================================
@@ -269,9 +302,23 @@ export const CONTRACT_ITEMS = {
     applyFlat: (stats) => {
       stats.armor += 57;
     },
+    /*
+     * Deux bugs corriges ici, tous deux muets (aucune erreur, l'objet se
+     * contentait de ne jamais rien faire) :
+     *
+     *  - `stats.maxHp` n'existe nulle part dans getEffectiveStats() — les PV
+     *    max se lisent via getHealth(stats.vigor), comme partout ailleurs
+     *    dans ce fichier. `maxHp` valait donc toujours 0, et le garde-fou
+     *    `if (!maxHp ...)` sortait a chaque appel avant meme de regarder les
+     *    PV actuels.
+     *  - `runtimeState.voileUtilise` n'etait jamais remis a false : meme
+     *    corrige, l'objet ne se serait declenche qu'une fois par PARTIE,
+     *    jamais qu'une fois par combat comme l'annonce sa description. Voir
+     *    le reset dans spawn.js, a cote de celui d'usedAbsolution.
+     */
     funcOnBeingHit: (stats) => {
-      const maxHp = stats.maxHp || 0;
-      if (!maxHp || runtimeState.voileUtilise) return;
+      if (runtimeState.voileUtilise) return;
+      const maxHp = getHealth(stats.vigor);
       if (runtimeState.playerCurrentHp > maxHp * 0.3) return;
 
       runtimeState.voileUtilise = true;
@@ -359,6 +406,73 @@ export const CONTRACT_ITEMS = {
         applyEffect(targetEffects, "MADNESS", 2);
         ActionLog("Marque de l'Huissier : la sommation resonne.", "log-status");
       }
+    },
+  },
+
+  /* ================================================================
+     AVARE — archetype UNIVERSEL
+     Runes portees converties en Force et Armure, pour tout archetype.
+     ================================================================ */
+
+  miser_blade: {
+    name: "Lame de l'Avare",
+    type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
+    set: "ECONOME",
+    isAlwaysMax: true,
+    description:
+      "Exclusif aux contrats. Convertit vos runes portees en Force : +1 par tranche de 4 000 runes portees, jusqu'a 30 tranches (+120 Force max).",
+    applyMult: (stats) => {
+      stats.strength += tranchesRunes(4000, 30);
+    },
+  },
+
+  miser_plate: {
+    name: "Cuirasse du Grippe-sou",
+    type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
+    set: "ECONOME",
+    isAlwaysMax: true,
+    description:
+      "Exclusif aux contrats. Convertit vos runes portees en Armure : +3 par tranche de 3 000 runes portees, jusqu'a 25 tranches (+75 Armure max).",
+    applyMult: (stats) => {
+      stats.armor += 3 * tranchesRunes(3000, 25);
+    },
+  },
+
+  leaded_purse: {
+    name: "Bourse plombee",
+    type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
+    set: "ECONOME",
+    isAlwaysMax: true,
+    description:
+      "Exclusif aux contrats. Amplifie Force et Armure de 2% par tranche de 5 000 runes portees, jusqu'a 20 tranches (+40% max). " +
+      "Absolution du Grippe-sou (panoplie complete) : une fois par expedition, si vous alliez mourir, la moitie de vos runes portees vous sauve la vie a la place.",
+    applyMult: (stats) => {
+      const mult = 1 + tranchesRunes(5000, 20) * 0.02;
+      stats.strength *= mult;
+      stats.armor *= mult;
+    },
+    /*
+     * Le bonus a 3 pieces vit ici et non dans ITEM_SETS (constants.js) : ce
+     * module-la n'importe rien, et un `effect` de set ne recoit que les
+     * stats, jamais gameState. Voir le commentaire sur ECONOME dans
+     * constants.js.
+     */
+    funcOnBeingHit: (stats) => {
+      if (!porteAvareComplet() || runtimeState.avareUtilise) return;
+      const maxHp = getHealth(stats.vigor);
+      if (runtimeState.playerCurrentHp >= maxHp * 0.05) return;
+
+      runtimeState.avareUtilise = true;
+      const rachat = Math.floor((gameState.runes.carried || 0) / 2);
+      gameState.runes.carried -= rachat;
+      runtimeState.playerCurrentHp = Math.floor(maxHp * 0.25);
+      ActionLog(
+        `Absolution du Grippe-sou : ${rachat} runes se consument pour vous ramener a la vie.`,
+        "log-heal",
+      );
     },
   },
 };

@@ -11,6 +11,7 @@ import {
   CONTRACTS_MIN_LEVEL,
   CONTRACT_ITEM_IDS,
   SETS_PAR_ARCHETYPE,
+  SET_UNIVERSEL,
 } from "./constants.js";
 import {
   RARETES,
@@ -506,7 +507,17 @@ const possede = (id) => gameState.inventory.some((entree) => entree.id === id);
 const poolRecompense = () => {
   const setVise = SETS_PAR_ARCHETYPE[archetypeDominant()];
   const manquantesDuSet = piecesDuSet(setVise).filter((id) => !possede(id));
-  if (manquantesDuSet.length > 0) return manquantesDuSet;
+  /*
+   * L'Avare (SET_UNIVERSEL) ne remplace jamais le set d'archetype : il
+   * s'ajoute. C'est le seul set qui ne cible personne en particulier — le
+   * exclure ici reviendrait a le reserver aux joueurs qui ont deja fini le
+   * leur, ce qui contredit sa raison d'etre (voir constants.js).
+   */
+  const manquantesUniverselles = piecesDuSet(SET_UNIVERSEL).filter(
+    (id) => !possede(id),
+  );
+  const cibles = [...manquantesDuSet, ...manquantesUniverselles];
+  if (cibles.length > 0) return cibles;
 
   /*
    * Le set vise est complet : on ouvre aux autres panoplies.

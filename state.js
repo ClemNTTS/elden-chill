@@ -49,6 +49,10 @@ export const runtimeState = {
   degatsJoueurDuTour: 0,
   usedRenaissance: false,
   usedAbsolution: false,
+  // Voile des Endeuilles (MOURNER) et Bourse plombee (ECONOME) : chacune sa
+  // propre garde a un usage par combat/expedition, voir items/contracts.js.
+  voileUtilise: false,
+  avareUtilise: false,
   filterChanged: false,
   offlineSpeedMultiplier: 3, // default speed multiplier when using offline bank (reduced to x3)
 };

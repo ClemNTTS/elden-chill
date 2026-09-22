@@ -126,6 +126,10 @@ export const spawnMonster = (monsterId, sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
 
   runtimeState.usedAbsolution = false;
+  // Voile des Endeuilles (MOURNER) : "une fois par combat", comme
+  // usedAbsolution ci-dessus. Rien ne la remettait jamais a false avant ce
+  // correctif — voir items/contracts.js.
+  runtimeState.voileUtilise = false;
 
   const template = MONSTERS[monsterId];
   // Un identifiant absent du bestiaire plantait le combat sur la ligne

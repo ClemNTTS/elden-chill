@@ -253,13 +253,13 @@ test("chaque cendre a son icone, et aucune n'en partage une", async () => {
  */
 test("les cendres tardives ne tombent pas avant le niveau 100", async () => {
   const { LOOT_TABLES } = await import("../biome.js");
-  const { BIOME_GUIDE } = await import("../world-map.js");
+  const { getBandeRecommandee } = await import("../world-map.js");
 
   for (const id of TARDIVES) {
     let plusTot = Number.POSITIVE_INFINITY;
     for (const [zone, table] of Object.entries(LOOT_TABLES)) {
       if (!table.some((ligne) => ligne.ashId === id)) continue;
-      const niveau = BIOME_GUIDE[zone]?.recommendedLevel?.[0] ?? 0;
+      const niveau = getBandeRecommandee(zone)?.[0] ?? 0;
       plusTot = Math.min(plusTot, niveau);
     }
     assert.ok(
