@@ -252,6 +252,7 @@ import {
   enregistrerPanoplie,
   equipItem,
   getContratActif,
+  getFaveurContrats,
   getMultiUpgradeCost,
   getPanoplies,
   getUpgradeCost,
@@ -285,7 +286,14 @@ import {
   runtimeState,
 } from "./state.js";
 import { CONTRACTS_MIN_LEVEL } from "./constants.js";
-import { REGLAGES_RARETE, progressionContrat } from "./contracts.js";
+import {
+  FAVEUR_MAX,
+  REGLAGES_RARETE,
+  attenteAvantRelance,
+  chanceLegendaire,
+  formaterAttente,
+  progressionContrat,
+} from "./contracts.js";
 import {
   FERVEUR_PRIME_PAR_RANG,
   FERVEUR_RANG_BUTIN,
@@ -489,6 +497,35 @@ export const formatNumber = (num) => {
  * l'etat — reclamer quand c'est fini, abandonner sinon — plutot que d'afficher
  * en permanence deux actions dont une seule est jamais pertinente.
  */
+/*
+ * Le bouton du panneau de contrat.
+ *
+ * Il portait la meme apparence pour deux actions opposees, et un joueur a
+ * lu "Abandonner" comme un "Reclamer" grise : il a cru le contrat bloque et
+ * n'a jamais su qu'il pouvait en changer. Trois etats, trois intentions :
+ *
+ *   honore   -> action gagnante, mise en avant
+ *   expire   -> reprise neutre, rien n'est perdu qui ne le soit deja
+ *   en cours -> relance, teintee de rouge parce qu'on jette du travail,
+ *               et desactivee tant que le delai court
+ */
+const boutonDuContrat = (contrat) => {
+  if (contrat.honore) {
+    return `<button type="button" id="contract-claim" class="contract__claim is-ready">Reclamer la recompense</button>`;
+  }
+  if (contrat.expire) {
+    return `<button type="button" id="contract-abandon" class="contract__abandon">Demander un autre contrat</button>`;
+  }
+  const attente = attenteAvantRelance(contrat);
+  if (attente > 0) {
+    return `<button type="button" class="contract__abandon" disabled
+              title="Un contrat peut etre relance 24 h apres avoir ete demande">
+              Relance dans ${formaterAttente(attente)}
+            </button>`;
+  }
+  return `<button type="button" id="contract-abandon" class="contract__abandon is-armed">Relancer ce contrat</button>`;
+};
+
 const updateContractDisplay = () => {
   const corps = document.getElementById("contract-body");
   if (!corps) return;
@@ -510,8 +547,27 @@ const updateContractDisplay = () => {
   const contrat = getContratActif();
 
   if (!contrat) {
+    /*
+     * Le panneau vide affiche la faveur.
+     *
+     * C'est le seul moment ou le joueur decide s'il relance ou non, et c'etait
+     * jusqu'ici un ecran mort : « Aucun contrat en cours » et un bouton. La
+     * chance legendaire y est desormais lisible, avec ce qui la fait monter —
+     * une jauge qu'on ne voit pas ne change le comportement de personne.
+     */
+    const faveur = getFaveurContrats();
+    const chance = Math.round(chanceLegendaire(faveur) * 1000) / 10;
+    const aLaFaveurMax = faveur >= FAVEUR_MAX;
     corps.innerHTML = `
       <p class="contract-empty">Aucun contrat en cours.</p>
+      <p class="contract-faveur">
+        Chance de contrat legendaire : <strong>${chance}%</strong>
+      </p>
+      <p class="contract-faveur__aide">${
+        aLaFaveurMax
+          ? "Faveur au maximum. Le prochain legendaire la remettra a zero."
+          : "Honorez un contrat pour augmenter ces chances : +1 pour un commun, +3 pour un rare."
+      }</p>
       <button type="button" id="contract-new">Demander un contrat</button>
     `;
     const btn = document.getElementById("contract-new");
@@ -584,11 +640,7 @@ const updateContractDisplay = () => {
           : `<p class="contract__reward">Recompense : ${echapperHtml(recompenses.join(" · ") || "aucune")}</p>`
       }
       <div class="contract__actions">
-        ${
-          contrat.honore
-            ? '<button type="button" id="contract-claim" class="contract__claim">Reclamer</button>'
-            : `<button type="button" id="contract-abandon" class="contract__abandon">${contrat.expire ? "Demander un autre contrat" : "Abandonner"}</button>`
-        }
+        ${boutonDuContrat(contrat)}
       </div>
     </article>
   `;

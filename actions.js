@@ -13,11 +13,17 @@ import {
   SETS_PAR_ARCHETYPE,
 } from "./constants.js";
 import {
+  RARETES,
+  attenteAvantRelance,
   avancerContrat,
+  formaterAttente,
   ecoulerEcheance,
   etapeSuivanteChaine,
+  faveurApresContrat,
   genererContrat,
   normaliserContrat,
+  normaliserFaveur,
+  peutRelancer,
   primeDeChaine,
 } from "./contracts.js";
 import { addJournalEntry } from "./systems.js";
@@ -343,8 +349,11 @@ export const equipItem = (itemId) => {
 /** Etat des contrats, cree a la volee pour les sauvegardes anterieures. */
 export const getEtatContrats = () => {
   if (!gameState.contracts || typeof gameState.contracts !== "object") {
-    gameState.contracts = { actif: null, completed: 0, total: 0 };
+    gameState.contracts = { actif: null, completed: 0, total: 0, faveur: 0 };
   }
+  // Une sauvegarde d'avant la faveur, ou retouchee, ne doit pas la laisser
+  // indefinie : tout le systeme lit ce nombre.
+  gameState.contracts.faveur = normaliserFaveur(gameState.contracts.faveur);
   if (gameState.contracts.actif) {
     gameState.contracts.actif = normaliserContrat(gameState.contracts.actif);
   }
@@ -401,6 +410,9 @@ export const verifierDeblocageContrats = () => {
 /** Le contrat en cours, ou null tant que les contrats sont verrouilles. */
 export const getContratActif = () =>
   contratsDebloques() ? getEtatContrats().actif : null;
+
+/** Faveur accumulee, qui pousse la chance de contrat legendaire. */
+export const getFaveurContrats = () => getEtatContrats().faveur;
 
 /*
  * Zones eligibles : celles que le joueur a debloquees.
@@ -511,7 +523,15 @@ export const proposerContrat = (zonePreferee = null) => {
     nomBiome: BIOMES[biomeId]?.name || biomeId,
     niveauJoueur: gameState.stats.level || 1,
     objetsExclusifs: poolRecompense(),
+    faveur: etat.faveur,
   });
+
+  /*
+   * La faveur est depensee par le TIRAGE, pas par la reclamation : c'est le
+   * tirage qu'elle a influence. La garder apres avoir sorti un legendaire
+   * rendrait le suivant presque certain.
+   */
+  if (contrat?.rarete === RARETES.LEGENDAIRE) etat.faveur = 0;
 
   etat.actif = contrat;
   saveGame("new_contract");
@@ -519,21 +539,33 @@ export const proposerContrat = (zonePreferee = null) => {
   return contrat;
 };
 
-/** Abandonne le contrat en cours et en tire un autre. */
+/**
+ * Relance le contrat en cours et en tire un autre.
+ *
+ * Soumise a un delai depuis la demande : voir DELAI_REROLL_MS. La regle vit
+ * dans contracts.js, ici on ne fait que refuser poliment.
+ */
 export const abandonnerContrat = () => {
   const etat = getEtatContrats();
   if (!etat.actif) return;
-  // Un contrat expire n'a plus rien a perdre : on ne demande pas confirmation
-  // pour jeter ce qui est deja mort.
+  // Un contrat expire n'a plus rien a perdre : on ne demande ni delai ni
+  // confirmation pour jeter ce qui est deja mort.
   if (etat.actif.expire) {
     etat.actif = null;
     proposerContrat();
     return;
   }
+  if (!peutRelancer(etat.actif)) {
+    ActionLog(
+      `Ce contrat ne peut pas encore etre relance : ${formaterAttente(
+        attenteAvantRelance(etat.actif),
+      )} restantes.`,
+      "log-warning",
+    );
+    return;
+  }
   if (
-    !confirm(
-      `Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`,
-    )
+    !confirm(`Relancer "${etat.actif.titre}" ? Un autre contrat sera propose.`)
   ) {
     return;
   }
@@ -608,6 +640,7 @@ export const reclamerContrat = () => {
 
   etat.completed = (etat.completed || 0) + 1;
   etat.total = (etat.total || 0) + 1;
+  etat.faveur = faveurApresContrat(etat.faveur, contrat.rarete);
   etat.actif = null;
 
   addJournalEntry(

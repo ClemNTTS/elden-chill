@@ -76,6 +76,18 @@ export function setGameState(newState) {
     }
   };
 
+  /*
+   * TOUTE cle d'objet du profil doit figurer ici.
+   *
+   * Cette liste est un filtre, pas une documentation : une cle oubliee n'est
+   * pas restauree, silencieusement. `contracts` et `loadouts` y manquaient, et
+   * le joueur perdait a CHAQUE rechargement son contrat en cours, ses compteurs
+   * et ses panoplies — sans le moindre message, puisque la sauvegarde sur
+   * disque, elle, les contenait bien.
+   *
+   * tests/etat-restaure.test.mjs echoue desormais si une cle du profil par
+   * defaut ne survit pas a setGameState.
+   */
   [
     "runes",
     "stats",
@@ -87,6 +99,7 @@ export function setGameState(newState) {
     "save",
     "rebirth",
     "automation",
+    "contracts",
   ].forEach(mergeObject);
 
   mergeObject("ashesOfWaruses");
@@ -95,6 +108,7 @@ export function setGameState(newState) {
   replaceArray("ennemyEffects");
   replaceArray("ashesOfWarOwned");
   replaceArray("order");
+  replaceArray("loadouts");
 
   if ("equippedAsh" in newState) {
     gameState.equippedAsh = newState.equippedAsh ?? null;

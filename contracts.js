@@ -88,15 +88,50 @@ export const RARETES = {
 /*
  * Poids de tirage.
  *
- * Le legendaire est rare sans etre anecdotique : a 8%, un joueur regulier en
- * voit un toutes les deux ou trois sessions, ce qui suffit a en faire un
- * horizon sans en faire une routine.
+ * Le legendaire valait 8 en poids fixe, soit une chance sur douze a chaque
+ * contrat, indefiniment. C'etait invisible et sans memoire : un joueur pouvait
+ * en enchainer trente sans rien voir, et surtout rien de ce qu'il faisait
+ * n'avait le moindre effet dessus. Le systeme ne racontait rien.
+ *
+ * Le poids legendaire part desormais de 1 et MONTE a chaque contrat honore,
+ * voir FAVEUR_PAR_RARETE. Ce qui etait un jet de des devient une jauge : on
+ * sait ou on en est, on sait quoi faire pour avancer, et on sait que ca
+ * avance.
  */
 export const POIDS_RARETE = {
   [RARETES.COMMUNE]: 62,
   [RARETES.RARE]: 30,
-  [RARETES.LEGENDAIRE]: 8,
+  [RARETES.LEGENDAIRE]: 1,
 };
+
+/*
+ * Faveur gagnee en honorant un contrat, par rarete de celui-ci.
+ *
+ * Elle s'ajoute au poids du legendaire. Un contrat rare demande deux fois et
+ * demie l'effort d'un commun (facteurObjectif 2,5 contre 1) : il rapporte
+ * trois fois plus de faveur, de sorte que viser les contrats difficiles reste
+ * le chemin court sans que les contrats communs cessent de compter.
+ *
+ * Honorer un legendaire ne rapporte rien et REMET LA FAVEUR A ZERO : la jauge
+ * a rendu ce qu'elle promettait. Sans cette remise, elle ne ferait que monter
+ * jusqu'a rendre le legendaire systematique, et la promesse s'annulerait
+ * elle-meme.
+ */
+export const FAVEUR_PAR_RARETE = {
+  [RARETES.COMMUNE]: 1,
+  [RARETES.RARE]: 3,
+  [RARETES.LEGENDAIRE]: 0,
+};
+
+/*
+ * Plafond de la faveur.
+ *
+ * A 39, le legendaire pese 40 contre 92 pour les deux autres, soit 30% de
+ * chance par contrat. Au-dela la jauge cesserait d'etre un horizon pour
+ * devenir une certitude, et les contrats communs et rares — qui portent les
+ * objectifs, les chaines et l'essentiel du jeu — deviendraient une formalite.
+ */
+export const FAVEUR_MAX = 39;
 
 /** Reglages par rarete : ampleur de l'objectif et de la recompense. */
 export const REGLAGES_RARETE = {
@@ -269,6 +304,57 @@ export const CYCLES_ECHEANCE = { [RARETES.RARE]: 12, [RARETES.LEGENDAIRE]: 20 };
 export const PRIME_ECHEANCE = 1.5;
 
 /*
+ * Delai avant de pouvoir relancer un contrat vivant.
+ *
+ * L'abandon etait libre, immediat et illimite : on pouvait relancer en boucle
+ * jusqu'a tomber sur un objectif facile dans la zone qu'on farmait deja. Un
+ * contrat qu'on refuse sans rien risquer ne demande aucune decision, et le
+ * systeme entier perdait sa contrainte.
+ *
+ * Vingt-quatre heures, parce que le but n'est pas de punir : c'est de rendre
+ * le tirage engageant sur une session, tout en garantissant que personne ne
+ * reste coince derriere un objectif hors de portee.
+ */
+export const DELAI_REROLL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Peut-on relancer ce contrat maintenant ?
+ *
+ * Un contrat expire se jette sans delai : il n'a plus rien a donner, le faire
+ * attendre ne protegerait rien.
+ */
+export const peutRelancer = (contrat, maintenant = Date.now()) => {
+  if (!contrat) return false;
+  if (contrat.expire) return true;
+  const demande = Number(contrat.demandeA) || 0;
+  // Un contrat d'avant cette regle n'a pas d'horodatage : on ne le retient pas
+  // en otage d'une contrainte qui n'existait pas quand il a ete tire.
+  if (!demande) return true;
+  return maintenant - demande >= DELAI_REROLL_MS;
+};
+
+/** Millisecondes restantes avant de pouvoir relancer. Zero si c'est deja bon. */
+export const attenteAvantRelance = (contrat, maintenant = Date.now()) => {
+  if (peutRelancer(contrat, maintenant)) return 0;
+  return DELAI_REROLL_MS - (maintenant - (Number(contrat.demandeA) || 0));
+};
+
+/**
+ * Attente restante, en toutes lettres.
+ *
+ * Arrondie a l'heure superieure tant qu'il reste plus d'une heure : annoncer
+ * "23 h 47 min" a quelqu'un qui ne peut rien y faire n'aide personne, et un
+ * compte a rebours a la minute obligerait le panneau a se redessiner sans fin.
+ */
+export const formaterAttente = (millisecondes) => {
+  const minutes = Math.ceil(Math.max(0, millisecondes) / 60000);
+  if (minutes <= 1) return "moins d'une minute";
+  if (minutes < 60) return `${minutes} minutes`;
+  const heures = Math.ceil(minutes / 60);
+  return heures === 1 ? "une heure" : `${heures} heures`;
+};
+
+/*
  * Chaine.
  *
  * Trois contrats lies, dans trois zones differentes, et une prime versee au
@@ -289,12 +375,43 @@ const ORDRE_RARETE = [RARETES.COMMUNE, RARETES.RARE, RARETES.LEGENDAIRE];
 const rareteSuffisante = (rarete, minimum) =>
   ORDRE_RARETE.indexOf(rarete) >= ORDRE_RARETE.indexOf(minimum);
 
+/** Faveur bornee, quelle que soit la valeur qui arrive d'une sauvegarde. */
+export const normaliserFaveur = (faveur) =>
+  Math.max(0, Math.min(FAVEUR_MAX, Math.floor(Number(faveur) || 0)));
+
+/** Poids de chaque rarete, faveur accumulee comprise. */
+export const poidsAvecFaveur = (faveur = 0) => ({
+  ...POIDS_RARETE,
+  [RARETES.LEGENDAIRE]:
+    POIDS_RARETE[RARETES.LEGENDAIRE] + normaliserFaveur(faveur),
+});
+
+/**
+ * Probabilite d'obtenir un contrat legendaire au prochain tirage.
+ *
+ * Affichee au joueur : c'est le seul nombre qui rende la faveur lisible, et
+ * une jauge qu'on ne voit pas ne change le comportement de personne.
+ */
+export const chanceLegendaire = (faveur = 0) => {
+  const poids = poidsAvecFaveur(faveur);
+  const total = Object.values(poids).reduce((a, b) => a + b, 0);
+  return poids[RARETES.LEGENDAIRE] / total;
+};
+
+/** Faveur apres avoir honore un contrat de cette rarete. */
+export const faveurApresContrat = (faveur, rarete) => {
+  if (rarete === RARETES.LEGENDAIRE) return 0;
+  const gain = FAVEUR_PAR_RARETE[rarete] ?? 0;
+  return normaliserFaveur(normaliserFaveur(faveur) + gain);
+};
+
 /** Tirage pondere d'une rarete. `random` est injectable pour les tests. */
-export const tirerRarete = (random = Math.random) => {
-  const total = Object.values(POIDS_RARETE).reduce((a, b) => a + b, 0);
+export const tirerRarete = (random = Math.random, faveur = 0) => {
+  const poids = poidsAvecFaveur(faveur);
+  const total = Object.values(poids).reduce((a, b) => a + b, 0);
   let seuil = random() * total;
-  for (const [rarete, poids] of Object.entries(POIDS_RARETE)) {
-    seuil -= poids;
+  for (const [rarete, valeur] of Object.entries(poids)) {
+    seuil -= valeur;
     if (seuil < 0) return rarete;
   }
   return RARETES.COMMUNE;
@@ -352,6 +469,7 @@ export const calculerRecompense = (
  * @param {string} options.nomBiome           son nom lisible
  * @param {number} options.niveauJoueur
  * @param {string[]} options.objetsExclusifs  pool des recompenses d'objet
+ * @param {number} [options.faveur]  faveur accumulee, qui pousse le legendaire
  * @param {() => number} [options.random]
  */
 export const genererContrat = ({
@@ -360,13 +478,17 @@ export const genererContrat = ({
   niveauJoueur = 1,
   objetsExclusifs = [],
   chaineHeritee = null,
+  faveur = 0,
+  maintenant = Date.now(),
   random = Math.random,
 } = {}) => {
   if (!biomeId) return null;
 
   // Une etape de chaine reste legendaire de bout en bout : retirer la rarete
   // en cours de route reviendrait a degrader la promesse apres coup.
-  const rarete = chaineHeritee ? RARETES.LEGENDAIRE : tirerRarete(random);
+  const rarete = chaineHeritee
+    ? RARETES.LEGENDAIRE
+    : tirerRarete(random, faveur);
   const candidats = modelesPour(rarete);
   const modele =
     candidats[Math.floor(random() * candidats.length)] || MODELES[0];
@@ -427,6 +549,9 @@ export const genererContrat = ({
 
   return {
     id: `contrat_${Date.now()}_${Math.floor(random() * 1e6)}`,
+    // Date de la demande : c'est elle qui ouvre le droit de relancer, pas la
+    // progression. Voir peutRelancer.
+    demandeA: maintenant,
     modele: modele.id,
     evenement: modele.evenement,
     filtre,
@@ -637,6 +762,12 @@ export const normaliserContrat = (brut) => {
     echeance,
     cyclesRestants: Math.min(echeance, Math.max(0, cyclesRestants)),
     expire: echeance > 0 && cyclesRestants <= 0 && avancement < objectif,
+    // Un horodatage dans le futur rendrait la relance inatteignable : on le
+    // ramene a maintenant plutot que de le jeter.
+    demandeA: Math.min(
+      Date.now(),
+      Math.max(0, Math.floor(Number(brut.demandeA) || 0)),
+    ),
     chaine,
     honore: avancement >= objectif,
   };

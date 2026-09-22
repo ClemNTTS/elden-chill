@@ -4045,6 +4045,31 @@ button:disabled {
   font-size: 0.82rem;
 }
 
+/*
+ * Faveur de contrat, affichee quand aucun contrat n'est en cours.
+ *
+ * Le pourcentage est la seule information du panneau vide qui aide a decider :
+ * il porte donc la couleur d'accent, et l'explication reste en retrait.
+ */
+.contract-faveur {
+  margin: 0 0 4px;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.contract-faveur strong {
+  color: var(--accent-strong, var(--accent));
+  font-size: 0.95rem;
+}
+
+.contract-faveur__aide {
+  margin: 0 0 12px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text-faint, var(--text-soft));
+  opacity: 0.85;
+}
+
 .contract {
   display: flex;
   flex-direction: column;
@@ -4152,14 +4177,80 @@ button:disabled {
   font-weight: 700;
 }
 
+/*
+ * Contrat pret : le bouton doit se voir DE LOIN.
+ *
+ * Il ne se distinguait de l'abandon que par son libelle, et un joueur a lu
+ * "Abandonner" comme un "Reclamer" grise. Le halo pulse deux fois puis
+ * s'arrete : assez pour attirer l'oeil en arrivant sur le Hub, pas assez pour
+ * clignoter en permanence dans un jeu qu'on laisse ouvert.
+ */
+.contract__claim.is-ready {
+  animation: contract-ready 1.6s ease-out 2;
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+@keyframes contract-ready {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contract__claim.is-ready {
+    animation: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+}
+
 .contract.is-done .contract__progress-fill {
   background: linear-gradient(90deg, var(--accent), var(--accent));
 }
 
-/* Abandonner ne doit pas attirer l'oeil autant que le reste. */
+/* Relancer ne doit pas attirer l'oeil autant que reclamer. */
 .contract__abandon {
   opacity: 0.8;
   font-size: 0.8rem;
+}
+
+/*
+ * Relance disponible : teinte de rouge, discretement.
+ *
+ * Assez pour qu'on lise « ceci detruit le contrat en cours » sans regarder le
+ * libelle, pas assez pour rivaliser avec le bouton de reclamation ni sortir de
+ * la palette du camp — c'est le meme --danger que le reste de la page.
+ */
+.contract__abandon.is-armed {
+  opacity: 1;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--danger) 12%, transparent),
+    var(--surface-strong)
+  );
+}
+
+.contract__abandon.is-armed:hover {
+  border-color: color-mix(in srgb, var(--danger) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--danger) 20%, transparent),
+    var(--surface-strong)
+  );
+}
+
+/* Delai en cours : le bouton dit pourquoi il ne fait rien. */
+.contract__abandon[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /*

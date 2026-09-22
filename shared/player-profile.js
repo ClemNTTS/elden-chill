@@ -1,13 +1,5 @@
 export const PLAYER_PROFILE_VERSION = "3.0.0";
 /*
- * Plafond de niveau.
- *
- * Il suit le nombre de biomes : 150 couvrait les 32 biomes d'origine, 220
- * couvre les 46 de la version complete, au meme rythme d'environ 4,8 niveaux
- * par biome. Le relever sans ajouter de contenu aurait casse la courbe de
- * cout, qui croit en carre du niveau.
- */
-/*
  * Niveau maximum absolu, renaissance exclue.
  *
  * Il valait 220, et la progression du plafond (25 + 20 par boss principal)
@@ -28,6 +20,15 @@ export const PLAYER_PROFILE_VERSION = "3.0.0";
  */
 export const MAX_LEVEL = 365;
 export const MAX_OFFLINE_TIME_BANK = 3600;
+
+/*
+ * Plafond de la faveur de contrat, repris de contracts.js.
+ *
+ * La valeur est dupliquee, et c'est voulu : ce module est la base que tout le
+ * monde lit, contracts.js remonte jusqu'a escalation.js, et l'importer ici
+ * creerait un cycle. Un test verifie que les deux valeurs restent egales.
+ */
+export const FAVEUR_CONTRAT_MAX = 39;
 
 /** Ecrans du camp, dans l'ordre de la navigation. Source unique : la
  *  sauvegarde doit pouvoir valider ui.currentScreen sans dependre de ui.js. */
@@ -72,7 +73,7 @@ export const DEFAULT_PLAYER_PROFILE = {
    * Contrats de zone. `actif` est le contrat en cours, `completed` le nombre
    * honore depuis la derniere renaissance — la Lame du Serment le lit.
    */
-  contracts: { actif: null, completed: 0, total: 0, annonce: false },
+  contracts: { actif: null, completed: 0, total: 0, annonce: false, faveur: 0 },
   world: {
     currentBiome: "limgrave_west",
     unlockedBiomes: ["limgrave_west"],
@@ -378,6 +379,18 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   );
   // Drapeau d'annonce du deblocage : un booleen, pas une progression.
   base.contracts.annonce = !!base.contracts.annonce;
+  /*
+   * La faveur est bornee ici aussi, et pas seulement a la lecture dans
+   * actions.js : c'est ce module qui decide de ce qu'une sauvegarde a le droit
+   * de contenir. Une faveur forgee a 10 000 rendrait le legendaire certain.
+   */
+  base.contracts.faveur = Math.max(
+    0,
+    Math.min(
+      FAVEUR_CONTRAT_MAX,
+      Math.floor(Number(base.contracts.faveur) || 0),
+    ),
+  );
   // Le contrat lui-meme est normalise par contracts.js, que ce module ne peut
   // pas importer sans se donner une dependance. On garantit juste un objet.
   if (base.contracts.actif && typeof base.contracts.actif !== "object") {
