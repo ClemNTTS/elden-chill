@@ -1,4 +1,4 @@
-import { ITEM_TYPES } from "../constants.js";
+import { ITEM_RARITIES, ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
 import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
@@ -7,6 +7,7 @@ export const DEPTHS = {
   ainsel_shard_spear: {
     name: "Lance d'Eclat d'Ainsel",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "AINSEL_ASTRAL",
     description:
       "Dex +12%, Int +12%. Convertit 26% (+2% / niv) de votre Dexterité de base en Force et applique 2 Gelures sur critique.",
@@ -28,6 +29,7 @@ export const DEPTHS = {
   ainsel_starmap: {
     name: "Carte Stellaire d'Ainsel",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "AINSEL_ASTRAL",
     description:
       "Intelligence +18%. Chaque tranche de 10 Intelligence investie ajoute " +
@@ -51,6 +53,7 @@ export const DEPTHS = {
   ainsel_silk_robe: {
     name: "Robe de Soie d'Ainsel",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "AINSEL_ASTRAL",
     description:
       "Dex +10%, Armure +18 (+3 / niv). Si vous avez plus de 30 Int de base, gagne 10% d'esquive supplémentaire.",
@@ -69,6 +72,7 @@ export const DEPTHS = {
   rootbound_maul: {
     name: "Maillet Sépulcral",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROOTBOUND",
     description:
       "Force +18%. Convertit 18% (+2% / niv) de la Vigueur totale en Force. Si vous avez des Épines, gagne +10% dégâts.",
@@ -94,6 +98,7 @@ export const DEPTHS = {
   rootbound_plate: {
     name: "Cuirasse des Racines",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROOTBOUND",
     description:
       "Armure +35 (+5 / niv). Réduit de 1 les charges de Saignement et de Brûlure au début du tour.",
@@ -118,6 +123,7 @@ export const DEPTHS = {
   prince_bark_talisman: {
     name: "Talisman d'Ecorce Princière",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROOTBOUND",
     description:
       "Vigueur +15%. Chaque tranche de 100 Armure soigne 1,1% de vos PV max " +
@@ -140,6 +146,7 @@ export const DEPTHS = {
   rotbloom_blade: {
     name: "Lame Rotfleur",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROTBLOOM",
     description:
       "Force +12%, Dextérité +12% <em style='color: grey;'>(+0,5% chacune / Niv)</em>. 35% de chance d'infliger " +
@@ -168,6 +175,7 @@ export const DEPTHS = {
   rotbloom_mail: {
     name: "Cotte Rotfleur",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROTBLOOM",
     description:
       "Vigueur +12%, +24 Armure <em style='color: grey;'>(+3 Armure / Niv)</em>. Chaque tour, 20% de chance de retirer " +
@@ -199,6 +207,7 @@ export const DEPTHS = {
   rotbloom_idol: {
     name: "Idole Rotfleur",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "ROTBLOOM",
     description:
       "+8% Chance de Critique <em style='color: grey;'>(+0,4% / Niv)</em>. Chaque affliction présente sur la cible " +

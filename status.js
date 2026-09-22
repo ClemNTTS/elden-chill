@@ -172,10 +172,38 @@ export const STATUS_EFFECTS = {
         );
         entity.currentHp -= damage;
       } else {
-        damage = Math.min(
+        const base = Math.min(
           Math.floor(max * 0.02),
           Math.floor((max - entity.hp) * 0.1),
         );
+
+        /*
+         * Bonus d'Intelligence, sur le meme principe que POISON (bonusInt
+         * ci-dessus) : sans lui, aucune affliction sur la duree ne recompensait
+         * l'Intelligence, et tout personnage d'Intelligence n'avait plus qu'une
+         * seule voie — convertir l'Intelligence en Force (Loretta, Marteau de
+         * Haima) — pour compter en fin de partie.
+         *
+         * PLAFONNE, contrairement au bonus de POISON : la Putrefaction a deja
+         * appris cette lecon a ce module (voir le commentaire au-dessus de
+         * SCARLET_ROT) en tiquant a 5% des PV maximum sans aucun plafond —
+         * tous les archetypes convergeaient vers une arme de putrefaction. La
+         * Brulure est le point d'entree d'un axe de jeu voulu ("mage
+         * pyromancien" : panoplies qui multiplient ou prolongent ses tics), et
+         * l'ouvrir sans plafond recreerait exactement le meme piege des le
+         * premier objet qui en boosterait la duree ou la cadence. Le bonus
+         * reste donc borne a la moitie du dernier coup du joueur, comme la
+         * Putrefaction : il complete un build a l'arme, il ne le remplace pas.
+         */
+        const eff = getEffectiveStats();
+        const bonusInt = Math.floor(eff.intelligence * 0.5);
+        const reference = runtimeState.degatsJoueurDuTour;
+        const bonusPlafonne =
+          reference > 0
+            ? Math.min(bonusInt, Math.floor(reference * 0.5))
+            : bonusInt;
+
+        damage = base + bonusPlafonne;
         entity.hp -= damage;
       }
 

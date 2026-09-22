@@ -1,5 +1,6 @@
 import { applyEffect } from "../status-apply.js";
 import {
+  ITEM_RARITIES,
   CONTRACT_ITEM_IDS,
   ITEM_TYPES,
   SETS_PAR_ARCHETYPE,
@@ -70,6 +71,7 @@ export const CONTRACT_ITEMS = {
   oath_blade: {
     name: "Lame du Serment",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "OATHBOUND",
     isAlwaysMax: true,
     description:
@@ -87,6 +89,7 @@ export const CONTRACT_ITEMS = {
   oathbound_plate: {
     name: "Harnois du Serment",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "OATHBOUND",
     isAlwaysMax: true,
     description:
@@ -102,6 +105,7 @@ export const CONTRACT_ITEMS = {
   seal_of_the_pact: {
     name: "Sceau du Pacte",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "OATHBOUND",
     isAlwaysMax: true,
     description: "Exclusif aux contrats. Force +12%. Penetration d'armure +42.",
@@ -121,6 +125,7 @@ export const CONTRACT_ITEMS = {
   hunters_edge: {
     name: "Tranchant du Traqueur",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "BOUNTY_HUNTER",
     isAlwaysMax: true,
     description: "Exclusif aux contrats. Dexterite +20%. Chance critique +17%.",
@@ -135,6 +140,7 @@ export const CONTRACT_ITEMS = {
   quarry_stalkers_garb: {
     name: "Tenue du Rabatteur",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "BOUNTY_HUNTER",
     isAlwaysMax: true,
     description:
@@ -151,6 +157,7 @@ export const CONTRACT_ITEMS = {
   ledger_of_debts: {
     name: "Registre des Dettes",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "BOUNTY_HUNTER",
     isAlwaysMax: true,
     description:
@@ -172,6 +179,7 @@ export const CONTRACT_ITEMS = {
   writ_of_ruin: {
     name: "Bref de Ruine",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "ARCHIVIST",
     isAlwaysMax: true,
     description:
@@ -190,6 +198,7 @@ export const CONTRACT_ITEMS = {
   archivists_mantle: {
     name: "Manteau de l'Archiviste",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "ARCHIVIST",
     isAlwaysMax: true,
     description:
@@ -206,6 +215,7 @@ export const CONTRACT_ITEMS = {
   unsigned_clause: {
     name: "Clause non Signee",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "ARCHIVIST",
     isAlwaysMax: true,
     description:
@@ -223,6 +233,7 @@ export const CONTRACT_ITEMS = {
   vigil_greatshield: {
     name: "Pavois de la Veille",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "MOURNER",
     isAlwaysMax: true,
     description:
@@ -250,6 +261,7 @@ export const CONTRACT_ITEMS = {
   mourners_veil: {
     name: "Voile des Endeuilles",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "MOURNER",
     isAlwaysMax: true,
     description:
@@ -276,6 +288,7 @@ export const CONTRACT_ITEMS = {
   widows_token: {
     name: "Jeton de la Veuve",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "MOURNER",
     isAlwaysMax: true,
     description: "Exclusif aux contrats. Vigueur +12%. Soins recus +52%.",
@@ -295,6 +308,7 @@ export const CONTRACT_ITEMS = {
   verdict_fang: {
     name: "Croc du Verdict",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "SENTENCE",
     isAlwaysMax: true,
     description:
@@ -314,6 +328,7 @@ export const CONTRACT_ITEMS = {
   plague_writ_shroud: {
     name: "Suaire du Bref Pestilent",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "SENTENCE",
     isAlwaysMax: true,
     description:
@@ -331,6 +346,7 @@ export const CONTRACT_ITEMS = {
   bailiffs_brand: {
     name: "Marque de l'Huissier",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "SENTENCE",
     isAlwaysMax: true,
     description:

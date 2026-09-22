@@ -44,11 +44,18 @@ export const LANDS_ITEMS = {
     set: "FESTIVAL",
     description:
       "Cousus pour danser, pas pour encaisser. +24 Armure <em style='color: grey;'>(+2 / Niv)</em>, " +
-      "+5 Dextérité <em style='color: grey;'>(+1 / Niv)</em>, +4 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+5 Dextérité <em style='color: grey;'>(+1 / Niv)</em>, +4 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "Chaque tranche de 15 Dextérité de base ajoute 1% (+0,2% / Niv) d'esquive.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 22 + itemLevel * 2;
       stats.resistances.folie += 4 + Math.floor(itemLevel / 2);
       stats.dexterity += 4 + itemLevel;
+    },
+    applyMult: (stats, itemLevel) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      stats.dodgeChance =
+        (stats.dodgeChance || 0) +
+        Math.floor(baseDex / 15) * (0.01 + 0.002 * (itemLevel - 1));
     },
   },
   madding_charm: {
@@ -92,10 +99,20 @@ export const LANDS_ITEMS = {
     set: "BRIAR",
     description:
       "Vernies contre la brume du Château. +33 Armure <em style='color: grey;'>(+3 / Niv)</em>, " +
-      "+5 Résistance Poison <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+5 Résistance Poison <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "22% (+1% / Niv) de chance, en encaissant un coup, de laisser repousser vos Épines pour 2 tours.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 30 + itemLevel * 3;
       stats.resistances.poison += 5 + Math.floor(itemLevel / 2);
+    },
+    funcOnBeingHit: (stats, attacker, damage, itemLevel = 1) => {
+      if (Math.random() < 0.22 + 0.01 * itemLevel) {
+        applyEffect(gameState.playerEffects, "THORNS", 2);
+        ActionLog(
+          "Spallieres ombragees : les épines repoussent.",
+          "log-status",
+        );
+      }
     },
   },
   briar_thorn_seal: {
@@ -155,10 +172,31 @@ export const LANDS_ITEMS = {
     set: "MANOR",
     description:
       "Écailles vivantes, tièdes au toucher. +37 Armure <em style='color: grey;'>(+3 / Niv)</em>, " +
-      "+4 Résistance Poison <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+4 Résistance Poison <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "Si votre cible brûle déjà, attise le feu : +1 tour (+1 tous les 5 Niv).",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 34 + itemLevel * 3;
       stats.resistances.poison += 4 + Math.floor(itemLevel / 2);
+    },
+    /*
+     * Le Manoir donne la Brulure (fouet de magma), mais rien n'en faisait
+     * jamais PLUS que sa duree de base : un mage du feu n'avait aucun moyen
+     * de faire tenir l'affliction, contrairement au Saignement ou a la
+     * Putrefaction qui ont chacun leur propre logique de cumul/prolongation.
+     * C'est ce qui manquait pour qu'une panoplie « pyromancien » existe
+     * vraiment : voir SPLASH_SOLO_RATIO et le bonus d'Intelligence de BURN
+     * dans status.js pour le reste de l'axe.
+     */
+    funcOnHit: (stats, targetEffects, itemLevel = 1) => {
+      const brulure = targetEffects.find((e) => e.id === "BURN");
+      if (brulure) {
+        const bonus = 1 + Math.floor(itemLevel / 5);
+        applyEffect(targetEffects, "BURN", brulure.duration + bonus);
+        ActionLog(
+          `Maille serpentine : la brûlure s'attise (+${bonus} tour(s)).`,
+          "log-status",
+        );
+      }
     },
   },
 
@@ -208,10 +246,18 @@ export const LANDS_ITEMS = {
     set: "BLASPHEMY",
     description:
       "Ce qui reste de Rykard tient encore dessus. +39 Armure <em style='color: grey;'>(+3 / Niv)</em>, " +
-      "+7 Vigueur <em style='color: grey;'>(+1 / Niv)</em>.",
+      "+7 Vigueur <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "En encaissant un coup, regagnez 1,5% (+0,1% / Niv) de vos PV maximum : le serpent boit aussi votre sang.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 36 + itemLevel * 3;
       stats.vigor += 6 + itemLevel;
+    },
+    funcOnBeingHit: (stats, attacker, damage, itemLevel = 1) => {
+      const maxHp = getHealth(stats.vigor);
+      const heal = Math.floor(maxHp * (0.015 + 0.001 * itemLevel));
+      const healed = healPlayer(heal, maxHp);
+      if (healed > 0)
+        ActionLog(`Couronne du roi serpent : +${healed} PV.`, "log-heal");
     },
   },
 
@@ -250,10 +296,24 @@ export const LANDS_ITEMS = {
     set: "TOWER",
     description:
       "Rivetée de sceaux dorés, lourde et muette. +46 Armure <em style='color: grey;'>(+4 / Niv)</em>, " +
-      "+5 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+5 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "Sous 30% de vos PV, les rivets cedent : +50% de votre Vigueur convertie en Armure.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 42 + itemLevel * 4;
       stats.resistances.folie += 5 + Math.floor(itemLevel / 2);
+    },
+    /*
+     * L'anneau du sceau (tower_seal_ring) coupe les soins de moitie : sans
+     * contrepartie, porter le set revenait a payer une penalite pour rien des
+     * qu'on encaissait vraiment. Plutot que de rouvrir healReceivedMult (deja
+     * multiplie par l'anneau dans la meme passe applyMult, dans un ordre non
+     * garanti), la contrepartie passe par l'Armure : elle ne depend d'aucun
+     * autre objet pour s'activer.
+     */
+    applyMult: (stats) => {
+      if (runtimeState.playerCurrentHp < getHealth(stats.vigor) * 0.3) {
+        stats.armor += Math.floor(stats.vigor * 0.5);
+      }
     },
   },
 
@@ -286,11 +346,16 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
     description:
-      "Taillee pour la nuit : +38 Armure (+3 / Niv), +8 Dexterite et resistance au Gel.",
+      "Taillee pour la nuit : +38 Armure (+3 / Niv), +8 Dexterite et resistance au Gel. " +
+      "Chaque tranche de 20 Dextérité de base ajoute 1% de Chance de Critique : on frappe depuis l'ombre.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 38 + itemLevel * 3;
       stats.dexterity += 8 + itemLevel;
       stats.resistances.gel += 4 + Math.floor(itemLevel / 2);
+    },
+    applyMult: (stats) => {
+      const baseDex = gameState.stats.dexterity || 0;
+      stats.critChance += Math.floor(baseDex / 20) * 0.01;
     },
   },
   starlight_shard: {
@@ -331,10 +396,14 @@ export const LANDS_ITEMS = {
     set: "ZAMOR",
     description:
       "Taillé pour porter un marteau plus lourd que soi. " +
-      "+49 Armure <em style='color: grey;'>(+4 / Niv)</em>, +7 Force <em style='color: grey;'>(+1 / Niv)</em>.",
+      "+49 Armure <em style='color: grey;'>(+4 / Niv)</em>, +7 Force <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Convertit 15% de votre Force de base en Armure supplémentaire.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 45 + itemLevel * 4;
       stats.strength += 6 + itemLevel;
+    },
+    applyMult: (stats) => {
+      stats.armor += Math.floor((gameState.stats.strength || 0) * 0.15);
     },
   },
   zamor_ice_seal: {
@@ -343,11 +412,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "ZAMOR",
     description:
-      "+10 Force (+2 / Niv) et +6 resistance au Gel (+1 / Niv) : tenir dans le froid et frapper dedans.",
+      "+10 Force (+2 / Niv) et +6 resistance au Gel (+1 / Niv) : tenir dans le froid et frapper dedans. " +
+      "18% de chance d'infliger 2 Gelure au contact.",
     applyFlat: (stats, itemLevel) => {
       stats.resistances.gel += 6 + itemLevel;
       stats.strength += 10 + itemLevel * 2;
     },
+    onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.18 },
   },
 
   /* ============ PURGE (Elphael) — voie de la putrefaction ============ */
@@ -376,10 +447,14 @@ export const LANDS_ITEMS = {
     set: "CLEANROT",
     description:
       "La seule armure qui tienne sous une pluie de spores. " +
-      "+57 Armure <em style='color: grey;'>(+5 / Niv)</em>, +9 Résistance Putréfaction <em style='color: grey;'>(+1 / Niv)</em>.",
+      "+57 Armure <em style='color: grey;'>(+5 / Niv)</em>, +9 Résistance Putréfaction <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Chaque point de Résistance Putréfaction ajoute 2 d'Armure : la carapace se nourrit de ce qu'elle repousse.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 52 + itemLevel * 5;
       stats.resistances.putrefaction += 8 + itemLevel;
+    },
+    applyMult: (stats) => {
+      stats.armor += (stats.resistances.putrefaction || 0) * 2;
     },
   },
   scarlet_bloom_charm: {
@@ -423,10 +498,16 @@ export const LANDS_ITEMS = {
     set: "DESTINED_DEATH",
     description:
       "Ce que Maliketh portait avant de cesser de parler. " +
-      "+60 Armure <em style='color: grey;'>(+5 / Niv)</em>, +12 Dextérité <em style='color: grey;'>(+2 / Niv)</em>.",
+      "+60 Armure <em style='color: grey;'>(+5 / Niv)</em>, +12 Dextérité <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "Convertit 15% de votre Dextérité de base en Pénétration fixe d'armure.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 55 + itemLevel * 5;
       stats.dexterity += 10 + itemLevel * 2;
+    },
+    applyMult: (stats) => {
+      stats.flatDamagePenetration += Math.floor(
+        (gameState.stats.dexterity || 0) * 0.15,
+      );
     },
   },
   destined_death_rune: {
@@ -471,11 +552,15 @@ export const LANDS_ITEMS = {
     set: "ALL_KNOWING",
     description:
       "Cent yeux, aucun sommeil. +63 Armure <em style='color: grey;'>(+5 / Niv)</em>, " +
-      "+21 Intelligence <em style='color: grey;'>(+3 / Niv)</em>, +9 Résistance Folie <em style='color: grey;'>(+1 / Niv)</em>.",
+      "+21 Intelligence <em style='color: grey;'>(+3 / Niv)</em>, +9 Résistance Folie <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Convertit 15% de son Intelligence effective en Dégâts de zone supplémentaires.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 58 + itemLevel * 5;
       stats.intelligence += 18 + itemLevel * 3;
       stats.resistances.folie += 8 + itemLevel;
+    },
+    applyMult: (stats) => {
+      stats.splashDamage += Math.floor(stats.intelligence * 0.15);
     },
   },
   ashen_capital_seal: {
@@ -484,10 +569,25 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "ALL_KNOWING",
     description:
-      "+26 Armure (+4 / Niv) et +14 Intelligence : de quoi compenser la cendre qui ronge les plaques.",
+      "+26 Armure (+4 / Niv) et +14 Intelligence : de quoi compenser la cendre qui ronge les plaques. " +
+      "Chaque tranche de 20 Intelligence effective amplifie vos dégâts de zone de 2%.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 26 + itemLevel * 4;
       stats.intelligence += 14 + itemLevel * 2;
+    },
+    /*
+     * Applique en DERNIER (voir l'ordre des trois pieces dans ce fichier) :
+     * amplifie donc les degats de zone deja apportes par le Grimoire d'Ofnir
+     * et par le Heaume ci-dessus, dans la meme passe applyMult. Le Tout-Savant
+     * devient ainsi le seul set ou les TROIS pieces renforcent la meme voie —
+     * exactement ce qui manquait pour qu'un build d'Intelligence pur ait une
+     * identite propre plutot que de converger vers la conversion en Force.
+     */
+    applyMult: (stats) => {
+      const tranches = Math.floor((stats.intelligence || 0) / 20);
+      stats.splashDamage = Math.floor(
+        stats.splashDamage * (1 + tranches * 0.02),
+      );
     },
   },
 
@@ -534,10 +634,14 @@ export const LANDS_ITEMS = {
     set: "GOLDEN_ORDER",
     description:
       "Le dernier morceau d'armure de l'Entre-Terre. +74 Armure <em style='color: grey;'>(+6 / Niv)</em>, " +
-      "+23 Vigueur <em style='color: grey;'>(+3 / Niv)</em>.",
+      "+23 Vigueur <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "Convertit 10% de sa Vigueur de base en Intelligence, dans le meme esprit que le Sceau de l'Ordre d'Or.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 68 + itemLevel * 6;
       stats.vigor += 20 + itemLevel * 3;
+    },
+    applyMult: (stats) => {
+      stats.intelligence += Math.floor((gameState.stats.vigor || 0) * 0.1);
     },
   },
 
@@ -576,10 +680,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "BEASTIAL",
     description:
-      "Encore chaude. +31 Armure <em style='color: grey;'>(+3 / Niv)</em>, +9 Vigueur <em style='color: grey;'>(+1 / Niv)</em>.",
+      "Encore chaude. +31 Armure <em style='color: grey;'>(+3 / Niv)</em>, +9 Vigueur <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Chaque tranche de 20 Vigueur de base ajoute 1% de runes gagnées : Gurranq paie aussi l'endurance.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 28 + itemLevel * 3;
       stats.vigor += 8 + itemLevel;
+    },
+    applyMult: (stats) => {
+      stats.runeGainMult +=
+        Math.floor((gameState.stats.vigor || 0) / 20) * 0.01;
     },
   },
 
@@ -644,11 +753,15 @@ export const LANDS_ITEMS = {
     set: "ANCIENT_DRAGON",
     description:
       "Plus dure que tout ce qui a été forgé depuis. +68 Armure <em style='color: grey;'>(+6 / Niv)</em>, " +
-      "+7 Résistance Gel et +7 Résistance Folie <em style='color: grey;'>(+1 chacune / Niv)</em>.",
+      "+7 Résistance Gel et +7 Résistance Folie <em style='color: grey;'>(+1 chacune / Niv)</em>. " +
+      "La foudre rebondit sur l'écaille : 5% de l'Armure convertis en Dégâts de zone.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 62 + itemLevel * 6;
       stats.resistances.gel += 6 + itemLevel;
       stats.resistances.folie += 6 + itemLevel;
+    },
+    applyMult: (stats) => {
+      stats.splashDamage += Math.floor((stats.armor || 0) * 0.05);
     },
   },
   dragon_halberd_ancient: {
@@ -658,10 +771,14 @@ export const LANDS_ITEMS = {
     set: "ANCIENT_DRAGON",
     description:
       "Trop longue pour un humain. On s'y fait. +47 Force <em style='color: grey;'>(+5 / Niv)</em>, " +
-      "+12 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>.",
+      "+12 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "Convertit 15% de sa Force de base en Dégâts de zone : la foudre saute deja a l'impact.",
     applyFlat: (stats, itemLevel) => {
       stats.strength += 42 + itemLevel * 5;
       stats.flatDamagePenetration += 10 + itemLevel * 2;
+    },
+    applyMult: (stats) => {
+      stats.splashDamage += Math.floor((gameState.stats.strength || 0) * 0.15);
     },
   },
 };

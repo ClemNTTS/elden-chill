@@ -1,4 +1,4 @@
-import { ITEM_TYPES } from "../constants.js";
+import { ITEM_RARITIES, ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, runtimeState } from "../state.js";
 import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
@@ -7,6 +7,7 @@ export const NOKRON = {
   nokron_flame_dagger: {
     name: "Dague Enflamée de Nokron",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Tier 5. Dextérité +20%. Convertit 55% (+2% / Niv) de votre Dextérité en Force. Dague Enflamée : Chaque coup a 30% (+2% / Niv) de chance d'infliger 2 Brûlures et 1 Saignement.",
     applyMult: (stats, itemLevel) => {
@@ -31,6 +32,7 @@ export const NOKRON = {
   mercury_breastplate: {
     name: "Plastron de Mercure",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Tier 5. +20 d'Armure (+1 / Niv). Une armure qui durcit au fur et à mesure que tu reçois des coups, augmentant ton Armure pendant le combat de 1 (+0.2 / Niv).",
 
@@ -50,6 +52,7 @@ export const NOKRON = {
   silver_tear_mask: {
     name: "Masque de Larme d'Argent",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.LEGENDARY,
     isAlwaysMax: true,
     description:
       "Tier 5. FORCE +15%. Mimétisme de Force : Vous gagnez +1% (+0.4% / Niveau) de Force pour chaque tranche de 5 points de Dextérité de base.",
@@ -72,6 +75,7 @@ export const NOKRON = {
   celestial_dew_talisman: {
     name: "Rosée Céleste Bénie",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Tier 5. Vigueur +20%. +2% de Force par niveau. Absolution : Une fois par combat, si vos PV tombent sous 30%, tous vos effets de statut négatifs sont purifiés et vous gagnez +50 d'Armure pour 3 tours.",
     applyMult: (stats, itemLevel) => {

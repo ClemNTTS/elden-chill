@@ -37,6 +37,14 @@ const inertElement = new Proxy(
         case "children":
         case "childNodes":
           return [];
+        case "querySelectorAll":
+          // Sans ce cas, il retombe sur le `noop` par defaut : un appelant
+          // qui fait `.forEach()` sur le retour (ui-action-log.js, qui relit
+          // la colonne du journal apres l'avoir peuplee) plante sur
+          // "Cannot read properties of undefined (reading 'forEach')" des
+          // qu'un test declenche un vrai combat au lieu de simplement
+          // charger le moteur.
+          return () => [];
         case "dataset":
           return {};
         case "value":

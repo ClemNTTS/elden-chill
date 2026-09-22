@@ -1,4 +1,4 @@
-import { ITEM_TYPES } from "../constants.js";
+import { ITEM_RARITIES, ITEM_TYPES } from "../constants.js";
 import { gameState, getHealth, healPlayer, runtimeState } from "../state.js";
 import { applyEffect } from "../status-apply.js";
 import { ActionLog } from "../ui-action-log.js";
@@ -8,6 +8,7 @@ export const RIVER = {
   horn_bow_talisman: {
     name: "Arc de Corne de Disciple",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Dex +15%. Tir de Précision : Chaque tranche de 10 Dex de base offre +2% (+0.5% / Niv) de chance d'ÉTOURDIR l'ennemi (max 50%).",
     applyMult: (stats, itemLevel) => {
@@ -32,6 +33,7 @@ export const RIVER = {
   starlight_pendant: {
     name: "Pendentif de Lumière Stellaire",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     isAlwaysMax: true,
     description:
       "Int +20%. Gelure Astrale : Frapper un ennemi ÉTOURDI applique instantanément 5 charges de GELURE.",
@@ -52,6 +54,7 @@ export const RIVER = {
   ancestral_spirit_horn: {
     name: "Corne de l'Esprit Ancestral",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     isAlwaysMax: true,
 
     description:
@@ -72,6 +75,7 @@ export const RIVER = {
   ancient_bone_axe: {
     name: "Hache d'Os des Anciens",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Force +20% (+2% / Niv). Poids Ancestral : Si votre Armure est > à l'ennemi, les Critiques peuvent doubler la durée du STUN en cours.",
     applyMult: (stats, itemLevel) => {
@@ -95,6 +99,7 @@ export const RIVER = {
   ancestral_renaissance_horn: {
     name: "Corne de la Renaissance Ancestrale",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     isAlwaysMax: true, // Objet légendaire, pas de niveaux
     description:
       "Tier 5. Force et Intelligence +15%. Harmonie Primordiale : Augmente votre Force de 1% pour chaque point d'Intelligence de base. Cycle de Vie : Une fois par donjon, si vos PV tombent sous 5%, vos PV sont restaurés à 25% de vos PV Max.",

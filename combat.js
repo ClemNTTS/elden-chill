@@ -83,6 +83,23 @@ function clamp(v, min = 0) {
  */
 const AFFLICTION_CAP = 6;
 
+/*
+ * Part des degats de zone qui touche la cible elle-meme quand elle est SEULE.
+ *
+ * splashDamage ne visait que "le reste du groupe" (targetGroup[1..]) : contre
+ * un boss solo — Rykard, Fia, la quasi-totalite des combats qui comptent pour
+ * juger un build — chaque objet qui en donne (baton de l'astronome, robe du
+ * sage de Caelid, set ACADEMY_PRIME/AINSEL_ASTRAL...) ne faisait litteralement
+ * rien. C'est ce qui poussait tout personnage d'Intelligence a converger vers
+ * la conversion INT -> Force (Loretta, Marteau de Haima) : c'etait la seule
+ * part de son investissement qui comptait encore en solo.
+ *
+ * Une moitie plutot que la valeur pleine : les degats de zone restent
+ * meilleurs contre un groupe, ce qui est leur identite, mais cessent d'etre
+ * un mur contre un boss.
+ */
+const SPLASH_SOLO_RATIO = 0.5;
+
 /** Cumuls necessaires au declenchement. */
 const MADNESS_THRESHOLD = 8;
 const DEATH_BLIGHT_THRESHOLD = 12;
@@ -454,6 +471,16 @@ export function performAttack({
       ActionLog(
         `${logPrefix} ${isPlayer ? "infligez" : "inflige"} ${formatNumber(splash)} dégâts de zone au reste du groupe de ${targetGroup[0].name}.`,
       );
+    } else if (splash > 0 && isPlayer) {
+      // Voir SPLASH_SOLO_RATIO : sans cible pour l'encaisser, une part brule
+      // la cible principale plutot que de se perdre.
+      const soloDamage = Math.floor(splash * SPLASH_SOLO_RATIO);
+      if (soloDamage > 0) {
+        setEntityHp(target, getEntityHp(target) - soloDamage);
+        ActionLog(
+          `${logPrefix} embrasez ${target.name} de dégâts de zone (${formatNumber(soloDamage)}).`,
+        );
+      }
     }
 
     /* ===== TARGET EFFECT REACTIONS ===== */

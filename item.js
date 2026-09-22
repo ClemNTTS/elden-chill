@@ -1,4 +1,4 @@
-import { ITEM_TYPES } from "./constants.js";
+import { ITEM_RARITIES, ITEM_TYPES } from "./constants.js";
 import { DEPTHS } from "./items/depths.js";
 import { LANDS_ITEMS } from "./items/lands.js";
 import { NOKRON } from "./items/nokron.js";
@@ -17,6 +17,7 @@ export const ITEMS = {
     name: "poings",
     description: "+5 Force",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     applyFlat: (stats, itemLevel) => {
       stats.strength += 5;
     },
@@ -25,6 +26,7 @@ export const ITEMS = {
   rune_fragment: {
     name: "Fragment de Runes",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     description: "C'est très joli, mais pas très utile : +1 Intelligence.",
     isAlwaysMax: true,
     applyFlat: (stats, itemLevel) => {
@@ -38,6 +40,7 @@ export const ITEMS = {
     name: "Épée en Fer",
     description: "+5 Force <em style='color: grey;'>(+ 0.5 / Niv)</em>",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     applyFlat: (stats, itemLevel) => {
       stats.strength += 5 + 0.5 * (itemLevel - 1);
     },
@@ -45,6 +48,7 @@ export const ITEMS = {
   crimson_amber: {
     name: "Médaillon d'Ambre",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     description: "Vigueur  +1 par Niv",
     applyFlat: (stats, itemLevel) => {
       stats.vigor += itemLevel;
@@ -53,6 +57,7 @@ export const ITEMS = {
   leather_vest: {
     name: "Veste en Cuir",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "Augmente l'armure de 15. <em style='color: grey;'>(+1 par Niv)</em>",
     applyFlat: (stats, itemLevel) => {
@@ -64,6 +69,7 @@ export const ITEMS = {
   keen_dagger: {
     name: "Dague Affûtée",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+5 de Force. Dextérité +15%. Convertit 28% (+1% / Niv) de la Dex de base en Force. +10% Chance de Critique (+2% / Niv).",
     applyFlat: (stats, itemLevel) => {
@@ -91,6 +97,7 @@ export const ITEMS = {
     description:
       "+5 de Force. Transforme 42% de votre vigueur de base en Force (+1% / Niv). Réduit la Dextérité de 10%.",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     applyFlat: (stats, itemLevel) => {
       // Base fixe de 5, alignee sur les poings : sans elle, un personnage sans
       // vigueur investie ne tirait aucun degat de cette arme. La conversion de
@@ -111,6 +118,7 @@ export const ITEMS = {
   scholars_ring: {
     name: "Anneau d'Érudit",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     description: "+5 Intelligence <em style='color: grey;'>(+1 / Niv)</em>",
     applyFlat: (stats, itemLevel) => {
       stats.intelligence += 5 + 1 * (itemLevel - 1);
@@ -119,6 +127,7 @@ export const ITEMS = {
   leather_boots: {
     name: "Bottes de Cuir",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+1 Dextérité / Niv. Chaque point de dextérité de base vous procure également 1 de vigueur (max 15)",
     applyFlat: (stats, itemLevel) => {
@@ -132,6 +141,7 @@ export const ITEMS = {
   kama: {
     name: "Faucille",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "Une lame rapide. Ajoute 30% (+2%/Niv) de votre Intelligence à votre Force. Inflige 2 Poison (1% PV Max + 50% Int). +5 d'Intelligence",
     applyFlat: (stats, itemLevel) => {
@@ -151,6 +161,7 @@ export const ITEMS = {
   bloodhound_fang: {
     name: "Croc de Limier",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+5 Dextérité (+1 / Niv). Convertit 24% (+1% / Niveau) de la Dextérité de base en force bonus. 40% chance d'appliquer 3 saignements",
     applyFlat: (stats, itemLevel) => {
@@ -168,6 +179,7 @@ export const ITEMS = {
   margit_shackle: {
     name: "Entraves de Margit",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     isAlwaysMax: true,
     description:
       "Vous gagnez 8% de chance d'étourdir l'ennemi. +1% de force par niveau",
@@ -180,6 +192,7 @@ export const ITEMS = {
   briar_armor: {
     name: "Armure de Ronce",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+1 Vigueur /Niv, -25% de force. Votre armure vous donne épine constament.",
     applyFlat: (stats, itemLevel) => {
@@ -193,6 +206,7 @@ export const ITEMS = {
   astronomer_staff: {
     name: "Bâton de l'Astronome",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "Convertit 20% de l'Intelligence en Force et en Dégâts de zone bonus. <em style='color: grey;'>(+2% par Niv)</em>. +4 Intelligence <em style='color: grey;'>(+1 / Niv)</em>",
     applyFlat: (stats, itemLevel) => {
@@ -221,6 +235,7 @@ export const ITEMS = {
   styptic_boluses: {
     name: "Boluses Styptiques",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+5 d'armure <em style='color: grey;'>(+1 / Niv)</em>Réduit de moitié les charges de Saignement au début de votre tour.",
     passiveEffect: "HALVE_BLEED",
@@ -232,6 +247,7 @@ export const ITEMS = {
   troll_necklace: {
     name: "Pendentif de Troll",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "Intelligence +5 et 45% de chance d'appliquer 3 poison. Si vous avez 20 Intelligence de base, vous gagnez en précision : +1% Chance Crit par tranche de 10 Int de base. (+0.5% / Niv)",
     applyFlat: (stats, itemLevel) => {
@@ -249,6 +265,7 @@ export const ITEMS = {
   knight_greatsword: {
     name: "Grande Épée de Chevalier",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.COMMON,
     description:
       "+5 Force, -10% Vigueur, +15% Force <em style='color: grey;'>(+1.5% Force/ Niv)</em>",
     applyFlat: (stats, itemLevel) => {
@@ -266,6 +283,7 @@ export const ITEMS = {
   margit_hammer: {
     name: "Marteau de Margit",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 20 Dextérité de base pour être utilisé. Donne +20% de Force , Convertit +50% de la Dextérité de base en Dégats de zone. Convertit 15% (+2% / Niveau) de la Dextérité de base en Force. <em style='color: grey;'>(+10% de chance d'étourdir l'ennemi pendant 2 tours.)</em>",
     applyFlat: (stats, itemLevel) => {
@@ -291,6 +309,7 @@ export const ITEMS = {
   burned_dragon_hearth: {
     name: "Cœur de Dragon Brûlé",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Le coeur de dragon pompe votre vigueur -0.8 / Niveau. Si vous touchez un ennemi brulé, vous vous soignez de 10PV / Niveau",
     applyFlat: (stats, itemLevel) => {
@@ -314,6 +333,7 @@ export const ITEMS = {
   burn_sword: {
     name: "Épée Brûlante",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "+3,5% de Force et +2% d'Armure par niveau, des le niveau 1. " +
       "30% de chance d'infliger 2 Brûlure.",
@@ -337,6 +357,7 @@ export const ITEMS = {
   zamor_curved_sword: {
     name: "Épée Courbe de Zamor",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 15 de Force et 18 de Dextérité investies. " +
       "+1% de Force et +2% de Dextérité par niveau, des le niveau 1. " +
@@ -361,6 +382,7 @@ export const ITEMS = {
   queen_staff: {
     name: "Bâton de la Reine",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Vous convertissez 50% (+2% par Niveau) de votre intelligence par Niveau en force. +10% d'intelligence",
     applyFlat: (stats, itemLevel) => {
@@ -387,6 +409,7 @@ export const ITEMS = {
   radagon_scarseal: {
     name: "Sceau Meurtri de Radagon",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Vous gagnez un peu de points dans toutes les stats +5% (+1%/Niv) mais perdez 20 d'armure",
     applyFlat: (stats, itemLevel) => {
@@ -404,6 +427,7 @@ export const ITEMS = {
   night_cavalry_armor: {
     name: "Armure de Cavalier de la Nuit",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 40 de vigueur de base pour être utilisé. +10% de Force (+1% par Niveau)  et réduit les dégâts subis en augmentant l'Armure de 15 (+2 / Niv). Et donne 15% de chance d'appliquer 2 saignements",
     applyFlat: (stats, itemLevel) => {
@@ -427,6 +451,7 @@ export const ITEMS = {
   grafted_blade_greatsword: {
     name: "Grande Épée Forgée",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 30 de Force et 10 de Dextérité de base. +15% de Force (+2% / Niv). 15% de chance d'appliquer saignement (+1 stack / Niveau). Une vraie épée de guerrier sans servelle : perdez 5 d'intelligence et de vigueur",
     applyFlat: (stats, itemLevel) => {
@@ -465,6 +490,7 @@ export const ITEMS = {
   pumkin_helm: {
     name: "Casque de Citrouille",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Réduit les dégâts subis en augmentant l'Armure de 15 (+5 / Niv). Cependant, votre vision est réduite : -15% de Chance de Critique. Vous empêche d'être étourdi pendant 1 tour",
     applyFlat: (stats, itemLevel) => {
@@ -495,6 +521,7 @@ export const ITEMS = {
   forged_grip: {
     name: "Manche Forgée",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Vous convertissez -15% de Dex et de Force en dégats de zone. Chaque niveau du Manche forgé multiplie le gain de 20% ",
     applyMult: (stats, itemLevel) => {
@@ -508,6 +535,7 @@ export const ITEMS = {
   hunter_cap: {
     name: "Cape du Chasseur",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 10 Dex. +5% Armure (+0.5% / Niv). Chaque tranche de 10 Dex de base offre +3% Chance Crit.",
     applyFlat: (stats, itemLevel) => {
@@ -529,6 +557,7 @@ export const ITEMS = {
   alchimist_suit: {
     name: "Veste de l'Alchimiste",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 20 Intelligence de base. Ajoute 15% (+2% / Niveau) de votre Int de base à votre Vigueur. Vos sorts se divisent : 30% de l'Int de base devient des Dégâts de zone.",
     applyFlat: (stats, itemLevel) => {
@@ -543,6 +572,7 @@ export const ITEMS = {
   twin_blade: {
     name: "Lames Jumelles",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 20 de dextérité et 10% de chance de Crit de base pour être utilisé. Attaque 2 fois, 35% (+1% / Niveau) de chance d'appliquer 3 saignements. Vous gagnez 20% (+1% / Niv) de votre Dextérité de base en Force.",
     applyFlat: (stats, itemLevel) => {
@@ -582,6 +612,7 @@ export const ITEMS = {
   godrick_knight_armor: {
     name: "Armure de Chevalier de Godrick",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 25 de Vigueur de base. Augmente l'Armure de 20 (+3 / Niv) et la Force de 10% (+1% / Niv). Réduis de 1 les charges de Feu au début de votre tour",
 
@@ -616,6 +647,7 @@ export const ITEMS = {
   godrick_great_rune: {
     name: "Rune Majeure de Godrick",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Une rune restaurant le pouvoir de la lignée dorée. +15% d'intelligence (+1.5% / Niv). Vous donne 10% d'étourdire l'ennemi pendant 1 tour (+1 de durée quand la rune atteint le niveau 10)",
 
@@ -647,6 +679,7 @@ export const ITEMS = {
   godrick_axe: {
     name: "Hache de Godrick",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 30 de Force de base. Inflige d'énormes dégâts de zone (50% de la Force). +20% Force (+2% / Niv).",
     applyMult: (stats, itemLevel) => {
@@ -664,6 +697,7 @@ export const ITEMS = {
   crystal_shell_mail: {
     name: "Carapace Cristalline",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Intelligence +15%. Chaque tranche de 10 points d'Intelligence de BASE augmente votre Armure de 5%. (+1% / Niv)",
     applyMult: (stats, itemLevel) => {
@@ -678,6 +712,7 @@ export const ITEMS = {
   snail_slime_mantle: {
     name: "Manteau de Cristal",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "FROST_ASSASSIN",
     description:
       "Dextérité +15%. La finesse ignore l'armure : +1 Pénétration Fixe par tranche de 10 Dex de base. (+1 / Niv)",
@@ -691,6 +726,7 @@ export const ITEMS = {
   rotten_greataxe: {
     name: "Grande Hache Putréfiée",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 30 de Vigueur.Force +15%. Ajoute 10% de votre Vigueur à votre Force. (+2% / Niveau). 20% de chance d'appliquer 2 putréfactions",
     applyMult: (stats, itemLevel) => {
@@ -707,6 +743,7 @@ export const ITEMS = {
   winged_sword_insignia: {
     name: "Insigne de l'Épée Ailée",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARIONETTE_MASTER",
     description:
       "Dextérité +10%. Augmente vos Dégâts Critiques de 0.1x pour chaque tranche de 10 points de Dextérité de BASE. (+0.02x / Niv)",
@@ -723,6 +760,7 @@ export const ITEMS = {
   marionette_scimitar: {
     name: "Cimeterre de Marionnette",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARIONETTE_MASTER",
     description:
       "Dextérité +10%. Vous convertissez 38% de votre Dextérité de base en Force. Chaque coup a 25% de chance de déclencher une attaque supplémentaire immédiate. (+1% / Niv)",
@@ -750,6 +788,7 @@ export const ITEMS = {
   marionette_mask: {
     name: "Masque de Soldat Marionnette",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARIONETTE_MASTER",
     description:
       "Dextérité +5% (+1% / Niv). Vos mouvements erratiques augmentent votre esquive de 5%.",
@@ -762,6 +801,7 @@ export const ITEMS = {
   sage_caelid_robe: {
     name: "Robe du Sage de Caélid",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Intelligence +20%. Réduit votre Vigueur de 15%. Convertit 52% de votre " +
       "Intelligence en Dégâts de zone <em style='color: grey;'>(+2% / Niv)</em>.",
@@ -777,6 +817,7 @@ export const ITEMS = {
   vermilion_seed: {
     name: "Graine de Vermillon",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Requiert 42 de Vigueur. +10% Vigueur (+1% / Niv). Vous soigne de 1% de vos PV Max à chaque coup porté.",
     applyMult: (stats, itemLevel) => {
@@ -805,6 +846,7 @@ export const ITEMS = {
   stormhawk_feather: {
     name: "Plume de Faucon de Tempête",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Vents de tempête : +2% Str, Dex et Int par Niveau. +25% dégâts contre les 'Greffés'.",
     applyMult: (stats, itemLevel) => {
@@ -825,6 +867,7 @@ export const ITEMS = {
     name: "Bâton de Pierre d'Éclat Carien",
     set: "CARIAN_KNIGHT",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Int +15%. +60% de votre intelligenc en force. Vous drainez la vie des ennemis. Vous soigne de 10% de votre Intelligence totale à chaque coup. (+3% / Niveau).",
     applyMult: (stats, itemLevel) => {
@@ -845,6 +888,7 @@ export const ITEMS = {
   moon_of_nokstella: {
     name: "Lune de Nokstella",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "CARIAN_KNIGHT",
     description:
       "Chaque tranche de 10 points d'Int de BASE augmente vos Dégâts de Zone (Splash) de 1 dégât et vos dégâts Splash sont augmentés de 15%. (+2% / Niv)",
@@ -859,6 +903,7 @@ export const ITEMS = {
     name: "Armure de Chevalier Carien",
     set: "CARIAN_KNIGHT",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Vigueur +25%. Ajoute 20% de votre Intelligence totale à votre Armure physique. (+2% / Niv)",
     applyMult: (stats, itemLevel) => {
@@ -871,6 +916,7 @@ export const ITEMS = {
   icerind_hatchet: {
     name: "Hachette de Givre",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "FROST_ASSASSIN",
     description:
       "Dextérité +15%. Vos attaques ignorent 10% de l'armure adverse (+1% / Niveau). Applique 2 Gelures (35% chance).",
@@ -884,6 +930,7 @@ export const ITEMS = {
   black_knife_gauntlets: {
     name: "Gantelets de Mailles Noires",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "FROST_ASSASSIN",
     description:
       "Dextérité +10%. Vos coups critiques sont plus brutaux (+0.1x Deg. Crit. / Niv).",
@@ -897,6 +944,7 @@ export const ITEMS = {
   glintstone_dragon_heart: {
     name: "Cœur de Dragon d'Éclat",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.LEGENDARY,
     isAlwaysMax: true,
     description:
       "La faim de Smarag : Convertit 100% de votre Intelligence de base en Force. Cependant, la magie pèse sur votre corps : -35% Vigueur.",
@@ -913,6 +961,7 @@ export const ITEMS = {
   academy_glintstone_staff: {
     name: "Bâton d'Éclat de l'Académie",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "ACADEMY_PRIME",
     description:
       "Intelligence +15%. Vos sorts ignorent 20% de l'armure (+1% / Niv). Ajoute 20% de l'Int à la Force. (+1% / Niv)",
@@ -930,6 +979,7 @@ export const ITEMS = {
   raya_lucaria_robe: {
     name: "Robe d'Érudit de Raya Lucaria",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "ACADEMY_PRIME",
     description:
       "Intelligence +10% (+1% /Niv) et Vigueur +10% (+1% /Niv). Réduit les dégâts de Poison et de Brûlure.",
@@ -960,6 +1010,7 @@ export const ITEMS = {
   karolos_mask: {
     name: "Masque de Pierre d'Éclat de Karolos",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "ACADEMY_PRIME",
     description:
       "Intelligence +15%. Augmente votre armure de 2% par Niveau. 40% de chance d'infliger brûlure.",
@@ -974,6 +1025,7 @@ export const ITEMS = {
   marsh_great_hammer: {
     name: "Grand Marteau des Marais",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARSH_WARDEN",
     description:
       "Vigueur +15%. Ajoute 20% de votre Vigueur à votre Force. (+2% / Niv). 8% de chance d'étourdissement",
@@ -988,6 +1040,7 @@ export const ITEMS = {
   lobster_shell_plate: {
     name: "Plastron de Carapace de Homard",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARSH_WARDEN",
     description:
       "Vigueur +15% (+3% / Niv). Réduit de 1 les charges de Poison au début de votre tour.",
@@ -1014,6 +1067,7 @@ export const ITEMS = {
   carian_crusher: {
     name: "Broyeur Carien",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "CRYSTAL_BULWARK",
     description: "Force +15%. Ignore 20% de l'armure ennemie. (+1% / Niv)",
     applyMult: (stats, itemLevel) => {
@@ -1024,6 +1078,7 @@ export const ITEMS = {
   heavy_crystal_gauntlets: {
     name: "Gantelets de Cristal Massif",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "CRYSTAL_BULWARK",
     description:
       "Force +10%. Vous avez 20% de chance de vous appliquer 1 épine (+0.5 durée / Niveau).",
@@ -1045,6 +1100,7 @@ export const ITEMS = {
   bog_amulet: {
     name: "Amulette de la Tourbière",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "MARSH_WARDEN",
     description:
       "Vigueur +20%. La pression du marais renforce vos coups : chaque points de Vigueur de base ajoute 0.25 à votre Pénétration d'Armure Fixe. (+0.05 / Niv) pour un maximum de 30",
@@ -1061,6 +1117,7 @@ export const ITEMS = {
   crystal_crust_armor: {
     name: "Armure de Croûte Cristalline",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "CRYSTAL_BULWARK",
     description:
       "Force +10%. Votre armure est si dense qu'elle augmente votre Force totale de 5% si vous avez plus de 150 d'Armure. (+1% / Niv)",
@@ -1075,6 +1132,7 @@ export const ITEMS = {
   starscourge_greatsword: {
     name: "Espadon du Fléau des Astres",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Force +25%. La gravité renforce vos coups : ajoute 50% de votre Armure totale à votre Force. (+5% / Niv)",
     applyMult: (stats, itemLevel) => {
@@ -1087,6 +1145,7 @@ export const ITEMS = {
   radahn_lion_armor: {
     name: "Armure du Lion de Radahn",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     isAlwaysMax: true,
     description:
       "Force +15%. Immunité partielle : Réduit de 2 les charges de Putréfaction et de Saignement au début du tour.",
@@ -1107,6 +1166,7 @@ export const ITEMS = {
   rotten_dragon_heart: {
     name: "Cœur de Dragon Putréfié",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     isAlwaysMax: true,
     description:
       "Vos attaques ont 40% de chance d'infliger 3 Putréfactions. Augmente vos dégâts de 20% contre les ennemis infectés.",
@@ -1125,6 +1185,7 @@ export const ITEMS = {
   executioner_greataxe: {
     name: "Grande Hache de Bourreau",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "EXECUTIONER",
     description:
       "Force +20% (+2% / Niv). Vos critiques infligent 0.5x dégâts supplémentaires mais votre Armure baisse de 20.",
@@ -1142,6 +1203,7 @@ export const ITEMS = {
   executioner_hood: {
     name: "Cagoule de Bourreau",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "EXECUTIONER",
     description:
       "Chance de Critique +10% (+1% / Niv). Vigueur -10% : Le poids de la culpabilité affaiblit le corps.",
@@ -1154,6 +1216,7 @@ export const ITEMS = {
   guillotine_pendant: {
     name: "Pendentif de la Guillotine",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "EXECUTIONER",
     description:
       "Force +10%. Sous 30% des PV de l'ennemi, +36% de Chance de Critique <em style='color: grey;'>(+1% / Niv)</em>.",
@@ -1172,6 +1235,7 @@ export const ITEMS = {
   golden_tree_halberd: {
     name: "Hallebarde de l'Arbre d'Or",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.RARE,
     set: "TREE_SENTINEL",
     description:
       "Vigueur +15%. Convertissez 15% (+2%/Niv) de votre Vigueur en Force. 40% de chance d'activer 'Épines' (15% dégâts renvoyés + 0.5x Vigueur) pendant 2 tours.",
@@ -1192,6 +1256,7 @@ export const ITEMS = {
   golden_sentinel_armor: {
     name: "Plastron de la Sentinelle",
     type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RARE,
     set: "TREE_SENTINEL",
     description:
       "Armure +30 (+5 / Niv). Vigueur +10%. Réduit la durée de TOUS les statuts négatifs de 1 tour.",
@@ -1214,6 +1279,7 @@ export const ITEMS = {
   sentinel_greatshield_talisman: {
     name: "Talisman du Grand Bouclier",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     set: "TREE_SENTINEL",
     description:
       "Vigueur +10% (+1% / Niv). La sève de l'Arbre coule en vous : si vous avez le statut 'Épines', vous récupérez 5 PV (+2 / Niv) au début du tour.",
@@ -1238,6 +1304,7 @@ export const ITEMS = {
   loretta_glintstone_sickle: {
     name: "Faucille d'Éclat de Loretta",
     type: ITEM_TYPES.WEAPON,
+    rarity: ITEM_RARITIES.LEGENDARY,
     isAlwaysMax: true,
     description:
       "Intelligence +15%. Convertit 70% de l'Int en Force. Fracassement : Vos attaques contre un ennemi déjà gelé ignorent 50% de son Armure. 40% de chance d'appliquer 2 Gelures.",
@@ -1266,6 +1333,7 @@ export const ITEMS = {
   carian_troll_gauntlet: {
     name: "Gantelet du Troll de Caria",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.LEGENDARY,
     description:
       "Force +10% (+1% / Niv). Force de Frappe : Frapper un ennemi étourdi (STUN) propage 100% de vos dégâts à tous les autres ennemis du groupe.",
     applyMult: (stats, itemLevel) => {
@@ -1283,6 +1351,7 @@ export const ITEMS = {
   finger_stitcher_needle: {
     name: "Aiguille à coudre des Doigts",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Dextérité +12% (+1% / Niv). Infection Croisée : Si vous frappez un ennemi qui saigne, vous lui appliquez du poison du même nombre que de saignement.",
     applyMult: (stats, itemLevel) => {
@@ -1303,6 +1372,7 @@ export const ITEMS = {
   lunar_resilience_talisman: {
     name: "Talisman de Résilience Lunaire",
     type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RARE,
     description:
       "Vigueur +15% (+2% / Niv). Armure de Souffrance : Gagnez +20 d'Armure pour chaque effet de statut négatif DIFFERENTS qui vous affecte actuellement.",
     applyMult: (stats, itemLevel) => {
