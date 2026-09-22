@@ -235,6 +235,7 @@ import {
   getMaxLevel,
   getNextMainBoss,
   getNodeRank,
+  MAIN_BOSS_BIOMES,
   getRebirthCount,
   getRebirthPointsAvailable,
   getRebirthPointsSpent,
@@ -394,9 +395,10 @@ import {
 import {
   BIOME_GUIDE,
   BIOME_ORDER,
-  getBiomeDangerClass,
+  calculerPositionsCarte,
   getBiomeGraphDepth,
   getBiomePowerBand,
+  getDangerRelatif,
 } from "./world-map.js";
 
 const CAMP_SCREENS = CAMP_SCREEN_IDS;
@@ -1968,7 +1970,7 @@ const renderHubFocus = () => {
       </div>
       <div class="hub-focus-card__stat">
         <span class="detail-label">Danger</span>
-        <strong>${guide?.danger || "Inconnu"}</strong>
+        <strong>${echapperHtml(getDangerRelatif(biomeId, gameState.stats?.level || 0).libelle)}</strong>
       </div>
       <div class="hub-focus-card__stat">
         <span class="detail-label">Role</span>
@@ -2210,7 +2212,7 @@ const renderBiomeShortcuts = (visibleIds) => {
       btn.innerHTML = `
         <span class="biome-shortcut__title">${BIOMES[biomeId]?.name || biomeId}</span>
         <span class="biome-shortcut__meta">
-          ${getBiomePowerBand(biomeId)} · ${guide?.danger || "?"}
+          ${getBiomePowerBand(biomeId)} · ${echapperHtml(getDangerRelatif(biomeId, gameState.stats?.level || 0).libelle)}
         </span>
       `;
 
@@ -2255,26 +2257,19 @@ const renderWorldMap = (visibleIds) => {
     const danger = css.getPropertyValue("--danger").trim() || "#b75b3b";
     const bg = css.getPropertyValue("--surface-subtle").trim() || "#191510";
     const elements = [];
-    const depthMemo = new Map();
-    const groupedByDepth = new Map();
-
-    visibleIds.forEach((biomeId) => {
-      const depth = getBiomeGraphDepth(biomeId, depthMemo);
-      if (!groupedByDepth.has(depth)) groupedByDepth.set(depth, []);
-      groupedByDepth.get(depth).push(biomeId);
-    });
+    /*
+     * Le placement n'est plus saisi a la main : il se calcule. Voir
+     * calculerPositionsCarte — rang par plus long chemin, ordre vertical par
+     * barycentre. Vingt croisements d'aretes sont tombes a trois.
+     */
+    const positions = calculerPositionsCarte(visibleIds);
+    const niveauJoueur = gameState.stats?.level || 0;
 
     visibleIds.forEach((biomeId) => {
       const guide = BIOME_GUIDE[biomeId];
       const isUnlocked = gameState.world.unlockedBiomes.includes(biomeId);
-      const depth = getBiomeGraphDepth(biomeId, depthMemo);
-      const siblings = groupedByDepth.get(depth) || [biomeId];
-      const siblingIndex = siblings.indexOf(biomeId);
-      const hasManualPosition =
-        Number.isFinite(guide?.x) && Number.isFinite(guide?.y);
-      const centeredOffset = siblingIndex - (siblings.length - 1) / 2;
-      const autoX = depth * 240 + 140;
-      const autoY = 420 + centeredOffset * 170;
+      const place = positions.get(biomeId) || { rang: 0, offset: 0 };
+      const danger = getDangerRelatif(biomeId, niveauJoueur);
       elements.push({
         data: {
           id: biomeId,
@@ -2283,11 +2278,15 @@ const renderWorldMap = (visibleIds) => {
           state: isUnlocked ? "unlocked" : "reachable",
         },
         position: {
-          x: hasManualPosition ? guide.x * 18 : autoX,
-          y: hasManualPosition ? guide.y * 18 : autoY,
+          x: (place.x ?? 0) * 300 + 160,
+          y: (place.y ?? 0) * 90 + 220,
         },
         classes: [
           isUnlocked ? "unlocked-node" : "reachable-node",
+          // Le danger se lit par rapport au personnage : une zone « Extrem »
+          // finit par devenir une promenade, et l'inverse est vrai aussi.
+          `danger-${danger.cle}`,
+          MAIN_BOSS_BIOMES.includes(biomeId) ? "main-node" : "side-node",
           biomeId === selectedBiomeId ? "selected-node" : "",
           biomeId === gameState.world.currentBiome ? "current-node" : "",
           guide?.wip ? "wip-node" : "",
@@ -2304,6 +2303,12 @@ const renderWorldMap = (visibleIds) => {
             source: biomeId,
             target: nextId,
           },
+          // Une arete appartient a la trame quand ses deux extremites en sont.
+          classes:
+            MAIN_BOSS_BIOMES.includes(biomeId) &&
+            MAIN_BOSS_BIOMES.includes(nextId)
+              ? "main-edge"
+              : "side-edge",
         });
       });
     });
@@ -2396,6 +2401,81 @@ const renderWorldMap = (visibleIds) => {
             "target-arrow-shape": "none",
             "curve-style": "bezier",
             opacity: 0.9,
+          },
+        },
+        {
+          /*
+           * La trame principale se lit d'un coup d'oeil.
+           *
+           * Les cinquante aretes avaient toutes la meme apparence : rien ne
+           * distinguait la route qui fait avancer la campagne des dix-huit
+           * branches optionnelles. Trait plein, plus epais, couleur d'accent.
+           */
+          selector: ".main-edge",
+          style: {
+            width: 4,
+            "line-style": "solid",
+            "line-color": accent,
+            opacity: 1,
+          },
+        },
+        {
+          // Les branches annexes s'effacent au profit de la trame.
+          selector: ".side-edge",
+          style: {
+            width: 2,
+            opacity: 0.55,
+          },
+        },
+        {
+          // Une etape de la trame est plus grosse qu'une zone facultative.
+          selector: ".main-node",
+          style: {
+            width: 26,
+            height: 26,
+          },
+        },
+        {
+          selector: ".side-node",
+          style: {
+            width: 18,
+            height: 18,
+          },
+        },
+        /*
+         * Danger RELATIF au personnage.
+         *
+         * L'etiquette fixe du biome ne bougeait jamais : une zone « Extrem »
+         * le restait soixante niveaux plus tard. La couleur suit desormais
+         * l'ecart entre le niveau du joueur et la bande recommandee, donc la
+         * carte se repeint au fur et a mesure qu'on monte. Voir
+         * getDangerRelatif.
+         */
+        {
+          selector: ".danger-suicidaire",
+          style: { "background-color": danger, "border-color": danger },
+        },
+        {
+          selector: ".danger-mortel",
+          style: {
+            "background-color": surfaceStrong,
+            "border-color": danger,
+            "border-width": 3,
+          },
+        },
+        {
+          selector: ".danger-dangereux",
+          style: { "border-color": accent, "border-width": 3 },
+        },
+        {
+          selector: ".danger-mesure",
+          style: { "border-color": info },
+        },
+        {
+          selector: ".danger-promenade",
+          style: {
+            "border-color": success,
+            opacity: 0.6,
           },
         },
         {
@@ -2499,7 +2579,7 @@ const renderBiomeDetail = (biomeId) => {
         <p class="detail-kicker">${guide?.chapter || "Zone"} · ${guide?.region || "Inconnu"}</p>
         <h4>${biome.name}</h4>
       </div>
-      <span class="danger-badge ${getBiomeDangerClass(biomeId)}">${guide?.danger || "Inconnu"}</span>
+      <span class="danger-badge danger-${getDangerRelatif(biomeId, gameState.stats?.level || 0).cle}">${echapperHtml(getDangerRelatif(biomeId, gameState.stats?.level || 0).libelle)}</span>
     </div>
     <p class="biome-focus">${guide?.focus || "Aucune recommandation disponible."}</p>
     <div class="biome-detail-grid">

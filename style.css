@@ -1252,18 +1252,35 @@ button:disabled {
   background: var(--surface-muted);
 }
 
-.danger-badge.faible {
+/*
+ * Danger RELATIF au personnage.
+ *
+ * Les anciennes classes suivaient l'etiquette fixe du biome — faible, modere,
+ * eleve — qui ne bougeait jamais quel que soit le niveau atteint. Elles sont
+ * remplacees par les cinq crans de getDangerRelatif, qui se repeignent a
+ * chaque montee de niveau.
+ */
+.danger-badge.danger-promenade {
   color: var(--success);
 }
 
-.danger-badge.modere {
+.danger-badge.danger-mesure {
+  color: var(--info);
+}
+
+.danger-badge.danger-dangereux {
   color: var(--accent);
 }
 
-.danger-badge.eleve,
-.danger-badge.tres-eleve,
-.danger-badge.extrem {
+.danger-badge.danger-mortel,
+.danger-badge.danger-suicidaire {
   color: var(--danger);
+}
+
+/* Le pire cran se signale aussi par son fond : le texte seul se rate. */
+.danger-badge.danger-suicidaire {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-muted));
 }
 
 .biome-focus {
