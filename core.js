@@ -381,6 +381,7 @@ export const handleVictory = (sessionId) => {
     runtimeState.areaCleared = false;
     runtimeState.usedRenaissance = false;
     runtimeState.usedAbsolution = false;
+    runtimeState.avareUtilise = false;
     if (gameState.runes.carried > 0) playSfx("runes");
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
@@ -716,6 +717,9 @@ export const startExploration = (biomeId) => {
   // precedente offrirait des etapes gratuites au demarrage de celle-ci.
   reinitialiserRattrapage();
   runtimeState.usedRenaissance = false;
+  // Bourse plombee (ECONOME) : "une fois par expedition", meme portee que
+  // usedRenaissance ci-dessus.
+  runtimeState.avareUtilise = false;
   const sessionAtStart = runtimeState.currentCombatSession;
   const biome = BIOMES[biomeId];
   clearRunBuffs();
