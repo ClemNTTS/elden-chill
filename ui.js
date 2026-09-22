@@ -252,6 +252,7 @@ import {
   enregistrerPanoplie,
   equipItem,
   getContratActif,
+  getFaveurContrats,
   getMultiUpgradeCost,
   getPanoplies,
   getUpgradeCost,
@@ -285,7 +286,12 @@ import {
   runtimeState,
 } from "./state.js";
 import { CONTRACTS_MIN_LEVEL } from "./constants.js";
-import { REGLAGES_RARETE, progressionContrat } from "./contracts.js";
+import {
+  FAVEUR_MAX,
+  REGLAGES_RARETE,
+  chanceLegendaire,
+  progressionContrat,
+} from "./contracts.js";
 import {
   FERVEUR_PRIME_PAR_RANG,
   FERVEUR_RANG_BUTIN,
@@ -510,8 +516,27 @@ const updateContractDisplay = () => {
   const contrat = getContratActif();
 
   if (!contrat) {
+    /*
+     * Le panneau vide affiche la faveur.
+     *
+     * C'est le seul moment ou le joueur decide s'il relance ou non, et c'etait
+     * jusqu'ici un ecran mort : « Aucun contrat en cours » et un bouton. La
+     * chance legendaire y est desormais lisible, avec ce qui la fait monter —
+     * une jauge qu'on ne voit pas ne change le comportement de personne.
+     */
+    const faveur = getFaveurContrats();
+    const chance = Math.round(chanceLegendaire(faveur) * 1000) / 10;
+    const aLaFaveurMax = faveur >= FAVEUR_MAX;
     corps.innerHTML = `
       <p class="contract-empty">Aucun contrat en cours.</p>
+      <p class="contract-faveur">
+        Chance de contrat legendaire : <strong>${chance}%</strong>
+      </p>
+      <p class="contract-faveur__aide">${
+        aLaFaveurMax
+          ? "Faveur au maximum. Le prochain legendaire la remettra a zero."
+          : "Honorez un contrat pour augmenter ces chances : +1 pour un commun, +3 pour un rare."
+      }</p>
       <button type="button" id="contract-new">Demander un contrat</button>
     `;
     const btn = document.getElementById("contract-new");

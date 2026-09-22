@@ -13,11 +13,14 @@ import {
   SETS_PAR_ARCHETYPE,
 } from "./constants.js";
 import {
+  RARETES,
   avancerContrat,
   ecoulerEcheance,
   etapeSuivanteChaine,
+  faveurApresContrat,
   genererContrat,
   normaliserContrat,
+  normaliserFaveur,
   primeDeChaine,
 } from "./contracts.js";
 import { addJournalEntry } from "./systems.js";
@@ -343,8 +346,11 @@ export const equipItem = (itemId) => {
 /** Etat des contrats, cree a la volee pour les sauvegardes anterieures. */
 export const getEtatContrats = () => {
   if (!gameState.contracts || typeof gameState.contracts !== "object") {
-    gameState.contracts = { actif: null, completed: 0, total: 0 };
+    gameState.contracts = { actif: null, completed: 0, total: 0, faveur: 0 };
   }
+  // Une sauvegarde d'avant la faveur, ou retouchee, ne doit pas la laisser
+  // indefinie : tout le systeme lit ce nombre.
+  gameState.contracts.faveur = normaliserFaveur(gameState.contracts.faveur);
   if (gameState.contracts.actif) {
     gameState.contracts.actif = normaliserContrat(gameState.contracts.actif);
   }
@@ -401,6 +407,9 @@ export const verifierDeblocageContrats = () => {
 /** Le contrat en cours, ou null tant que les contrats sont verrouilles. */
 export const getContratActif = () =>
   contratsDebloques() ? getEtatContrats().actif : null;
+
+/** Faveur accumulee, qui pousse la chance de contrat legendaire. */
+export const getFaveurContrats = () => getEtatContrats().faveur;
 
 /*
  * Zones eligibles : celles que le joueur a debloquees.
@@ -511,7 +520,15 @@ export const proposerContrat = (zonePreferee = null) => {
     nomBiome: BIOMES[biomeId]?.name || biomeId,
     niveauJoueur: gameState.stats.level || 1,
     objetsExclusifs: poolRecompense(),
+    faveur: etat.faveur,
   });
+
+  /*
+   * La faveur est depensee par le TIRAGE, pas par la reclamation : c'est le
+   * tirage qu'elle a influence. La garder apres avoir sorti un legendaire
+   * rendrait le suivant presque certain.
+   */
+  if (contrat?.rarete === RARETES.LEGENDAIRE) etat.faveur = 0;
 
   etat.actif = contrat;
   saveGame("new_contract");
@@ -608,6 +625,7 @@ export const reclamerContrat = () => {
 
   etat.completed = (etat.completed || 0) + 1;
   etat.total = (etat.total || 0) + 1;
+  etat.faveur = faveurApresContrat(etat.faveur, contrat.rarete);
   etat.actif = null;
 
   addJournalEntry(

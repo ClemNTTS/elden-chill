@@ -4045,6 +4045,31 @@ button:disabled {
   font-size: 0.82rem;
 }
 
+/*
+ * Faveur de contrat, affichee quand aucun contrat n'est en cours.
+ *
+ * Le pourcentage est la seule information du panneau vide qui aide a decider :
+ * il porte donc la couleur d'accent, et l'explication reste en retrait.
+ */
+.contract-faveur {
+  margin: 0 0 4px;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+
+.contract-faveur strong {
+  color: var(--accent-strong, var(--accent));
+  font-size: 0.95rem;
+}
+
+.contract-faveur__aide {
+  margin: 0 0 12px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--text-faint, var(--text-soft));
+  opacity: 0.85;
+}
+
 .contract {
   display: flex;
   flex-direction: column;
