@@ -1849,7 +1849,36 @@ const renderHeroPanel = () => {
   const titleEl = document.getElementById("hero-archetype");
   const noteEl = document.getElementById("hero-archetype-note");
   if (titleEl) titleEl.innerText = archetype.title;
-  if (noteEl) noteEl.innerText = archetype.note;
+
+  /*
+   * Quand la stat dominante ne vient pas des points investis, on le dit.
+   *
+   * La silhouette se lit sur les stats EFFECTIVES, volontairement : une arme
+   * qui donne de la force doit pouvoir changer d'apparence. Mais un joueur qui
+   * a mis chacun de ses points en Intelligence, et qui porte la Corne (+1% de
+   * Force par point d'Intelligence de base) et la Faucille (70% de l'Int
+   * convertie), se voyait annoncer « La force domine » sans avoir investi un
+   * seul point dedans. Le jeu disait vrai sur la mecanique et faux sur son
+   * intention.
+   *
+   * La note nomme donc la conversion au lieu de la passer sous silence.
+   */
+  if (noteEl) {
+    const eff = getEffectiveStats();
+    const dominante = getDominantStat(eff);
+    const investi = Number(gameState.stats[dominante]) || 0;
+    const effective = Number(eff[dominante]) || 0;
+    // Moins d'un tiers de la valeur effective vient des points : c'est
+    // l'equipement qui parle, pas la feuille de personnage.
+    const vientDeLEquipement = dominante && investi < effective * 0.34;
+    const source = Object.keys(STAT_META)
+      .map((key) => [key, Number(gameState.stats[key]) || 0])
+      .sort((a, b) => b[1] - a[1])[0];
+    noteEl.innerText =
+      vientDeLEquipement && source && source[1] > 0 && source[0] !== dominante
+        ? `${archetype.note} Elle vient de votre equipement : vos points sont en ${STAT_META[source[0]]?.label || source[0]}.`
+        : archetype.note;
+  }
 
   const statsRoot = document.getElementById("hero-stats");
   if (!statsRoot) return;

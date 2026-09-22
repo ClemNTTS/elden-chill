@@ -50,8 +50,8 @@ export const V21_MONSTERS = {
 
   gelmir_hexmage: {
     name: "Hexer de Gelmir",
-    hp: 1360,
-    atk: 80,
+    hp: 1224,
+    atk: 72,
     armor: 165,
     runes: 24000,
     specificStats: { attacksPerTurn: 2 },
@@ -92,8 +92,8 @@ export const V21_MONSTERS = {
     phaseInvocations: 3,
     phasePuissanceEcho: 0.15,
     name: "Fragment du Prêteur",
-    hp: 8873,
-    atk: 83,
+    hp: 6655,
+    atk: 62,
     armor: 158,
     runes: 132000,
     isBoss: true,
@@ -125,8 +125,8 @@ export const V21_MONSTERS = {
 
   giant_fire_disciple: {
     name: "Disciple des flammes géantes",
-    hp: 2197,
-    atk: 111,
+    hp: 2307,
+    atk: 117,
     armor: 200,
     runes: 36000,
     specificStats: { attacksPerTurn: 2 },
@@ -165,8 +165,8 @@ export const V21_MONSTERS = {
     comportementsPhase2: ["riposte"],
     phaseRiposte: 0.18,
     name: "Éclat du Géant de feu",
-    hp: 22176,
-    atk: 232,
+    hp: 14414,
+    atk: 151,
     armor: 168,
     runes: 188000,
     isBoss: true,

@@ -35,14 +35,34 @@ const { LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS, MAIN_BOSS_BIOMES } = await import(
   "../rebirth.js"
 );
 const { MAX_LEVEL } = await import("../shared/player-profile.js");
+const { BIOME_GUIDE } = await import("../world-map.js");
 
 /** Tirages par rencontre : groupes et points de vie sont aleatoires. */
 const TIRAGES = 10;
 
 /*
+ * Toutes les zones qui ont un boss et des monstres, annexes comprises.
+ *
+ * La premiere version ne couvrait que la trame principale. Les biomes annexes
+ * n'etaient alors mesures par RIEN : le Lac de la Putrefaction coutait 47% des
+ * points de vie par groupe standard et 68% par elite, soit trois fois le
+ * budget entier avant meme le feu de camp. Un joueur de niveau 185 y mourait
+ * sans jamais atteindre le milieu de la zone.
+ *
+ * Une zone facultative peut etre dure. Elle ne peut pas etre impossible sans
+ * que personne ne s'en apercoive.
+ */
+export const ZONES_MESURABLES = Object.keys(BIOMES).filter(
+  (id) =>
+    BIOMES[id].boss &&
+    BIOMES[id].monsters?.length &&
+    BIOME_GUIDE[id]?.recommendedLevel,
+);
+
+/*
  * Zones soumises au contrat.
  *
- * Les sept premieres en sont exclues, et c'est un CHOIX, pas un oubli.
+ * Les sept premieres de la trame en sont exclues, et c'est un CHOIX.
  *
  * Elles se traversent a 5-9% des points de vie et le boss n'y coute que 7 a
  * 19% : on termine l'Academie de Raya Lucaria a 88% de sa barre, tres loin du
@@ -56,7 +76,39 @@ const TIRAGES = 10;
  *
  * Ne pas etendre cette liste vers le debut sans la meme conversation.
  */
-export const ZONES_SOUS_CONTRAT = MAIN_BOSS_BIOMES.slice(7);
+/*
+ * Zones dont la FORME a ete reglee sur le contrat.
+ *
+ * Liste explicite, et volontairement pas une regle du genre « tout ce qui est
+ * apres l'Academie de Raya ». Deux raisons :
+ *
+ *   - « Jusqu'a l'Academie de Raya ca ne m'a pas choque » : la progression du
+ *     debut convient telle quelle, tres en dessous du budget, et c'est assume ;
+ *   - entre les deux, des zones annexes comme Nokron ou la Riviere Ainsel se
+ *     jouent bien sans coller au contrat. Les y forcer durcirait ce que
+ *     personne n'a signale.
+ *
+ * Y figurent la trame principale a partir du Plateau d'Altus, et les zones
+ * annexes qu'on a du corriger parce qu'elles etaient infranchissables.
+ *
+ * Le Chateau Sol et l'Enclos des Champions en ont ete retires apres coup : une
+ * fois rendus franchissables ils se traversent a 73% des points de vie, donc
+ * plus doux que le contrat. Ce sont des zones facultatives et courtes ; les
+ * durcir pour tenir une cible n'aurait servi que la cible.
+ *
+ * Tout le reste du jeu reste soumis aux regles de SURETE — franchissable, feu
+ * de camp atteignable — qui, elles, ne souffrent aucune exception.
+ */
+export const ZONES_SOUS_CONTRAT = [
+  ...MAIN_BOSS_BIOMES.slice(7),
+  "rotlake",
+  "divine_tower",
+  "consecrated_snowfield",
+  "mohgwyn_palace",
+  "giants_catacombs",
+  "miquella_haligtree",
+  "elphael",
+].filter((id) => ZONES_MESURABLES.includes(id));
 
 const tailleDuGroupe = (combinaisons) => {
   if (!combinaisons) return 1;
@@ -67,6 +119,34 @@ const tailleDuGroupe = (combinaisons) => {
     if (r <= cumul) return entree.size;
   }
   return combinaisons.at(-1).size;
+};
+
+/*
+ * Afflictions SUBIES, longtemps absentes du modele.
+ *
+ * On comptait ce que le joueur inflige et pas ce qu'il encaisse. Or au Lac de
+ * la Putrefaction, quatre monstres sur cinq posent la Putrefaction, qui ronge
+ * 5% des points de vie MAXIMUM par tour : sur un combat de dix tours, c'est la
+ * moitie de la barre, invisible pour le banc. La zone paraissait dure, elle
+ * etait mortelle.
+ *
+ * Modelise : putrefaction, poison et brulure, les trois qui tiquent chaque
+ * tour. Le saignement et la gelure frappent par seuils sur le coup de
+ * l'attaquant et sont deja, en partie, dans les degats directs. Le banc reste
+ * donc un peu optimiste sur les zones de saignement.
+ */
+const degatsSubisParTour = (groupe, pvMax, niveau) => {
+  let total = 0;
+  for (const ennemi of groupe) {
+    if (ennemi.hp <= 0 || !ennemi.affliction) continue;
+    const { id, chance, duration } = ennemi.affliction;
+    // Presence : au moins une pose par tour, prolongee par la duree.
+    const presence = Math.min(1, chance * Math.max(1, duration));
+    if (id === "SCARLET_ROT") total += pvMax * 0.05 * presence;
+    else if (id === "POISON") total += niveau * 0.7 * presence;
+    else if (id === "BURN") total += pvMax * 0.03 * presence;
+  }
+  return total;
 };
 
 const instancier = (modele) => {
@@ -81,6 +161,7 @@ const instancier = (modele) => {
     esquive: modele.dodgeChance ?? 0,
     cadence: modele.specificStats?.attacksPerTurn || 1,
     boss: !!modele.isBoss,
+    affliction: modele.onHitEffect || null,
   };
 };
 
@@ -103,7 +184,16 @@ const composer = (modeleId) => {
   return groupe;
 };
 
-const combattre = (eff, arme, groupe, pv, armurePhase2 = null, seuil = 0) => {
+const combattre = (
+  eff,
+  arme,
+  groupe,
+  pv,
+  armurePhase2 = null,
+  seuil = 0,
+  pvMax = pv,
+  niveau = 1,
+) => {
   const depart = pv;
   let tours = 0;
   const total = groupe.reduce((n, e) => n + e.hp, 0);
@@ -131,6 +221,7 @@ const combattre = (eff, arme, groupe, pv, armurePhase2 = null, seuil = 0) => {
         recu += Math.floor(ennemi.atk * (100 / Math.max(1, eff.armor)));
     }
     pv -= Math.floor(recu * cadence * (1 - esquive));
+    pv -= Math.floor(degatsSubisParTour(groupe, pvMax, niveau));
   }
   return { perdus: depart - pv, tours, mort: pv <= 0 };
 };
@@ -139,13 +230,33 @@ const combattre = (eff, arme, groupe, pv, armurePhase2 = null, seuil = 0) => {
 export const mesurerBudgetZone = (biomeId) => {
   const biome = BIOMES[biomeId];
   const modeleBoss = MONSTERS[biome?.boss];
+  /*
+   * A quel niveau mesure-t-on ?
+   *
+   * Pour un biome de la trame principale, celui que le plafond garantit a son
+   * etape : 80% du plafond, la promesse du garde-fou de progression.
+   *
+   * Pour un biome ANNEXE, il n'y a pas d'etape — il n'ouvre aucun niveau. On
+   * prend le HAUT de sa bande recommandee : une zone facultative se visite
+   * avec les niveaux gagnes sur la trame principale, donc en surniveau par
+   * rapport a son plancher. Mesurer au plancher declarait perdues des zones
+   * qu'un joueur reel a nettoyees — Nokron, le Manoir de Caria, la Riviere
+   * Ainsel —, ce qui aurait conduit a les affaiblir pour rien.
+   *
+   * Sans ce cas, `indexOf` renvoyait -1, le plafond retombait a 25 et toutes
+   * les zones annexes etaient mesurees au niveau 20 : elles ressortaient
+   * toutes injouables, defaut de la mesure et non du jeu.
+   */
   const rang = MAIN_BOSS_BIOMES.indexOf(biomeId);
-  const plafond = Math.min(
-    MAX_LEVEL,
-    LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * Math.max(0, rang),
-  );
-  // Le niveau que le garde-fou de progression garantit a cette etape.
-  const niveau = Math.floor(plafond * 0.8);
+  const niveau =
+    rang >= 0
+      ? Math.floor(
+          Math.min(MAX_LEVEL, LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * rang) *
+            0.8,
+        )
+      : (BIOME_GUIDE[biomeId]?.recommendedLevel?.[1] ??
+        BIOME_GUIDE[biomeId]?.recommendedLevel?.[0] ??
+        1);
   const palier = palierPour(biomeId, 8);
 
   applyBuild(BUILDS.int, niveau);
@@ -165,7 +276,16 @@ export const mesurerBudgetZone = (biomeId) => {
     let somme = 0;
     for (let i = 0; i < TIRAGES; i += 1) {
       for (const id of ids) {
-        somme += combattre(eff, palier.arme, composer(id), PV).perdus;
+        somme += combattre(
+          eff,
+          palier.arme,
+          composer(id),
+          PV,
+          null,
+          0,
+          PV,
+          niveau,
+        ).perdus;
       }
     }
     return somme / (TIRAGES * ids.length) / PV;
@@ -175,6 +295,13 @@ export const mesurerBudgetZone = (biomeId) => {
   const elite = cout(biome.rareMonsters);
   const rencontres = Math.max(0, Math.floor(biome.length / 2) - 2);
   const traversee = groupe * rencontres + elite;
+  /*
+   * Premiere moitie : le meme nombre de rencontres, sans boss. C'est elle qui
+   * decide si l'on atteint le feu de camp — et donc si la zone est jouable du
+   * tout.
+   */
+  const premiereMoitie =
+    groupe * Math.max(0, Math.floor(biome.length / 2) - 1) + elite;
   const arrivee = 1 - traversee;
 
   let boss = 0;
@@ -202,6 +329,8 @@ export const mesurerBudgetZone = (biomeId) => {
         PV * arrivee,
         armurePhase2,
         modeleBoss.thresholdForPhase2 ?? 0,
+        PV,
+        niveau,
       );
       somme += Math.min(arrivee, r.perdus / PV);
       if (r.mort) morts += 1;
@@ -217,6 +346,7 @@ export const mesurerBudgetZone = (biomeId) => {
     groupe,
     elite,
     traversee,
+    premiereMoitie,
     arrivee,
     boss,
     total: traversee + boss,
