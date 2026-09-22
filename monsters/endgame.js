@@ -17,8 +17,8 @@ export const ENDGAME_MONSTERS = {
   // apparaitre plantait le combat sur `MONSTERS[id]` undefined.
   mountaintops_bird: {
     name: "Rapace des cimes",
-    hp: 2013,
-    atk: 125,
+    hp: 1912,
+    atk: 119,
     armor: 150,
     runes: 31500,
     specificStats: { attacksPerTurn: 2 },
@@ -46,8 +46,8 @@ export const ENDGAME_MONSTERS = {
   },
   leyndell_tree_watcher: {
     name: "Veilleur de l'Arbre",
-    hp: 5940,
-    atk: 308,
+    hp: 6831,
+    atk: 354,
     armor: 260,
     runes: 33400,
     isRare: true,
@@ -73,8 +73,8 @@ export const ENDGAME_MONSTERS = {
     comportementsPhase2: ["regeneration"],
     phaseRegen: 0.04,
     name: "Avatar de l'Arbre-Monde",
-    hp: 17618,
-    atk: 199,
+    hp: 20261,
+    atk: 229,
     armor: 181,
     runes: 143000,
     isBoss: true,
@@ -106,8 +106,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= TERRE INTERDITE ================= */
   forbidden_black_knife: {
     name: "Lame noire des interdits",
-    hp: 1890,
-    atk: 112,
+    hp: 1984,
+    atk: 118,
     armor: 160,
     runes: 32300,
     specificStats: { attacksPerTurn: 2 },
@@ -115,8 +115,8 @@ export const ENDGAME_MONSTERS = {
   },
   forbidden_grave_bird: {
     name: "Corbeau des sepultures",
-    hp: 1958,
-    atk: 104,
+    hp: 2056,
+    atk: 109,
     armor: 140,
     runes: 33500,
     specificStats: { attacksPerTurn: 2 },
@@ -124,8 +124,8 @@ export const ENDGAME_MONSTERS = {
   },
   forbidden_deathbird: {
     name: "Oiseau de mort",
-    hp: 7012,
-    atk: 360,
+    hp: 5960,
+    atk: 306,
     armor: 200,
     runes: 38800,
     isRare: true,
@@ -149,8 +149,8 @@ export const ENDGAME_MONSTERS = {
     comportementsPhase2: ["malediction"],
     phaseMalediction: { id: "DEATH_BLIGHT", duration: 2 },
     name: "Gardien des tombes interdites",
-    hp: 19901,
-    atk: 219,
+    hp: 18906,
+    atk: 208,
     armor: 170,
     runes: 162000,
     isBoss: true,
@@ -176,8 +176,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= PLAINE ENNEIGEE CONSACREE ================= */
   snowfield_albinauric_rider: {
     name: "Cavalier albinaurique",
-    hp: 1350,
-    atk: 68,
+    hp: 1755,
+    atk: 88,
     armor: 210,
     runes: 41500,
     specificStats: { attacksPerTurn: 1 },
@@ -185,8 +185,8 @@ export const ENDGAME_MONSTERS = {
   },
   snowfield_frost_hound: {
     name: "Molosse de givre",
-    hp: 1312,
-    atk: 72,
+    hp: 1706,
+    atk: 94,
     armor: 165,
     runes: 40400,
     specificStats: { attacksPerTurn: 2 },
@@ -194,8 +194,8 @@ export const ENDGAME_MONSTERS = {
   },
   snowfield_night_cavalry: {
     name: "Cavalerie nocturne",
-    hp: 4760,
-    atk: 214,
+    hp: 5712,
+    atk: 257,
     armor: 250,
     runes: 51700,
     isRare: true,
@@ -217,8 +217,8 @@ export const ENDGAME_MONSTERS = {
   },
   snowfield_rime_dragon: {
     name: "Dragon de givre consacre",
-    hp: 13300,
-    atk: 123,
+    hp: 13965,
+    atk: 129,
     armor: 255,
     runes: 201000,
     isBoss: true,
@@ -250,8 +250,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= PALAIS DE MOHGWYN ================= */
   mohgwyn_blood_noble: {
     name: "Noble sanglant",
-    hp: 1525,
-    atk: 74,
+    hp: 1830,
+    atk: 89,
     armor: 215,
     runes: 47000,
     specificStats: { attacksPerTurn: 1 },
@@ -259,8 +259,8 @@ export const ENDGAME_MONSTERS = {
   },
   mohgwyn_albinauric_wretch: {
     name: "Miserable albinaurique",
-    hp: 1475,
-    atk: 78,
+    hp: 1770,
+    atk: 94,
     armor: 150,
     runes: 45400,
     specificStats: { attacksPerTurn: 2 },
@@ -268,8 +268,8 @@ export const ENDGAME_MONSTERS = {
   },
   mohgwyn_blood_hound: {
     name: "Limier de sang",
-    hp: 3750,
-    atk: 165,
+    hp: 3562,
+    atk: 157,
     armor: 230,
     runes: 57000,
     isRare: true,
@@ -293,8 +293,8 @@ export const ENDGAME_MONSTERS = {
   },
   mohgwyn_blood_lord_echo: {
     name: "Echo du seigneur du sang",
-    hp: 12300,
-    atk: 112,
+    hp: 14760,
+    atk: 134,
     armor: 245,
     runes: 217000,
     isBoss: true,
@@ -320,8 +320,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= ARBRE SACRE DE MIQUELLA ================= */
   haligtree_misbegotten_crusader: {
     name: "Croise mal-ne",
-    hp: 1127,
-    atk: 53,
+    hp: 1296,
+    atk: 61,
     armor: 225,
     runes: 52400,
     specificStats: { attacksPerTurn: 1 },
@@ -329,8 +329,8 @@ export const ENDGAME_MONSTERS = {
   },
   haligtree_putrid_avatar: {
     name: "Avatar putride",
-    hp: 1160,
-    atk: 51,
+    hp: 1334,
+    atk: 59,
     armor: 245,
     runes: 53900,
     specificStats: { attacksPerTurn: 1 },
@@ -338,8 +338,8 @@ export const ENDGAME_MONSTERS = {
   },
   haligtree_oracle_envoy: {
     name: "Envoye oracle",
-    hp: 6396,
-    atk: 266,
+    hp: 5117,
+    atk: 213,
     armor: 270,
     runes: 62300,
     isRare: true,
@@ -361,8 +361,8 @@ export const ENDGAME_MONSTERS = {
   },
   haligtree_rot_knight: {
     name: "Chevalier de la putrefaction",
-    hp: 7525,
-    atk: 68,
+    hp: 6622,
+    atk: 59,
     armor: 265,
     runes: 228000,
     isBoss: true,

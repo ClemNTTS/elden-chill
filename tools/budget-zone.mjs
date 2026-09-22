@@ -149,6 +149,40 @@ const degatsSubisParTour = (groupe, pvMax, niveau) => {
   return total;
 };
 
+/*
+ * Cadence reelle d'un boss scripte.
+ *
+ * Le banc supposait que tout ennemi frappe une fois par tour a pleine
+ * puissance. Douze boss ont un `onTurnAction` qui dit autre chose : certains
+ * sautent des tours, d'autres frappent double. L'ecart va de 0,95 a 1,50 —
+ * jusqu'a 50% de degats en plus ou en moins que ce que le banc comptait.
+ *
+ * C'est ce trou qui a laisse passer le Noble Godskin, a 0,95 : plus faible
+ * qu'un boss sans mecanique, et personne ne pouvait le voir puisque la mesure
+ * ne regardait pas la mecanique.
+ *
+ * On deroule douze tours a vide pour en tirer un multiplicateur moyen. Les
+ * comportements qui dependent des points de vie restants (frenesie, carapace)
+ * ne sont pas captures ici : ils passent par comportementsPhase2, que le banc
+ * traite a part.
+ */
+const cadenceDe = (modele) => {
+  if (typeof modele.onTurnAction !== "function") return 1;
+  const sonde = { ...modele, hp: modele.hp, maxHp: modele.hp };
+  let somme = 0;
+  for (let tour = 0; tour < 12; tour += 1) {
+    let action = {};
+    try {
+      action = modele.onTurnAction(sonde, {}) || {};
+    } catch {
+      return 1;
+    }
+    if (action.skipAttack) continue;
+    somme += action.dmgMult || 1;
+  }
+  return somme / 12;
+};
+
 const instancier = (modele) => {
   const pv = Math.floor(
     modele.hp * (modele.isBoss || modele.isRare ? 1 : 1 + Math.random()),
@@ -160,6 +194,8 @@ const instancier = (modele) => {
     armor: modele.armor ?? 100,
     esquive: modele.dodgeChance ?? 0,
     cadence: modele.specificStats?.attacksPerTurn || 1,
+    // Ce que son comportement de tour lui fait reellement infliger.
+    scenario: cadenceDe(modele),
     boss: !!modele.isBoss,
     affliction: modele.onHitEffect || null,
   };
@@ -218,7 +254,9 @@ const combattre = (
     let recu = 0;
     for (const ennemi of groupe) {
       if (ennemi.hp > 0)
-        recu += Math.floor(ennemi.atk * (100 / Math.max(1, eff.armor)));
+        recu += Math.floor(
+          ennemi.atk * (ennemi.scenario ?? 1) * (100 / Math.max(1, eff.armor)),
+        );
     }
     pv -= Math.floor(recu * cadence * (1 - esquive));
     pv -= Math.floor(degatsSubisParTour(groupe, pvMax, niveau));
