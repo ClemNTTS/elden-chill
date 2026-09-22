@@ -421,6 +421,45 @@ export const tirerRarete = (random = Math.random, faveur = 0) => {
 export const modelesPour = (rarete) =>
   MODELES.filter((m) => rareteSuffisante(rarete, m.minRarete));
 
+/*
+ * Filtres d'un modele qu'une zone sait honorer.
+ *
+ * `filtresPossibles` vaut null quand l'appelant ne sait rien de la zone : on
+ * ne restreint alors rien, parce qu'interdire par defaut reviendrait a vider
+ * le tirage de ses modeles a filtre des qu'un appel oublie l'argument.
+ *
+ * Renvoie un tableau vide quand le modele demande un filtre que la zone ne
+ * produit pas : le modele est alors ecarte du tirage.
+ */
+export const filtresRetenus = (modele, filtresPossibles = null) => {
+  if (modele.filtre) {
+    if (!filtresPossibles || filtresPossibles.includes(modele.filtre)) {
+      return [modele.filtre];
+    }
+    return [];
+  }
+  if (!modele.filtres?.length) return [null];
+  if (!filtresPossibles) return modele.filtres;
+  return modele.filtres.filter((f) => filtresPossibles.includes(f));
+};
+
+/*
+ * Modeles qu'une zone peut reellement honorer.
+ *
+ * Un contrat « Abattez 8 creatures en meute dans Profondeurs de la Souche »
+ * etait impossible : cette zone n'aligne jamais trois ennemis a la fois. Le
+ * joueur n'avait aucun moyen de le savoir, et le delai de relance le gardait
+ * vingt-quatre heures devant un objectif mort.
+ *
+ * Le modele n'est pas ecarte des qu'UN de ses filtres manque : « purge » tient
+ * tant que la zone en fournit un seul des trois. Il ne tombe que s'il n'en
+ * reste aucun.
+ */
+export const modelesRealisables = (rarete, filtresPossibles = null) =>
+  modelesPour(rarete).filter(
+    (m) => filtresRetenus(m, filtresPossibles).length > 0,
+  );
+
 /**
  * Recompense d'un contrat.
  *
@@ -479,6 +518,7 @@ export const genererContrat = ({
   objetsExclusifs = [],
   chaineHeritee = null,
   faveur = 0,
+  filtresPossibles = null,
   maintenant = Date.now(),
   random = Math.random,
 } = {}) => {
@@ -489,7 +529,7 @@ export const genererContrat = ({
   const rarete = chaineHeritee
     ? RARETES.LEGENDAIRE
     : tirerRarete(random, faveur);
-  const candidats = modelesPour(rarete);
+  const candidats = modelesRealisables(rarete, filtresPossibles);
   const modele =
     candidats[Math.floor(random() * candidats.length)] || MODELES[0];
   const reglages = REGLAGES_RARETE[rarete];
@@ -501,11 +541,9 @@ export const genererContrat = ({
    * (depeceur, purge). Le tirage est fige ICI et non relu a chaque
    * progression : sinon un contrat changerait de cible en cours de route.
    */
+  const filtresOuverts = filtresRetenus(modele, filtresPossibles);
   const filtre =
-    modele.filtre ??
-    (modele.filtres?.length
-      ? modele.filtres[Math.floor(random() * modele.filtres.length)]
-      : null);
+    filtresOuverts[Math.floor(random() * filtresOuverts.length)] ?? null;
 
   const objectif = Math.min(
     modele.plafond ?? Number.POSITIVE_INFINITY,
