@@ -42,10 +42,19 @@ const TIRAGES = 10;
 /*
  * Zones soumises au contrat.
  *
- * Les sept premieres en sont exclues : elles se traversent a 5-9% des points
- * de vie et se jouent sans probleme. Les durcir pour coller au budget
- * changerait un debut de partie que personne n'a signale, et c'est une
- * decision de conception qui n'a pas ete prise.
+ * Les sept premieres en sont exclues, et c'est un CHOIX, pas un oubli.
+ *
+ * Elles se traversent a 5-9% des points de vie et le boss n'y coute que 7 a
+ * 19% : on termine l'Academie de Raya Lucaria a 88% de sa barre, tres loin du
+ * budget de ~90% que le contrat demande. L'ecart est reel et mesure.
+ *
+ * Il reste en place parce que l'auteur du jeu, a qui ces chiffres ont ete
+ * montres, a tranche : « jusqu'a l'Academie de Raya ca ne m'a pas choque. »
+ * Le contrat decrit ce que la partie doit devenir, pas un uniforme a passer
+ * sur les premieres heures — un debut de partie ou l'on meurt en traversant
+ * Necrolimbe serait fidele au budget et infidele au jeu.
+ *
+ * Ne pas etendre cette liste vers le debut sans la meme conversation.
  */
 export const ZONES_SOUS_CONTRAT = MAIN_BOSS_BIOMES.slice(7);
 
