@@ -15,8 +15,8 @@ export const V21_MONSTERS = {
    */
   altus_praetor_guard: {
     name: "Gardien prétorien d'Altus",
-    hp: 1260,
-    atk: 52,
+    hp: 1197,
+    atk: 49,
     armor: 180,
     runes: 9800,
     specificStats: { attacksPerTurn: 2 },
@@ -24,8 +24,8 @@ export const V21_MONSTERS = {
   },
   altus_chariot_knight: {
     name: "Chevalier du char d'Altus",
-    hp: 1820,
-    atk: 132,
+    hp: 2548,
+    atk: 185,
     armor: 210,
     runes: 18500,
     isRare: true,
@@ -50,8 +50,8 @@ export const V21_MONSTERS = {
 
   gelmir_hexmage: {
     name: "Hexer de Gelmir",
-    hp: 1600,
-    atk: 94,
+    hp: 1360,
+    atk: 80,
     armor: 165,
     runes: 24000,
     specificStats: { attacksPerTurn: 2 },
@@ -59,8 +59,8 @@ export const V21_MONSTERS = {
   },
   serpent_inquisitor: {
     name: "Inquisiteur du serpent",
-    hp: 2025,
-    atk: 106,
+    hp: 2835,
+    atk: 148,
     armor: 190,
     runes: 31500,
     isRare: true,
@@ -92,8 +92,8 @@ export const V21_MONSTERS = {
     phaseInvocations: 3,
     phasePuissanceEcho: 0.15,
     name: "Fragment du Prêteur",
-    hp: 10439,
-    atk: 98,
+    hp: 8873,
+    atk: 83,
     armor: 158,
     runes: 132000,
     isBoss: true,
@@ -125,8 +125,8 @@ export const V21_MONSTERS = {
 
   giant_fire_disciple: {
     name: "Disciple des flammes géantes",
-    hp: 2585,
-    atk: 131,
+    hp: 2197,
+    atk: 111,
     armor: 200,
     runes: 36000,
     specificStats: { attacksPerTurn: 2 },
@@ -134,8 +134,8 @@ export const V21_MONSTERS = {
   },
   icy_colossus: {
     name: "Colosse du blanc néant",
-    hp: 3410,
-    atk: 155,
+    hp: 7843,
+    atk: 356,
     armor: 260,
     runes: 47000,
     isRare: true,
@@ -165,8 +165,8 @@ export const V21_MONSTERS = {
     comportementsPhase2: ["riposte"],
     phaseRiposte: 0.18,
     name: "Éclat du Géant de feu",
-    hp: 24640,
-    atk: 258,
+    hp: 22176,
+    atk: 232,
     armor: 168,
     runes: 188000,
     isBoss: true,
@@ -201,8 +201,8 @@ export const V21_MONSTERS = {
 
   azula_beast_lord: {
     name: "Seigneur bestial d'Azula",
-    hp: 2160,
-    atk: 92,
+    hp: 1620,
+    atk: 69,
     armor: 220,
     runes: 52000,
     specificStats: { attacksPerTurn: 3 },
@@ -210,8 +210,8 @@ export const V21_MONSTERS = {
   },
   azula_black_priest: {
     name: "Prêtre noir de Farum",
-    hp: 1770,
-    atk: 85,
+    hp: 4602,
+    atk: 221,
     armor: 210,
     runes: 61000,
     isRare: true,
@@ -242,8 +242,8 @@ export const V21_MONSTERS = {
   azula_tempest_avatar: {
     comportementsPhase2: ["frenesie"],
     name: "Avatar des tempêtes d'Azula",
-    hp: 21280,
-    atk: 186,
+    hp: 13832,
+    atk: 121,
     armor: 179,
     runes: 255000,
     isBoss: true,

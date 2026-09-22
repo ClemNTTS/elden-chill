@@ -872,8 +872,8 @@ export const MONSTERS = {
   // --- Plateau ---
   leyndell_soldier: {
     name: "Soldat de Leyndell",
-    hp: 154,
-    atk: 41,
+    hp: 146,
+    atk: 39,
     runes: 1500,
     armor: 150,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
@@ -885,16 +885,16 @@ export const MONSTERS = {
 
   altus_omen: {
     name: "Augure du Plateau",
-    hp: 455,
-    atk: 52,
+    hp: 432,
+    atk: 49,
     runes: 2100,
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.25 },
   },
 
   tree_sentinel_altus: {
     name: "Sentinelle de l'Arbre (Altus)",
-    hp: 1960,
-    atk: 77,
+    hp: 2744,
+    atk: 108,
     runes: 14500,
     isRare: true,
     armor: 220,
@@ -907,8 +907,8 @@ export const MONSTERS = {
 
   wormface_altus: {
     name: "Visage de Ver",
-    hp: 1540,
-    atk: 59,
+    hp: 2156,
+    atk: 83,
     runes: 6200,
     isRare: true,
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
@@ -931,8 +931,8 @@ export const MONSTERS = {
   draconic_tree_sentinel: {
     comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
-    hp: 6500,
-    atk: 150,
+    hp: 4875,
+    atk: 112,
     runes: 52000,
     isBoss: true,
     armor: 225,
