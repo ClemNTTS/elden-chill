@@ -37,8 +37,14 @@ const { LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS, MAIN_BOSS_BIOMES } = await import(
 const { MAX_LEVEL } = await import("../shared/player-profile.js");
 const { BIOME_GUIDE, getBandeRecommandee } = await import("../world-map.js");
 
-/** Tirages par rencontre : groupes et points de vie sont aleatoires. */
-const TIRAGES = 10;
+/**
+ * Tirages par rencontre : groupes et points de vie sont aleatoires.
+ *
+ * Dix tirages laissaient encore le Sud de Caelid basculer tres rarement du
+ * mauvais cote de la survie. Cinquante gardent le banc rapide tout en rendant
+ * la moyenne assez stable pour qu'un garde-fou de CI ne depende pas du tirage.
+ */
+const TIRAGES = 50;
 
 /*
  * Toutes les zones qui ont un boss et des monstres, annexes comprises.

@@ -41,10 +41,10 @@ export const MARSH_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "CHAROGNARD",
     description:
-      "+130 Armure <em style='color: grey;'>(+8 / Niv)</em>. " +
+      "+80 Armure <em style='color: grey;'>(+5 / Niv)</em>. " +
       "Manier la peste a un prix : -12 Résistance Poison.",
     applyFlat: (stats, itemLevel) => {
-      stats.armor += 130 + itemLevel * 8;
+      stats.armor += 75 + itemLevel * 5;
       // Malus assume, comme le Registre des Dettes ou l'Eclat de jarre
       // guerriere : l'objet est un pari, pas une amelioration seche.
       stats.resistances.poison -= 12;
