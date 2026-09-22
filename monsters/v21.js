@@ -15,8 +15,8 @@ export const V21_MONSTERS = {
    */
   altus_praetor_guard: {
     name: "Gardien prétorien d'Altus",
-    hp: 1800,
-    atk: 75,
+    hp: 1260,
+    atk: 52,
     armor: 180,
     runes: 9800,
     specificStats: { attacksPerTurn: 2 },
@@ -24,8 +24,8 @@ export const V21_MONSTERS = {
   },
   altus_chariot_knight: {
     name: "Chevalier du char d'Altus",
-    hp: 2600,
-    atk: 188,
+    hp: 1820,
+    atk: 132,
     armor: 210,
     runes: 18500,
     isRare: true,
@@ -50,8 +50,8 @@ export const V21_MONSTERS = {
 
   gelmir_hexmage: {
     name: "Hexer de Gelmir",
-    hp: 3200,
-    atk: 188,
+    hp: 1600,
+    atk: 94,
     armor: 165,
     runes: 24000,
     specificStats: { attacksPerTurn: 2 },
@@ -59,8 +59,8 @@ export const V21_MONSTERS = {
   },
   serpent_inquisitor: {
     name: "Inquisiteur du serpent",
-    hp: 4050,
-    atk: 212,
+    hp: 2025,
+    atk: 106,
     armor: 190,
     runes: 31500,
     isRare: true,
@@ -125,8 +125,8 @@ export const V21_MONSTERS = {
 
   giant_fire_disciple: {
     name: "Disciple des flammes géantes",
-    hp: 4700,
-    atk: 238,
+    hp: 2585,
+    atk: 131,
     armor: 200,
     runes: 36000,
     specificStats: { attacksPerTurn: 2 },
@@ -134,8 +134,8 @@ export const V21_MONSTERS = {
   },
   icy_colossus: {
     name: "Colosse du blanc néant",
-    hp: 6200,
-    atk: 282,
+    hp: 3410,
+    atk: 155,
     armor: 260,
     runes: 47000,
     isRare: true,
@@ -201,8 +201,8 @@ export const V21_MONSTERS = {
 
   azula_beast_lord: {
     name: "Seigneur bestial d'Azula",
-    hp: 7200,
-    atk: 308,
+    hp: 2160,
+    atk: 92,
     armor: 220,
     runes: 52000,
     specificStats: { attacksPerTurn: 3 },
@@ -210,8 +210,8 @@ export const V21_MONSTERS = {
   },
   azula_black_priest: {
     name: "Prêtre noir de Farum",
-    hp: 5900,
-    atk: 282,
+    hp: 1770,
+    atk: 85,
     armor: 210,
     runes: 61000,
     isRare: true,

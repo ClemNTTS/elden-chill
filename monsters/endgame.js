@@ -17,8 +17,8 @@ export const ENDGAME_MONSTERS = {
   // apparaitre plantait le combat sur `MONSTERS[id]` undefined.
   mountaintops_bird: {
     name: "Rapace des cimes",
-    hp: 4100,
-    atk: 255,
+    hp: 2255,
+    atk: 140,
     armor: 150,
     runes: 31500,
     specificStats: { attacksPerTurn: 2 },
@@ -28,8 +28,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= LEYNDELL, CITE ROYALE ================= */
   leyndell_gilded_knight: {
     name: "Chevalier dore de Leyndell",
-    hp: 3600,
-    atk: 196,
+    hp: 1800,
+    atk: 98,
     armor: 240,
     runes: 27700,
     specificStats: { attacksPerTurn: 1 },
@@ -37,8 +37,8 @@ export const ENDGAME_MONSTERS = {
   },
   leyndell_omen_killer: {
     name: "Tueur d'Omen",
-    hp: 3850,
-    atk: 205,
+    hp: 1925,
+    atk: 102,
     armor: 170,
     runes: 29600,
     specificStats: { attacksPerTurn: 2 },
@@ -46,8 +46,8 @@ export const ENDGAME_MONSTERS = {
   },
   leyndell_tree_watcher: {
     name: "Veilleur de l'Arbre",
-    hp: 4400,
-    atk: 228,
+    hp: 2200,
+    atk: 114,
     armor: 260,
     runes: 33400,
     isRare: true,
@@ -106,8 +106,8 @@ export const ENDGAME_MONSTERS = {
   /* ================= TERRE INTERDITE ================= */
   forbidden_black_knife: {
     name: "Lame noire des interdits",
-    hp: 4200,
-    atk: 248,
+    hp: 2100,
+    atk: 124,
     armor: 160,
     runes: 32300,
     specificStats: { attacksPerTurn: 2 },
@@ -115,8 +115,8 @@ export const ENDGAME_MONSTERS = {
   },
   forbidden_grave_bird: {
     name: "Corbeau des sepultures",
-    hp: 4350,
-    atk: 232,
+    hp: 2175,
+    atk: 116,
     armor: 140,
     runes: 33500,
     specificStats: { attacksPerTurn: 2 },
@@ -124,8 +124,8 @@ export const ENDGAME_MONSTERS = {
   },
   forbidden_deathbird: {
     name: "Oiseau de mort",
-    hp: 5100,
-    atk: 262,
+    hp: 2550,
+    atk: 131,
     armor: 200,
     runes: 38800,
     isRare: true,

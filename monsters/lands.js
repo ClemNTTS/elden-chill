@@ -168,8 +168,8 @@ export const LANDS_MONSTERS = {
   /* ============ MANOIR DU VOLCAN (ch. VII) ============ */
   volcano_manservant: {
     name: "Serviteur du Manoir",
-    hp: 2400,
-    atk: 125,
+    hp: 1440,
+    atk: 75,
     armor: 205,
     runes: 18500,
     specificStats: { attacksPerTurn: 1 },
@@ -177,8 +177,8 @@ export const LANDS_MONSTERS = {
   },
   volcano_abductor: {
     name: "Vierge Ravisseuse",
-    hp: 2600,
-    atk: 118,
+    hp: 1560,
+    atk: 71,
     armor: 245,
     runes: 20000,
     specificStats: { attacksPerTurn: 1 },
@@ -196,8 +196,8 @@ export const LANDS_MONSTERS = {
   },
   volcano_iron_virgin: {
     name: "Vierge de Fer",
-    hp: 2900,
-    atk: 140,
+    hp: 1740,
+    atk: 84,
     armor: 280,
     runes: 22000,
     isRare: true,
@@ -246,8 +246,8 @@ export const LANDS_MONSTERS = {
   /* ============ ANTRE DE RYKARD (ch. VII) ============ */
   rykard_serpent_spawn: {
     name: "Rejeton serpentin",
-    hp: 2985,
-    atk: 155,
+    hp: 1791,
+    atk: 93,
     armor: 210,
     runes: 23000,
     specificStats: { attacksPerTurn: 2 },
@@ -255,8 +255,8 @@ export const LANDS_MONSTERS = {
   },
   rykard_devoured: {
     name: "Devore du banquet",
-    hp: 3100,
-    atk: 148,
+    hp: 1860,
+    atk: 89,
     armor: 190,
     runes: 23800,
     specificStats: { attacksPerTurn: 1 },
@@ -264,8 +264,8 @@ export const LANDS_MONSTERS = {
   },
   rykard_blasphemous_priest: {
     name: "Pretre blasphematoire",
-    hp: 3600,
-    atk: 174,
+    hp: 2160,
+    atk: 104,
     armor: 250,
     runes: 27400,
     isRare: true,
@@ -566,8 +566,8 @@ export const LANDS_MONSTERS = {
   /* ============ FARUM AZULA, ABIME (ch. IX) ============ */
   azula_dragon_warrior: {
     name: "Guerrier draconique",
-    hp: 8700,
-    atk: 452,
+    hp: 4350,
+    atk: 226,
     armor: 275,
     runes: 67000,
     specificStats: { attacksPerTurn: 1 },
@@ -575,8 +575,8 @@ export const LANDS_MONSTERS = {
   },
   azula_storm_hawk: {
     name: "Faucon des tempetes",
-    hp: 8200,
-    atk: 470,
+    hp: 4100,
+    atk: 235,
     armor: 195,
     runes: 63100,
     specificStats: { attacksPerTurn: 2 },
@@ -584,8 +584,8 @@ export const LANDS_MONSTERS = {
   },
   azula_maliketh: {
     name: "Maliketh, Lame de Mort",
-    hp: 10450,
-    atk: 506,
+    hp: 5225,
+    atk: 253,
     armor: 270,
     runes: 79400,
     isRare: true,
@@ -643,8 +643,8 @@ export const LANDS_MONSTERS = {
   /* ============ LEYNDELL LA CENDREUSE (ch. X) ============ */
   ash_gilded_guard: {
     name: "Garde dore calcine",
-    hp: 10000,
-    atk: 520,
+    hp: 4500,
+    atk: 234,
     armor: 290,
     runes: 77000,
     specificStats: { attacksPerTurn: 1 },
@@ -652,8 +652,8 @@ export const LANDS_MONSTERS = {
   },
   ash_putrid_avatar: {
     name: "Avatar des cendres",
-    hp: 10400,
-    atk: 505,
+    hp: 4680,
+    atk: 227,
     armor: 265,
     runes: 80000,
     specificStats: { attacksPerTurn: 1 },
@@ -661,8 +661,8 @@ export const LANDS_MONSTERS = {
   },
   ash_gideon_ozz: {
     name: "Gideon Ofnir, le Tout-Savant",
-    hp: 12000,
-    atk: 582,
+    hp: 5400,
+    atk: 262,
     armor: 250,
     runes: 91200,
     isRare: true,
@@ -721,8 +721,8 @@ export const LANDS_MONSTERS = {
   /* ============ TRONE D'ELDEN (ch. X) ============ */
   throne_golden_shade: {
     name: "Ombre doree",
-    hp: 11500,
-    atk: 598,
+    hp: 5175,
+    atk: 269,
     armor: 295,
     runes: 88600,
     specificStats: { attacksPerTurn: 1 },
@@ -730,8 +730,8 @@ export const LANDS_MONSTERS = {
   },
   throne_order_fragment: {
     name: "Fragment de l'Ordre",
-    hp: 11000,
-    atk: 620,
+    hp: 4950,
+    atk: 279,
     armor: 240,
     runes: 84700,
     specificStats: { attacksPerTurn: 2 },
@@ -739,8 +739,8 @@ export const LANDS_MONSTERS = {
   },
   throne_radagon: {
     name: "Radagon de l'Ordre d'Or",
-    hp: 13800,
-    atk: 670,
+    hp: 6210,
+    atk: 302,
     armor: 280,
     runes: 104900,
     isRare: true,
@@ -808,8 +808,8 @@ export const LANDS_MONSTERS = {
   // des hommes-betes a Farum Azula — est conservee, au bon palier.
   azula_beastman: {
     name: "Homme-bete de Farum Azula",
-    hp: 7000,
-    atk: 315,
+    hp: 2100,
+    atk: 94,
     armor: 230,
     runes: 53900,
     specificStats: { attacksPerTurn: 2 },
