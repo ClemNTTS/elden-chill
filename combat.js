@@ -103,6 +103,9 @@ const SPLASH_SOLO_RATIO = 0.5;
 /** Cumuls necessaires au declenchement. */
 const MADNESS_THRESHOLD = 8;
 const DEATH_BLIGHT_THRESHOLD = 12;
+/** Charognard toxique (3 pieces) l'abaisse a 6 : voir stats.toxineSeuilReduit. */
+const TOXIN_THRESHOLD = 8;
+const TOXIN_THRESHOLD_REDUIT = 6;
 
 const processTurnEffects = (entity, effectsArray) => {
   const logMessages = [];
@@ -115,7 +118,9 @@ const processTurnEffects = (entity, effectsArray) => {
     const effectData = STATUS_EFFECTS[effectRef.id];
 
     if (effectData.onTurnStart) {
-      const result = effectData.onTurnStart(entity);
+      // POISON en a besoin pour poser un cumul de Toxine (voir status.js et
+      // le SEUIL DE TOXINE plus bas) ; les autres l'ignorent simplement.
+      const result = effectData.onTurnStart(entity, effectsArray);
       if (result?.message) logMessages.push(result.message);
       if (result?.skipTurn) skipTurn = true;
     }
@@ -256,6 +261,43 @@ export function performAttack({
       );
       const idx = targetEffects.findIndex((e) => e.id === "DEATH_BLIGHT");
       if (idx > -1) targetEffects.splice(idx, 1);
+    }
+
+    /*
+     * ===== SEUIL DE TOXINE =====
+     *
+     * Meme forme que la Folie : rien jusqu'au seuil, puis un burst qui
+     * consomme les cumuls. Le Charognard toxique (panoplie complete) abaisse
+     * le seuil a 6 via stats.toxineSeuilReduit — `stats` est deja
+     * l'effective du joueur au complet a ce point de l'appel (voir plus haut
+     * dans performAttack), les bonus de panoplie y sont donc deja.
+     *
+     * Plafonne comme la Gelure et le Fleau mortel (AFFLICTION_CAP) : sans
+     * plafond, une panoplie pensee pour ESCALADER pendant un combat long
+     * recreerait exactement ce que la Putrefaction a appris a ce fichier a
+     * ne plus jamais faire.
+     */
+    const toxine = targetEffects.find((e) => e.id === "TOXIN");
+    const seuilToxine =
+      isPlayer && stats?.toxineSeuilReduit
+        ? TOXIN_THRESHOLD_REDUIT
+        : TOXIN_THRESHOLD;
+    if (toxine && toxine.stacks >= seuilToxine) {
+      const maxHp = target.maxHp || 100;
+      const burst = Math.min(
+        Math.floor(maxHp * 0.08) + 20,
+        Math.floor(damage * AFFLICTION_CAP),
+      );
+      damage += burst;
+      ActionLog(
+        `TOXINE ! La charogne de ${target.name} se repand (${burst} degats).`,
+        "log-crit",
+      );
+      toxine.stacks -= seuilToxine;
+      if (toxine.stacks <= 0) {
+        const idx2 = targetEffects.findIndex((e) => e.id === "TOXIN");
+        if (idx2 > -1) targetEffects.splice(idx2, 1);
+      }
     }
 
     if (ashEffect?.damageMult) {

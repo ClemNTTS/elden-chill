@@ -3,8 +3,10 @@ import {
   gameState,
   getEffectiveStats,
   getHealth,
+  healPlayer,
   runtimeState,
 } from "./state.js";
+import { applyEffect } from "./status-apply.js";
 import { getResistanceForEffect } from "./systems.js";
 
 /*
@@ -33,7 +35,7 @@ export const STATUS_EFFECTS = {
     id: "POISON",
     name: "Poison",
     color: "#2ecc71",
-    onTurnStart: (entity) => {
+    onTurnStart: (entity, effectsArray) => {
       const isPlayer = "currentHp" in entity;
       let damage = 0;
 
@@ -54,6 +56,35 @@ export const STATUS_EFFECTS = {
 
         damage = Math.max(2, critTick(eff, Math.floor(baseDot + bonusInt)));
         entity.hp -= damage;
+
+        /*
+         * Toxine : un cumul par tic, MAIS seulement si l'equipement le
+         * permet (stats.toxineParTic). Sans ce garde-fou, tout personnage
+         * qui pose du Poison — la Faucille de tier 1 comprise — gagnerait
+         * gratuitement l'escalade du Charognard toxique. C'est un objet
+         * precis qui ouvre cette voie, pas le Poison lui-meme.
+         */
+        if (eff.toxineParTic && effectsArray) {
+          applyEffect(effectsArray, "TOXIN", 1);
+        }
+
+        /*
+         * Vol de vie necromantique : meme principe, gate par
+         * stats.poisonLifesteal (0 par defaut). Plafonne a 50% du tic : le
+         * Poison ignore deja l'armure, un soin sans plafond en ferait une
+         * source de vie infinie contre n'importe quel adversaire qui dure.
+         */
+        const vol = Math.min(0.5, eff.poisonLifesteal || 0);
+        if (vol > 0) {
+          const maxHp = getHealth(eff.vigor);
+          const soin = healPlayer(Math.floor(damage * vol), maxHp);
+          if (soin > 0) {
+            return {
+              damage,
+              message: `${entity.name} subit ${damage} dégâts de poison, et vous en absorbez ${soin} !`,
+            };
+          }
+        }
       }
 
       return {
@@ -244,6 +275,16 @@ export const STATUS_EFFECTS = {
     id: "FROSTBITE",
     name: "Gelure",
     color: "#3dd6c9",
+  },
+  /*
+   * Toxine. Cumuls, comme la Gelure : rien ne se passe jusqu'au seuil, puis
+   * tout part d'un coup. Le declenchement (SEUIL DE TOXINE) est dans
+   * combat.js, la pose d'un cumul dans POISON.onTurnStart ci-dessus.
+   */
+  TOXIN: {
+    id: "TOXIN",
+    name: "Toxine",
+    color: "#7ac74f",
   },
   /*
    * Folie. Elle comble un trou : `folie` existait comme resistance et comme

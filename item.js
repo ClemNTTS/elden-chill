@@ -1,6 +1,7 @@
 import { ITEM_RARITIES, ITEM_TYPES } from "./constants.js";
 import { DEPTHS } from "./items/depths.js";
 import { LANDS_ITEMS } from "./items/lands.js";
+import { MARSH_ITEMS } from "./items/marais.js";
 import { NOKRON } from "./items/nokron.js";
 import { RIVER } from "./items/river.js";
 import { V21_ITEMS } from "./items/v21.js";
@@ -1389,6 +1390,7 @@ export const ITEMS = {
   ...DEPTHS,
   ...V21_ITEMS,
   ...LANDS_ITEMS,
+  ...MARSH_ITEMS,
   /*
    * Butin exclusif des contrats legendaires. Present dans ITEMS pour que
    * l'equipement, l'affichage et les panoplies le traitent comme le reste,

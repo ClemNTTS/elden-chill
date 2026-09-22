@@ -727,6 +727,34 @@ export const ITEM_SETS = {
       },
     },
   },
+
+  /*
+   * CHAROGNARD (Marais de la Charogne) — le Poison qui s'intensifie.
+   *
+   * La Faux du charognard (l'arme) pose un cumul de Toxine a chaque tic de
+   * Poison inflige ; au seuil (8, ou 6 panoplie complete — voir
+   * TOXIN_THRESHOLD dans combat.js), la Toxine explose en un burst qui,
+   * contrairement au Poison lui-meme, profite du critique du joueur (le
+   * burst rejoint `damage` avant le jet de critique, comme la Folie et la
+   * Gelure).
+   */
+  CHAROGNARD: {
+    name: "Charognard toxique",
+    bonuses: {
+      2: {
+        desc: "Intelligence +15%.",
+        effect: (stats) => {
+          stats.intelligence *= 1.15;
+        },
+      },
+      3: {
+        desc: "La Toxine explose des 6 cumuls au lieu de 8.",
+        effect: (stats) => {
+          stats.toxineSeuilReduit = true;
+        },
+      },
+    },
+  },
 };
 
 /*

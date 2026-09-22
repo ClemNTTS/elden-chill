@@ -219,6 +219,15 @@ export function getEffectiveStats() {
      */
     dodgeChance: 0,
     bossMitigation: 0,
+    /*
+     * Charognard toxique et Necromancien (voir status.js, POISON.onTurnStart) :
+     * trois leviers a zero par defaut, qui n'existent que par l'equipement.
+     * Sans le garde-fou, tout personnage qui pose du Poison — la Faucille de
+     * tier 1 comprise — heriterait gratuitement de ces mecaniques.
+     */
+    toxineParTic: false,
+    toxineSeuilReduit: false,
+    poisonLifesteal: 0,
     resistances: {
       poison: 0,
       gel: 0,

@@ -72,6 +72,12 @@ export const LOOT_TABLES = {
     { id: "carian_crusher", chance: 0.3 },
     { id: "karolos_mask", chance: 0.4 },
   ],
+  carrion_marsh: [
+    { id: "carrion_scythe", chance: 0.28 },
+    { id: "plague_hide_armor", chance: 0.3 },
+    { id: "plague_amulet", chance: 0.22 },
+    { id: "rune_fragment", chance: 0.2 },
+  ],
   liurnia_west: [
     { id: "raya_lucaria_robe", chance: 0.4 },
     { id: "heavy_crystal_gauntlets", chance: 0.3 },
@@ -259,6 +265,8 @@ export const LOOT_TABLES = {
     { id: "cleanrot_spear", chance: 0.2 },
     { id: "haligtree_crest_shield", chance: 0.22 },
     { id: "scarlet_bloom_charm", chance: 0.16 },
+    { id: "necromancer_seal", chance: 0.18 },
+    { id: "gravewarden_cloak", chance: 0.18 },
     { id: "rune_fragment", chance: 0.2 },
   ],
   farum_azula_deep: [
@@ -441,7 +449,23 @@ export const BIOMES = {
     monsters: ["marionette_soldier", "raya_sorcerer"],
     boss: "rennala",
     length: 12,
-    unlocks: ["altus_plateau", "caria_mansion"],
+    unlocks: ["altus_plateau", "caria_mansion", "carrion_marsh"],
+  },
+
+  /*
+   * Donjon annexe : le Poison qui s'intensifie (voir CHAROGNARD dans
+   * constants.js). Cul-de-sac volontaire, comme Jarburg ou l'Enclos des
+   * Champions — un detour, pas un passage oblige.
+   */
+  carrion_marsh: {
+    name: "Marais de la Charogne",
+    monsters: ["marsh_carrion_crow", "marsh_bloated_ghoul"],
+    rareMonsters: ["marsh_plague_matriarch"],
+    maxRareSpawns: 2,
+    boss: "carrion_marsh_queen",
+    length: 11,
+    unlocks: [],
+    hazards: ["putrefaction", "poison"],
   },
 
   altus_plateau: {

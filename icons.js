@@ -132,6 +132,7 @@ const WEAPON_CELLS = {
   gelmir_dragon_fang: [14, 8],
   giant_breaker_maul: [5, 19],
   azula_black_censer: [4, 11],
+  carrion_scythe: [15, 14],
 };
 
 /* ------------------------------------------------------------------ */
@@ -186,6 +187,8 @@ const ARMOUR_CELLS = {
   mercury_breastplate: [5, 8],
   rootbound_plate: [3, 17],
   rotbloom_mail: [1, 18],
+  gravewarden_cloak: [5, 17],
+  plague_hide_armor: [6, 17],
 };
 
 /* ------------------------------------------------------------------ */

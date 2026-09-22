@@ -718,6 +718,60 @@ export const MONSTERS = {
     onHitEffect: { id: "STUN", duration: 1, chance: 0.15 },
   },
 
+  // === MARAIS DE LA CHAROGNE (donjon annexe, apres l'Academie) ===
+  marsh_carrion_crow: {
+    name: "Corbeau charognard",
+    hp: 140,
+    atk: 32,
+    runes: 580,
+    onHitEffect: { id: "POISON", duration: 2, chance: 0.35 },
+    groupCombinations: [
+      { size: 1, chance: 0.6 },
+      { size: 2, chance: 0.3 },
+      { size: 3, chance: 0.1 },
+    ],
+  },
+  marsh_bloated_ghoul: {
+    name: "Goule boursouflée",
+    hp: 190,
+    atk: 40,
+    armor: 70,
+    runes: 650,
+    onHitEffect: { id: "POISON", duration: 3, chance: 0.3 },
+    groupCombinations: [
+      { size: 1, chance: 0.7 },
+      { size: 2, chance: 0.3 },
+    ],
+  },
+  marsh_plague_matriarch: {
+    name: "Matriarche de la peste",
+    hp: 950,
+    atk: 58,
+    armor: 150,
+    runes: 2400,
+    isRare: true,
+    onHitEffect: { id: "POISON", duration: 3, chance: 0.4 },
+    drops: [
+      { id: "carrion_scythe", chance: 0.5 },
+      { id: "plague_hide_armor", chance: 0.5 },
+    ],
+  },
+  // Boss du donjon, avec une planche 96 px dediee.
+  carrion_marsh_queen: {
+    name: "Reine de la Charogne",
+    hp: 2200,
+    atk: 68,
+    runes: 12000,
+    isBoss: true,
+    armor: 90,
+    hasSecondPhase: true,
+    thresholdForPhase2: 0.45,
+    flavorTextPhase2: "La charogne se souleve et grouille de vermine.",
+    effectsPhase2: { id: "POISON", duration: 4, chance: 0.3 },
+    specificStats: { attacksPerTurn: 1 },
+    onHitEffect: { id: "POISON", duration: 3, chance: 0.3 },
+  },
+
   // === MARAIS DE LIURNIA
   liurnia_dragon_smarag: {
     name: "Smarag, Dragon de Pierre d'Éclat",

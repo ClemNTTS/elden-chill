@@ -23,6 +23,7 @@ BOSSES = [
     "evergaol_astel", "evergaol_fortissax", "evergaol_nameless_champion",
     "divine_tower_keeper", "catacomb_burnt_spirit",
     "gurranq_beast_clergyman", "jarburg_great_jar",
+    "carrion_marsh_queen",
 ]
 ROWS = [("idle", 4), ("attack", 6), ("hurt", 2), ("death", 6)]
 

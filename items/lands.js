@@ -478,6 +478,45 @@ export const LANDS_ITEMS = {
     },
   },
 
+  /* ============ NECROMANCIEN (Elphael) — vol de vie par le Poison ============
+     Deux pieces LIBRES, sans `set:` : elles ne s'excluent d'aucune panoplie
+     et ne dependent pas l'une de l'autre. Chacune ecrit stats.poisonLifesteal,
+     lu par status.js (POISON.onTurnStart), plafonne a 50% du tic quel que
+     soit le nombre de pieces portees. ============ */
+  necromancer_seal: {
+    name: "Sceau nécromantique",
+    type: ITEM_TYPES.ACCESSORY,
+    rarity: ITEM_RARITIES.RELIC,
+    description:
+      "+18 Intelligence <em style='color: grey;'>(+2 / Niv)</em>. Vos tics de Poison infligés " +
+      "vous rendent 30% de leurs dégâts en PV <em style='color: grey;'>(+2% / Niv)</em>.",
+    applyFlat: (stats, itemLevel) => {
+      stats.intelligence += 18 + itemLevel * 2;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.poisonLifesteal =
+        (stats.poisonLifesteal || 0) + 0.3 + 0.02 * (itemLevel - 1);
+    },
+  },
+
+  gravewarden_cloak: {
+    name: "Robe du fossoyeur",
+    type: ITEM_TYPES.ARMOR,
+    rarity: ITEM_RARITIES.RELIC,
+    description:
+      "+40 Armure <em style='color: grey;'>(+3 / Niv)</em>, +15 Résistance Putréfaction " +
+      "<em style='color: grey;'>(+1 / Niv)</em>. Vos tics de Poison infligés vous rendent 10% de plus " +
+      "en PV <em style='color: grey;'>(+1% / Niv)</em>.",
+    applyFlat: (stats, itemLevel) => {
+      stats.armor += 40 + itemLevel * 3;
+      stats.resistances.putrefaction += 15 + itemLevel;
+    },
+    applyMult: (stats, itemLevel) => {
+      stats.poisonLifesteal =
+        (stats.poisonLifesteal || 0) + 0.1 + 0.01 * (itemLevel - 1);
+    },
+  },
+
   /* ============ MORT DESTINEE (Farum Azula) — voie du fleau ============ */
   blade_of_destined_death: {
     name: "Lame de la Mort destinee",

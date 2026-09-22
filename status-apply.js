@@ -23,6 +23,10 @@ export const STACKING_EFFECTS = new Set([
   "FROSTBITE",
   "MADNESS",
   "DEATH_BLIGHT",
+  // Toxine : cumul pose par un tic de Poison quand l'equipement le permet
+  // (voir stats.toxineParTic dans status.js). Explose au seuil, comme les
+  // quatre autres.
+  "TOXIN",
 ]);
 
 /**

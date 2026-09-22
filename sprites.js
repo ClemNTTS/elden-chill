@@ -246,6 +246,7 @@ export const BOSS_ARCHETYPES = [
   "catacomb_burnt_spirit",
   "gurranq_beast_clergyman",
   "jarburg_great_jar",
+  "carrion_marsh_queen",
 ];
 
 export const MONSTER_ARCHETYPES = [

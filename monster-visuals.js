@@ -333,6 +333,12 @@ const VISUALS = {
   evergaol_astel: ["evergaol_astel", "void"],
   evergaol_ancient_dragon: ["dragon", "radiant"],
   evergaol_nameless_champion: ["evergaol_nameless_champion", "silver"],
+
+  // Marais de la Charogne
+  carrion_marsh_queen: ["carrion_marsh_queen", "rot"],
+  marsh_carrion_crow: ["volant", "rot"],
+  marsh_bloated_ghoul: ["mortvivant", "rot"],
+  marsh_plague_matriarch: ["mortvivant", "rot"],
 };
 
 /* ------------------------------------------------------------------ */
