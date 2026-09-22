@@ -41,7 +41,38 @@ const margePalier = (biomeId) => palierPour(biomeId);
 const niveauPour = (boss, seuil, biomeId) =>
   niveauPourMarge(boss, seuil, margePalier(biomeId), niveauObjet);
 
-/* Les releves de terrain, pour mesurer le biais du modele. */
+/*
+ * Les releves de terrain, pour mesurer le biais du modele.
+ *
+ * Les six premiers datent de l'equilibrage d'avant la parite des archetypes :
+ * ils decrivent un jeu ou l'intelligence frappait deux fois moins fort. Ils
+ * sont conserves parce qu'ils restent le seul ancrage du debut de partie, mais
+ * l'ecart qu'ils affichent melange le biais du modele et ce changement-la.
+ *
+ * TROIS RELEVES PLUS RECENTS, ET CE QU'ILS VALENT
+ *
+ * Un joueur de niveau 185, build intelligence, a rapporte :
+ *
+ *   Manoir du Volcan       gagne tres facilement, 95% des pv restants
+ *   Antre de Rykard        gagne, difficile, toutes les cendres depensees, 48%
+ *   Leyndell Cite Royale   MORT au neuvieme tour du boss
+ *
+ * Ils ne figurent PAS dans la table ci-dessous, et c'est important : un biome
+ * nettoye a 185 ne dit pas qu'il FALLAIT 185, seulement que 185 suffisait. Les
+ * verser comme des seuils gonflerait artificiellement l'ecart — teste, ils le
+ * portaient a +18,8 niveaux alors que le modele ne s'etait pas trompe.
+ *
+ * Ce sont donc des bornes, et elles valident le banc :
+ *
+ *   Volcan    survie 113, le joueur a 185 : tres au-dessus, d'ou les 95%
+ *   Rykard    survie  86, le joueur a 185 : au-dessus, mais le boss mord
+ *   Leyndell  survie 184, confort 240, le joueur a 185 : un niveau au-dessus
+ *             du minimum vital et cinquante-cinq sous le confort. Il est mort.
+ *
+ * Le dernier cas est le seul releve NET des trois — une mort donne un seuil,
+ * une victoire ne donne qu'un plafond — et le banc l'avait predit au niveau
+ * pres.
+ */
 const RELEVES = {
   limgrave_west: 9,
   limgrave_north: 17,

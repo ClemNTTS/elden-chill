@@ -931,8 +931,8 @@ export const MONSTERS = {
   draconic_tree_sentinel: {
     comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
-    hp: 3656,
-    atk: 84,
+    hp: 3839,
+    atk: 88,
     runes: 52000,
     isBoss: true,
     armor: 225,
@@ -1256,8 +1256,8 @@ export const MONSTERS = {
   // --- LAKE OF ROT ---
   rot_pest: {
     name: "Serviteur Pestiféré",
-    hp: 356,
-    atk: 21,
+    hp: 338,
+    atk: 20,
     runes: 2200,
     armor: 150,
     groupCombinations: [
@@ -1269,8 +1269,8 @@ export const MONSTERS = {
 
   scarlet_monk: {
     name: "Moine Ecarlate",
-    hp: 356,
-    atk: 23,
+    hp: 338,
+    atk: 22,
     runes: 2500,
     armor: 175,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.35 },
@@ -1308,8 +1308,8 @@ export const MONSTERS = {
 
   astel_bud: {
     name: "Bourgeon d'Astel",
-    hp: 4093,
-    atk: 49,
+    hp: 5116,
+    atk: 61,
     runes: 86000,
     isBoss: true,
     armor: 230,

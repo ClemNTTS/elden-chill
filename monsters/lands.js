@@ -168,8 +168,8 @@ export const LANDS_MONSTERS = {
   /* ============ MANOIR DU VOLCAN (ch. VII) ============ */
   volcano_manservant: {
     name: "Serviteur du Manoir",
-    hp: 907,
-    atk: 48,
+    hp: 862,
+    atk: 46,
     armor: 205,
     runes: 18500,
     specificStats: { attacksPerTurn: 1 },
@@ -177,8 +177,8 @@ export const LANDS_MONSTERS = {
   },
   volcano_abductor: {
     name: "Vierge Ravisseuse",
-    hp: 983,
-    atk: 45,
+    hp: 934,
+    atk: 43,
     armor: 245,
     runes: 20000,
     specificStats: { attacksPerTurn: 1 },
@@ -212,8 +212,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["regeneration"],
     phaseRegen: 0.05,
     name: "Noble Godskin",
-    hp: 10189,
-    atk: 105,
+    hp: 9196,
+    atk: 95,
     armor: 223,
     runes: 87000,
     isBoss: true,
@@ -223,19 +223,34 @@ export const LANDS_MONSTERS = {
     thresholdForPhase2: 0.5,
     flavorTextPhase2: "Le Noble se gonfle et cesse de toucher le sol.",
     effectsPhase2: { id: "STUN", duration: 2, chance: 0.3 },
+    /*
+     * Il roule : un tour d'elan, puis un ecrasement.
+     *
+     * L'ancienne version prenait DEUX tours d'elan pour un cycle de quatre.
+     * Sa cadence effective tombait a 0,95 — moins qu'un boss sans mecanique du
+     * tout, le plus faible des douze boss scriptes du jeu. Un joueur de niveau
+     * 185 terminait le Manoir du Volcan a 95% de ses points de vie et disait,
+     * a juste titre : « le boss est faible, ou alors je n'ai pas compris son
+     * action. »
+     *
+     * Les deux a la fois. Une fenetre de deux tours sans danger n'est pas une
+     * fenetre, c'est une pause : il n'y a rien a esquiver, rien a preparer, et
+     * le coup qui suit ne rattrape pas ce qui n'a pas ete inflige. Un tour
+     * d'elan sur trois porte la cadence a 1,33, dans la bande de ses pairs
+     * (Rykard 1,27, Chateau Sol 1,07, Farum Azula 1,25), et rend l'elan lisible
+     * parce qu'il est suivi de l'ecrasement au tour d'apres, pas deux plus loin.
+     */
     onTurnAction: (enemy) => {
-      // Il roule : deux tours sans degats, puis un ecrasement. Le rythme est
-      // volontairement long pour recompenser les cendres a fenetre.
       enemy._p = (enemy._p || 0) + 1;
-      if (enemy._p % 4 === 1 || enemy._p % 4 === 2) {
+      if (enemy._p % 3 === 1) {
         return {
           msg: "Le Noble se replie en boule et prend de la vitesse.",
           skipAttack: true,
         };
       }
-      if (enemy._p % 4 === 3) {
+      if (enemy._p % 3 === 2) {
         return {
-          dmgMult: 2.8,
+          dmgMult: 3,
           msg: "La masse du Noble s'abat de tout son poids.",
         };
       }
@@ -280,8 +295,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["drain", "malediction"],
     phaseMalediction: { id: "BURN", duration: 3 },
     name: "Rykard, Seigneur de la Blasphemie",
-    hp: 7795,
-    atk: 79,
+    hp: 6626,
+    atk: 67,
     armor: 229,
     runes: 109000,
     isBoss: true,
@@ -313,8 +328,8 @@ export const LANDS_MONSTERS = {
   /* ============ TOUR DIVINE (ch. VIII) ============ */
   divine_tower_watch: {
     name: "Garde de la Tour",
-    hp: 1197,
-    atk: 62,
+    hp: 1556,
+    atk: 81,
     armor: 250,
     runes: 30700,
     specificStats: { attacksPerTurn: 1 },
@@ -322,8 +337,8 @@ export const LANDS_MONSTERS = {
   },
   divine_tower_oracle: {
     name: "Oracle scelle",
-    hp: 1140,
-    atk: 64,
+    hp: 1482,
+    atk: 83,
     armor: 195,
     runes: 29300,
     specificStats: { attacksPerTurn: 2 },
@@ -345,8 +360,8 @@ export const LANDS_MONSTERS = {
   },
   divine_tower_keeper: {
     name: "Gardien de la Tour Divine",
-    hp: 12150,
-    atk: 126,
+    hp: 13972,
+    atk: 145,
     armor: 270,
     runes: 143000,
     isBoss: true,
@@ -443,8 +458,8 @@ export const LANDS_MONSTERS = {
   /* ============ CATACOMBES DES GEANTS (ch. VIII) ============ */
   catacomb_ember_shade: {
     name: "Ombre des braises",
-    hp: 1311,
-    atk: 68,
+    hp: 1377,
+    atk: 71,
     armor: 200,
     runes: 35400,
     specificStats: { attacksPerTurn: 2 },
@@ -452,8 +467,8 @@ export const LANDS_MONSTERS = {
   },
   catacomb_grave_giant: {
     name: "Geant des tombes",
-    hp: 1396,
-    atk: 66,
+    hp: 1466,
+    atk: 69,
     armor: 265,
     runes: 37700,
     specificStats: { attacksPerTurn: 1 },
@@ -475,8 +490,8 @@ export const LANDS_MONSTERS = {
   },
   catacomb_burnt_spirit: {
     name: "Esprit d'Arbre calcine",
-    hp: 8820,
-    atk: 90,
+    hp: 8379,
+    atk: 86,
     armor: 250,
     runes: 167000,
     isBoss: true,
@@ -502,8 +517,8 @@ export const LANDS_MONSTERS = {
   /* ============ ELPHAEL (ch. IX) ============ */
   elphael_cleanrot_knight: {
     name: "Chevalier de la Purge",
-    hp: 1305,
-    atk: 68,
+    hp: 1240,
+    atk: 65,
     armor: 285,
     runes: 55800,
     specificStats: { attacksPerTurn: 1 },
@@ -511,8 +526,8 @@ export const LANDS_MONSTERS = {
   },
   elphael_rot_swarm: {
     name: "Nuee putride",
-    hp: 1242,
-    atk: 70,
+    hp: 1180,
+    atk: 66,
     armor: 175,
     runes: 53100,
     specificStats: { attacksPerTurn: 3 },
@@ -534,8 +549,8 @@ export const LANDS_MONSTERS = {
   },
   malenia_blade: {
     name: "Malenia, Lame de Miquella",
-    hp: 9529,
-    atk: 95,
+    hp: 8100,
+    atk: 81,
     armor: 275,
     runes: 262000,
     isBoss: true,
@@ -566,8 +581,8 @@ export const LANDS_MONSTERS = {
   /* ============ FARUM AZULA, ABIME (ch. IX) ============ */
   azula_dragon_warrior: {
     name: "Guerrier draconique",
-    hp: 3502,
-    atk: 182,
+    hp: 3327,
+    atk: 173,
     armor: 275,
     runes: 67000,
     specificStats: { attacksPerTurn: 1 },
@@ -575,8 +590,8 @@ export const LANDS_MONSTERS = {
   },
   azula_storm_hawk: {
     name: "Faucon des tempetes",
-    hp: 3300,
-    atk: 189,
+    hp: 3135,
+    atk: 180,
     armor: 195,
     runes: 63100,
     specificStats: { attacksPerTurn: 2 },
@@ -584,8 +599,8 @@ export const LANDS_MONSTERS = {
   },
   azula_maliketh: {
     name: "Maliketh, Lame de Mort",
-    hp: 8360,
-    atk: 405,
+    hp: 6688,
+    atk: 324,
     armor: 270,
     runes: 79400,
     isRare: true,
@@ -610,8 +625,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["carapace", "mue"],
     phaseMue: { id: "DEATH_BLIGHT", duration: 3, chance: 0.4 },
     name: "Placidusax, Dragon-Seigneur",
-    hp: 19463,
-    atk: 201,
+    hp: 14597,
+    atk: 151,
     armor: 210,
     runes: 313000,
     isBoss: true,
@@ -643,8 +658,8 @@ export const LANDS_MONSTERS = {
   /* ============ LEYNDELL LA CENDREUSE (ch. X) ============ */
   ash_gilded_guard: {
     name: "Garde dore calcine",
-    hp: 1912,
-    atk: 100,
+    hp: 2103,
+    atk: 110,
     armor: 290,
     runes: 77000,
     specificStats: { attacksPerTurn: 1 },
@@ -652,8 +667,8 @@ export const LANDS_MONSTERS = {
   },
   ash_putrid_avatar: {
     name: "Avatar des cendres",
-    hp: 1989,
-    atk: 96,
+    hp: 2188,
+    atk: 106,
     armor: 265,
     runes: 80000,
     specificStats: { attacksPerTurn: 1 },
@@ -661,8 +676,8 @@ export const LANDS_MONSTERS = {
   },
   ash_gideon_ozz: {
     name: "Gideon Ofnir, le Tout-Savant",
-    hp: 8369,
-    atk: 406,
+    hp: 7114,
+    atk: 345,
     armor: 250,
     runes: 91200,
     isRare: true,
@@ -688,8 +703,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["frenesie", "riposte"],
     phaseRiposte: 0.12,
     name: "Hoarah Loux, Conquerant",
-    hp: 27992,
-    atk: 290,
+    hp: 23514,
+    atk: 244,
     armor: 200,
     runes: 360000,
     isBoss: true,
@@ -721,8 +736,8 @@ export const LANDS_MONSTERS = {
   /* ============ TRONE D'ELDEN (ch. X) ============ */
   throne_golden_shade: {
     name: "Ombre doree",
-    hp: 3364,
-    atk: 175,
+    hp: 3700,
+    atk: 193,
     armor: 295,
     runes: 88600,
     specificStats: { attacksPerTurn: 1 },
@@ -730,8 +745,8 @@ export const LANDS_MONSTERS = {
   },
   throne_order_fragment: {
     name: "Fragment de l'Ordre",
-    hp: 3218,
-    atk: 181,
+    hp: 2655,
+    atk: 149,
     armor: 240,
     runes: 84700,
     specificStats: { attacksPerTurn: 2 },
@@ -739,8 +754,8 @@ export const LANDS_MONSTERS = {
   },
   throne_radagon: {
     name: "Radagon de l'Ordre d'Or",
-    hp: 8694,
-    atk: 423,
+    hp: 8259,
+    atk: 402,
     armor: 280,
     runes: 104900,
     isRare: true,
@@ -766,8 +781,8 @@ export const LANDS_MONSTERS = {
     phaseRegen: 0.03,
     phaseMue: { id: "MADNESS", duration: 3, chance: 0.45 },
     name: "Bete d'Elden",
-    hp: 29000,
-    atk: 300,
+    hp: 23200,
+    atk: 240,
     armor: 210,
     runes: 413000,
     isBoss: true,
