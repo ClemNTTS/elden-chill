@@ -14,13 +14,16 @@ import {
 } from "./constants.js";
 import {
   RARETES,
+  attenteAvantRelance,
   avancerContrat,
+  formaterAttente,
   ecoulerEcheance,
   etapeSuivanteChaine,
   faveurApresContrat,
   genererContrat,
   normaliserContrat,
   normaliserFaveur,
+  peutRelancer,
   primeDeChaine,
 } from "./contracts.js";
 import { addJournalEntry } from "./systems.js";
@@ -536,21 +539,33 @@ export const proposerContrat = (zonePreferee = null) => {
   return contrat;
 };
 
-/** Abandonne le contrat en cours et en tire un autre. */
+/**
+ * Relance le contrat en cours et en tire un autre.
+ *
+ * Soumise a un delai depuis la demande : voir DELAI_REROLL_MS. La regle vit
+ * dans contracts.js, ici on ne fait que refuser poliment.
+ */
 export const abandonnerContrat = () => {
   const etat = getEtatContrats();
   if (!etat.actif) return;
-  // Un contrat expire n'a plus rien a perdre : on ne demande pas confirmation
-  // pour jeter ce qui est deja mort.
+  // Un contrat expire n'a plus rien a perdre : on ne demande ni delai ni
+  // confirmation pour jeter ce qui est deja mort.
   if (etat.actif.expire) {
     etat.actif = null;
     proposerContrat();
     return;
   }
+  if (!peutRelancer(etat.actif)) {
+    ActionLog(
+      `Ce contrat ne peut pas encore etre relance : ${formaterAttente(
+        attenteAvantRelance(etat.actif),
+      )} restantes.`,
+      "log-warning",
+    );
+    return;
+  }
   if (
-    !confirm(
-      `Abandonner "${etat.actif.titre}" ? Un autre contrat sera propose.`,
-    )
+    !confirm(`Relancer "${etat.actif.titre}" ? Un autre contrat sera propose.`)
   ) {
     return;
   }

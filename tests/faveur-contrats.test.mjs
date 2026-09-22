@@ -10,12 +10,18 @@ import assert from "node:assert/strict";
  */
 import test from "node:test";
 import {
+  DELAI_REROLL_MS,
   FAVEUR_MAX,
   FAVEUR_PAR_RARETE,
   RARETES,
+  attenteAvantRelance,
   chanceLegendaire,
   faveurApresContrat,
+  formaterAttente,
+  genererContrat,
+  normaliserContrat,
   normaliserFaveur,
+  peutRelancer,
   tirerRarete,
 } from "../contracts.js";
 import { FAVEUR_CONTRAT_MAX } from "../shared/player-profile.js";
@@ -94,4 +100,75 @@ test("la faveur raccourcit surtout les longues disettes", () => {
   // Le plafond de faveur borne mecaniquement l'attente : au pire on finit a
   // 30% par tirage, la ou 8% fixe laissait des series de plus de cent.
   assert.ok(pire <= 60, `pire attente observee : ${pire}`);
+});
+
+/*
+ * Relance d'un contrat.
+ *
+ * L'abandon etait libre, immediat et illimite : on relancait en boucle jusqu'a
+ * tomber sur un objectif facile dans la zone qu'on farmait deja. Un contrat
+ * qu'on refuse sans rien risquer ne demande aucune decision.
+ */
+test("un contrat frais ne peut pas etre relance", () => {
+  const maintenant = 1_000_000_000_000;
+  const contrat = { demandeA: maintenant, expire: false };
+  assert.equal(peutRelancer(contrat, maintenant), false);
+  assert.equal(attenteAvantRelance(contrat, maintenant), DELAI_REROLL_MS);
+});
+
+test("la relance s'ouvre vingt-quatre heures apres la demande", () => {
+  const demande = 1_000_000_000_000;
+  const contrat = { demandeA: demande, expire: false };
+  assert.equal(peutRelancer(contrat, demande + DELAI_REROLL_MS - 1), false);
+  assert.equal(peutRelancer(contrat, demande + DELAI_REROLL_MS), true);
+  assert.equal(attenteAvantRelance(contrat, demande + DELAI_REROLL_MS), 0);
+});
+
+test("un contrat expire se jette sans attendre", () => {
+  // Il n'a plus rien a donner : le retenir ne protege rien.
+  const maintenant = 1_000_000_000_000;
+  assert.equal(
+    peutRelancer({ demandeA: maintenant, expire: true }, maintenant),
+    true,
+  );
+});
+
+test("un contrat d'avant la regle n'est pas pris en otage", () => {
+  // Pas d'horodatage : on ne lui applique pas un delai qui n'existait pas
+  // quand il a ete tire.
+  assert.equal(peutRelancer({ expire: false }, Date.now()), true);
+});
+
+test("l'attente se lit en clair", () => {
+  assert.equal(formaterAttente(0), "moins d'une minute");
+  assert.equal(formaterAttente(90 * 1000), "2 minutes");
+  assert.equal(formaterAttente(45 * 60 * 1000), "45 minutes");
+  assert.equal(formaterAttente(60 * 60 * 1000), "une heure");
+  assert.equal(formaterAttente(DELAI_REROLL_MS), "24 heures");
+});
+
+test("un contrat genere porte la date de sa demande", () => {
+  const maintenant = 1_700_000_000_000;
+  const contrat = genererContrat({
+    biomeId: "nokron",
+    nomBiome: "Nokron",
+    niveauJoueur: 150,
+    maintenant,
+    random: () => 0.5,
+  });
+  assert.equal(contrat.demandeA, maintenant);
+  assert.equal(peutRelancer(contrat, maintenant), false);
+});
+
+test("un horodatage venu du futur ne bloque pas la relance a jamais", () => {
+  const forge = normaliserContrat({
+    ...genererContrat({
+      biomeId: "nokron",
+      nomBiome: "Nokron",
+      niveauJoueur: 150,
+      random: () => 0.5,
+    }),
+    demandeA: Date.now() + 10 * DELAI_REROLL_MS,
+  });
+  assert.ok(forge.demandeA <= Date.now());
 });

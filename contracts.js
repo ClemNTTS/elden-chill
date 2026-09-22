@@ -304,6 +304,57 @@ export const CYCLES_ECHEANCE = { [RARETES.RARE]: 12, [RARETES.LEGENDAIRE]: 20 };
 export const PRIME_ECHEANCE = 1.5;
 
 /*
+ * Delai avant de pouvoir relancer un contrat vivant.
+ *
+ * L'abandon etait libre, immediat et illimite : on pouvait relancer en boucle
+ * jusqu'a tomber sur un objectif facile dans la zone qu'on farmait deja. Un
+ * contrat qu'on refuse sans rien risquer ne demande aucune decision, et le
+ * systeme entier perdait sa contrainte.
+ *
+ * Vingt-quatre heures, parce que le but n'est pas de punir : c'est de rendre
+ * le tirage engageant sur une session, tout en garantissant que personne ne
+ * reste coince derriere un objectif hors de portee.
+ */
+export const DELAI_REROLL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Peut-on relancer ce contrat maintenant ?
+ *
+ * Un contrat expire se jette sans delai : il n'a plus rien a donner, le faire
+ * attendre ne protegerait rien.
+ */
+export const peutRelancer = (contrat, maintenant = Date.now()) => {
+  if (!contrat) return false;
+  if (contrat.expire) return true;
+  const demande = Number(contrat.demandeA) || 0;
+  // Un contrat d'avant cette regle n'a pas d'horodatage : on ne le retient pas
+  // en otage d'une contrainte qui n'existait pas quand il a ete tire.
+  if (!demande) return true;
+  return maintenant - demande >= DELAI_REROLL_MS;
+};
+
+/** Millisecondes restantes avant de pouvoir relancer. Zero si c'est deja bon. */
+export const attenteAvantRelance = (contrat, maintenant = Date.now()) => {
+  if (peutRelancer(contrat, maintenant)) return 0;
+  return DELAI_REROLL_MS - (maintenant - (Number(contrat.demandeA) || 0));
+};
+
+/**
+ * Attente restante, en toutes lettres.
+ *
+ * Arrondie a l'heure superieure tant qu'il reste plus d'une heure : annoncer
+ * "23 h 47 min" a quelqu'un qui ne peut rien y faire n'aide personne, et un
+ * compte a rebours a la minute obligerait le panneau a se redessiner sans fin.
+ */
+export const formaterAttente = (millisecondes) => {
+  const minutes = Math.ceil(Math.max(0, millisecondes) / 60000);
+  if (minutes <= 1) return "moins d'une minute";
+  if (minutes < 60) return `${minutes} minutes`;
+  const heures = Math.ceil(minutes / 60);
+  return heures === 1 ? "une heure" : `${heures} heures`;
+};
+
+/*
  * Chaine.
  *
  * Trois contrats lies, dans trois zones differentes, et une prime versee au
@@ -428,6 +479,7 @@ export const genererContrat = ({
   objetsExclusifs = [],
   chaineHeritee = null,
   faveur = 0,
+  maintenant = Date.now(),
   random = Math.random,
 } = {}) => {
   if (!biomeId) return null;
@@ -497,6 +549,9 @@ export const genererContrat = ({
 
   return {
     id: `contrat_${Date.now()}_${Math.floor(random() * 1e6)}`,
+    // Date de la demande : c'est elle qui ouvre le droit de relancer, pas la
+    // progression. Voir peutRelancer.
+    demandeA: maintenant,
     modele: modele.id,
     evenement: modele.evenement,
     filtre,
@@ -707,6 +762,12 @@ export const normaliserContrat = (brut) => {
     echeance,
     cyclesRestants: Math.min(echeance, Math.max(0, cyclesRestants)),
     expire: echeance > 0 && cyclesRestants <= 0 && avancement < objectif,
+    // Un horodatage dans le futur rendrait la relance inatteignable : on le
+    // ramene a maintenant plutot que de le jeter.
+    demandeA: Math.min(
+      Date.now(),
+      Math.max(0, Math.floor(Number(brut.demandeA) || 0)),
+    ),
     chaine,
     honore: avancement >= objectif,
   };
