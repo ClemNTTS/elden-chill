@@ -26,6 +26,7 @@ import {
   peutRelancer,
   primeDeChaine,
 } from "./contracts.js";
+import { filtresPossiblesPourZone } from "./contrats-zone.js";
 import { addJournalEntry } from "./systems.js";
 import { startExploration } from "./core.js";
 import {
@@ -356,6 +357,26 @@ export const getEtatContrats = () => {
   gameState.contracts.faveur = normaliserFaveur(gameState.contracts.faveur);
   if (gameState.contracts.actif) {
     gameState.contracts.actif = normaliserContrat(gameState.contracts.actif);
+    /*
+     * Un contrat impossible est jete, sans delai ni confirmation.
+     *
+     * Les sauvegardes d'avant la garde de contrats-zone.js portent des
+     * objectifs que leur zone ne peut pas honorer — une meute la ou les
+     * monstres arrivent seuls. Les laisser en place condamnerait le joueur a
+     * attendre vingt-quatre heures pour avoir le droit de relancer une barre
+     * qui ne peut pas bouger.
+     */
+    const actif = gameState.contracts.actif;
+    if (
+      actif.filtre &&
+      !filtresPossiblesPourZone(actif.biomeId).includes(actif.filtre)
+    ) {
+      gameState.contracts.actif = null;
+      ActionLog(
+        `Contrat annule : "${actif.titre}" demandait des proies que ${actif.nomBiome} n'abrite pas.`,
+        "log-event",
+      );
+    }
   }
   return gameState.contracts;
 };
@@ -524,6 +545,10 @@ export const proposerContrat = (zonePreferee = null) => {
     niveauJoueur: gameState.stats.level || 1,
     objetsExclusifs: poolRecompense(),
     faveur: etat.faveur,
+    // Sans ca, le tirage peut demander a une zone ce qu'elle ne produit
+    // jamais — une meute la ou les monstres arrivent seuls. Voir
+    // contrats-zone.js.
+    filtresPossibles: filtresPossiblesPourZone(biomeId),
   });
 
   /*
@@ -693,6 +718,7 @@ const tirerEtapeSuivante = (contrat) => {
     nomBiome: BIOMES[biomeId]?.name || biomeId,
     niveauJoueur: gameState.stats.level || 1,
     objetsExclusifs: poolRecompense(),
+    filtresPossibles: filtresPossiblesPourZone(biomeId),
   });
 };
 

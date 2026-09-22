@@ -475,8 +475,8 @@ export const MONSTERS = {
 
   rotten_stray: {
     name: "Chien Errant Putréfié",
-    hp: 85,
-    atk: 22,
+    hp: 47,
+    atk: 12,
     runes: 210,
     onHitEffect: { id: "SCARLET_ROT", duration: 3, chance: 0.35 },
     groupCombinations: [
@@ -487,8 +487,8 @@ export const MONSTERS = {
 
   kindred_of_rot: {
     name: "Serviteur de la Putréfaction",
-    hp: 120,
-    atk: 28,
+    hp: 66,
+    atk: 15,
     runes: 250,
     groupCombinations: [
       { size: 2, chance: 0.6 },
@@ -499,8 +499,8 @@ export const MONSTERS = {
 
   crystal_snail: {
     name: "Escargot de Cristal",
-    hp: 440,
-    atk: 35,
+    hp: 308,
+    atk: 24,
     runes: 300,
     armor: 250,
     isRare: true,
@@ -514,8 +514,8 @@ export const MONSTERS = {
 
   caelid_knight: {
     name: "Chevalier de Caélid",
-    hp: 550,
-    atk: 55,
+    hp: 385,
+    atk: 38,
     runes: 1200,
     isRare: true,
     armor: 140,
@@ -528,8 +528,8 @@ export const MONSTERS = {
 
   commander_oneil_weak: {
     name: "Commandant O'Neil (Exilé)",
-    hp: 1400,
-    atk: 50,
+    hp: 840,
+    atk: 30,
     runes: 4500,
     isBoss: true,
     armor: 150,
@@ -931,8 +931,8 @@ export const MONSTERS = {
   draconic_tree_sentinel: {
     comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
-    hp: 4875,
-    atk: 112,
+    hp: 3656,
+    atk: 84,
     runes: 52000,
     isBoss: true,
     armor: 225,
@@ -948,15 +948,15 @@ export const MONSTERS = {
 
   ancestral_follower: {
     name: "Disciple Ancestral",
-    hp: 475,
-    atk: 45,
+    hp: 214,
+    atk: 20,
     runes: 450,
   },
 
   siofra_rat: {
     name: "Rat de Siofra",
-    hp: 475,
-    atk: 18,
+    hp: 214,
+    atk: 8,
     runes: 120,
     groupCombinations: [
       { size: 3, chance: 0.6 },
@@ -966,10 +966,10 @@ export const MONSTERS = {
 
   ancestral_sniper: {
     name: "Archer Ancestral",
-    hp: 1000,
+    hp: 1150,
     runes: 5000,
     armor: 80,
-    atk: 83,
+    atk: 95,
     isRare: true,
     isCharging: false,
     drops: [
@@ -992,8 +992,8 @@ export const MONSTERS = {
 
   ancestral_spirit: {
     name: "Esprit Ancestral",
-    hp: 2500,
-    atk: 100,
+    hp: 1750,
+    atk: 70,
     runes: 12000,
     isBoss: true,
     dodgeChance: 0.2,
@@ -1256,8 +1256,8 @@ export const MONSTERS = {
   // --- LAKE OF ROT ---
   rot_pest: {
     name: "Serviteur Pestiféré",
-    hp: 1825,
-    atk: 105,
+    hp: 356,
+    atk: 21,
     runes: 2200,
     armor: 150,
     groupCombinations: [
@@ -1269,8 +1269,8 @@ export const MONSTERS = {
 
   scarlet_monk: {
     name: "Moine Ecarlate",
-    hp: 1825,
-    atk: 118,
+    hp: 356,
+    atk: 23,
     runes: 2500,
     armor: 175,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.35 },
@@ -1278,8 +1278,8 @@ export const MONSTERS = {
 
   cleanrot_revenant: {
     name: "Revenant Putréchevalier",
-    hp: 2600,
-    atk: 148,
+    hp: 1482,
+    atk: 85,
     runes: 9800,
     armor: 210,
     isRare: true,
@@ -1293,8 +1293,8 @@ export const MONSTERS = {
 
   ulcerated_rot_spirit: {
     name: "Esprit Putride Ulcéré",
-    hp: 3200,
-    atk: 165,
+    hp: 1824,
+    atk: 94,
     runes: 11000,
     armor: 180,
     isRare: true,
@@ -1308,8 +1308,8 @@ export const MONSTERS = {
 
   astel_bud: {
     name: "Bourgeon d'Astel",
-    hp: 10700,
-    atk: 130,
+    hp: 4093,
+    atk: 49,
     runes: 86000,
     isBoss: true,
     armor: 230,
