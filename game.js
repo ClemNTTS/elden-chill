@@ -24,6 +24,7 @@ import {
 } from "./save.js";
 import { enqueueDevSpawn } from "./spawn.js";
 import { DEFAULT_GAME_STATE, gameState, runtimeState } from "./state.js";
+import { setRafraichissementTempo } from "./tempo.js";
 import {
   afficherAvis,
   createFireParticles,
@@ -340,6 +341,10 @@ const reportSaveLoad = (report) => {
 
 window.onload = () => {
   if (handleAutoRefresh()) return;
+
+  // tempo.js ne peut pas importer ui.js : ui.js importe core.js, qui importe
+  // tempo.js. La dependance est donc posee ici.
+  setRafraichissementTempo(updateUI);
 
   const report = loadGame();
 

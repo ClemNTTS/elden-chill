@@ -888,6 +888,27 @@ export const updateOfflineDisplay = () => {
     if (el) el.innerText = formatSeconds(gameState.save?.offlineTimeBank || 0);
   });
 
+  /*
+   * Ce que la banque vaut REELLEMENT, en toutes lettres.
+   *
+   * Le compteur seul se lit comme une duree de jeu, et il ne l'est pas : a
+   * l'acceleration M, une banque de B secondes tient B/(M-1) secondes reelles
+   * et fait avancer le jeu de M fois cela. Un joueur qui lit "1 h" et voit son
+   * compteur tomber en trente minutes croit legitimement a un bug.
+   */
+  const M = runtimeState.offlineSpeedMultiplier || 3;
+  const banque = Math.max(0, gameState.save?.offlineTimeBank || 0);
+  const tenue = M > 1 ? banque / (M - 1) : banque;
+  const note =
+    banque <= 0
+      ? `Se remplit pendant que le jeu est ferme. Une fois depensee, l'expedition tourne ${M}x plus vite.`
+      : `Expedition ${M}x plus vite : ${formatSeconds(Math.round(tenue))} de jeu reel, ` +
+        `soit ${formatSeconds(Math.round(tenue * M))} de progression.`;
+  ["offline-note", "offline-note-b"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = note;
+  });
+
   btnIds.forEach((id) => {
     const btn = document.getElementById(id);
     if (!btn) return;

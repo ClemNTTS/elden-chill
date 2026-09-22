@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { delayedSetTimeout, reinitialiserRattrapage } from "./tempo.js";
 import {
   getFerveurBoostRarete,
   getFerveurLibelle,
@@ -58,39 +59,6 @@ import {
   updateStepper,
   updateUI,
 } from "./ui.js";
-
-// Helper to use offline-time bank to speed up timeouts when enabled.
-function delayedSetTimeout(fn, ms) {
-  let delay = ms;
-  try {
-    const save = gameState.save || {};
-    const use =
-      save.useOfflineTime &&
-      (save.offlineTimeBank || 0) > 0 &&
-      gameState.world.isExploring;
-    const M = runtimeState.offlineSpeedMultiplier || 3;
-    if (use && M > 1 && ms > 0) {
-      const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
-      const bankMs = (save.offlineTimeBank || 0) * 1000;
-      if (bankMs >= fullSavedMs) {
-        delay = Math.max(0, Math.floor(ms / M));
-        save.offlineTimeBank = Math.max(
-          0,
-          (save.offlineTimeBank || 0) - fullSavedMs / 1000,
-        );
-      } else if (bankMs > 0) {
-        delay = Math.max(0, Math.floor(ms - bankMs));
-        save.offlineTimeBank = 0;
-      }
-      try {
-        updateUI();
-      } catch (e) {}
-    }
-  } catch (e) {
-    console.warn("delayedSetTimeout error:", e);
-  }
-  return setTimeout(fn, delay);
-}
 
 /*
  * Etiquettes d'un ennemi abattu.
@@ -744,6 +712,9 @@ export const startExploration = (biomeId) => {
 
   runtimeState.currentLoopCount = 0;
   runtimeState.currentCombatSession++;
+  // Le rattrapage est propre a une expedition : une dette laissee par la
+  // precedente offrirait des etapes gratuites au demarrage de celle-ci.
+  reinitialiserRattrapage();
   runtimeState.usedRenaissance = false;
   const sessionAtStart = runtimeState.currentCombatSession;
   const biome = BIOMES[biomeId];
