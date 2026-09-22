@@ -21,34 +21,34 @@ const brulure = STATUS_EFFECTS.BURN;
 const ennemi = () => ({ name: "cible", maxHp: 100000, hp: 50000 });
 
 test("sans intelligence, la brulure ne change pas", () => {
-  etatNeuf({ stats: { intelligence: 0 } });
+  etatNeuf({ stats: { intelligence: 0, critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 0;
   assert.equal(brulure.onTurnStart(ennemi()).damage, 2000);
 });
 
 test("sans coup de reference, le bonus d'intelligence tique a plein", () => {
-  etatNeuf({ stats: { intelligence: 200 } });
+  etatNeuf({ stats: { intelligence: 200, critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 0;
   // base 2000 + bonusInt floor(200*0.5) = 100
   assert.equal(brulure.onTurnStart(ennemi()).damage, 2100);
 });
 
 test("le coup du joueur borne le bonus a sa moitie", () => {
-  etatNeuf({ stats: { intelligence: 200 } });
+  etatNeuf({ stats: { intelligence: 200, critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 100;
   // bonusInt = 100, plafond = floor(100*0.5) = 50 : le plafond mord
   assert.equal(brulure.onTurnStart(ennemi()).damage, 2050);
 });
 
 test("un gros cogneur garde son bonus plein, le plafond ne mord pas", () => {
-  etatNeuf({ stats: { intelligence: 200 } });
+  etatNeuf({ stats: { intelligence: 200, critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 1000;
   // plafond = 500, tres au-dessus du bonusInt de 100
   assert.equal(brulure.onTurnStart(ennemi()).damage, 2100);
 });
 
 test("subie par le joueur, la brulure ignore l'intelligence de l'ennemi", () => {
-  const partie = etatNeuf({ stats: { vigor: 100 } });
+  const partie = etatNeuf({ stats: { vigor: 100, critChance: 0 } });
   partie.stats.resistances = {};
   const maxHealth = state.getHealth(state.getEffectiveStats().vigor);
   const joueur = { currentHp: Math.floor(maxHealth * 0.5) };

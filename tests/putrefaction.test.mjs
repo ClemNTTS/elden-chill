@@ -16,26 +16,29 @@ const { STATUS_EFFECTS } = await import("../status.js");
 const putrefaction = STATUS_EFFECTS.SCARLET_ROT;
 const ennemi = (maxHp) => ({ name: "cible", maxHp, hp: maxHp });
 
+// Chance de critique a 0 partout : depuis que les tics peuvent criter (voir
+// critTick dans status.js), un critique ferait varier ces valeurs figees et
+// rendrait ces tests intermittents. Le critique a son propre test.
 test("sans coup de reference, la putrefaction tique a plein", () => {
-  etatNeuf();
+  etatNeuf({ stats: { critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 0;
   assert.equal(putrefaction.onTurnStart(ennemi(10000)).damage, 500);
 });
 
 test("le coup du joueur borne la putrefaction a sa moitie", () => {
-  etatNeuf();
+  etatNeuf({ stats: { critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 200;
   assert.equal(putrefaction.onTurnStart(ennemi(10000)).damage, 100);
 });
 
 test("un gros cogneur garde les 5% pleins, le plafond ne mord pas", () => {
-  etatNeuf();
+  etatNeuf({ stats: { critChance: 0 } });
   state.runtimeState.degatsJoueurDuTour = 4000;
   assert.equal(putrefaction.onTurnStart(ennemi(10000)).damage, 500);
 });
 
 test("la part de la putrefaction ne gonfle plus avec la vie du boss", () => {
-  etatNeuf();
+  etatNeuf({ stats: { critChance: 0 } });
   const coup = 1000;
   state.runtimeState.degatsJoueurDuTour = coup;
   const part = (pv) => {
@@ -48,7 +51,7 @@ test("la part de la putrefaction ne gonfle plus avec la vie du boss", () => {
 });
 
 test("subie par le joueur, elle reste a 5% : c'est une menace, pas une arme", () => {
-  const partie = etatNeuf();
+  const partie = etatNeuf({ stats: { critChance: 0 } });
   partie.stats.resistances = {};
   state.runtimeState.degatsJoueurDuTour = 10; // un coup derisoire ne l'adoucit pas
   const joueur = { currentHp: 4000 };

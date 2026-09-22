@@ -4,8 +4,6 @@ export const BIOME_GUIDE = {
   limgrave_west: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    x: 10,
-    y: 16,
     recommendedLevel: [6, 12],
     danger: "Faible",
     focus: "Prise en main, premiers builds, survie simple.",
@@ -14,8 +12,6 @@ export const BIOME_GUIDE = {
   limgrave_east: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    x: 22,
-    y: 16,
     recommendedLevel: [15, 24],
     danger: "Modere",
     focus: "Premiers duels solides, montee dex/bleed.",
@@ -24,8 +20,6 @@ export const BIOME_GUIDE = {
   limgrave_north: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    x: 18,
-    y: 6,
     recommendedLevel: [22, 29],
     danger: "Modere",
     focus: "Verrou de progression vers le premier grand chateau.",
@@ -34,8 +28,6 @@ export const BIOME_GUIDE = {
   limgrave_lake: {
     chapter: "Chapitre I",
     region: "Necrolimbe",
-    x: 10,
-    y: 31,
     recommendedLevel: [29, 36],
     danger: "Modere",
     focus: "Option feu/intelligence et dragon precoce.",
@@ -44,8 +36,6 @@ export const BIOME_GUIDE = {
   weeping_peninsula: {
     chapter: "Chapitre II",
     region: "Sud",
-    x: 22,
-    y: 31,
     recommendedLevel: [27, 35],
     danger: "Modere",
     focus: "Transition vers le tier 3, debut des builds givre.",
@@ -54,8 +44,6 @@ export const BIOME_GUIDE = {
   morne_castle: {
     chapter: "Chapitre II",
     region: "Sud",
-    x: 22,
-    y: 45,
     recommendedLevel: [39, 57],
     danger: "Eleve",
     focus: "Test force/bleed, gain d'armes lourdes.",
@@ -64,8 +52,6 @@ export const BIOME_GUIDE = {
   enter_stormwind_castle: {
     chapter: "Chapitre II",
     region: "Voile Orage",
-    x: 31,
-    y: 6,
     recommendedLevel: [33, 46],
     danger: "Eleve",
     focus: "Porte de Stormveil, combat plus technique.",
@@ -74,8 +60,6 @@ export const BIOME_GUIDE = {
   stormwind_castle: {
     chapter: "Chapitre II",
     region: "Voile Orage",
-    x: 42,
-    y: 6,
     recommendedLevel: [26, 36],
     danger: "Eleve",
     focus: "Premier gros check d'endurance et d'armure.",
@@ -84,8 +68,6 @@ export const BIOME_GUIDE = {
   caelid_west: {
     chapter: "Chapitre II",
     region: "Caelid",
-    x: 35,
-    y: 24,
     recommendedLevel: [49, 68],
     danger: "Eleve",
     focus: "Zone risk/reward, statuts et armures denses.",
@@ -94,8 +76,6 @@ export const BIOME_GUIDE = {
   liurnia_south: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    x: 54,
-    y: 11,
     recommendedLevel: [45, 62],
     danger: "Eleve",
     focus: "Ouverture caster et multi-builds de midgame.",
@@ -104,8 +84,6 @@ export const BIOME_GUIDE = {
   liurnia_west: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    x: 63,
-    y: 6,
     recommendedLevel: [48, 65],
     danger: "Eleve",
     focus: "Route carienne, tank/mage hybride.",
@@ -114,8 +92,6 @@ export const BIOME_GUIDE = {
   liurnia_east: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    x: 63,
-    y: 17,
     recommendedLevel: [50, 67],
     danger: "Eleve",
     focus: "Route marais, vigueur et penetration.",
@@ -124,8 +100,6 @@ export const BIOME_GUIDE = {
   liurnia_marsh: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    x: 54,
-    y: 24,
     recommendedLevel: [50, 70],
     danger: "Tres eleve",
     focus: "Dragon optionnel tres rentable pour les mages.",
@@ -134,8 +108,6 @@ export const BIOME_GUIDE = {
   raya_lucaria_academy: {
     chapter: "Chapitre III",
     region: "Liurnia",
-    x: 73,
-    y: 11,
     recommendedLevel: [52, 70],
     danger: "Tres eleve",
     focus: "Pivot midgame, sets academie et crystal.",
@@ -144,8 +116,6 @@ export const BIOME_GUIDE = {
   caria_mansion: {
     chapter: "Chapitre IV",
     region: "Nord des lacs",
-    x: 73,
-    y: 3,
     recommendedLevel: [90, 110],
     danger: "Tres eleve",
     focus: "Monte en puissance controle/givre.",
@@ -154,8 +124,6 @@ export const BIOME_GUIDE = {
   caelid_south: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    x: 47,
-    y: 28,
     recommendedLevel: [64, 84],
     danger: "Tres eleve",
     focus: "Endurance sous pression et packs brutaux.",
@@ -164,8 +132,6 @@ export const BIOME_GUIDE = {
   caelid_dragonbarrow: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    x: 47,
-    y: 40,
     recommendedLevel: [120, 155],
     danger: "Tres eleve",
     focus: "Dragon optionnel et loot corruption.",
@@ -174,8 +140,6 @@ export const BIOME_GUIDE = {
   siofra_river: {
     chapter: "Chapitre IV",
     region: "Souterrain",
-    x: 82,
-    y: 21,
     recommendedLevel: [79, 103],
     danger: "Tres eleve",
     focus: "Route controle/stun et sustain.",
@@ -184,8 +148,6 @@ export const BIOME_GUIDE = {
   redmane_castle: {
     chapter: "Chapitre IV",
     region: "Caelid",
-    x: 58,
-    y: 34,
     recommendedLevel: [117, 150],
     danger: "Tres eleve",
     focus: "Grand mur de puissance physique.",
@@ -194,8 +156,6 @@ export const BIOME_GUIDE = {
   nokron: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    x: 90,
-    y: 28,
     recommendedLevel: [116, 150],
     danger: "Tres eleve",
     focus: "Pivot late midgame, builds polymorphes.",
@@ -204,8 +164,6 @@ export const BIOME_GUIDE = {
   ainsel_river: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    x: 90,
-    y: 43,
     recommendedLevel: [155, 194],
     danger: "Tres eleve",
     focus: "Nouvelle route astrale dex/int a haut tempo.",
@@ -214,8 +172,6 @@ export const BIOME_GUIDE = {
   deeproot_depths: {
     chapter: "Chapitre V",
     region: "Souterrain",
-    x: 79,
-    y: 45,
     recommendedLevel: [160, 202],
     danger: "Tres eleve",
     focus: "Tank/sustain et armures vivantes.",
@@ -224,8 +180,6 @@ export const BIOME_GUIDE = {
   rotlake: {
     chapter: "Chapitre VI",
     region: "Souterrain",
-    x: 90,
-    y: 58,
     recommendedLevel: [125, 147],
     danger: "Extrem",
     focus: "Endgame optionnel axe statuts et survie active.",
@@ -234,8 +188,6 @@ export const BIOME_GUIDE = {
   altus_plateau: {
     chapter: "Chapitre VI",
     region: "Altus",
-    x: 84,
-    y: 8,
     recommendedLevel: [160, 200],
     danger: "Extrem",
     focus: "Frontiere du late game terrestre.",
@@ -245,8 +197,6 @@ export const BIOME_GUIDE = {
   mount_gelmir: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    x: 95,
-    y: 16,
     recommendedLevel: [150, 189],
     danger: "Extrem",
     focus: "Volcan, venins et predateurs draconiques en crescendo.",
@@ -256,8 +206,6 @@ export const BIOME_GUIDE = {
   mountaintops: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    x: 95,
-    y: 4,
     recommendedLevel: [176, 214],
     danger: "Extrem",
     focus: "Glace, posture et geants. Un mur de lecture et de tempo.",
@@ -267,8 +215,6 @@ export const BIOME_GUIDE = {
   crumbling_farum_azula: {
     chapter: "Chapitre IX",
     region: "Azula",
-    x: 99,
-    y: 28,
     recommendedLevel: [201, 220],
     danger: "Abyssal",
     focus: "Ruines suspendues, tempetes sacrileges et reliques noires.",
@@ -287,8 +233,6 @@ export const BIOME_GUIDE = {
   leyndell_royal: {
     chapter: "Chapitre VIII",
     region: "Leyndell",
-    x: 88,
-    y: 11,
     recommendedLevel: [176, 208],
     danger: "Extreme",
     focus: "Capitale doree, gardes royaux et longues avenues.",
@@ -297,8 +241,6 @@ export const BIOME_GUIDE = {
   forbidden_land: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    x: 92,
-    y: 7,
     recommendedLevel: [179, 214],
     danger: "Extreme",
     focus: "Col battu par les vents avant les sommets.",
@@ -307,8 +249,6 @@ export const BIOME_GUIDE = {
   consecrated_snowfield: {
     chapter: "Chapitre IX",
     region: "Cimes",
-    x: 92,
-    y: 48,
     recommendedLevel: [192, 220],
     danger: "Extreme",
     focus: "Plaine blanche ou l'on ne voit pas a dix pas.",
@@ -317,8 +257,6 @@ export const BIOME_GUIDE = {
   mohgwyn_palace: {
     chapter: "Chapitre IX",
     region: "Souterrain",
-    x: 96,
-    y: 52,
     recommendedLevel: [198, 220],
     danger: "Abyssal",
     focus: "Lac de sang sous une lune rouge.",
@@ -327,8 +265,6 @@ export const BIOME_GUIDE = {
   miquella_haligtree: {
     chapter: "Chapitre IX",
     region: "Arbre Sacre",
-    x: 100,
-    y: 44,
     recommendedLevel: [208, 220],
     danger: "Abyssal",
     focus: "Ramures suspendues et gardiens putrides.",
@@ -339,8 +275,6 @@ export const BIOME_GUIDE = {
   dominula_village: {
     chapter: "Chapitre VI",
     region: "Altus",
-    x: 66,
-    y: 30,
     recommendedLevel: [147, 184],
     danger: "Eleve",
     focus:
@@ -351,8 +285,6 @@ export const BIOME_GUIDE = {
   shaded_castle: {
     chapter: "Chapitre VI",
     region: "Altus",
-    x: 70,
-    y: 34,
     recommendedLevel: [138, 172],
     danger: "Eleve",
     focus: "Un chateau noye dans une brume qui ronge les poumons.",
@@ -362,8 +294,6 @@ export const BIOME_GUIDE = {
   volcano_manor: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    x: 78,
-    y: 26,
     recommendedLevel: [166, 192],
     danger: "Tres eleve",
     focus: "On y signe des contrats. On y paie bien, on n'y soigne personne.",
@@ -373,8 +303,6 @@ export const BIOME_GUIDE = {
   rykard_lair: {
     chapter: "Chapitre VII",
     region: "Gelmir",
-    x: 82,
-    y: 22,
     recommendedLevel: [173, 198],
     danger: "Tres eleve",
     focus: "Une fosse de magma et ce qui reste d'un dieu dedans.",
@@ -384,8 +312,6 @@ export const BIOME_GUIDE = {
   divine_tower: {
     chapter: "Chapitre VIII",
     region: "Leyndell",
-    x: 90,
-    y: 15,
     recommendedLevel: [185, 211],
     danger: "Extreme",
     focus: "La Tour coupe le lien a la Grace. Aucun soin ne fonctionne dedans.",
@@ -395,8 +321,6 @@ export const BIOME_GUIDE = {
   castle_sol: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    x: 94,
-    y: 11,
     recommendedLevel: [192, 217],
     danger: "Extreme",
     focus: "Une nuit qui ne finit pas. On ne voit pas venir les coups.",
@@ -406,8 +330,6 @@ export const BIOME_GUIDE = {
   giants_catacombs: {
     chapter: "Chapitre VIII",
     region: "Cimes",
-    x: 98,
-    y: 8,
     recommendedLevel: [198, 220],
     danger: "Extreme",
     focus: "Des braises qui couvent depuis la guerre des Geants.",
@@ -417,8 +339,6 @@ export const BIOME_GUIDE = {
   elphael: {
     chapter: "Chapitre IX",
     region: "Arbre Sacre",
-    x: 104,
-    y: 44,
     recommendedLevel: [217, 220],
     danger: "Abyssal",
     focus: "Les spores tombent en continu. Elle vous attend au bout.",
@@ -428,8 +348,6 @@ export const BIOME_GUIDE = {
   farum_azula_deep: {
     chapter: "Chapitre IX",
     region: "Farum Azula",
-    x: 110,
-    y: 36,
     recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Sous les ruines, une tempete qui dure depuis avant l'Arbre.",
@@ -439,8 +357,6 @@ export const BIOME_GUIDE = {
   leyndell_ash: {
     chapter: "Chapitre X",
     region: "Leyndell",
-    x: 116,
-    y: 30,
     recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "La capitale ensevelie sous la cendre. Elle ronge les armures.",
@@ -450,8 +366,6 @@ export const BIOME_GUIDE = {
   erdtree_throne: {
     chapter: "Chapitre X",
     region: "Arbre-Monde",
-    x: 122,
-    y: 24,
     recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Le terme de la route. On n'en repart pas en arriere.",
@@ -461,8 +375,6 @@ export const BIOME_GUIDE = {
   bestial_sanctum: {
     chapter: "Annexe",
     region: "Tertre Draconique",
-    x: 62,
-    y: 52,
     recommendedLevel: [172, 217],
     danger: "Eleve",
     focus:
@@ -473,8 +385,6 @@ export const BIOME_GUIDE = {
   jarburg: {
     chapter: "Annexe",
     region: "Liurnia",
-    x: 86,
-    y: 56,
     recommendedLevel: [40, 53],
     danger: "Faible",
     focus: "Des jarres creuses et pleines de runes. Elles se brisent vite.",
@@ -484,8 +394,6 @@ export const BIOME_GUIDE = {
   evergaol_champions: {
     chapter: "Annexe",
     region: "Enclos",
-    x: 114,
-    y: 50,
     recommendedLevel: [214, 220],
     danger: "Abyssal",
     focus: "Quatre champions a la suite, sans repos et sans soin.",
@@ -525,4 +433,245 @@ export function getBiomeDangerClass(biomeId) {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .replace(/\s+/g, "-");
+}
+
+/* ------------------------------------------------------------------ */
+/* Danger relatif au personnage                                       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Le champ `danger` de chaque biome est FIXE : « Extrem » le reste que l'on
+ * arrive au niveau recommande ou soixante niveaux au-dessus. C'est faux dans
+ * les deux sens — une zone finit par devenir une promenade, et une zone
+ * abordee trop tot est bien pire que son etiquette ne le dit.
+ *
+ * Le danger se lit donc a partir de l'ecart entre le niveau du joueur et le
+ * BAS de la bande recommandee, rapporte a un pas proportionnel a ce bas :
+ *
+ *   t = (niveau - bas) / max(8, bas * 0,15)
+ *
+ * Normaliser par la LARGEUR de la bande, comme dans une premiere version,
+ * paraissait plus naturel et donnait n'importe quoi : les bandes vont de six
+ * niveaux (Trone d'Elden, 214-220) a quarante (Plateau d'Altus, 160-200). Le
+ * Trone passait de « Suicidaire » a « Promenade » en seize niveaux, sans
+ * jamais afficher les crans du milieu.
+ *
+ * Un pas de 15% du niveau de la zone donne la meme progression partout :
+ * quinze niveaux comptent au debut de la partie, cinquante comptent a la fin.
+ *
+ * DEUX LIMITES CONNUES.
+ *
+ * Le niveau n'est pas la puissance : l'equipement pese lourd, mais
+ * `recommendedLevel` est exprime en niveaux et un joueur raisonne en niveaux.
+ * Approximation assumee.
+ *
+ * Surtout, la lecture ne vaut que ce que valent les bandes, et les bandes sont
+ * PERIMEES : elles datent d'avant le reequilibrage des monstres et des boss.
+ * Sur trois zones jouees au niveau 185 — Manoir du Volcan traverse a 95% de
+ * ses points de vie, Antre de Rykard a 48%, mort a Leyndell Cite Royale — les
+ * bandes actuelles annoncent « Dangereux » pour les trois.
+ *
+ * `node tools/banc-boss.mjs --ecrire-bandes` les regenere, et le resultat
+ * separe enfin ces zones. Mais les bandes alimentent aussi le choix du palier
+ * d'equipement et le niveau de mesure des zones annexes : les regenerer deplace
+ * toute la calibration d'equilibrage et fait tomber six tests. C'est une passe
+ * a part entiere, a mener avec ses propres releves, pas un effet de bord d'un
+ * travail sur la carte.
+ */
+export const PALIERS_DANGER = [
+  { seuil: Number.NEGATIVE_INFINITY, cle: "suicidaire", libelle: "Suicidaire" },
+  { seuil: -0.5, cle: "mortel", libelle: "Mortel" },
+  { seuil: 0, cle: "dangereux", libelle: "Dangereux" },
+  { seuil: 1, cle: "mesure", libelle: "Mesure" },
+  { seuil: 2, cle: "promenade", libelle: "Promenade" },
+];
+
+/**
+ * Danger d'un biome pour un personnage donne.
+ *
+ * Renvoie le libelle, une cle utilisable en classe CSS, et la position `t` sur
+ * l'axe — utile pour nuancer une couleur sans redecouper les paliers.
+ */
+export function getDangerRelatif(biomeId, niveauJoueur = 0) {
+  const guide = BIOME_GUIDE[biomeId];
+  const bande = guide?.recommendedLevel;
+  if (!bande) {
+    return { libelle: guide?.danger || "Inconnu", cle: "inconnu", t: 0 };
+  }
+
+  const [bas] = bande;
+  const pas = Math.max(8, bas * 0.15);
+  const t = (Math.max(0, niveauJoueur) - bas) / pas;
+
+  let palier = PALIERS_DANGER[0];
+  for (const candidat of PALIERS_DANGER) {
+    if (t >= candidat.seuil) palier = candidat;
+  }
+  return { libelle: palier.libelle, cle: palier.cle, t };
+}
+
+/* ------------------------------------------------------------------ */
+/* Placement de la carte                                              */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Les positions etaient saisies a la main, deux nombres par biome, quarante-six
+ * biomes. Resultat mesure : vingt croisements d'aretes, et une carte que son
+ * auteur decrivait comme « un peu le bordel ».
+ *
+ * Elles sont desormais CALCULEES. Le rang d'une zone est la longueur du plus
+ * long chemin qui y mene (getBiomeGraphDepth) : c'est l'assignation de rang de
+ * Sugiyama, et elle garantit qu'aucune arete ne revient en arriere. L'ordre
+ * vertical a l'interieur d'une colonne est ensuite affine par barycentre —
+ * chaque noeud glisse vers la moyenne de ses voisins, quelques passes dans un
+ * sens puis dans l'autre.
+ *
+ * Mesure sur le graphe reel, 46 noeuds et 50 aretes :
+ *
+ *   coordonnees saisies a la main             20 croisements
+ *   colonnes par chapitre                     29   (les annexes traversent tout)
+ *   colonnes par niveau recommande            15   (38 colonnes, illisible)
+ *   rang par plus long chemin, etale           3   (ruban de 6700 x 450)
+ *   le meme, replie en serpentin               8   (2400 x 1190, rapport 2:1)
+ *
+ * Le repliage coute cinq croisements et rend la carte affichable : etalee, la
+ * chaine de vingt-six rangs donne un ruban que le cadre reduit a un trait. Le
+ * compromis est assume — huit croisements sur une carte qu'on lit valent mieux
+ * que trois sur une carte qu'on ne lit pas.
+ */
+const PASSES_BARYCENTRE = 12;
+
+/*
+ * Rangs par bande avant repliage.
+ *
+ * Neuf donne trois bandes pour les vingt-six rangs, soit une carte de neuf
+ * colonnes sur trois etages — un rapport proche du cadre, qui est deux fois
+ * plus large que haut. Sept produisait un portrait, vingt-six un ruban.
+ */
+const RANGS_PAR_BANDE = 9;
+
+export function calculerPositionsCarte(biomeIds) {
+  const ids = biomeIds.filter((id) => BIOME_GUIDE[id]);
+  const memo = new Map();
+  const colonnes = new Map();
+
+  for (const id of ids) {
+    const rang = getBiomeGraphDepth(id, memo);
+    if (!colonnes.has(rang)) colonnes.set(rang, []);
+    colonnes.get(rang).push(id);
+  }
+
+  // Voisinage non oriente : un noeud se place entre ses parents ET ses enfants.
+  const voisins = new Map();
+  const relier = (a, b) => {
+    if (!voisins.has(a)) voisins.set(a, []);
+    voisins.get(a).push(b);
+  };
+  const presents = new Set(ids);
+  for (const id of ids) {
+    for (const suivant of BIOMES[id]?.unlocks || []) {
+      if (!presents.has(suivant)) continue;
+      relier(id, suivant);
+      relier(suivant, id);
+    }
+  }
+
+  const y = new Map();
+  for (const [, liste] of colonnes) liste.forEach((id, i) => y.set(id, i));
+
+  for (let passe = 0; passe < PASSES_BARYCENTRE; passe += 1) {
+    const ordre = [...colonnes.keys()].sort((a, b) =>
+      passe % 2 ? b - a : a - b,
+    );
+    for (const rang of ordre) {
+      const liste = colonnes.get(rang);
+      const bary = new Map();
+      for (const id of liste) {
+        const v = (voisins.get(id) || []).filter((x) => y.has(x));
+        bary.set(
+          id,
+          v.length ? v.reduce((s, x) => s + y.get(x), 0) / v.length : y.get(id),
+        );
+      }
+      liste.sort((a, b) => bary.get(a) - bary.get(b));
+      liste.forEach((id, i) => y.set(id, i));
+    }
+  }
+
+  /*
+   * Repliage en serpentin.
+   *
+   * Le graphe compte vingt-six rangs, dont une longue queue d'un seul noeud :
+   * la fin du jeu est une chaine droite. Etale d'un bloc, cela donne un ruban
+   * de 6700 pixels de large sur 4 de haut, illisible dans un cadre deux fois
+   * plus large que haut.
+   *
+   * Les rangs sont donc replies par bandes, une bande lue de gauche a droite
+   * puis la suivante de droite a gauche. Deux rangs consecutifs restent
+   * voisins, y compris au changement de bande — c'est tout l'interet du
+   * serpentin par rapport a un simple retour a la ligne, qui ferait traverser
+   * toute la largeur a l'arete de jonction.
+   */
+  const rangs = [...colonnes.keys()].sort((a, b) => a - b);
+  const hauteurMax = Math.max(1, ...rangs.map((r) => colonnes.get(r).length));
+
+  const positions = new Map();
+  rangs.forEach((rang, index) => {
+    const bande = Math.floor(index / RANGS_PAR_BANDE);
+    const dansBande = index % RANGS_PAR_BANDE;
+    // Une bande sur deux se lit a l'envers : le serpentin.
+    const colonne =
+      bande % 2 === 0 ? dansBande : RANGS_PAR_BANDE - 1 - dansBande;
+
+    const liste = colonnes.get(rang);
+    // Colonne centree : une colonne de deux noeuds ne doit pas pendre sous une
+    // colonne de quatre.
+    const decalage = (liste.length - 1) / 2;
+    liste.forEach((id, i) =>
+      positions.set(id, {
+        rang,
+        bande,
+        colonne,
+        offset: i - decalage,
+        x: colonne,
+        y: bande * (hauteurMax + 1.6) + (i - decalage),
+      }),
+    );
+  });
+
+  /*
+   * Second tri par barycentre, APRES le repliage.
+   *
+   * Le premier tri optimisait une carte etalee ; le serpentin rapproche
+   * ensuite des rangs que tout separait, et recree des croisements — neuf au
+   * lieu de trois. On rejoue donc quelques passes sur les ordonnees FINALES,
+   * celles qui portent le decalage de bande.
+   */
+  for (let passe = 0; passe < PASSES_BARYCENTRE; passe += 1) {
+    const ordre = [...rangs].sort((a, b) => (passe % 2 ? b - a : a - b));
+    for (const rang of ordre) {
+      const liste = colonnes.get(rang);
+      if (liste.length < 2) continue;
+      const base = positions.get(liste[0]);
+      const bary = new Map();
+      for (const id of liste) {
+        const v = (voisins.get(id) || []).filter((x) => positions.has(x));
+        bary.set(
+          id,
+          v.length
+            ? v.reduce((s, x) => s + positions.get(x).y, 0) / v.length
+            : positions.get(id).y,
+        );
+      }
+      liste.sort((a, b) => bary.get(a) - bary.get(b));
+      const decalage = (liste.length - 1) / 2;
+      liste.forEach((id, i) => {
+        const place = positions.get(id);
+        place.offset = i - decalage;
+        place.y = base.bande * (hauteurMax + 1.6) + place.offset;
+      });
+    }
+  }
+
+  return positions;
 }

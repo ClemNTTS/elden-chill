@@ -1,3 +1,4 @@
+import { rollCrit } from "./crit.js";
 import {
   gameState,
   getEffectiveStats,
@@ -5,6 +6,27 @@ import {
   runtimeState,
 } from "./state.js";
 import { getResistanceForEffect } from "./systems.js";
+
+/*
+ * Critique sur un tic d'affliction.
+ *
+ * Le Saignement, la Gelure, la Folie et le Fleau mortel critent deja : leur
+ * bonus s'ajoute au coup AVANT le jet de critique dans combat.js, qui les
+ * multiplie donc avec le reste. Poison, Putrefaction et Brulure sont calcules
+ * ICI, a part, et un jet de critique ne les touchait jamais — un build
+ * construit sur eux ne tirait donc rien de ses points de critique sur cette
+ * part de ses degats, contrairement a un build qui ne fait que taper.
+ *
+ * Le bonus est a MOITIE de celui d'un coup normal : ces trois afflictions
+ * ignorent deja l'armure (POISON, BRULURE) ou sont plafonnees par rapport au
+ * coup du joueur (BRULURE, PUTREFACTION) — un critique plein en plus les
+ * ferait cumuler deux avantages a la fois.
+ */
+const critTick = (eff, degats) => {
+  const crit = rollCrit(eff);
+  if (!crit.isCrit) return degats;
+  return Math.floor(degats * (1 + (crit.multiplier - 1) * 0.5));
+};
 
 export const STATUS_EFFECTS = {
   POISON: {
@@ -30,7 +52,7 @@ export const STATUS_EFFECTS = {
         const baseDot = Math.floor((entity.maxHp || 100) * 0.01);
         const bonusInt = Math.floor(eff.intelligence * 0.5);
 
-        damage = Math.max(2, Math.floor(baseDot + bonusInt));
+        damage = Math.max(2, critTick(eff, Math.floor(baseDot + bonusInt)));
         entity.hp -= damage;
       }
 
@@ -129,9 +151,12 @@ export const STATUS_EFFECTS = {
                   Math.min(0.65, getResistanceForEffect("SCARLET_ROT") * 0.08)),
             ),
           )
-        : reference > 0
-          ? Math.max(2, Math.min(baseDamage, Math.floor(reference * 0.5)))
-          : baseDamage;
+        : critTick(
+            getEffectiveStats(),
+            reference > 0
+              ? Math.max(2, Math.min(baseDamage, Math.floor(reference * 0.5)))
+              : baseDamage,
+          );
 
       if (isPlayer) {
         entity.currentHp -= damage;
@@ -203,7 +228,7 @@ export const STATUS_EFFECTS = {
             ? Math.min(bonusInt, Math.floor(reference * 0.5))
             : bonusInt;
 
-        damage = base + bonusPlafonne;
+        damage = critTick(eff, base + bonusPlafonne);
         entity.hp -= damage;
       }
 
