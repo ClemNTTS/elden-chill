@@ -261,8 +261,8 @@ export const LANDS_MONSTERS = {
   /* ============ ANTRE DE RYKARD (ch. VII) ============ */
   rykard_serpent_spawn: {
     name: "Rejeton serpentin",
-    hp: 1007,
-    atk: 52,
+    hp: 1057,
+    atk: 55,
     armor: 210,
     runes: 23000,
     specificStats: { attacksPerTurn: 2 },
@@ -270,8 +270,8 @@ export const LANDS_MONSTERS = {
   },
   rykard_devoured: {
     name: "Devore du banquet",
-    hp: 1046,
-    atk: 50,
+    hp: 1098,
+    atk: 52,
     armor: 190,
     runes: 23800,
     specificStats: { attacksPerTurn: 1 },
@@ -328,8 +328,8 @@ export const LANDS_MONSTERS = {
   /* ============ TOUR DIVINE (ch. VIII) ============ */
   divine_tower_watch: {
     name: "Garde de la Tour",
-    hp: 1556,
-    atk: 81,
+    hp: 2178,
+    atk: 113,
     armor: 250,
     runes: 30700,
     specificStats: { attacksPerTurn: 1 },
@@ -337,8 +337,8 @@ export const LANDS_MONSTERS = {
   },
   divine_tower_oracle: {
     name: "Oracle scelle",
-    hp: 1482,
-    atk: 83,
+    hp: 2075,
+    atk: 116,
     armor: 195,
     runes: 29300,
     specificStats: { attacksPerTurn: 2 },
@@ -346,8 +346,8 @@ export const LANDS_MONSTERS = {
   },
   divine_tower_gargoyle: {
     name: "Gargouille de la Tour",
-    hp: 3360,
-    atk: 162,
+    hp: 4032,
+    atk: 194,
     armor: 285,
     runes: 36500,
     isRare: true,
@@ -360,8 +360,8 @@ export const LANDS_MONSTERS = {
   },
   divine_tower_keeper: {
     name: "Gardien de la Tour Divine",
-    hp: 13972,
-    atk: 145,
+    hp: 18164,
+    atk: 188,
     armor: 270,
     runes: 143000,
     isBoss: true,
@@ -458,8 +458,8 @@ export const LANDS_MONSTERS = {
   /* ============ CATACOMBES DES GEANTS (ch. VIII) ============ */
   catacomb_ember_shade: {
     name: "Ombre des braises",
-    hp: 1377,
-    atk: 71,
+    hp: 2134,
+    atk: 110,
     armor: 200,
     runes: 35400,
     specificStats: { attacksPerTurn: 2 },
@@ -467,8 +467,8 @@ export const LANDS_MONSTERS = {
   },
   catacomb_grave_giant: {
     name: "Geant des tombes",
-    hp: 1466,
-    atk: 69,
+    hp: 2272,
+    atk: 107,
     armor: 265,
     runes: 37700,
     specificStats: { attacksPerTurn: 1 },
@@ -476,8 +476,8 @@ export const LANDS_MONSTERS = {
   },
   catacomb_ancient_hero: {
     name: "Heros ancien de Zamor",
-    hp: 5500,
-    atk: 268,
+    hp: 8525,
+    atk: 415,
     armor: 275,
     runes: 41800,
     isRare: true,
@@ -490,8 +490,8 @@ export const LANDS_MONSTERS = {
   },
   catacomb_burnt_spirit: {
     name: "Esprit d'Arbre calcine",
-    hp: 8379,
-    atk: 86,
+    hp: 13406,
+    atk: 138,
     armor: 250,
     runes: 167000,
     isBoss: true,
@@ -517,8 +517,8 @@ export const LANDS_MONSTERS = {
   /* ============ ELPHAEL (ch. IX) ============ */
   elphael_cleanrot_knight: {
     name: "Chevalier de la Purge",
-    hp: 1240,
-    atk: 65,
+    hp: 2356,
+    atk: 124,
     armor: 285,
     runes: 55800,
     specificStats: { attacksPerTurn: 1 },
@@ -526,8 +526,8 @@ export const LANDS_MONSTERS = {
   },
   elphael_rot_swarm: {
     name: "Nuee putride",
-    hp: 1180,
-    atk: 66,
+    hp: 2242,
+    atk: 125,
     armor: 175,
     runes: 53100,
     specificStats: { attacksPerTurn: 3 },
@@ -535,8 +535,8 @@ export const LANDS_MONSTERS = {
   },
   elphael_rot_dog: {
     name: "Chien de la Purge",
-    hp: 4872,
-    atk: 236,
+    hp: 7308,
+    atk: 354,
     armor: 255,
     runes: 66100,
     isRare: true,
@@ -549,8 +549,8 @@ export const LANDS_MONSTERS = {
   },
   malenia_blade: {
     name: "Malenia, Lame de Miquella",
-    hp: 8100,
-    atk: 81,
+    hp: 12555,
+    atk: 126,
     armor: 275,
     runes: 262000,
     isBoss: true,
@@ -581,8 +581,8 @@ export const LANDS_MONSTERS = {
   /* ============ FARUM AZULA, ABIME (ch. IX) ============ */
   azula_dragon_warrior: {
     name: "Guerrier draconique",
-    hp: 3327,
-    atk: 173,
+    hp: 2163,
+    atk: 112,
     armor: 275,
     runes: 67000,
     specificStats: { attacksPerTurn: 1 },
@@ -590,8 +590,8 @@ export const LANDS_MONSTERS = {
   },
   azula_storm_hawk: {
     name: "Faucon des tempetes",
-    hp: 3135,
-    atk: 180,
+    hp: 2038,
+    atk: 117,
     armor: 195,
     runes: 63100,
     specificStats: { attacksPerTurn: 2 },
@@ -599,8 +599,8 @@ export const LANDS_MONSTERS = {
   },
   azula_maliketh: {
     name: "Maliketh, Lame de Mort",
-    hp: 6688,
-    atk: 324,
+    hp: 4682,
+    atk: 227,
     armor: 270,
     runes: 79400,
     isRare: true,
@@ -625,8 +625,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["carapace", "mue"],
     phaseMue: { id: "DEATH_BLIGHT", duration: 3, chance: 0.4 },
     name: "Placidusax, Dragon-Seigneur",
-    hp: 14597,
-    atk: 151,
+    hp: 11678,
+    atk: 121,
     armor: 210,
     runes: 313000,
     isBoss: true,
@@ -658,8 +658,8 @@ export const LANDS_MONSTERS = {
   /* ============ LEYNDELL LA CENDREUSE (ch. X) ============ */
   ash_gilded_guard: {
     name: "Garde dore calcine",
-    hp: 2103,
-    atk: 110,
+    hp: 1998,
+    atk: 104,
     armor: 290,
     runes: 77000,
     specificStats: { attacksPerTurn: 1 },
@@ -667,8 +667,8 @@ export const LANDS_MONSTERS = {
   },
   ash_putrid_avatar: {
     name: "Avatar des cendres",
-    hp: 2188,
-    atk: 106,
+    hp: 2079,
+    atk: 101,
     armor: 265,
     runes: 80000,
     specificStats: { attacksPerTurn: 1 },
@@ -703,8 +703,8 @@ export const LANDS_MONSTERS = {
     comportementsPhase2: ["frenesie", "riposte"],
     phaseRiposte: 0.12,
     name: "Hoarah Loux, Conquerant",
-    hp: 23514,
-    atk: 244,
+    hp: 24690,
+    atk: 256,
     armor: 200,
     runes: 360000,
     isBoss: true,
@@ -736,8 +736,8 @@ export const LANDS_MONSTERS = {
   /* ============ TRONE D'ELDEN (ch. X) ============ */
   throne_golden_shade: {
     name: "Ombre doree",
-    hp: 3700,
-    atk: 193,
+    hp: 4255,
+    atk: 222,
     armor: 295,
     runes: 88600,
     specificStats: { attacksPerTurn: 1 },
@@ -745,8 +745,8 @@ export const LANDS_MONSTERS = {
   },
   throne_order_fragment: {
     name: "Fragment de l'Ordre",
-    hp: 2655,
-    atk: 149,
+    hp: 3053,
+    atk: 171,
     armor: 240,
     runes: 84700,
     specificStats: { attacksPerTurn: 2 },
@@ -754,8 +754,8 @@ export const LANDS_MONSTERS = {
   },
   throne_radagon: {
     name: "Radagon de l'Ordre d'Or",
-    hp: 8259,
-    atk: 402,
+    hp: 6442,
+    atk: 314,
     armor: 280,
     runes: 104900,
     isRare: true,
@@ -834,8 +834,8 @@ export const LANDS_MONSTERS = {
   /* ============ SANCTUAIRE BESTIAL (bonus) ============ */
   bestial_cleric: {
     name: "Clerc bestial",
-    hp: 1500,
-    atk: 78,
+    hp: 1275,
+    atk: 66,
     armor: 200,
     runes: 11600,
     specificStats: { attacksPerTurn: 1 },
@@ -843,8 +843,8 @@ export const LANDS_MONSTERS = {
   },
   bestial_vulture: {
     name: "Vautour du sanctuaire",
-    hp: 1420,
-    atk: 82,
+    hp: 1207,
+    atk: 70,
     armor: 165,
     runes: 11000,
     specificStats: { attacksPerTurn: 2 },
@@ -852,8 +852,8 @@ export const LANDS_MONSTERS = {
   },
   bestial_black_blade: {
     name: "Lame noire bestiale",
-    hp: 1800,
-    atk: 87,
+    hp: 3150,
+    atk: 152,
     armor: 235,
     runes: 13700,
     isRare: true,
@@ -866,8 +866,8 @@ export const LANDS_MONSTERS = {
   },
   gurranq_beast_clergyman: {
     name: "Gurranq, Bete de la Mort",
-    hp: 10000,
-    atk: 105,
+    hp: 7000,
+    atk: 74,
     armor: 245,
     runes: 53000,
     isBoss: true,

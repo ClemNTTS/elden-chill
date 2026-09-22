@@ -544,8 +544,8 @@ export const MONSTERS = {
 
   commander_oneil_strong: {
     name: "Commandant O'Neil (Exilé)",
-    hp: 1400,
-    atk: 90,
+    hp: 700,
+    atk: 45,
     runes: 4500,
     isBoss: true,
     armor: 150,
@@ -798,8 +798,8 @@ export const MONSTERS = {
   },
   giant_crow: {
     name: "Corbeau Monstrueux",
-    hp: 380,
-    atk: 65,
+    hp: 665,
+    atk: 114,
     runes: 920,
     dodgeChance: 0.15,
     groupCombinations: [
@@ -861,8 +861,8 @@ export const MONSTERS = {
   // --- BOSS : EKZYKES L'INCURABLE ---
   ekzykes: {
     name: "Ekzykes l'Incurable",
-    hp: 5300,
-    atk: 138,
+    hp: 4505,
+    atk: 117,
     runes: 55000,
     isBoss: true,
     armor: 160,
@@ -872,8 +872,8 @@ export const MONSTERS = {
   // --- Plateau ---
   leyndell_soldier: {
     name: "Soldat de Leyndell",
-    hp: 146,
-    atk: 39,
+    hp: 139,
+    atk: 37,
     runes: 1500,
     armor: 150,
     onHitEffect: { id: "STUN", duration: 1, chance: 0.08 },
@@ -893,8 +893,8 @@ export const MONSTERS = {
 
   tree_sentinel_altus: {
     name: "Sentinelle de l'Arbre (Altus)",
-    hp: 2744,
-    atk: 108,
+    hp: 2607,
+    atk: 103,
     runes: 14500,
     isRare: true,
     armor: 220,
@@ -907,8 +907,8 @@ export const MONSTERS = {
 
   wormface_altus: {
     name: "Visage de Ver",
-    hp: 2156,
-    atk: 83,
+    hp: 2048,
+    atk: 79,
     runes: 6200,
     isRare: true,
     onHitEffect: { id: "FROSTBITE", duration: 3, chance: 0.4 },
@@ -931,8 +931,8 @@ export const MONSTERS = {
   draconic_tree_sentinel: {
     comportementsPhase2: ["carapace"],
     name: "Sentinelle Dracogarde de l'Arbre",
-    hp: 3839,
-    atk: 88,
+    hp: 3071,
+    atk: 70,
     runes: 52000,
     isBoss: true,
     armor: 225,
@@ -1256,8 +1256,8 @@ export const MONSTERS = {
   // --- LAKE OF ROT ---
   rot_pest: {
     name: "Serviteur Pestiféré",
-    hp: 338,
-    atk: 20,
+    hp: 963,
+    atk: 57,
     runes: 2200,
     armor: 150,
     groupCombinations: [
@@ -1269,8 +1269,8 @@ export const MONSTERS = {
 
   scarlet_monk: {
     name: "Moine Ecarlate",
-    hp: 338,
-    atk: 22,
+    hp: 963,
+    atk: 63,
     runes: 2500,
     armor: 175,
     onHitEffect: { id: "POISON", duration: 2, chance: 0.35 },
@@ -1278,8 +1278,8 @@ export const MONSTERS = {
 
   cleanrot_revenant: {
     name: "Revenant Putréchevalier",
-    hp: 1482,
-    atk: 85,
+    hp: 3334,
+    atk: 191,
     runes: 9800,
     armor: 210,
     isRare: true,
@@ -1293,8 +1293,8 @@ export const MONSTERS = {
 
   ulcerated_rot_spirit: {
     name: "Esprit Putride Ulcéré",
-    hp: 1824,
-    atk: 94,
+    hp: 4104,
+    atk: 212,
     runes: 11000,
     armor: 180,
     isRare: true,
@@ -1308,8 +1308,8 @@ export const MONSTERS = {
 
   astel_bud: {
     name: "Bourgeon d'Astel",
-    hp: 5116,
-    atk: 61,
+    hp: 8186,
+    atk: 98,
     runes: 86000,
     isBoss: true,
     armor: 230,

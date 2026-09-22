@@ -12,9 +12,9 @@
  *   node tools/audit-progression.mjs
  */
 import { BIOMES } from "../biome.js";
-import { BIOME_GUIDE } from "../world-map.js";
+import { BIOME_GUIDE, getBandeRecommandee } from "../world-map.js";
 
-const bande = (id) => BIOME_GUIDE[id]?.recommendedLevel ?? null;
+const bande = (id) => getBandeRecommandee(id) ?? null;
 
 /* Qui mene a quoi. */
 const menantsVers = new Map();

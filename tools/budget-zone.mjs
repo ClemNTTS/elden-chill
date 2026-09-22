@@ -35,7 +35,7 @@ const { LEVEL_CAP_BASE, LEVEL_PER_MAIN_BOSS, MAIN_BOSS_BIOMES } = await import(
   "../rebirth.js"
 );
 const { MAX_LEVEL } = await import("../shared/player-profile.js");
-const { BIOME_GUIDE } = await import("../world-map.js");
+const { BIOME_GUIDE, getBandeRecommandee } = await import("../world-map.js");
 
 /** Tirages par rencontre : groupes et points de vie sont aleatoires. */
 const TIRAGES = 10;
@@ -53,10 +53,7 @@ const TIRAGES = 10;
  * que personne ne s'en apercoive.
  */
 export const ZONES_MESURABLES = Object.keys(BIOMES).filter(
-  (id) =>
-    BIOMES[id].boss &&
-    BIOMES[id].monsters?.length &&
-    BIOME_GUIDE[id]?.recommendedLevel,
+  (id) => BIOMES[id].boss && BIOMES[id].monsters?.length && BIOME_GUIDE[id],
 );
 
 /*
@@ -292,9 +289,7 @@ export const mesurerBudgetZone = (biomeId) => {
           Math.min(MAX_LEVEL, LEVEL_CAP_BASE + LEVEL_PER_MAIN_BOSS * rang) *
             0.8,
         )
-      : (BIOME_GUIDE[biomeId]?.recommendedLevel?.[1] ??
-        BIOME_GUIDE[biomeId]?.recommendedLevel?.[0] ??
-        1);
+      : (getBandeRecommandee(biomeId)?.[1] ?? 1);
   const palier = palierPour(biomeId, 8);
 
   applyBuild(BUILDS.int, niveau);

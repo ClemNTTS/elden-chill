@@ -15,8 +15,8 @@ export const V21_MONSTERS = {
    */
   altus_praetor_guard: {
     name: "Gardien prétorien d'Altus",
-    hp: 1197,
-    atk: 49,
+    hp: 1137,
+    atk: 47,
     armor: 180,
     runes: 9800,
     specificStats: { attacksPerTurn: 2 },
@@ -24,8 +24,8 @@ export const V21_MONSTERS = {
   },
   altus_chariot_knight: {
     name: "Chevalier du char d'Altus",
-    hp: 2548,
-    atk: 185,
+    hp: 2421,
+    atk: 176,
     armor: 210,
     runes: 18500,
     isRare: true,
@@ -50,8 +50,8 @@ export const V21_MONSTERS = {
 
   gelmir_hexmage: {
     name: "Hexer de Gelmir",
-    hp: 1163,
-    atk: 68,
+    hp: 814,
+    atk: 48,
     armor: 165,
     runes: 24000,
     specificStats: { attacksPerTurn: 2 },
@@ -59,8 +59,8 @@ export const V21_MONSTERS = {
   },
   serpent_inquisitor: {
     name: "Inquisiteur du serpent",
-    hp: 3402,
-    atk: 178,
+    hp: 2722,
+    atk: 142,
     armor: 190,
     runes: 31500,
     isRare: true,
@@ -92,8 +92,8 @@ export const V21_MONSTERS = {
     phaseInvocations: 3,
     phasePuissanceEcho: 0.15,
     name: "Fragment du Prêteur",
-    hp: 7321,
-    atk: 68,
+    hp: 5857,
+    atk: 54,
     armor: 158,
     runes: 132000,
     isBoss: true,
@@ -125,8 +125,8 @@ export const V21_MONSTERS = {
 
   giant_fire_disciple: {
     name: "Disciple des flammes géantes",
-    hp: 2192,
-    atk: 111,
+    hp: 1534,
+    atk: 78,
     armor: 200,
     runes: 36000,
     specificStats: { attacksPerTurn: 2 },
@@ -134,8 +134,8 @@ export const V21_MONSTERS = {
   },
   icy_colossus: {
     name: "Colosse du blanc néant",
-    hp: 7843,
-    atk: 356,
+    hp: 5882,
+    atk: 267,
     armor: 260,
     runes: 47000,
     isRare: true,
@@ -165,8 +165,8 @@ export const V21_MONSTERS = {
     comportementsPhase2: ["riposte"],
     phaseRiposte: 0.18,
     name: "Éclat du Géant de feu",
-    hp: 15135,
-    atk: 159,
+    hp: 11351,
+    atk: 119,
     armor: 168,
     runes: 188000,
     isBoss: true,

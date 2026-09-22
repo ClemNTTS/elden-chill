@@ -396,6 +396,7 @@ import {
   BIOME_GUIDE,
   BIOME_ORDER,
   calculerPositionsCarte,
+  getBandeRecommandee,
   getBiomeGraphDepth,
   getBiomePowerBand,
   getDangerRelatif,
@@ -1315,7 +1316,7 @@ const getSuggestedBiomeId = () => {
 
   return (
     unlocked.find((biomeId) => {
-      const band = BIOME_GUIDE[biomeId]?.recommendedLevel;
+      const band = getBandeRecommandee(biomeId);
       return band && playerLevel >= band[0] && playerLevel <= band[1];
     }) ||
     unlocked[unlocked.length - 1] ||
@@ -2855,9 +2856,7 @@ const updateCodexDisplay = () => {
       const info = getCodexBiomeInfo(biomeId);
       return {
         title: info.biome?.name || biomeId,
-        meta: info.guide
-          ? `Niv. ${info.guide.recommendedLevel[0]}-${info.guide.recommendedLevel[1]}`
-          : "",
+        meta: info.guide ? getBiomePowerBand(info.id) : "",
         copy: info.guide ? describeHazards(biomeId) : "Biome nettoye",
       };
     }),

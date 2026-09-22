@@ -23,15 +23,13 @@ const { ITEMS } = await import("../item.js");
 const { ITEM_SETS } = await import("../constants.js");
 const { BIOMES, LOOT_TABLES } = await import("../biome.js");
 const { MONSTERS } = await import("../monster.js");
-const { BIOME_GUIDE } = await import("../world-map.js");
+const { BIOME_GUIDE, getBandeRecommandee } = await import("../world-map.js");
 
 const NL = String.fromCharCode(10);
 const arg = (n, d) =>
   process.argv.find((x) => x.startsWith("--" + n + "="))?.split("=")[1] ?? d;
 const JUSQUA = arg("jusqua", "raya_lucaria_academy");
-const NIVEAU = Number(
-  arg("niveau", BIOME_GUIDE[JUSQUA]?.recommendedLevel?.[0] || 60),
-);
+const NIVEAU = Number(arg("niveau", getBandeRecommandee(JUSQUA)?.[0] || 60));
 const NIVEAU_OBJET = Number(arg("niveau-objet", 6));
 const ARMURE_CIBLE = Number(arg("armure", 180));
 
@@ -48,7 +46,7 @@ const ARMURE_CIBLE = Number(arg("armure", 180));
  * plausiblement nettoye les biomes dont la bande commence en dessous.
  */
 const atteints = Object.keys(BIOMES).filter((id) => {
-  const bande = BIOME_GUIDE[id]?.recommendedLevel;
+  const bande = getBandeRecommandee(id);
   return bande && bande[0] <= NIVEAU && !BIOMES[id].isTrial;
 });
 

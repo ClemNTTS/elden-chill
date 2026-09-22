@@ -18,7 +18,7 @@ import { readFileSync } from "node:fs";
  */
 import { BIOMES, LOOT_TABLES } from "../biome.js";
 import { MONSTERS } from "../monster.js";
-import { BIOME_GUIDE } from "../world-map.js";
+import { BIOME_GUIDE, getBandeRecommandee } from "../world-map.js";
 
 /* Les noms des cendres se lisent au texte : ashes.js importe combat.js, qui
  * remonte jusqu'a game.js et son objet window. */
@@ -76,7 +76,7 @@ const lignes = Object.keys(nomsCendres).map((ashId) => {
   /* Le biome le plus tot ou la cendre peut tomber, et le meilleur taux. */
   const parBiome = src.map((s) => ({
     ...s,
-    niveau: BIOME_GUIDE[s.biome]?.recommendedLevel?.[0] ?? null,
+    niveau: getBandeRecommandee(s.biome)?.[0] ?? null,
   }));
   const plusTot = parBiome.length
     ? parBiome.reduce((a, b) =>
