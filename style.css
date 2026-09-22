@@ -932,16 +932,7 @@ button:disabled {
   height: clamp(380px, 58vh, 640px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  background: radial-gradient(
-      circle at 25% 18%,
-      rgba(160, 136, 89, 0.22),
-      transparent 24%
-    ),
-    radial-gradient(
-      circle at 77% 74%,
-      rgba(95, 127, 159, 0.16),
-      transparent 22%
-    ), linear-gradient(180deg, #f6efdf, #eaddc6);
+  background: linear-gradient(180deg, #f6efdf, #eaddc6);
   overflow: hidden;
 }
 
@@ -1012,14 +1003,40 @@ button:disabled {
     ), linear-gradient(180deg, #241d16, #15120f);
 }
 
+/*
+ * Parchemin de fond.
+ *
+ * L'illustration porte le vocabulaire du jeu — pierre fissuree, filigrane
+ * dore, arches, l'Arbre — la ou les deux degrades precedents ne disaient rien.
+ *
+ * Elle vit dans ce pseudo-element et non sur le conteneur, pour une raison
+ * precise : `opacity` sur #world-map-shell aurait aussi delave le graphe, qui
+ * est son enfant. Ici seule l'image est attenuee ; les noeuds et les libelles
+ * gardent leur contraste plein.
+ *
+ * Elle est aussi ASSOMBRIE par un voile. Son centre est un beige clair, or les
+ * libelles de la carte sont clairs eux aussi : telle quelle, le texte se
+ * dissolvait dans le parchemin. C'est ce voile, plus que l'opacite, qui rend la
+ * lecture possible.
+ *
+ * La trame de 54px est conservee par-dessus : elle donne l'echelle et survit a
+ * l'image sans la concurrencer.
+ */
 #world-map-shell::before {
   content: "";
   position: absolute;
   inset: 0;
   background-image: linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 54px 54px;
-  opacity: 0.35;
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(
+      180deg,
+      rgba(16, 13, 10, 0.74),
+      rgba(16, 13, 10, 0.58) 45%,
+      rgba(16, 13, 10, 0.8)
+    ), url("assets/ui/carte-fond.webp");
+  background-size: 54px 54px, 54px 54px, cover, cover;
+  background-position: 0 0, 0 0, center, center;
+  opacity: 0.9;
   pointer-events: none;
 }
 
