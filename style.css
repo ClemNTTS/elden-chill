@@ -1935,6 +1935,17 @@ button:disabled {
   color: var(--text-soft);
 }
 
+/*
+ * Ce que la banque vaut reellement. En retrait : c'est une explication, pas
+ * une valeur a surveiller — le compteur au-dessus joue ce role.
+ */
+.bank-note {
+  margin: 4px 0 8px;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--text-faint);
+}
+
 .danger-panel .reset-btn {
   border-color: color-mix(in srgb, var(--danger) 55%, var(--border-strong));
   color: var(--danger);

@@ -1,4 +1,5 @@
 import { ASHES_OF_WAR } from "./ashes.js";
+import { delayedSetTimeout } from "./tempo.js";
 import { tickBiomeTraits } from "./biome-traits.js";
 import {
   actionDePhase,
@@ -43,41 +44,6 @@ import {
  * ici continuent de fonctionner.
  */
 export { applyEffect };
-
-// Helper to use offline-time bank to speed up timeouts when enabled.
-function delayedSetTimeout(fn, ms) {
-  let delay = ms;
-  try {
-    const save = gameState.save || {};
-    const use =
-      save.useOfflineTime &&
-      (save.offlineTimeBank || 0) > 0 &&
-      gameState.world.isExploring;
-    const M = runtimeState.offlineSpeedMultiplier || 3;
-    if (use && M > 1 && ms > 0) {
-      const fullSavedMs = Math.max(0, ms - Math.floor(ms / M));
-      const bankMs = (save.offlineTimeBank || 0) * 1000;
-      if (bankMs >= fullSavedMs) {
-        delay = Math.max(0, Math.floor(ms / M));
-        save.offlineTimeBank = Math.max(
-          0,
-          (save.offlineTimeBank || 0) - fullSavedMs / 1000,
-        );
-      } else if (bankMs > 0) {
-        delay = Math.max(0, Math.floor(ms - bankMs));
-        save.offlineTimeBank = 0;
-      }
-      // reflect UI changes immediately
-      try {
-        updateUI();
-      } catch (e) {}
-    }
-  } catch (e) {
-    console.warn("delayedSetTimeout error:", e);
-  }
-
-  return setTimeout(fn, delay);
-}
 
 /* ================= HELPERS ================= */
 
