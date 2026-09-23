@@ -43,7 +43,7 @@ export const ATLASES = {
   accessories: {
     src: "assets/sprites/atlas/accessories.png",
     cols: 8,
-    rows: 7,
+    rows: 8,
   },
   ui: { src: "assets/sprites/atlas/ui.png", cols: 6, rows: 3 },
   emblems: { src: "assets/sprites/atlas/emblems.png", cols: 6, rows: 2 },
@@ -211,6 +211,7 @@ const ACCESSORY_CELLS = {
   ashen_capital_seal: [5, 6],
   scarlet_bloom_charm: [6, 6],
   golden_order_seal: [7, 6],
+  plague_amulet: [0, 7],
   rune_fragment: [0, 0],
   crimson_amber: [1, 0],
   scholars_ring: [2, 0],
@@ -327,6 +328,7 @@ const STATUS_CELLS = {
   MADNESS: [0, 2],
   DEATH_BLIGHT: [1, 2],
   SLEEP: [2, 2],
+  TOXIN: [4, 2],
 };
 
 const MISC_CELLS = {

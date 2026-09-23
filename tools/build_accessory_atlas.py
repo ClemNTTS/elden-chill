@@ -246,6 +246,11 @@ ITEMS = [
     ("ashen_capital_seal",               "shield",      "obsidian"),
     ("scarlet_bloom_charm",              "feather",     "rot"),
     ("golden_order_seal",                "mask",        "gold"),
+
+    # Marais de la Charogne (panoplie CHAROGNARD), ajoutee apres coup et donc
+    # en fin de liste : deplacer une entree decalerait tous les index suivants
+    # et desynchroniserait ACCESSORY_CELLS dans icons.js.
+    ("plague_amulet",                    "amulet",      "rot"),
 ]
 
 # --------------------------------------------------------------------------

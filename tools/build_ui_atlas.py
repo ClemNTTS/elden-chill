@@ -132,6 +132,16 @@ def shape_ward(d):
     d.polygon([(8, 3), (10, 7), (6, 7)], fill=A)
 
 
+def shape_vial(d):
+    # Toxine : une fiole qui se remplit, cumul par cumul, jusqu'a l'explosion
+    # au seuil. La goutte du Poison coule ; celle-ci doit au contraire lire
+    # comme une jauge qui monte, d'ou un contenant plutot qu'un liquide seul.
+    d.rectangle([6, 0, 9, 1], fill=A)            # bouchon
+    d.rectangle([6, 1, 9, 5], fill=W)            # goulot
+    d.ellipse([2, 4, 13, 15], fill=W)            # corps de la fiole
+    d.ellipse([4, 8, 11, 13], fill=A)            # niveau de toxine accumule
+
+
 def shape_rune(d):
     # Glyphe runique : losange evide, traverse d'une barre horizontale.
     # Une barre VERTICALE remplissait tout le creux et la forme lisait comme
@@ -182,6 +192,7 @@ SHAPES = {
     "snowflake": shape_snowflake,
     "ward": shape_ward,
     "rune": shape_rune,
+    "vial": shape_vial,
 }
 
 
@@ -211,6 +222,12 @@ ENTRIES = [
     ("SLEEP",              "crescent",  "moonlit"),
 
     ("rune",               "rune",      "gold"),
+
+    # Ajoute apres coup, en fin de liste : Toxine (panoplie CHAROGNARD, Marais
+    # de la Charogne) n'existait pas au moment ou l'atlas a ete genere. La
+    # placer ailleurs decalerait tous les index suivants et desynchroniserait
+    # STATUS_CELLS dans icons.js.
+    ("TOXIN",              "vial",      "toxin"),
 ]
 
 

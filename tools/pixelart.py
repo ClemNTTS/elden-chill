@@ -51,6 +51,7 @@ PALETTES = {
     "putrid":   ("#4a120d", "#7c2019", "#922b21", "#2e0906", "#cf6a5c"),
     "hoarfrost": ("#154a48", "#1f8c85", "#3dd6c9", "#0c2e2c", "#96f2e9"),
     "dew":      ("#2c5b78", "#4d8fb5", "#85c1e9", "#1b3a4d", "#c2e6f8"),
+    "toxin":    ("#2b461c", "#538736", "#7ac74f", "#1a2a11", "#afdd96"),
 
     # Stats : calees sur les jetons --stat-* de style.css.
     "statVigor":        ("#1f4a26", "#2f7038", "#48a352", "#143018", "#8ad294"),
