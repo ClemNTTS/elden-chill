@@ -369,6 +369,14 @@ export const BIOME_GUIDE = {
     pathRole: "Defi de fin de partie",
     hazards: ["folie"],
   },
+  carrion_marsh: {
+    chapter: "Annexe",
+    region: "Liurnia",
+    danger: "Tres eleve",
+    focus: "Le Poison qui s'intensifie. Panoplie CHAROGNARD en jeu.",
+    pathRole: "Cul-de-sac volontaire",
+    hazards: ["putrefaction", "poison"],
+  },
 };
 
 export const BIOME_ORDER = Object.keys(BIOME_GUIDE);
