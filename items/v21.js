@@ -11,9 +11,11 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "GILDED_EXECUTIONER",
     description:
-      "Force +10. Convertit 45% de vos chances de critique en dégâts critiques. Accentue les finishers.",
+      "+18% de Force de base <em style='color: grey;'>(+1,5% / Niv)</em>. Convertit 45% de vos chances de critique en dégâts critiques. Accentue les finishers.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 10 + itemLevel;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.18 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats, itemLevel) => {
       stats.critDamage += stats.critChance * (0.45 + 0.02 * itemLevel);
@@ -59,11 +61,15 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "GELMIR_DRAGON",
     description:
-      "+9 Force <em style='color: grey;'>(+1 / Niv)</em>. +5 Intelligence <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "+14% de Force de base <em style='color: grey;'>(+1,5% / Niv)</em>. +8% d'Intelligence de base <em style='color: grey;'>(+1% / Niv)</em>. " +
       "23% de chance d'infliger 2 Brûlure <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 8 + itemLevel;
-      stats.intelligence += 5 + Math.floor(itemLevel / 2);
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.14 + 0.015 * (itemLevel - 1)),
+      );
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.08 + 0.01 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.22 + itemLevel * 0.01) {
@@ -111,11 +117,13 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "COLOSSUS_ARENA",
     description:
-      "+16 Force <em style='color: grey;'>(+2 / Niv)</em>. +15 Armure <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "+17% de Force de base <em style='color: grey;'>(+2,5% / Niv)</em>. +15 Armure <em style='color: grey;'>(+3 / Niv)</em>. " +
       "Arme lourde : vous perdez une attaque par tour, sans jamais descendre " +
       "sous une attaque.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 14 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.17 + 0.025 * (itemLevel - 1)),
+      );
       stats.armor += 12 + itemLevel * 3;
     },
     applyMult: (stats) => {
@@ -131,10 +139,12 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "COLOSSUS_ARENA",
     description:
-      "+65 Armure <em style='color: grey;'>(+5 / Niv)</em>. +6 Vigueur <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+65 Armure <em style='color: grey;'>(+5 / Niv)</em>. +8% de Vigueur de base <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 60 + itemLevel * 5;
-      stats.vigor += 6 + Math.floor(itemLevel / 2);
+      stats.vigor += Math.floor(
+        (gameState.stats.vigor || 0) * (0.08 + 0.01 * (itemLevel - 1)),
+      );
     },
   },
   arena_colossus_token: {
@@ -155,10 +165,12 @@ export const V21_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLACK_REVENANT",
     description:
-      "+10 Intelligence <em style='color: grey;'>(+1 / Niv)</em>. +3,5% Chance de Critique <em style='color: grey;'>(+0,5% / Niv)</em>. " +
+      "+9% d'Intelligence de base <em style='color: grey;'>(+1% / Niv)</em>. +3,5% Chance de Critique <em style='color: grey;'>(+0,5% / Niv)</em>. " +
       "19% de chance d'infliger 2 Putréfaction <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 9 + itemLevel;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.09 + 0.01 * (itemLevel - 1)),
+      );
       stats.critChance += 0.03 + itemLevel * 0.005;
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -234,10 +246,12 @@ export const V21_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.LEGENDARY,
     description:
-      "+16 Dégâts de zone <em style='color: grey;'>(+6 / Niv)</em>. +4 Intelligence <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+16 Dégâts de zone <em style='color: grey;'>(+6 / Niv)</em>. +6% d'Intelligence de base <em style='color: grey;'>(+1% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
       stats.splashDamage += 10 + itemLevel * 6;
-      stats.intelligence += 4 + Math.floor(itemLevel / 2);
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.06 + 0.01 * (itemLevel - 1)),
+      );
     },
   },
   talisman_blackrot: {

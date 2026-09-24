@@ -134,8 +134,8 @@ export const V21_MONSTERS = {
   },
   icy_colossus: {
     name: "Colosse du blanc néant",
-    hp: 5882,
-    atk: 267,
+    hp: 7647,
+    atk: 347,
     armor: 260,
     runes: 47000,
     isRare: true,
@@ -210,8 +210,8 @@ export const V21_MONSTERS = {
   },
   azula_black_priest: {
     name: "Prêtre noir de Farum",
-    hp: 4602,
-    atk: 221,
+    hp: 5983,
+    atk: 287,
     armor: 210,
     runes: 61000,
     isRare: true,

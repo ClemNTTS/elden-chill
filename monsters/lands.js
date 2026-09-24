@@ -754,8 +754,8 @@ export const LANDS_MONSTERS = {
   },
   throne_radagon: {
     name: "Radagon de l'Ordre d'Or",
-    hp: 6442,
-    atk: 314,
+    hp: 7408,
+    atk: 361,
     armor: 280,
     runes: 104900,
     isRare: true,
