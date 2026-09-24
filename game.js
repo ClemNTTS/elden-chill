@@ -370,12 +370,25 @@ window.onload = () => {
 /* ------------------------------------------------------------------ */
 
 /*
- * exportSaveString() et importSaveString() existaient dans save.js depuis
- * longtemps, testees et fonctionnelles — mais AUCUN bouton ne les appelait.
- * La fonctionnalite etait ecrite a cent pour cent et joignable a zero.
+ * Export et import par FICHIER.
+ *
+ * La premiere version passait par un champ de texte et le presse-papiers. La
+ * chaine scellee depasse ce que certains presse-papiers acceptent, sur
+ * telephone comme sur PC : le code arrivait tronque et l'import echouait sur
+ * le sceau. Un fichier .txt n'a pas de limite de ce genre, et reste lisible
+ * et deplacable par le joueur. Le format est inchange : le fichier contient
+ * exactement la chaine de exportSaveString().
  */
 
-const champTransfert = () => document.getElementById("save-transfer");
+/** Un fichier de sauvegarde fait quelques dizaines de Ko : au-dela, ce n'en
+ *  est pas un, et on evite de charger en memoire n'importe quoi. */
+const TAILLE_MAX_FICHIER = 5 * 1024 * 1024;
+
+const nomDuFichier = () => {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `elden-chill-sauvegarde-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.txt`;
+};
 
 /** Affiche un retour lisible sous les deux boutons. */
 const direTransfert = (message, ok) => {
@@ -394,54 +407,62 @@ const direTransfert = (message, ok) => {
  * frequent.
  */
 const RAISONS_IMPORT = {
-  EMPTY: "Le champ est vide : collez d'abord un code de sauvegarde.",
+  EMPTY: "Ce fichier est vide.",
+  TOO_BIG: "Ce fichier est bien trop gros pour etre une sauvegarde du jeu.",
+  UNREADABLE: "Impossible de lire ce fichier.",
   MALFORMED:
-    "Ce n'est pas un code de sauvegarde valide. Verifiez qu'il a ete copie en entier.",
+    "Ce fichier ne contient pas une sauvegarde valide. Choisissez le .txt exporte par le jeu.",
   UNSUPPORTED_VERSION:
     "Ce code vient d'une version du jeu trop ancienne pour etre relue.",
-  TAMPERED:
-    "Le sceau ne correspond pas. Le code a probablement ete tronque ou modifie.",
-  CORRUPT_PAYLOAD: "Le contenu du code est illisible.",
+  TAMPERED: "Le sceau ne correspond pas : le fichier a ete modifie ou abime.",
+  CORRUPT_PAYLOAD: "Le contenu du fichier est illisible.",
   INCOMPATIBLE_VERSION:
     "Cette sauvegarde vient d'une version incompatible du jeu.",
 };
 
 const exportSave = () => {
-  const champ = champTransfert();
-  if (!champ) return;
   const code = exportSaveString();
-  champ.value = code;
-  champ.select();
-
-  // Le presse-papiers peut etre refuse (contexte non securise, permission) :
-  // le code reste selectionne dans le champ, donc copiable a la main.
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard
-      .writeText(code)
-      .then(() =>
-        direTransfert(
-          `Sauvegarde exportee (${code.length} signes) et copiee dans le presse-papiers.`,
-          true,
-        ),
-      )
-      .catch(() =>
-        direTransfert(
-          `Sauvegarde exportee (${code.length} signes). Le code est selectionne : copiez-le.`,
-          true,
-        ),
-      );
-    return;
-  }
+  const url = URL.createObjectURL(
+    new Blob([code], { type: "text/plain;charset=utf-8" }),
+  );
+  const lien = document.createElement("a");
+  lien.href = url;
+  lien.download = nomDuFichier();
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  // Laisse au navigateur le temps de lancer le telechargement.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   direTransfert(
-    `Sauvegarde exportee (${code.length} signes). Le code est selectionne : copiez-le.`,
+    `Sauvegarde exportee dans ${lien.download}. Gardez ce fichier en lieu sur.`,
     true,
   );
 };
 
+/** Ouvre le selecteur de fichier ; la suite se joue dans importSaveFile. */
 const importSave = () => {
-  const champ = champTransfert();
-  if (!champ) return;
-  const code = champ.value.trim();
+  const entree = document.getElementById("save-file-input");
+  if (!entree) return;
+  // Vide la valeur : choisir deux fois le meme fichier doit relancer l'import.
+  entree.value = "";
+  entree.click();
+};
+
+const importSaveFile = async (entree) => {
+  const fichier = entree?.files?.[0];
+  if (!fichier) return;
+  if (fichier.size > TAILLE_MAX_FICHIER) {
+    direTransfert(RAISONS_IMPORT.TOO_BIG, false);
+    return;
+  }
+
+  let code;
+  try {
+    code = (await fichier.text()).trim();
+  } catch {
+    direTransfert(RAISONS_IMPORT.UNREADABLE, false);
+    return;
+  }
   if (!code) {
     direTransfert(RAISONS_IMPORT.EMPTY, false);
     return;
@@ -451,7 +472,7 @@ const importSave = () => {
   // reinitialisation.
   if (
     !confirm(
-      "Importer cette sauvegarde remplacera definitivement votre partie en cours. Continuer ?",
+      `Importer ${fichier.name} remplacera definitivement votre partie en cours. Continuer ?`,
     )
   ) {
     return;
@@ -483,6 +504,7 @@ const importSave = () => {
 
 window.exportSave = exportSave;
 window.importSave = importSave;
+window.importSaveFile = importSaveFile;
 
 window.addEventListener("beforeunload", () => {
   saveGame("beforeunload");

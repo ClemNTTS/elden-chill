@@ -613,22 +613,24 @@
                 <div class="camp-panel">
                   <h3>Sauvegarde manuelle</h3>
                   <p class="option-hint">
-                    Exporter produit un code a coller ailleurs. Importer remplace la partie en cours.
+                    Exporter telecharge un fichier .txt. Importer le recharge et remplace la partie en cours.
                   </p>
+                  <!--
+                    Un fichier plutot qu'un code a copier-coller : la chaine
+                    scellee depasse ce que certains presse-papiers acceptent,
+                    sur telephone comme sur PC, et arrivait tronquee.
+                  -->
                   <div class="button-stack">
                     <button onclick="exportSave()">Exporter ma sauvegarde</button>
                     <button onclick="importSave()">Importer une sauvegarde</button>
                   </div>
-                  <!-- Un champ de texte plutot qu'un telechargement : ca marche
-                       partout, y compris sur mobile, et le joueur voit ce qu'il
-                       copie. -->
-                  <textarea
-                    id="save-transfer"
-                    class="save-transfer"
-                    rows="3"
-                    spellcheck="false"
-                    placeholder="Le code de sauvegarde apparait ici. Collez-en un pour l'importer."
-                  ></textarea>
+                  <input
+                    id="save-file-input"
+                    type="file"
+                    accept=".txt,text/plain"
+                    hidden
+                    onchange="importSaveFile(this)"
+                  />
                   <p class="option-hint" id="save-transfer-status" role="status" aria-live="polite"></p>
                 </div>
 
