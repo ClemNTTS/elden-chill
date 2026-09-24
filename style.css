@@ -1569,6 +1569,18 @@ button:disabled {
   color: var(--text);
 }
 
+/* En-tete de panneau avec un bouton pour le replier (cendres de l'inventaire). */
+.panel-collapse-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-collapse-row h3 {
+  margin: 0;
+}
+
 .inventory-toolbar {
   display: flex;
   justify-content: space-between;

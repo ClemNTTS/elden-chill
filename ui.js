@@ -3169,6 +3169,41 @@ window.setInventorySearch = (requete) => {
   updateInventoryDisplay();
 };
 
+/*
+ * Replier les cendres de guerre de l'inventaire.
+ *
+ * La liste grandit avec la partie et repousse les objets tout en bas de
+ * l'ecran. L'etat est garde dans le navigateur : c'est une preference
+ * d'affichage, elle n'a rien a faire dans la sauvegarde. Le stockage peut
+ * etre indisponible (navigation privee) : on replie alors sans memoriser.
+ */
+const CLE_CENDRES_REPLIEES = "elden_chill_inventory_ashes_collapsed";
+
+const appliquerCendresRepliees = (repliees) => {
+  const corps = document.getElementById("inventory-ashes-body");
+  const btn = document.getElementById("btn-collapse-ashes");
+  if (!corps || !btn) return;
+  corps.hidden = repliees;
+  btn.innerText = repliees ? "Deplier" : "Replier";
+  btn.setAttribute("aria-expanded", String(!repliees));
+};
+
+window.toggleInventoryAshesCollapse = () => {
+  const repliees = !document.getElementById("inventory-ashes-body")?.hidden;
+  appliquerCendresRepliees(repliees);
+  try {
+    localStorage.setItem(CLE_CENDRES_REPLIEES, repliees ? "1" : "0");
+  } catch {
+    // Preference non memorisee : le repli marche quand meme.
+  }
+};
+
+try {
+  appliquerCendresRepliees(localStorage.getItem(CLE_CENDRES_REPLIEES) === "1");
+} catch {
+  // Stockage indisponible : panneau deplie par defaut.
+}
+
 window.toggleInventoryCollapse = () => {
   const grid = document.getElementById("inventory-section");
   const btn = document.getElementById("btn-collapse");

@@ -469,12 +469,25 @@
               Build" : le seul des quatre emplacements a ne pas repondre au clic.
             -->
             <div id="inventory-ashes-panel" class="camp-panel">
-              <h3>Cendres de guerre</h3>
-              <p class="option-hint">
-                Une seule cendre part en expedition. Cliquez pour l'equiper.
-              </p>
-              <div id="inventory-ashes-list" class="ashes-container">
-                Aucune cendre de guerre possedee
+              <div class="panel-collapse-row">
+                <h3>Cendres de guerre</h3>
+                <button
+                  type="button"
+                  id="btn-collapse-ashes"
+                  aria-expanded="true"
+                  aria-controls="inventory-ashes-body"
+                  onclick="toggleInventoryAshesCollapse()"
+                >
+                  Replier
+                </button>
+              </div>
+              <div id="inventory-ashes-body">
+                <p class="option-hint">
+                  Une seule cendre part en expedition. Cliquez pour l'equiper.
+                </p>
+                <div id="inventory-ashes-list" class="ashes-container">
+                  Aucune cendre de guerre possedee
+                </div>
               </div>
             </div>
 

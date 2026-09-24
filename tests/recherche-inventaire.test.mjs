@@ -46,6 +46,13 @@ test("une requete vide laisse tout passer", () => {
   assert.equal(objetCorrespond(baton, "   "), true);
 });
 
+test("le nom se cherche n'importe ou, meme en milieu de mot", () => {
+  assert.equal(objetCorrespond(baton, "cademi"), true);
+  assert.equal(objetCorrespond(cape, "eau de"), true);
+  // La description reste en debut de mot : "ints" (de "points") ne sort pas.
+  assert.equal(objetCorrespond(cape, "ints"), false);
+});
+
 test("les alias anglais pointent vers le mot du jeu", () => {
   assert.equal(objetCorrespond({ description: "+10% de Force" }, "str"), true);
 });

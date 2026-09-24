@@ -38,12 +38,18 @@ export const termesDeRecherche = (requete) =>
 
 /**
  * L'objet correspond-il a la requete ?
- * Cherche dans le nom, la description, le type, la rarete et la panoplie.
+ *
+ * Deux regles, selon l'endroit :
+ * - le NOM se cherche n'importe ou ("adagon" trouve le Marteau de Radagon) :
+ *   il est court, et c'est souvent un bout de nom que l'on a en tete ;
+ * - la description, le type, la rarete et la panoplie se cherchent en debut
+ *   de mot, pour que "int" ne remonte pas tous les "points de vie".
  */
 export const objetCorrespond = (itemData, requete) => {
-  const termes = termesDeRecherche(requete);
-  if (!termes.length) return true;
+  const bruts = mots(requete);
+  if (!bruts.length) return true;
   if (!itemData) return false;
+  const nom = mots(itemData.name).join(" ");
   const vocabulaire = mots(
     [
       itemData.name,
@@ -53,7 +59,9 @@ export const objetCorrespond = (itemData, requete) => {
       itemData.set,
     ].join(" "),
   );
-  return termes.every((terme) =>
-    vocabulaire.some((mot) => mot.startsWith(terme)),
-  );
+  return bruts.every((brut) => {
+    if (nom.includes(brut)) return true;
+    const terme = ALIAS[brut] || brut;
+    return vocabulaire.some((mot) => mot.startsWith(terme));
+  });
 };
