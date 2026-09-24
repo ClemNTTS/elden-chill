@@ -25,11 +25,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "FESTIVAL",
     description:
-      "Chaque victime alimente la fête. +18 Force <em style='color: grey;'>(+2 / Niv)</em>, +7 Dextérité <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Chaque victime alimente la fête. +27% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +11% de Dextérité de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "22% de chance d'infliger 2 Folie <em style='color: grey;'>(+2% / Niv)</em> ; la Folie explose au huitième cumul.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 16 + itemLevel * 2;
-      stats.dexterity += 6 + itemLevel;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.27 + 0.03 * (itemLevel - 1)),
+      );
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.11 + 0.015 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.2 + 0.02 * itemLevel) {
@@ -44,12 +48,14 @@ export const LANDS_ITEMS = {
     set: "FESTIVAL",
     description:
       "Cousus pour danser, pas pour encaisser. +24 Armure <em style='color: grey;'>(+2 / Niv)</em>, " +
-      "+5 Dextérité <em style='color: grey;'>(+1 / Niv)</em>, +4 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
+      "+8% de Dextérité de base <em style='color: grey;'>(+1,5% / Niv)</em>, +4 Résistance Folie <em style='color: grey;'>(+1 tous les 2 / Niv)</em>. " +
       "Chaque tranche de 15 Dextérité de base ajoute 1% (+0,2% / Niv) d'esquive.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 22 + itemLevel * 2;
       stats.resistances.folie += 4 + Math.floor(itemLevel / 2);
-      stats.dexterity += 4 + itemLevel;
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.08 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats, itemLevel) => {
       const baseDex = gameState.stats.dexterity || 0;
@@ -88,10 +94,12 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "BRIAR",
     description:
-      "Les barbes restent dans la plaie. +21 Force <em style='color: grey;'>(+2 / Niv)</em>, +9 Armure <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Les barbes restent dans la plaie. +29% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +9 Armure <em style='color: grey;'>(+1 / Niv)</em>. " +
       "27% de chance d'infliger Épines pendant 3 tours <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 19 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.29 + 0.03 * (itemLevel - 1)),
+      );
       stats.armor += 8 + itemLevel;
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -144,11 +152,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "MANOR",
     description:
-      "Frappe le groupe entier. +24 Force <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "Frappe le groupe entier. +33% de Force de base <em style='color: grey;'>(+4% / Niv)</em>. " +
       "Convertit 44% de votre Intelligence en Dégâts de zone <em style='color: grey;'>(+4% / Niv)</em>. " +
       "27% de chance d'infliger 3 Brûlure <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 21 + itemLevel * 3;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.33 + 0.04 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats, itemLevel) => {
       stats.splashDamage += Math.floor(
@@ -215,7 +225,7 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLASPHEMY",
     description:
-      "Vol de vie : chaque coup porte vous rend 1% <em style='color: grey;'>(+0.1% / Niv)</em> de vos points de vie maximum.",
+      "+12% de Vigueur de base <em style='color: grey;'>(+2,5% / Niv)</em>. Vol de vie : chaque coup porte vous rend 1% <em style='color: grey;'>(+0.1% / Niv)</em> de vos points de vie maximum.",
     // funcOnHit et funcOnBeingHit sont les deux seuls crochets de combat que le
     // moteur appelle sur un objet. Le soin passe par healPlayer, donc il est
     // bien annule dans les biomes qui scellent les soins.
@@ -227,7 +237,9 @@ export const LANDS_ITEMS = {
         ActionLog(`Le calice se remplit : +${healed} PV.`, "log-heal");
     },
     applyFlat: (stats, itemLevel) => {
-      stats.vigor += 8 + itemLevel * 2;
+      stats.vigor += Math.floor(
+        (gameState.stats.vigor || 0) * (0.12 + 0.025 * (itemLevel - 1)),
+      );
     },
   },
   godslayer_greatsword: {
@@ -236,10 +248,12 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "BLASPHEMY",
     description:
-      "Sa flamme noire s'accroche à la plaie. +27 Force <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "Sa flamme noire s'accroche à la plaie. +33% de Force de base <em style='color: grey;'>(+4% / Niv)</em>. " +
       "32% de chance d'infliger 4 Brûlure <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 24 + itemLevel * 3;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.33 + 0.04 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.3 + 0.02 * itemLevel) {
@@ -254,11 +268,13 @@ export const LANDS_ITEMS = {
     set: "BLASPHEMY",
     description:
       "Ce qui reste de Rykard tient encore dessus. +39 Armure <em style='color: grey;'>(+3 / Niv)</em>, " +
-      "+7 Vigueur <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "+9% de Vigueur de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "En encaissant un coup, regagnez 1,5% (+0,1% / Niv) de vos PV maximum : le serpent boit aussi votre sang.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 36 + itemLevel * 3;
-      stats.vigor += 6 + itemLevel;
+      stats.vigor += Math.floor(
+        (gameState.stats.vigor || 0) * (0.09 + 0.015 * (itemLevel - 1)),
+      );
     },
     funcOnBeingHit: (stats, attacker, damage, itemLevel = 1) => {
       const maxHp = getHealth(stats.vigor);
@@ -276,10 +292,12 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "TOWER",
     description:
-      "Longue portée. +29 Force <em style='color: grey;'>(+3 / Niv)</em>, " +
+      "Longue portée. +30% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, " +
       "+10 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 26 + itemLevel * 3;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.3 + 0.03 * (itemLevel - 1)),
+      );
       stats.flatDamagePenetration += 8 + itemLevel * 2;
     },
   },
@@ -333,11 +351,15 @@ export const LANDS_ITEMS = {
     set: "NIGHT",
     description:
       "Elle frappe seule : +1 attaque par tour, garantie. " +
-      "+25 Force <em style='color: grey;'>(+3 / Niv)</em>, +12 Dextérité <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "+26% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +12% de Dextérité de base <em style='color: grey;'>(+2,5% / Niv)</em>. " +
       "15,5% de chance d'infliger 2 Sommeil <em style='color: grey;'>(+1,5% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 22 + itemLevel * 3;
-      stats.dexterity += 10 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.26 + 0.03 * (itemLevel - 1)),
+      );
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.12 + 0.025 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.attacksPerTurn += 1;
@@ -354,11 +376,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
     description:
-      "Taillee pour la nuit : +38 Armure (+3 / Niv), +8 Dexterite et resistance au Gel. " +
+      "Taillee pour la nuit : +38 Armure (+3 / Niv), +9% de Dextérité de base <em style='color: grey;'>(+1% / Niv)</em> et resistance au Gel. " +
       "Chaque tranche de 20 Dextérité de base ajoute 1% de Chance de Critique : on frappe depuis l'ombre.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 38 + itemLevel * 3;
-      stats.dexterity += 8 + itemLevel;
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.09 + 0.01 * (itemLevel - 1)),
+      );
       stats.resistances.gel += 4 + Math.floor(itemLevel / 2);
     },
     applyMult: (stats) => {
@@ -372,9 +396,11 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "NIGHT",
     description:
-      "+12 Intelligence (+2 / Niv). La lumiere des astres porte les sorts.",
+      "+14% d'Intelligence de base <em style='color: grey;'>(+2,5% / Niv)</em>. La lumiere des astres porte les sorts.",
     applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 12 + itemLevel * 2;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.14 + 0.025 * (itemLevel - 1)),
+      );
     },
   },
 
@@ -385,11 +411,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "ZAMOR",
     description:
-      "+30 Force <em style='color: grey;'>(+3 / Niv)</em>, +9 Dextérité <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "+29% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +9% de Dextérité de base <em style='color: grey;'>(+1% / Niv)</em>. " +
       "32% de chance d'infliger 2 Gelure <em style='color: grey;'>(+2% / Niv)</em>, qui se cumulent.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 27 + itemLevel * 3;
-      stats.dexterity += 8 + itemLevel;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.29 + 0.03 * (itemLevel - 1)),
+      );
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.09 + 0.01 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.3 + 0.02 * itemLevel) {
@@ -404,11 +434,13 @@ export const LANDS_ITEMS = {
     set: "ZAMOR",
     description:
       "Taillé pour porter un marteau plus lourd que soi. " +
-      "+49 Armure <em style='color: grey;'>(+4 / Niv)</em>, +7 Force <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "+49 Armure <em style='color: grey;'>(+4 / Niv)</em>, +6% de Force de base <em style='color: grey;'>(+1% / Niv)</em>. " +
       "Convertit 15% de votre Force de base en Armure supplémentaire.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 45 + itemLevel * 4;
-      stats.strength += 6 + itemLevel;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.06 + 0.01 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.armor += Math.floor((gameState.stats.strength || 0) * 0.15);
@@ -420,11 +452,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "ZAMOR",
     description:
-      "+10 Force (+2 / Niv) et +6 resistance au Gel (+1 / Niv) : tenir dans le froid et frapper dedans. " +
+      "+11% de Force de base <em style='color: grey;'>(+1,5% / Niv)</em> et +6 resistance au Gel (+1 / Niv) : tenir dans le froid et frapper dedans. " +
       "18% de chance d'infliger 2 Gelure au contact.",
     applyFlat: (stats, itemLevel) => {
       stats.resistances.gel += 6 + itemLevel;
-      stats.strength += 10 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.11 + 0.015 * (itemLevel - 1)),
+      );
     },
     onHitEffect: { id: "FROSTBITE", duration: 2, chance: 0.18 },
   },
@@ -436,11 +470,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "CLEANROT",
     description:
-      "+38 Force <em style='color: grey;'>(+4 / Niv)</em>, +14 Dextérité <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "+30% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +11% de Dextérité de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "34% de chance d'infliger 3 Putréfaction <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 34 + itemLevel * 4;
-      stats.dexterity += 12 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.3 + 0.03 * (itemLevel - 1)),
+      );
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.11 + 0.015 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.32 + 0.02 * itemLevel) {
@@ -471,9 +509,11 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "CLEANROT",
     description:
-      "+19 Intelligence <em style='color: grey;'>(+3 / Niv)</em>, +4 Résistance Putréfaction <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
+      "+15% d'Intelligence de base <em style='color: grey;'>(+2,5% / Niv)</em>, +4 Résistance Putréfaction <em style='color: grey;'>(+1 tous les 2 / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 16 + itemLevel * 3;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.15 + 0.025 * (itemLevel - 1)),
+      );
       stats.resistances.putrefaction += 4 + Math.floor(itemLevel / 2);
     },
   },
@@ -488,10 +528,12 @@ export const LANDS_ITEMS = {
     type: ITEM_TYPES.ACCESSORY,
     rarity: ITEM_RARITIES.RELIC,
     description:
-      "+18 Intelligence <em style='color: grey;'>(+2 / Niv)</em>. Vos tics de Poison infligés " +
+      "+15% d'Intelligence de base <em style='color: grey;'>(+1,5% / Niv)</em>. Vos tics de Poison infligés " +
       "vous rendent 30% de leurs dégâts en PV <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 18 + itemLevel * 2;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.15 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats, itemLevel) => {
       stats.poisonLifesteal =
@@ -524,12 +566,14 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "DESTINED_DEATH",
     description:
-      "La seule arme qui applique le Fléau mortel. +42 Force <em style='color: grey;'>(+4 / Niv)</em>, " +
+      "La seule arme qui applique le Fléau mortel. +36% de Force de base <em style='color: grey;'>(+4% / Niv)</em>, " +
       "+14 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>. " +
       "28% de chance d'infliger 2 Fléau mortel <em style='color: grey;'>(+2% / Niv)</em> ; au douzième cumul, " +
       "la cible perd 12% de ses PV maximum.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 38 + itemLevel * 4;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.36 + 0.04 * (itemLevel - 1)),
+      );
       stats.flatDamagePenetration += 12 + itemLevel * 2;
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -545,11 +589,13 @@ export const LANDS_ITEMS = {
     set: "DESTINED_DEATH",
     description:
       "Ce que Maliketh portait avant de cesser de parler. " +
-      "+60 Armure <em style='color: grey;'>(+5 / Niv)</em>, +12 Dextérité <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "+60 Armure <em style='color: grey;'>(+5 / Niv)</em>, +11% de Dextérité de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "Convertit 15% de votre Dextérité de base en Pénétration fixe d'armure.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 55 + itemLevel * 5;
-      stats.dexterity += 10 + itemLevel * 2;
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.11 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.flatDamagePenetration += Math.floor(
@@ -563,9 +609,11 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "DESTINED_DEATH",
     description:
-      "Chaque coup ajoute 2 cumuls de Fleau mortel, en plus de ceux de votre arme.",
+      "+18% de Force de base <em style='color: grey;'>(+2,5% / Niv)</em>. Chaque coup ajoute 2 cumuls de Fleau mortel, en plus de ceux de votre arme.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 18 + itemLevel * 3;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.18 + 0.025 * (itemLevel - 1)),
+      );
       stats.percentDamagePenetration += 0.05 + 0.005 * itemLevel;
     },
     funcOnHit: (stats, targetEffects) => {
@@ -580,11 +628,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "ALL_KNOWING",
     description:
-      "Arme de savoir. +34 Intelligence <em style='color: grey;'>(+4 / Niv)</em>, +16 Force <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "Arme de savoir. +27% d'Intelligence de base <em style='color: grey;'>(+3% / Niv)</em>, +14% de Force de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "Convertit 33% de votre Intelligence en Dégâts de zone <em style='color: grey;'>(+3% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.intelligence += 30 + itemLevel * 4;
-      stats.strength += 14 + itemLevel * 2;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.27 + 0.03 * (itemLevel - 1)),
+      );
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.14 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats, itemLevel) => {
       stats.splashDamage += Math.floor(
@@ -599,11 +651,13 @@ export const LANDS_ITEMS = {
     set: "ALL_KNOWING",
     description:
       "Cent yeux, aucun sommeil. +63 Armure <em style='color: grey;'>(+5 / Niv)</em>, " +
-      "+21 Intelligence <em style='color: grey;'>(+3 / Niv)</em>, +9 Résistance Folie <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "+17% d'Intelligence de base <em style='color: grey;'>(+2,5% / Niv)</em>, +9 Résistance Folie <em style='color: grey;'>(+1 / Niv)</em>. " +
       "Convertit 15% de son Intelligence effective en Dégâts de zone supplémentaires.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 58 + itemLevel * 5;
-      stats.intelligence += 18 + itemLevel * 3;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.17 + 0.025 * (itemLevel - 1)),
+      );
       stats.resistances.folie += 8 + itemLevel;
     },
     applyMult: (stats) => {
@@ -616,11 +670,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "ALL_KNOWING",
     description:
-      "+26 Armure (+4 / Niv) et +14 Intelligence : de quoi compenser la cendre qui ronge les plaques. " +
+      "+26 Armure (+4 / Niv) et +14% d'Intelligence de base <em style='color: grey;'>(+1,5% / Niv)</em> : de quoi compenser la cendre qui ronge les plaques. " +
       "Chaque tranche de 20 Intelligence effective amplifie vos dégâts de zone de 2%.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 26 + itemLevel * 4;
-      stats.intelligence += 14 + itemLevel * 2;
+      stats.intelligence += Math.floor(
+        (gameState.stats.intelligence || 0) * (0.14 + 0.015 * (itemLevel - 1)),
+      );
     },
     /*
      * Applique en DERNIER (voir l'ordre des trois pieces dans ce fichier) :
@@ -645,11 +701,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "GOLDEN_ORDER",
     description:
-      "Le poids de l'Ordre entier, tenu à une main. +53 Force <em style='color: grey;'>(+5 / Niv)</em>, " +
+      "Le poids de l'Ordre entier, tenu à une main. +41% de Force de base <em style='color: grey;'>(+4% / Niv)</em>, " +
       "+16 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>. " +
       "26% de chance d'étourdir 1 tour <em style='color: grey;'>(+2% / Niv)</em>.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 48 + itemLevel * 5;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.41 + 0.04 * (itemLevel - 1)),
+      );
       stats.flatDamagePenetration += 14 + itemLevel * 2;
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
@@ -681,11 +739,13 @@ export const LANDS_ITEMS = {
     set: "GOLDEN_ORDER",
     description:
       "Le dernier morceau d'armure de l'Entre-Terre. +74 Armure <em style='color: grey;'>(+6 / Niv)</em>, " +
-      "+23 Vigueur <em style='color: grey;'>(+3 / Niv)</em>. " +
+      "+18% de Vigueur de base <em style='color: grey;'>(+2,5% / Niv)</em>. " +
       "Convertit 10% de sa Vigueur de base en Intelligence, dans le meme esprit que le Sceau de l'Ordre d'Or.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 68 + itemLevel * 6;
-      stats.vigor += 20 + itemLevel * 3;
+      stats.vigor += Math.floor(
+        (gameState.stats.vigor || 0) * (0.18 + 0.025 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.intelligence += Math.floor((gameState.stats.vigor || 0) * 0.1);
@@ -699,11 +759,15 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.LEGENDARY,
     set: "BEASTIAL",
     description:
-      "Griffe de pierre. +20 Force <em style='color: grey;'>(+2 / Niv)</em>, +16 Dextérité <em style='color: grey;'>(+2 / Niv)</em>. " +
+      "Griffe de pierre. +30% de Force de base <em style='color: grey;'>(+3% / Niv)</em>, +24% de Dextérité de base <em style='color: grey;'>(+3% / Niv)</em>. " +
       "30% de chance d'infliger 2 Saignement <em style='color: grey;'>(+2% / Niv)</em>, qui se cumulent.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 18 + itemLevel * 2;
-      stats.dexterity += 14 + itemLevel * 2;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.3 + 0.03 * (itemLevel - 1)),
+      );
+      stats.dexterity += Math.floor(
+        (gameState.stats.dexterity || 0) * (0.24 + 0.03 * (itemLevel - 1)),
+      );
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (Math.random() < 0.28 + 0.02 * itemLevel) {
@@ -727,11 +791,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "BEASTIAL",
     description:
-      "Encore chaude. +31 Armure <em style='color: grey;'>(+3 / Niv)</em>, +9 Vigueur <em style='color: grey;'>(+1 / Niv)</em>. " +
+      "Encore chaude. +31 Armure <em style='color: grey;'>(+3 / Niv)</em>, +14% de Vigueur de base <em style='color: grey;'>(+1,5% / Niv)</em>. " +
       "Chaque tranche de 20 Vigueur de base ajoute 1% de runes gagnées : Gurranq paie aussi l'endurance.",
     applyFlat: (stats, itemLevel) => {
       stats.armor += 28 + itemLevel * 3;
-      stats.vigor += 8 + itemLevel;
+      stats.vigor += Math.floor(
+        (gameState.stats.vigor || 0) * (0.14 + 0.015 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.runeGainMult +=
@@ -746,9 +812,11 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RARE,
     set: "JAR",
     description:
-      "Se brise a l'impact : degats eleves, mais votre armure est reduite de 15%.",
+      "+29% de Force de base <em style='color: grey;'>(+3% / Niv)</em>. Se brise a l'impact : degats eleves, mais votre armure est reduite de 15%.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 24 + itemLevel * 3;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.29 + 0.03 * (itemLevel - 1)),
+      );
     },
     applyMult: (stats) => {
       stats.armor *= 0.85;
@@ -817,11 +885,13 @@ export const LANDS_ITEMS = {
     rarity: ITEM_RARITIES.RELIC,
     set: "ANCIENT_DRAGON",
     description:
-      "Trop longue pour un humain. On s'y fait. +47 Force <em style='color: grey;'>(+5 / Niv)</em>, " +
+      "Trop longue pour un humain. On s'y fait. +41% de Force de base <em style='color: grey;'>(+4,5% / Niv)</em>, " +
       "+12 Pénétration fixe d'armure <em style='color: grey;'>(+2 / Niv)</em>. " +
       "Convertit 15% de sa Force de base en Dégâts de zone : la foudre saute deja a l'impact.",
     applyFlat: (stats, itemLevel) => {
-      stats.strength += 42 + itemLevel * 5;
+      stats.strength += Math.floor(
+        (gameState.stats.strength || 0) * (0.41 + 0.045 * (itemLevel - 1)),
+      );
       stats.flatDamagePenetration += 10 + itemLevel * 2;
     },
     applyMult: (stats) => {
