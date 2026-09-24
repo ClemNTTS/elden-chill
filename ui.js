@@ -223,7 +223,7 @@ function playDungeonMusic() {
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
-import { getBiomeTrait } from "./biome-traits.js";
+import { getBiomeTrait, repliInterdit } from "./biome-traits.js";
 import {
   LEVEL_PER_MAIN_BOSS,
   POINTS_PER_REBIRTH,
@@ -389,7 +389,6 @@ import {
   getCodexBiomeInfo,
   getItemRarity,
   getKnownCodexBiomes,
-  getRunModifier,
   syncCodexFromInventory,
 } from "./systems.js";
 import {
@@ -3378,13 +3377,9 @@ export const toggleView = (view) => {
    * biome, mais aucune ligne ne lisait cette cle : le joueur pouvait se replier
    * d'une zone qui lui annonçait le contraire.
    */
-  if (
-    view !== "biome" &&
-    gameState.world.isExploring &&
-    getRunModifier("noRetreat", 0) > 0
-  ) {
+  if (view !== "biome" && repliInterdit()) {
     ActionLog(
-      "Il n'y a plus de route derriere vous. Le repli est impossible ici.",
+      "Il n'y a plus de route derriere vous : le repli sera possible une fois le boss vaincu.",
       "log-event",
     );
     return;

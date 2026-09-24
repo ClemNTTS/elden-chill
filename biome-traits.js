@@ -129,7 +129,7 @@ export const BIOME_TRAITS = {
   no_retreat: {
     name: "Nulle part ou fuir",
     detail:
-      "Au pied du Trone, il n'y a plus de route derriere. Le repli est impossible, et le Fleau mortel s'accumule d'un cumul par tour.",
+      "Au pied du Trone, il n'y a plus de route derriere. Le repli est impossible tant que la Bete d'Elden n'est pas tombee, et le Fleau mortel s'accumule d'un cumul par tour.",
     runBuff: { noRetreat: 1 },
     onTurn: () => {
       applyEffect(gameState.playerEffects, "DEATH_BLIGHT", 1);
@@ -221,6 +221,23 @@ export const tickBiomeTraits = (playerMaxHp) => {
 
   return messages;
 };
+
+/*
+ * Le repli est-il interdit en ce moment ?
+ *
+ * "Nulle part ou fuir" ne vaut que jusqu'a la premiere victoire sur le boss.
+ * L'expedition enchaine ensuite les cycles d'elle-meme (core.js) : un
+ * blocage permanent ne laissait plus que deux sorties, mourir — et perdre les
+ * runes portees — ou avoir regle un arret automatique apres N cycles. Le
+ * trait devait rendre le Trone sans retour, pas transformer la victoire en
+ * piege.
+ */
+export const repliInterdit = () =>
+  gameState.world.isExploring &&
+  (runtimeState.currentLoopCount || 0) === 0 &&
+  (gameState.preparation?.activeRunBuffs || []).some(
+    (buff) => (buff.noRetreat || 0) > 0,
+  );
 
 /** Modificateurs a verser dans activeRunBuffs au depart de l'expedition. */
 export const getTraitRunBuffs = (traitIds = []) =>

@@ -255,8 +255,12 @@ export function performAttack({
         Math.floor(damage * AFFLICTION_CAP),
       );
       damage += toll;
+      // Le message dit QUI paie : sur le journal, "Votre heros perd..." se
+      // lisait mal au milieu des degats infliges aux ennemis.
       ActionLog(
-        `FLEAU MORTEL ! ${target.name} perd un quart de sa vie (${toll}).`,
+        isPlayer
+          ? `FLEAU MORTEL ! ${target.name} perd ${formatNumber(toll)} PV (12% de ses PV max).`
+          : `FLEAU MORTEL ! Le fleau vous ronge : ${formatNumber(toll)} degats de plus sur ce coup (12% de vos PV max).`,
         "log-crit",
       );
       const idx = targetEffects.findIndex((e) => e.id === "DEATH_BLIGHT");
@@ -652,9 +656,15 @@ export const combatLoop = (sessionId) => {
   if (sessionId !== runtimeState.currentCombatSession) return;
 
   const playerObj = {
-    name: "Vôtre héro",
+    name: "Votre heros",
     currentHp: runtimeState.playerCurrentHp,
-    maxHp: getHealth(gameState.stats.vigor),
+    /*
+     * Vigueur EFFECTIVE, comme la barre de vie affichee (ui.js). La vigueur
+     * de base sous-estimait le maximum : le Fleau mortel (12% des PV max) et
+     * les traits de biome en pourcentage partaient d'une barre plus courte
+     * que celle du joueur.
+     */
+    maxHp: getHealth(getEffectiveStats().vigor),
   };
 
   // Tick des traits de biome, avant tout le reste du tour : c'est la regle
