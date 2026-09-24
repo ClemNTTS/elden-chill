@@ -3210,6 +3210,60 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+/* Renaissance disponible : le cadre doit se voir d'un coup d'oeil. */
+.endgame-panel.is-ready {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 24px color-mix(in srgb, var(--accent) 35%, transparent);
+  animation: endgame-lueur 2.4s ease-in-out infinite;
+}
+
+@keyframes endgame-lueur {
+  50% {
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 36px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+}
+
+.endgame-ready-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #1a1408;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* Pastille sur l'onglet Hub tant qu'une Renaissance attend. */
+.nav-btn.has-alert {
+  position: relative;
+}
+
+.nav-btn.has-alert::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .endgame-panel.is-ready {
+    animation: none;
+  }
+}
+
 .endgame-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
