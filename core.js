@@ -50,6 +50,7 @@ import {
 } from "./systems.js";
 import {
   ActionLog,
+  afficherAvis,
   formatNumber,
   showEventBanner,
   toggleView,
@@ -418,6 +419,23 @@ export const handleVictory = (sessionId) => {
       ActionLog(
         "La route est achevee. La Renaissance vous attend au camp.",
         "log-crit",
+      );
+      /*
+       * La ligne de journal ne suffisait pas : dans un jeu qui tourne seul,
+       * l'expedition enchaine le cycle suivant et la ligne file hors de vue.
+       * Le bandeau reste en haut de page, sur tous les ecrans, jusqu'a ce que
+       * le joueur le ferme ; l'onglet Hub garde ensuite une pastille (voir
+       * renderEndgamePanel dans ui.js).
+       */
+      afficherAvis(
+        "La Bete d'Elden est tombee : vous avez termine le jeu. La Renaissance et les Epreuves sont ouvertes dans le Hub, cadre Fin de partie.",
+        "unlock",
+      );
+      addJournalEntry(
+        "checkpoint",
+        "Fin de partie",
+        "La Bete d'Elden est tombee. La Renaissance et les Epreuves sont ouvertes au camp.",
+        biomeId,
       );
     }
 

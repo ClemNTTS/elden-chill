@@ -1732,12 +1732,23 @@ const renderEndgamePanel = () => {
 
   const count = getRebirthCount();
   const ready = canRebirth();
+  /*
+   * Pastille sur l'onglet Hub tant qu'une Renaissance attend : le cadre est
+   * en bas du Hub, et un joueur qui vit sur la carte ou l'inventaire ne le
+   * voyait pas apparaitre.
+   */
+  const ongletHub = document.getElementById("nav-hub");
+  if (ongletHub) {
+    ongletHub.classList.toggle("has-alert", ready);
+    ongletHub.title = ready ? "Renaissance disponible" : "";
+  }
   if (!ready && count === 0) {
     root.classList.add("is-hidden");
     root.innerHTML = "";
     return;
   }
   root.classList.remove("is-hidden");
+  root.classList.toggle("is-ready", ready);
 
   const trials = TRIALS.map((trial) => {
     const done = isTrialCleared(trial.id);
@@ -1787,7 +1798,7 @@ const renderEndgamePanel = () => {
   root.innerHTML = `
     <div class="section-head">
       <div>
-        <h3>Fin de partie</h3>
+        <h3>Fin de partie${ready ? ' <span class="endgame-ready-badge">Renaissance disponible</span>' : ""}</h3>
         <p>Renaitre pour recommencer plus vite, ou rester pour les epreuves.</p>
       </div>
     </div>
