@@ -10,6 +10,9 @@ import { gameState, getHealth, healPlayer, runtimeState } from "./state.js";
 import { applyEffect } from "./status-apply.js";
 import { ActionLog } from "./ui-action-log.js";
 
+/** Soin maximum du Baton de Pierre d'Eclat Carien, par coup. */
+export const SOIN_MAX_BATON_CARIEN = 45;
+
 export const ITEMS = {
   /*===========================
             TIER 0
@@ -870,7 +873,7 @@ export const ITEMS = {
     type: ITEM_TYPES.WEAPON,
     rarity: ITEM_RARITIES.RARE,
     description:
-      "Int +15%. +60% de votre intelligenc en force. Vous drainez la vie des ennemis. Vous soigne de 10% de votre Intelligence totale à chaque coup. (+3% / Niveau).",
+      "Int +15%. +60% de votre intelligence en force. Vous drainez la vie des ennemis. Vous soigne de 10% de votre Intelligence totale à chaque coup <em style='color: grey;'>(+3% / Niv)</em>, 45 PV au maximum par coup.",
     applyMult: (stats, itemLevel) => {
       stats.intelligence = Math.floor(stats.intelligence * 1.15);
       // Depuis l'Intelligence INVESTIE : cet objet vient d'appliquer +15%
@@ -879,7 +882,15 @@ export const ITEMS = {
     },
     funcOnHit: (stats, targetEffects, itemLevel) => {
       if (!itemLevel) return;
-      const heal = Math.floor(stats.intelligence * (0.1 + 0.03 * itemLevel));
+      /*
+       * Plafonne a 45 PV par coup. Sans plafond, le soin suivait
+       * l'Intelligence sans limite : en fin de partie, environ 240 PV par coup
+       * et plusieurs coups par tour, de quoi rendre le personnage immortel.
+       */
+      const heal = Math.min(
+        SOIN_MAX_BATON_CARIEN,
+        Math.floor(stats.intelligence * (0.1 + 0.03 * itemLevel)),
+      );
       const maxHp = getHealth(stats.vigor);
       const healed = healPlayer(heal, maxHp);
       if (healed > 0) ActionLog(`Siphon Carien : +${healed} PV`, "log-heal");
