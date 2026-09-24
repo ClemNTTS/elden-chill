@@ -438,6 +438,19 @@
                 <button onclick="setInventoryFilter('Armure')">Armures</button>
                 <button onclick="setInventoryFilter('Accessoire')">Accessoires</button>
               </div>
+              <!--
+                Filtre sur le nom et la description : "int" retrouve tout ce qui
+                parle d'Intelligence. Voir inventory-search.js.
+              -->
+              <input
+                id="inventory-search"
+                class="inventory-search"
+                type="search"
+                placeholder="Rechercher : int, feu, critique..."
+                aria-label="Rechercher dans l'inventaire"
+                autocomplete="off"
+                oninput="setInventorySearch(this.value)"
+              />
             </div>
 
             <div id="inventory-equipped-panel" class="camp-panel">

@@ -1576,6 +1576,27 @@ button:disabled {
   gap: 14px;
 }
 
+.inventory-search {
+  flex: 1 1 220px;
+  max-width: 320px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font: inherit;
+}
+
+.inventory-search::placeholder {
+  color: var(--text-soft);
+}
+
+.inventory-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .inventory-equipped-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3004,6 +3025,12 @@ button:disabled {
   .biome-actions-bottom {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  /* En colonne, la base flex s'appliquerait a la hauteur du champ. */
+  .inventory-search {
+    flex: none;
+    max-width: none;
   }
 
   .hub-cta-grid,

@@ -362,6 +362,7 @@ import {
   getStatusIcon,
   iconMarkup,
 } from "./icons.js";
+import { objetCorrespond } from "./inventory-search.js";
 import { ITEMS } from "./item.js";
 import { TINTS, getMonsterVisual } from "./monster-visuals.js";
 import { CAMP_SCREEN_IDS } from "./shared/player-profile.js";
@@ -3054,12 +3055,15 @@ const updateEnemyIntentDisplay = () => {
 };
 
 let currentInventoryFilter = "Tous";
+let currentInventorySearch = "";
 let lastInventorySnapshot = "";
 const updateInventoryDisplay = () => {
   const currentSnapshot = JSON.stringify(
     gameState.inventory.map((i) => ({ id: i.id, lv: i.level })),
   );
-  if (gameState.world.isExploring) return;
+  // Un filtre ou une recherche saisis pendant l'expedition doivent repondre
+  // tout de suite : seul le rafraichissement automatique est suspendu.
+  if (gameState.world.isExploring && !runtimeState.filterChanged) return;
   if (
     currentSnapshot === lastInventorySnapshot &&
     !runtimeState.filterChanged
@@ -3080,16 +3084,21 @@ const updateInventoryDisplay = () => {
   }
 
   const filteredInventory = gameState.inventory.filter((item) => {
+    const itemData = ITEMS[item.id];
+    if (!objetCorrespond(itemData, currentInventorySearch)) return false;
     if (currentInventoryFilter === "Tous") return true;
-    return ITEMS[item.id].type === currentInventoryFilter;
+    return itemData.type === currentInventoryFilter;
   });
 
   // 2. Trier une copie de l'inventaire
   const sortedInventory = filteredInventory.sort((a, b) => b.level - a.level);
 
   if (sortedInventory.length === 0) {
-    invGrid.innerHTML =
-      '<div style="color: grey; padding: 10px;">Aucun objet de ce type</div>';
+    invGrid.innerHTML = `<div style="color: grey; padding: 10px;">${
+      currentInventorySearch.trim()
+        ? "Aucun objet ne correspond a cette recherche"
+        : "Aucun objet de ce type"
+    }</div>`;
     return;
   }
 
@@ -3150,6 +3159,12 @@ const updateInventoryDisplay = () => {
 
 window.setInventoryFilter = (type) => {
   currentInventoryFilter = type;
+  runtimeState.filterChanged = true;
+  updateInventoryDisplay();
+};
+
+window.setInventorySearch = (requete) => {
+  currentInventorySearch = requete;
   runtimeState.filterChanged = true;
   updateInventoryDisplay();
 };
