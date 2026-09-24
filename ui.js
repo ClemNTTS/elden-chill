@@ -3094,12 +3094,11 @@ const updateInventoryDisplay = () => {
   const sortedInventory = filteredInventory.sort((a, b) => b.level - a.level);
 
   if (sortedInventory.length === 0) {
-    invGrid.innerHTML =
-      `<div style="color: grey; padding: 10px;">${
-        currentInventorySearch.trim()
-          ? "Aucun objet ne correspond a cette recherche"
-          : "Aucun objet de ce type"
-      }</div>`;
+    invGrid.innerHTML = `<div style="color: grey; padding: 10px;">${
+      currentInventorySearch.trim()
+        ? "Aucun objet ne correspond a cette recherche"
+        : "Aucun objet de ce type"
+    }</div>`;
     return;
   }
 
