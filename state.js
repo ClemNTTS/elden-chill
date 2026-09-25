@@ -3,6 +3,8 @@ import { ITEMS } from "./item.js";
 import {
   getRebirthArmorMult,
   getRebirthCritBonus,
+  getRebirthPenetrationBonus,
+  getRebirthResistBonus,
   getRebirthRuneBonus,
   getRebirthVigorMult,
 } from "./rebirth.js";
@@ -352,6 +354,11 @@ export function getEffectiveStats() {
   // "Ecorce de l'Arbre" et "Oeil du traqueur", meme place et meme raison.
   effStats.armor *= getRebirthArmorMult();
   effStats.critChance += getRebirthCritBonus();
+  // "Brise-Armure" et "Peau de tempete".
+  effStats.percentDamagePenetration += getRebirthPenetrationBonus();
+  for (const cle of Object.keys(effStats.resistances)) {
+    effStats.resistances[cle] += getRebirthResistBonus();
+  }
 
   /*
    * Sur la dexterite de BASE, pas l'effective.

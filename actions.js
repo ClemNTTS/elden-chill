@@ -48,7 +48,7 @@ import {
   getRebirthCount,
   investRebirthPoint,
   performRebirth,
-  resetRebirthTree,
+  REBIRTH_NODES,
 } from "./rebirth.js";
 import { clearSaveStorage, saveGame, suspendreSauvegarde } from "./save.js";
 import { gameState, runtimeState } from "./state.js";
@@ -99,31 +99,26 @@ export { getCritPointsAvailable };
 /* Fin de partie                                                      */
 /* ------------------------------------------------------------------ */
 
-/** Investit un point de renaissance dans un noeud de l'arbre. */
+/**
+ * Investit un point de renaissance dans un noeud de l'arbre.
+ *
+ * DEFINITIF : l'arbre ne se reinitialise plus, le choix des points est une
+ * decision de build a part entiere. D'ou la confirmation, pour qu'un clic de
+ * trop ne coute pas un point pour toujours.
+ */
 export const investRebirthNode = (nodeId) => {
-  if (!investRebirthPoint(nodeId)) return;
-  gameState.save.maxLevel = getMaxLevel();
-  saveGame("invest_rebirth_node");
-  updateUI();
-};
-
-/** Rend tous les points de l'arbre. Gratuit : ils viennent des renaissances. */
-export const respecRebirthTree = () => {
+  const node = REBIRTH_NODES.find((n) => n.id === nodeId);
+  if (!node) return;
   if (
     !confirm(
-      "Reinitialiser l'arbre de renaissance ? Tous les points vous seront rendus.",
+      `Investir un point dans ${node.name} ? (${node.detail}) Ce choix est definitif.`,
     )
   ) {
     return;
   }
-  resetRebirthTree();
+  if (!investRebirthPoint(nodeId)) return;
   gameState.save.maxLevel = getMaxLevel();
-  if (gameState.stats.level > gameState.save.maxLevel) {
-    alert(
-      "Votre niveau depasse le nouveau plafond : il ne baissera pas, mais vous ne pourrez plus monter tant que vous n'aurez pas reinvesti dans Volonte.",
-    );
-  }
-  saveGame("respec_rebirth_tree");
+  saveGame("invest_rebirth_node");
   updateUI();
 };
 
