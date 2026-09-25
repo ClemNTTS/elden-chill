@@ -106,6 +106,25 @@ export const REBIRTH_NODES = [
     maxRank: 5,
     perRank: 0.05,
   },
+  /*
+   * Un point de resistance attenue l'affliction correspondante de 8% (plafond
+   * 60%, voir status.js) : cinq rangs couvrent un tiers de la route, sans
+   * dispenser d'objets de resistance dans les zones les plus dures.
+   */
+  {
+    id: "storm",
+    name: "Peau de tempete",
+    detail: "+1 a toutes les resistances par rang.",
+    maxRank: 5,
+    perRank: 1,
+  },
+  {
+    id: "breaker",
+    name: "Brise-Armure",
+    detail: "+3% de penetration d'armure par rang.",
+    maxRank: 5,
+    perRank: 0.03,
+  },
 ];
 
 const EMPTY_TREE = () =>
@@ -159,12 +178,6 @@ export const investRebirthPoint = (nodeId) => {
   if (r.tree[nodeId] >= node.maxRank) return false;
   r.tree[nodeId] += 1;
   return true;
-};
-
-/** Reinitialisation gratuite : les points viennent des renaissances, pas des
- *  runes, donc les rendre ne cree aucune ressource. */
-export const resetRebirthTree = () => {
-  getRebirth().tree = EMPTY_TREE();
 };
 
 export const getRebirthCount = () => getRebirth().count;
@@ -270,6 +283,12 @@ export const getRebirthDamageMult = () => 1 + getNodeValue("edge");
 
 /** Chance de critique ajoutee par l'arbre. */
 export const getRebirthCritBonus = () => getNodeValue("eye");
+
+/** Resistances ajoutees par l'arbre, a chaque affliction. */
+export const getRebirthResistBonus = () => getNodeValue("storm");
+
+/** Penetration d'armure en pourcentage ajoutee par l'arbre. */
+export const getRebirthPenetrationBonus = () => getNodeValue("breaker");
 
 /** Multiplicateur d'armure effective apporte par l'arbre. */
 export const getRebirthArmorMult = () => 1 + getNodeValue("bark");

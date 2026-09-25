@@ -238,7 +238,6 @@ import {
   MAIN_BOSS_BIOMES,
   getRebirthCount,
   getRebirthPointsAvailable,
-  getRebirthPointsSpent,
   getRebirthPointsTotal,
   getRebirthRuneBonus,
   isTrialCleared,
@@ -1834,12 +1833,7 @@ const renderEndgamePanel = () => {
         <h4>Arbre de renaissance</h4>
         <p>${getRebirthPointsAvailable()} / ${getRebirthPointsTotal()} point(s) disponible(s). ${POINTS_PER_REBIRTH} par renaissance.</p>
       </div>
-      <button
-        type="button"
-        class="crit-points__reset"
-        onclick="respecRebirthTree()"
-        ${getRebirthPointsSpent() === 0 ? "disabled" : ""}
-      >Reinitialiser</button>
+      <p class="rebirth-tree__final">Choix definitifs : l'arbre ne se reinitialise pas.</p>
     </div>
     <div class="rebirth-tree">${nodes}</div>`
         : ""
@@ -3385,32 +3379,55 @@ export const updateRealTimeStatsDisplay = () => {
   const maxHp = Math.floor(getHealth(eff.vigor));
   const resistances = eff.resistances || {};
 
-  container.innerHTML = `
-    <div class="rt-stat"><span>Niveau:</span> <b>${eff.level || 0}</b></div>
-    <div class="rt-stat"><span>Runes depensees:</span> <b>${gameState.stats.runesSpent || 0}</b></div>
-    <hr>
-    <div class="rt-stat"><span>Force Totale:</span> <b>${eff.strength.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Vigueur Totale:</span> <b>${eff.vigor.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Points de Vie Max:</span> <b>${maxHp}</b></div> <hr>
-    <div class="rt-stat"><span>Dexterite totale:</span> <b>${eff.dexterity.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Int Totale:</span> <b>${eff.intelligence.toFixed(1)}</b></div>
-    <hr>
-    <div class="rt-stat"><span>Taux d'Esquive:</span> <b>${dodgeChance.toFixed(1)}%</b></div>
-    <div class="rt-stat"><span>Penetration (fixe):</span> <b>${flatPen.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Penetration (%):</span> <b>${percentPen.toFixed(1)}%</b></div>
-    <hr>
-    <div class="rt-stat"><span>Armure:</span> <b>${eff.armor.toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Attaques / Tour:</span> <b>${eff.attacksPerTurn}${eff.extraAttackChance > 0.005 ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>` : ""}</b></div>
-    <div class="rt-stat"><span>Degats de zone (Splash):</span> <b>${(eff.splashDamage || 0).toFixed(1)}</b></div>
-    <div class="rt-stat"><span>Deg. min. Epines:</span> <b>${Math.floor(eff.vigor / 2) || 0}</b></div>
-    <div class="rt-stat"><span>Mitig. Boss:</span> <b>${((eff.bossMitigation || 0) * 100).toFixed(1)}%</b></div>
-    <div class="rt-stat"><span>Gain de Runes:</span> <b>${((eff.runeGainMult || 0) * 100).toFixed(1)}%</b></div>
-    <hr>
-    <div class="rt-stat"><span>Res. Poison:</span> <b>${resistances.poison || 0}</b></div>
-    <div class="rt-stat"><span>Res. Gel:</span> <b>${resistances.gel || 0}</b></div>
-    <div class="rt-stat"><span>Res. Folie:</span> <b>${resistances.folie || 0}</b></div>
-    <div class="rt-stat"><span>Res. Putrefaction:</span> <b>${resistances.putrefaction || 0}</b></div>
-  `;
+  /*
+   * Par groupes titres, pas en une seule grille : la version precedente
+   * melait 21 lignes et des <hr> qui devenaient des cellules vides, et
+   * chaque libelle s'ecartait de sa valeur sur toute la largeur.
+   */
+  const ligne = (libelle, valeur) =>
+    `<div class="rt-stat"><span>${libelle}</span><b>${valeur}</b></div>`;
+  const groupe = (titre, lignes) =>
+    `<section class="rt-group"><h5>${titre}</h5>${lignes.join("")}</section>`;
+  const pct = (v) => `${(v * 100).toFixed(1)}%`;
+  const attaquesEnPlus =
+    eff.extraAttackChance > 0.005
+      ? ` <small>+${Math.round(eff.extraAttackChance * 100)}% d'une ${eff.attacksPerTurn + 1}e</small>`
+      : "";
+
+  container.innerHTML = [
+    groupe("Personnage", [
+      ligne("Niveau", eff.level || 0),
+      ligne("Runes depensees", formatNumber(gameState.stats.runesSpent || 0)),
+      ligne("Gain de runes", `+${pct(eff.runeGainMult || 0)}`),
+    ]),
+    groupe("Attributs", [
+      ligne("Force", formatNumber(eff.strength)),
+      ligne("Dexterite", formatNumber(eff.dexterity)),
+      ligne("Intelligence", formatNumber(eff.intelligence)),
+      ligne("Vigueur", formatNumber(eff.vigor)),
+    ]),
+    groupe("Attaque", [
+      ligne("Attaques / tour", `${eff.attacksPerTurn}${attaquesEnPlus}`),
+      ligne("Chance critique", pct(eff.critChance || 0)),
+      ligne("Degats critiques", `x${(eff.critDamage || 0).toFixed(2)}`),
+      ligne("Penetration fixe", formatNumber(flatPen)),
+      ligne("Penetration", `${percentPen.toFixed(1)}%`),
+      ligne("Degats de zone", formatNumber(eff.splashDamage || 0)),
+    ]),
+    groupe("Survie", [
+      ligne("Points de vie max", formatNumber(maxHp)),
+      ligne("Armure", formatNumber(eff.armor)),
+      ligne("Esquive", `${dodgeChance.toFixed(1)}%`),
+      ligne("Mitigation des boss", pct(eff.bossMitigation || 0)),
+      ligne("Degats min. des epines", Math.floor(eff.vigor / 2) || 0),
+    ]),
+    groupe("Resistances", [
+      ligne("Poison", resistances.poison || 0),
+      ligne("Gel", resistances.gel || 0),
+      ligne("Folie", resistances.folie || 0),
+      ligne("Putrefaction", resistances.putrefaction || 0),
+    ]),
+  ].join("");
 };
 
 export const updateUI = () => {

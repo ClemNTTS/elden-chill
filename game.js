@@ -7,7 +7,6 @@ import {
   requestRebirth,
   resetGame,
   respecCritPoints,
-  respecRebirthTree,
   startTrial,
   upgradeStat,
   upgradeStatMultiple,
@@ -225,7 +224,6 @@ window.respecCritPoints = respecCritPoints;
 window.startTrial = startTrial;
 window.requestRebirth = requestRebirth;
 window.investRebirthNode = investRebirthNode;
-window.respecRebirthTree = respecRebirthTree;
 window.toggleView = toggleView;
 window.startExploration = startExploration;
 window.equipItem = equipItem;

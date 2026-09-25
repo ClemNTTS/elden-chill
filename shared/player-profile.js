@@ -441,7 +441,26 @@ export const normalizePlayerProfile = (source = {}, options = {}) => {
   };
   base.rebirth.count = Math.max(0, Math.floor(Number(base.rebirth.count) || 0));
   base.rebirth.finalCleared = !!base.rebirth.finalCleared;
-  base.rebirth.trialsCleared = toObject(base.rebirth.trialsCleared);
+  // Copie, pas reference : toObject rend l'objet recu tel quel, et le profil
+  // par defaut aurait partage le sien avec chaque partie neuve.
+  base.rebirth.trialsCleared = { ...toObject(base.rebirth.trialsCleared) };
+  /*
+   * L'arbre est TOUJOURS pose, meme vide.
+   *
+   * setGameState fusionne `rebirth` au lieu de le remplacer : sans cle `tree`
+   * dans le profil charge, l'arbre de la partie precedente survivait. Une
+   * remise a zero repartait avec 0 renaissance mais gardait tous les bonus de
+   * l'arbre. Les rangs sont bornes ici au format ; rebirth.js les ramene
+   * ensuite sous le maximum de chaque noeud.
+   */
+  base.rebirth.tree = Object.fromEntries(
+    Object.entries(toObject(base.rebirth.tree))
+      .filter(([cle]) => /^[a-z_]{1,32}$/.test(cle))
+      .map(([cle, rang]) => [
+        cle,
+        Math.max(0, Math.min(99, Math.floor(Number(rang) || 0))),
+      ]),
+  );
   base.save.maxLevel = MAX_LEVEL + 10 * base.rebirth.count;
   base.save.version = PLAYER_PROFILE_VERSION;
   base.save.offlineTimeBank = Math.max(
