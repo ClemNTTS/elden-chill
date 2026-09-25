@@ -224,14 +224,30 @@
             <div class="screen-heading">
               <div>
                 <p class="screen-kicker">Build</p>
-                <h2>Attributs et cendres</h2>
+                <h2>Attributs et preparation</h2>
                 <p class="screen-copy">
                   Toute la profondeur du theorycraft, sans polluer l'ecran principal.
                 </p>
               </div>
               <div id="real-time-stats-toggle">
-                <button type="button" onclick="toggleRealTimeStats()">Voir les stats effectives</button>
+                <button
+                  type="button"
+                  id="btn-real-time-stats"
+                  aria-expanded="false"
+                  aria-controls="real-time-stats-panel"
+                  onclick="toggleRealTimeStats()"
+                >Voir les stats effectives</button>
               </div>
+            </div>
+
+            <!--
+              Au-dessus de la grille, juste sous le bouton : place en bas de la
+              colonne de droite, le panneau s'ouvrait hors de l'ecran et le
+              bouton semblait ne rien faire.
+            -->
+            <div id="real-time-stats-panel" class="camp-panel hidden-panel build-effective-panel">
+              <h4>Statistiques effectives</h4>
+              <div id="real-time-content"></div>
             </div>
 
             <div class="build-grid">
@@ -402,17 +418,6 @@
                   </div>
                 </div>
 
-                <div id="real-time-stats-panel" class="camp-panel hidden-panel">
-                  <h4>Statistiques effectives</h4>
-                  <div id="real-time-content"></div>
-                </div>
-
-                <div id="ashes-selection-section" class="camp-panel">
-                  <h3>Cendres de guerre</h3>
-                  <div id="ashes-list" class="ashes-container">
-                    Aucune cendre de guerre possedee
-                  </div>
-                </div>
               </div>
             </div>
           </div>

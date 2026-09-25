@@ -1,6 +1,11 @@
 import { ITEM_SETS } from "./constants.js";
 import { ITEMS } from "./item.js";
-import { getRebirthRuneBonus, getRebirthVigorMult } from "./rebirth.js";
+import {
+  getRebirthArmorMult,
+  getRebirthCritBonus,
+  getRebirthRuneBonus,
+  getRebirthVigorMult,
+} from "./rebirth.js";
 import { DEFAULT_PLAYER_PROFILE } from "./shared/player-profile.js";
 import { applyPreparationStats } from "./systems.js";
 
@@ -344,6 +349,9 @@ export function getEffectiveStats() {
   // Noeud "Sang endurci" : applique apres les objets pour qu'il les amplifie,
   // et avant l'arrondi final pour ne pas perdre les decimales.
   effStats.vigor *= getRebirthVigorMult();
+  // "Ecorce de l'Arbre" et "Oeil du traqueur", meme place et meme raison.
+  effStats.armor *= getRebirthArmorMult();
+  effStats.critChance += getRebirthCritBonus();
 
   /*
    * Sur la dexterite de BASE, pas l'effective.

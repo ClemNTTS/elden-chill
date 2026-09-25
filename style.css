@@ -1392,6 +1392,48 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  /*
+   * La colonne ne compte pas dans la hauteur de la rangee : c'est la feuille
+   * de personnage qui la fixe, et la preparation s'y cale. Sans ca, chaque
+   * benediction debloquee allongeait la carte et desalignait les deux.
+   */
+  contain: size;
+}
+
+#preparation-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#preparation-section .prep-columns {
+  flex: 1;
+  min-height: 0;
+}
+
+#preparation-section .prep-columns > div {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Benedictions et atouts defilent dans la carte au lieu de l'allonger. */
+#preparation-section .prep-option-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+  padding-right: 4px;
+}
+
+/* Stats effectives : pleine largeur, en colonnes, sous le bouton. */
+.build-effective-panel {
+  margin-bottom: 18px;
+}
+
+.build-effective-panel #real-time-content {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
 #character-sheet {
@@ -2921,6 +2963,16 @@ button:disabled {
 }
 
 @media (max-width: 1080px) {
+  /* Une seule colonne : la preparation retrouve sa hauteur naturelle, et ses
+     listes gardent une hauteur bornee pour ne pas repousser la page. */
+  .build-side-stack {
+    contain: none;
+  }
+
+  #preparation-section .prep-option-list {
+    max-height: 360px;
+  }
+
   .app-header,
   .hub-grid,
   .map-screen-grid,
