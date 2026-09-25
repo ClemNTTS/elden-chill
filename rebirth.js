@@ -61,11 +61,17 @@ export const REBIRTH_NODES = [
     maxRank: 5,
     perRank: 0.04,
   },
+  /*
+   * Deux rangs, pas trois : au-dela, une cendre se lancait si souvent qu'elle
+   * cessait d'etre un choix de timing. Un joueur qui avait investi trois
+   * points recupere le troisieme : getRebirth() ramene chaque rang sous son
+   * maximum, et les points disponibles se recalculent sur les rangs.
+   */
   {
     id: "grace",
     name: "Grace persistante",
     detail: "+1 charge de cendre de guerre par rang.",
-    maxRank: 3,
+    maxRank: 2,
     perRank: 1,
   },
   {
@@ -74,6 +80,31 @@ export const REBIRTH_NODES = [
     detail: "+12% de chance de rencontre rare par rang.",
     maxRank: 3,
     perRank: 0.12,
+  },
+  /*
+   * Trois voies de combat, pour que l'arbre ne se resume pas a l'economie et
+   * a la Vigueur. Aucune ne cible un archetype : chaque build en profite.
+   */
+  {
+    id: "edge",
+    name: "Tranchant du Sans-Eclat",
+    detail: "+4% de degats infliges par rang, sorts compris.",
+    maxRank: 5,
+    perRank: 0.04,
+  },
+  {
+    id: "eye",
+    name: "Oeil du traqueur",
+    detail: "+2% de chance de critique par rang.",
+    maxRank: 5,
+    perRank: 0.02,
+  },
+  {
+    id: "bark",
+    name: "Ecorce de l'Arbre",
+    detail: "+5% d'armure effective par rang.",
+    maxRank: 5,
+    perRank: 0.05,
   },
 ];
 
@@ -233,6 +264,15 @@ export const getRebirthRuneBonus = () =>
 
 /** Multiplicateur de Vigueur effective apporte par l'arbre. */
 export const getRebirthVigorMult = () => 1 + getNodeValue("blood");
+
+/** Multiplicateur des degats infliges par le joueur. */
+export const getRebirthDamageMult = () => 1 + getNodeValue("edge");
+
+/** Chance de critique ajoutee par l'arbre. */
+export const getRebirthCritBonus = () => getNodeValue("eye");
+
+/** Multiplicateur d'armure effective apporte par l'arbre. */
+export const getRebirthArmorMult = () => 1 + getNodeValue("bark");
 
 /** Charges de cendre de guerre supplementaires. */
 export const getRebirthAshBonus = () => getNodeValue("grace");

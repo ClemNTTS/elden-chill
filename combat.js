@@ -9,6 +9,7 @@ import {
 import { handleDeath, handleVictory } from "./core.js";
 import { rollCrit } from "./crit.js";
 import { ITEMS } from "./item.js";
+import { getRebirthDamageMult } from "./rebirth.js";
 import { playSfx } from "./sfx.js";
 import { getMagicDamage } from "./state.js";
 import {
@@ -386,6 +387,12 @@ export function performAttack({
       if (magic > 0) {
         finalDamage += Math.floor(isCrit ? magic * critDamage : magic);
       }
+    }
+
+    // "Tranchant du Sans-Eclat" : apres l'armure et la magie, pour amplifier
+    // le coup entier, quel que soit le build.
+    if (isPlayer) {
+      finalDamage = Math.floor(finalDamage * getRebirthDamageMult());
     }
 
     if (!isPlayer && attacker?.isBoss) {

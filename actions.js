@@ -34,6 +34,7 @@ import {
   getCritPointsAvailable,
   resetCritRanks,
   spendCritPoint,
+  syncCritStats,
 } from "./crit.js";
 import { ITEMS } from "./item.js";
 import {
@@ -167,8 +168,16 @@ export const requestRebirth = () => {
   gameState.save.maxLevel = getMaxLevel();
   syncCritStats();
   saveGame("rebirth");
-  updateUI();
   alert(`Renaissance ${count}. Les Terres Intermediaires vous ont oublie.`);
+  /*
+   * Rechargement, comme apres un import de sauvegarde (game.js).
+   *
+   * updateUI() seul ne suffisait pas : plusieurs vues ne sont construites
+   * qu'au chargement et gardaient l'ancienne partie. Le joueur acceptait la
+   * Renaissance et ne voyait rien changer tant qu'il n'avait pas rafraichi.
+   * La sauvegarde est deja ecrite, le beforeunload reecrit le meme etat.
+   */
+  window.location.reload();
 };
 
 export const equipAsh = (ashId) => {

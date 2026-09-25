@@ -3311,7 +3311,8 @@ export const updateAshButton = () => {
  * Le rendu est partage plutot que duplique : deux copies auraient diverge des
  * la premiere evolution du bouton.
  */
-const CONTENEURS_CENDRES = ["ashes-list", "inventory-ashes-list"];
+// Le Build affichait aussi la liste : doublon de l'inventaire, retire.
+const CONTENEURS_CENDRES = ["inventory-ashes-list"];
 
 const peindreCendres = (container) => {
   /*
@@ -3357,6 +3358,13 @@ export const toggleRealTimeStats = () => {
   showRealTime = !showRealTime;
   const panel = document.getElementById("real-time-stats-panel");
   panel.style.display = showRealTime ? "block" : "none";
+  const btn = document.getElementById("btn-real-time-stats");
+  if (btn) {
+    btn.innerText = showRealTime
+      ? "Masquer les stats effectives"
+      : "Voir les stats effectives";
+    btn.setAttribute("aria-expanded", String(showRealTime));
+  }
   updateRealTimeStatsDisplay();
 };
 
