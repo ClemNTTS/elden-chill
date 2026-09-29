@@ -21,7 +21,13 @@ if (typeof document !== "undefined") {
   document.head.appendChild(appleTitle);
 }
 
-if ("serviceWorker" in navigator && location.protocol === "https:") {
+const canRegisterServiceWorker =
+  typeof window !== "undefined" &&
+  typeof navigator !== "undefined" &&
+  "serviceWorker" in navigator &&
+  globalThis.location?.protocol === "https:";
+
+if (canRegisterServiceWorker) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch((error) => {
       console.warn("[PWA] Service worker registration failed", error);
