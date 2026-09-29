@@ -29,6 +29,7 @@ const dungeonSongs = [
 ];
 
 const NARRATOR_TRACK = "./assets/music/narrator-song.mp3";
+const TRAILER_TRACK = "./assets/music/trailer-song.mp3";
 
 /*
  * Gain par piste, pour egaliser le volume percu.
@@ -65,6 +66,7 @@ const TRACK_GAIN = {
   "dungeon_song_6.mp3": 1,
   "dungeon_song_7.mp3": 0.93,
   "narrator-song.mp3": 1,
+  "trailer-song.mp3": 1,
 };
 
 /*
@@ -198,6 +200,11 @@ export const toggleNarrator = () => {
     endNarrator();
     return;
   }
+  if (trailerPlaying) {
+    trailerAudio.pause();
+    trailerPlaying = false;
+    refreshTrailerButton();
+  }
   narratorPlaying = true;
   campAudio.pause();
   dungeonAudio.pause();
@@ -210,6 +217,51 @@ export const toggleNarrator = () => {
   narratorAudio.play().catch(endNarrator);
   refreshNarratorButton();
 };
+
+/** Meme logique que le narrateur : lecture unique, musique de fond en pause puis reprise. */
+const trailerAudio = new Audio();
+let trailerPlaying = false;
+
+const refreshTrailerButton = () => {
+  const btn = document.getElementById("btn-trailer-music");
+  if (!btn) return;
+  btn.innerText = trailerPlaying
+    ? "Arreter la musique du trailer"
+    : "Musique du trailer";
+  btn.classList.toggle("is-active", trailerPlaying);
+};
+
+const endTrailerMusic = () => {
+  trailerPlaying = false;
+  if (currentSection === "dungeon") dungeonAudio.play().catch(() => {});
+  else playCampMusic();
+  refreshTrailerButton();
+};
+
+export const toggleTrailerMusic = () => {
+  if (trailerPlaying) {
+    trailerAudio.pause();
+    endTrailerMusic();
+    return;
+  }
+  if (narratorPlaying) {
+    narratorAudio.pause();
+    narratorPlaying = false;
+    refreshNarratorButton();
+  }
+  trailerPlaying = true;
+  campAudio.pause();
+  dungeonAudio.pause();
+  if (!trailerAudio.src) trailerAudio.src = TRAILER_TRACK;
+  applyTrackVolume(trailerAudio);
+  trailerAudio.currentTime = 0;
+  trailerAudio.onended = endTrailerMusic;
+  trailerAudio.onerror = endTrailerMusic;
+  trailerAudio.play().catch(endTrailerMusic);
+  refreshTrailerButton();
+};
+
+window.toggleTrailerMusic = toggleTrailerMusic;
 
 function playDungeonMusic() {
   campAudio.pause();
