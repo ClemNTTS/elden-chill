@@ -9,6 +9,7 @@ import {
 import { handleDeath, handleVictory } from "./core.js";
 import { rollCrit } from "./crit.js";
 import { ITEMS } from "./item.js";
+import { elanAttaque, retourDeCoup, texteFlottant } from "./juice.js";
 import { getRebirthDamageMult } from "./rebirth.js";
 import { playSfx } from "./sfx.js";
 import { getMagicDamage } from "./state.js";
@@ -123,6 +124,15 @@ const processTurnEffects = (entity, effectsArray) => {
       // le SEUIL DE TOXINE plus bas) ; les autres l'ignorent simplement.
       const result = effectData.onTurnStart(entity, effectsArray);
       if (result?.message) logMessages.push(result.message);
+      // Les tics d'affliction se lisent aussi sur le combattant, a la couleur
+      // de l'affliction, et pas seulement dans le journal.
+      if (result?.damage > 0) {
+        texteFlottant(
+          "currentHp" in entity ? "heros" : "ennemi",
+          `-${formatNumber(result.damage)}`,
+          effectData.color,
+        );
+      }
       if (result?.skipTurn) skipTurn = true;
     }
 
@@ -160,6 +170,7 @@ export function performAttack({
 
       if (!isStunned && dodgeChance > 0 && Math.random() < dodgeChance) {
         ActionLog(`ESQUIVE ! ${target.name} évite l'attaque.`, "log-dodge");
+        texteFlottant("ennemi", "Esquive", "esquive");
         return; // cancel this hit completely
       }
     } else {
@@ -427,16 +438,30 @@ export function performAttack({
       playHeroCombatAttack();
       // Le son suit l'animation deja en place : un seul endroit a maintenir.
       playSfx(isCrit ? "crit" : "hit");
-      if (getEntityHp(target) <= 0) {
+      const mortel = getEntityHp(target) <= 0;
+      if (mortel) {
         playEnemyDeath();
         playSfx("kill");
       } else {
         playEnemyHurt();
       }
+      elanAttaque("heros");
+      retourDeCoup({
+        cible: "ennemi",
+        texte: formatNumber(finalDamage),
+        critique: isCrit,
+        mortel,
+      });
     } else {
       playEnemyAttack();
       playHeroCombatHurt();
       playSfx("hurt");
+      elanAttaque("ennemi");
+      retourDeCoup({
+        cible: "heros",
+        texte: `-${formatNumber(finalDamage)}`,
+        critique: isCrit,
+      });
     }
 
     updateHealthBars();
@@ -920,6 +945,7 @@ export const combatLoop = (sessionId) => {
 
             if (Math.random() < dodgeChance && !playerIsStunned) {
               ActionLog("ESQUIVE ! Vous évitez le coup.", "log-dodge");
+              texteFlottant("heros", "Esquive", "esquive");
               delayedSetTimeout(() => combatLoop(sessionId), 500);
               return;
             }
