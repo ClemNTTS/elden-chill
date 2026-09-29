@@ -39,6 +39,9 @@ const getLogSide = (message, className = "") => {
     "log-heal",
     "log-runes",
     "log-ash-activation",
+    // Butin et montee de niveau des objets : c'est le Sans-eclat qui les
+    // recoit, meme quand le message commence par le nom de l'objet.
+    "log-loot",
   ];
   if (playerClasses.includes(className)) return "player";
 
@@ -67,6 +70,7 @@ const getLogKind = (message = "", className = "") => {
   if (className === "log-runes") return "runes";
   if (className === "log-heal") return "heal";
   if (className === "log-event") return "event";
+  if (className === "log-loot") return "loot";
   if (className === "log-ash-activation" || message.startsWith("CENDRE"))
     return "ash";
   if (className === "log-crit" || message.startsWith("BOSS VAINCU"))
