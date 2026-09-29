@@ -1,24 +1,26 @@
 // PWA bootstrap kept separate from the game so install support stays isolated.
-if (typeof document !== "undefined") {
+const documentHead = globalThis.document?.head;
+
+if (documentHead) {
   const manifest = document.createElement("link");
   manifest.rel = "manifest";
   manifest.href = "/manifest.webmanifest";
-  document.head.appendChild(manifest);
+  documentHead.appendChild(manifest);
 
   const themeColor = document.createElement("meta");
   themeColor.name = "theme-color";
   themeColor.content = "#080806";
-  document.head.appendChild(themeColor);
+  documentHead.appendChild(themeColor);
 
   const appleCapable = document.createElement("meta");
   appleCapable.name = "apple-mobile-web-app-capable";
   appleCapable.content = "yes";
-  document.head.appendChild(appleCapable);
+  documentHead.appendChild(appleCapable);
 
   const appleTitle = document.createElement("meta");
   appleTitle.name = "apple-mobile-web-app-title";
   appleTitle.content = "Elden Chill";
-  document.head.appendChild(appleTitle);
+  documentHead.appendChild(appleTitle);
 }
 
 const canRegisterServiceWorker =
