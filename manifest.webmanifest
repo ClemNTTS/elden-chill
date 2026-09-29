@@ -1,0 +1,19 @@
+{
+  "name": "Elden Chill",
+  "short_name": "Elden Chill",
+  "description": "Fan web game in the world of Elden Ring.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080806",
+  "theme_color": "#080806",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
