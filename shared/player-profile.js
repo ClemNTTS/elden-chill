@@ -39,6 +39,7 @@ export const CAMP_SCREEN_IDS = [
   "inventory",
   "codex",
   "options",
+  "artworks",
 ];
 
 export const DEFAULT_PLAYER_PROFILE = {

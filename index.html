@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Elden Chill</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RE7EB5NDPJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-RE7EB5NDPJ");
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -604,6 +614,17 @@
                   <div class="option-row">
                     <button id="btn-narrator" class="menu-button" onclick="toggleNarrator()">Ecouter le narrateur</button>
                   </div>
+                  <div class="option-row">
+                    <button id="btn-trailer-music" class="menu-button" onclick="toggleTrailerMusic()">Musique du trailer</button>
+                  </div>
+                </div>
+
+                <div class="camp-panel">
+                  <h3>Artworks</h3>
+                  <p class="option-hint">Images du trailer, a telecharger.</p>
+                  <div class="button-stack">
+                    <button class="menu-button" onclick="navigateTo('artworks')">Voir les artworks</button>
+                  </div>
                 </div>
 
                 <div class="camp-panel">
@@ -646,6 +667,42 @@
                     <button class="reset-btn" onclick="refundRunes()">Rembourser les runes investies</button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-artworks" class="app-screen">
+          <div class="screen-shell">
+            <div class="screen-heading">
+              <div>
+                <p class="screen-kicker">Monde</p>
+                <h2>Artworks</h2>
+                <p class="screen-copy">
+                  Images du trailer, telechargeables librement.
+                </p>
+              </div>
+              <div>
+                <button type="button" class="menu-button" onclick="navigateTo('options')">Retour aux options</button>
+              </div>
+            </div>
+
+            <div class="artworks-grid">
+              <div class="camp-panel artwork-card">
+                <img src="./assets/video/trailer-stills/01-camp-depart.png" alt="Camp de depart" loading="lazy" />
+                <a class="menu-button" href="./assets/video/trailer-stills/01-camp-depart.png" download>Telecharger</a>
+              </div>
+              <div class="camp-panel artwork-card">
+                <img src="./assets/video/trailer-stills/02-ferveur.png" alt="Ferveur" loading="lazy" />
+                <a class="menu-button" href="./assets/video/trailer-stills/02-ferveur.png" download>Telecharger</a>
+              </div>
+              <div class="camp-panel artwork-card">
+                <img src="./assets/video/trailer-stills/03-boss-gauntlet.png" alt="Boss gauntlet" loading="lazy" />
+                <a class="menu-button" href="./assets/video/trailer-stills/03-boss-gauntlet.png" download>Telecharger</a>
+              </div>
+              <div class="camp-panel artwork-card">
+                <img src="./assets/video/trailer-stills/04-renaissance.png" alt="Renaissance" loading="lazy" />
+                <a class="menu-button" href="./assets/video/trailer-stills/04-renaissance.png" download>Telecharger</a>
               </div>
             </div>
           </div>
