@@ -1,3 +1,4 @@
+import { celebrerEquipement, celebrerNiveau } from "./juice.js";
 import { ActionLog } from "./ui-action-log.js";
 import {
   NOM_PANOPLIE_MAX,
@@ -253,6 +254,7 @@ export const upgradeStat = (statName) => {
     saveGame("upgrade_stat");
     verifierDeblocageContrats();
     updateUI();
+    celebrerNiveau({ stat: statName, niveau: gameState.stats.level });
   } else {
     alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
   }
@@ -286,6 +288,11 @@ export const upgradeStatMultiple = (statName, count) => {
     saveGame("upgrade_stat_multiple");
     verifierDeblocageContrats();
     updateUI();
+    celebrerNiveau({
+      stat: statName,
+      niveau: gameState.stats.level,
+      gain: count,
+    });
   } else {
     alert("Pas assez de runes pour renforcer votre lien avec la Grace !");
   }
@@ -346,6 +353,10 @@ export const equipItem = (itemId) => {
   runtimeState.filterChanged = true;
   saveGame("equip_item");
   updateUI();
+  // On ne fete que l'equipement, pas le retrait.
+  if (gameState.equipped[slotKey] === itemId) {
+    celebrerEquipement({ slot: slotKey, itemId });
+  }
 };
 
 /* ------------------------------------------------------------------ */

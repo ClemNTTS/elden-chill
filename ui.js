@@ -275,6 +275,7 @@ function playDungeonMusic() {
 }
 
 import { ASHES_OF_WAR } from "./ashes.js";
+import { recapRetour, retirerApresAnimation } from "./juice.js";
 import { getBiomeTrait, repliInterdit } from "./biome-traits.js";
 import {
   LEVEL_PER_MAIN_BOSS,
@@ -356,7 +357,11 @@ import {
   getFerveurRang,
 } from "./escalation.js";
 import { panoplieEstActive } from "./loadouts.js";
-import { decrireAffliction } from "./status-apply.js";
+import {
+  DESCRIPTIONS_AFFLICTIONS,
+  STACKING_EFFECTS,
+  decrireAffliction,
+} from "./status-apply.js";
 import { STATUS_EFFECTS } from "./status.js";
 import {
   attachInfoTooltip,
@@ -425,6 +430,8 @@ import {
   getAshElement,
   getDominantStat,
   getHeroIdForStats,
+  getMonsterCell,
+  getTintedSheet,
   mountMonster,
   playEffectOnce,
   playMonsterAnimation,
@@ -527,6 +534,8 @@ export const navigateTo = (screenId) => {
       updateBiomeDisplay();
     });
   }
+  // Les boss croises depuis la derniere visite se revelent a l'ouverture.
+  if (screenId === "codex") updateCodexDisplay();
   if (!gameState.world.isExploring) {
     saveGame();
   }
@@ -1708,6 +1717,7 @@ export const showBossBanner = ({ name, subtitle }) => {
     flash.classList.remove("is-on");
     void flash.offsetWidth;
     flash.classList.add("is-on");
+    retirerApresAnimation(flash, "is-on");
   }
   playSfx("event");
 
@@ -2327,6 +2337,60 @@ const renderBiomeShortcuts = (visibleIds) => {
   });
 };
 
+/*
+ * Zones debloquees depuis la derniere visite de la carte : elles s'allument
+ * et les chemins qui y menent se tracent. La liste des zones deja vues vit
+ * dans gameState.ui (preferences locales). A la premiere visite apres cette
+ * version, tout ce qui est deja debloque est tenu pour vu : on n'allume que
+ * les vraies nouveautes.
+ */
+const revelerNouvellesZones = (graphe) => {
+  if (ensureUiState().currentScreen !== "map") return;
+  const ui = ensureUiState();
+  const debloquees = gameState.world.unlockedBiomes || [];
+  if (!Array.isArray(ui.zonesVuesSurCarte)) {
+    ui.zonesVuesSurCarte = [...debloquees];
+    return;
+  }
+  const vues = new Set(ui.zonesVuesSurCarte);
+  const nouvelles = debloquees.filter((id) => !vues.has(id));
+  if (!nouvelles.length) return;
+  ui.zonesVuesSurCarte = [...debloquees];
+
+  const reduit = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  if (reduit) return;
+  nouvelles.forEach((id, rang) => {
+    const noeud = graphe.getElementById(id);
+    if (!noeud || noeud.empty()) return;
+    // Les chemins qui arrivent sur la zone se tracent, puis elle s'allume.
+    noeud.connectedEdges().forEach((arete) => {
+      if (arete.target().id() !== id) return;
+      const opacite = arete.style("opacity");
+      arete.style("opacity", 0);
+      // Cytoscape n'a pas d'option `delay` dans animate() : elle serait
+      // ignoree et le chemin resterait invisible. Le delai passe par delay().
+      arete
+        .delay(200 + rang * 250)
+        .animate({ style: { opacity: opacite } }, { duration: 900 });
+    });
+    const pulser = (restant) => {
+      if (restant <= 0 || graphe !== worldMapGraph) return;
+      noeud.style({
+        "underlay-color": "#ffd98a",
+        "underlay-padding": 12,
+        "underlay-opacity": 0.85,
+      });
+      noeud.animate(
+        { style: { "underlay-opacity": 0.1 } },
+        { duration: 800, complete: () => pulser(restant - 1) },
+      );
+    };
+    setTimeout(() => pulser(3), 700 + rang * 250);
+  });
+};
+
 const renderWorldMap = (visibleIds) => {
   const map = document.getElementById("world-map");
   const paths = document.getElementById("world-map-paths");
@@ -2381,6 +2445,10 @@ const renderWorldMap = (visibleIds) => {
           // finit par devenir une promenade, et l'inverse est vrai aussi.
           `danger-${danger.cle}`,
           MAIN_BOSS_BIOMES.includes(biomeId) ? "main-node" : "side-node",
+          // Boss de la zone vaincu : sceau dore, visible en vue d'ensemble.
+          gameState.world.defeatedBosses?.includes(biomeId)
+            ? "cleared-node"
+            : "",
           biomeId === selectedBiomeId ? "selected-node" : "",
           biomeId === gameState.world.currentBiome ? "current-node" : "",
           guide?.wip ? "wip-node" : "",
@@ -2462,6 +2530,17 @@ const renderWorldMap = (visibleIds) => {
           style: {
             opacity: 0.4,
             "border-style": "dashed",
+          },
+        },
+        {
+          selector: ".cleared-node",
+          style: {
+            "border-color": "#e9c878",
+            "border-width": 4,
+            "underlay-color": "#e9c878",
+            "underlay-opacity": 0.28,
+            "underlay-padding": 7,
+            "underlay-shape": "ellipse",
           },
         },
         {
@@ -2626,6 +2705,7 @@ const renderWorldMap = (visibleIds) => {
     requestAnimationFrame(() => {
       if (!currentGraph || currentGraph !== worldMapGraph) return;
       frameMap(currentGraph);
+      revelerNouvellesZones(currentGraph);
     });
 
     return;
@@ -2876,6 +2956,127 @@ const updateJournalDisplay = () => {
     : `<p class="journal-empty">Le journal s'ecrira au fil de la prochaine expedition.</p>`;
 };
 
+/*
+ * Galerie des boss du Codex. Tous les boss du jeu y figurent : ceux qui n'ont
+ * pas encore ete croises restent en silhouette noire, sans nom. Un boss
+ * rencontre depuis la derniere visite du Codex se revele sous les yeux du
+ * joueur.
+ */
+const zoneDuBoss = (() => {
+  let cache = null;
+  return (bossId) => {
+    if (!cache) {
+      cache = new Map();
+      BIOME_ORDER.forEach((biomeId) => {
+        const boss = BIOMES[biomeId]?.boss;
+        if (boss && !cache.has(boss)) cache.set(boss, biomeId);
+      });
+    }
+    return cache.get(bossId);
+  };
+})();
+
+const listeBossCodex = () => {
+  // Deux entrees partagent parfois un nom (deux phases d'un meme boss) :
+  // une seule carte par nom, rencontree si l'une des deux l'est.
+  const parNom = new Map();
+  Object.entries(MONSTERS).forEach(([id, monstre]) => {
+    if (!monstre.isBoss) return;
+    const entree = parNom.get(monstre.name);
+    if (entree) entree.ids.push(id);
+    else parNom.set(monstre.name, { id, name: monstre.name, ids: [id] });
+  });
+  const rang = (entree) => {
+    const zone = entree.ids.map(zoneDuBoss).find(Boolean);
+    const i = zone ? BIOME_ORDER.indexOf(zone) : -1;
+    return i < 0 ? 999 : i;
+  };
+  return [...parNom.values()].sort((a, b) => rang(a) - rang(b));
+};
+
+const dessinerBossCodex = async (canvas, bossId) => {
+  const visual = getMonsterVisual(bossId);
+  try {
+    const planche = await getTintedSheet(
+      visual.archetype,
+      visual.tint,
+      TINTS[visual.tint],
+    );
+    const cellule = getMonsterCell(visual.archetype);
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(
+      planche,
+      0,
+      0,
+      cellule,
+      cellule,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+  } catch {
+    // Planche introuvable : la carte reste sans image, le nom suffit.
+  }
+};
+
+const renderCodexBosses = (root) => {
+  const vus = gameState.codex?.bossesSeen || {};
+  const liste = listeBossCodex();
+  const estVu = (entree) => entree.ids.some((id) => vus[id]);
+  const signature = liste.map((e) => (estVu(e) ? 1 : 0)).join("");
+
+  if (root.dataset.signature !== signature) {
+    root.dataset.signature = signature;
+    const total = liste.length;
+    const rencontres = liste.filter(estVu).length;
+    root.innerHTML = `
+      <p class="codex-boss-count"><strong>${rencontres}</strong> / ${total} boss rencontrés</p>
+      <div class="codex-boss-grid">
+        ${liste
+          .map((entree) => {
+            const vu = estVu(entree);
+            const idVu = entree.ids.find((id) => vus[id]) || entree.id;
+            const zone = vu
+              ? BIOMES[vus[idVu]?.biomeId]?.name || "Biome inconnu"
+              : "Non rencontré";
+            return `
+              <article class="codex-boss ${vu ? "is-seen" : "is-unknown"}" data-boss="${entree.id}">
+                <canvas class="codex-boss__sprite" width="96" height="96" aria-hidden="true"></canvas>
+                <strong class="codex-boss__name">${vu ? echapperHtml(entree.name) : "???"}</strong>
+                <span class="codex-boss__zone">${echapperHtml(zone)}</span>
+              </article>`;
+          })
+          .join("")}
+      </div>`;
+    root.querySelectorAll(".codex-boss").forEach((carte) => {
+      dessinerBossCodex(carte.querySelector("canvas"), carte.dataset.boss);
+    });
+  }
+
+  // Revelation des nouveaux venus, seulement Codex ouvert.
+  const ui = ensureUiState();
+  const vusMaintenant = liste.filter(estVu).map((e) => e.id);
+  if (!Array.isArray(ui.bossRevelesCodex)) {
+    ui.bossRevelesCodex = vusMaintenant;
+    return;
+  }
+  if (ui.currentScreen !== "codex") return;
+  const deja = new Set(ui.bossRevelesCodex);
+  const nouveaux = vusMaintenant.filter((id) => !deja.has(id));
+  if (!nouveaux.length) return;
+  ui.bossRevelesCodex = vusMaintenant;
+  nouveaux.forEach((id, rang) => {
+    const carte = root.querySelector(`.codex-boss[data-boss="${id}"]`);
+    if (!carte) return;
+    carte.style.animationDelay = `${rang * 180}ms`;
+    carte.classList.add("is-revealing");
+    retirerApresAnimation(carte, "is-revealing");
+  });
+};
+
 const updateCodexDisplay = () => {
   syncCodexFromInventory();
   const bossRoot = document.getElementById("codex-bosses");
@@ -2903,17 +3104,7 @@ const updateCodexDisplay = () => {
       : `<p class="codex-empty">${emptyLabel}</p>`;
   };
 
-  renderList(
-    bossRoot,
-    Object.keys(gameState.codex?.bossesSeen || {}).map((monsterId) => ({
-      title: MONSTERS[monsterId]?.name || monsterId,
-      meta:
-        BIOMES[gameState.codex.bossesSeen[monsterId].biomeId]?.name ||
-        "Biome inconnu",
-      copy: "Boss reference de votre route et mur de progression memorise.",
-    })),
-    "Aucun boss note pour le moment.",
-  );
+  renderCodexBosses(bossRoot);
 
   renderList(
     monsterRoot,
@@ -3245,6 +3436,7 @@ const updateInventoryDisplay = () => {
     `;
     attachTooltipEvents(itemDiv, item);
 
+    itemDiv.dataset.itemId = item.id;
     itemDiv.onclick = () => equipItem(item.id);
     invGrid.appendChild(itemDiv);
   });
@@ -3334,19 +3526,48 @@ export const updateStatusIcons = () => {
     // en combat la place est comptee et huit noms ecrits saturaient la ligne.
     // Le nom reste accessible en title et en aria-label.
     const label = `${data.name}${text}`;
-    return `<div class="status-icon status-icon--${eff.id.toLowerCase()}" title="${label}">
+    // Pas de title : le panneau d'explication le remplace au survol.
+    return `<div class="status-icon status-icon--${eff.id.toLowerCase()}" data-effect="${eff.id}" aria-label="${label}">
               ${iconMarkup(getStatusIcon(eff.id), { scale: 2, label: data.name })}
               ${text ? `<span class="status-icon__count">${text.trim().replace(/[()]/g, "")}</span>` : ""}
             </div>`;
   };
 
-  if (pContainer) {
-    pContainer.innerHTML = gameState.playerEffects.map(renderStatus).join("");
-  }
+  /*
+   * Rendu seulement si la barre change : elle est rafraichie plusieurs fois
+   * par seconde, et remplacer l'icone survolee a chaque fois refermerait son
+   * panneau en boucle.
+   */
+  // `lireEffets` et non le tableau : il est remplace a chaque expedition, et
+  // le panneau doit lire l'etat du moment ou il s'ouvre.
+  const rendre = (container, lireEffets) => {
+    if (!container) return;
+    const html = lireEffets().map(renderStatus).join("");
+    if (container.dataset.rendu === html) return;
+    // L'icone survolee va disparaitre : aucun mouseleave ne refermera plus
+    // son panneau.
+    if (container.matches(":hover")) hideTooltip();
+    container.innerHTML = html;
+    container.dataset.rendu = html;
+    container.querySelectorAll(".status-icon").forEach((icone) => {
+      const id = icone.dataset.effect;
+      attachInfoTooltip(icone, () => {
+        const actuel = lireEffets().find((e) => e.id === id);
+        const affichage = actuel ? decrireAffliction(actuel) : {};
+        const cumul = STACKING_EFFECTS.has(id);
+        const etat = affichage.compteur
+          ? `<br><em>${cumul ? "Cumuls" : "Tours restants"} : ${affichage.compteur}</em>`
+          : "";
+        return {
+          title: STATUS_EFFECTS[id]?.name || id,
+          text: `${DESCRIPTIONS_AFFLICTIONS[id] || ""}${etat}`,
+        };
+      });
+    });
+  };
 
-  if (eContainer) {
-    eContainer.innerHTML = gameState.ennemyEffects.map(renderStatus).join("");
-  }
+  rendre(pContainer, () => gameState.playerEffects);
+  rendre(eContainer, () => gameState.ennemyEffects);
 };
 
 window.primeAsh = () => {
@@ -3583,9 +3804,11 @@ export const toggleView = (view) => {
      * mise a l'abri. Le versement precede l'encaissement des runes portees
      * pour que le journal se lise dans l'ordre du geste. Voir escalation.js.
      */
-    if (gameState.world.isExploring) {
-      encaisserFerveur("Repli au camp");
-    }
+    const revenaitDExpedition = gameState.world.isExploring;
+    const ferveurEncaissee = revenaitDExpedition
+      ? encaisserFerveur("Repli au camp")
+      : 0;
+    const runesRapportees = gameState.runes.carried + ferveurEncaissee;
     gameState.runes.banked += gameState.runes.carried;
     gameState.runes.carried = 0;
     const layout = ensureBattleLogLayout();
@@ -3608,6 +3831,13 @@ export const toggleView = (view) => {
     playCampMusic();
     checkForUpdate();
     saveGame();
+    if (revenaitDExpedition) {
+      recapRetour({
+        montant: runesRapportees,
+        ferveur: ferveurEncaissee,
+        format: formatNumber,
+      });
+    }
   }
   updateUI();
 };

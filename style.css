@@ -4814,3 +4814,412 @@ button:disabled {
     animation: none;
   }
 }
+
+/* Chiffres de degats au-dessus des combattants, poses par juice.js. */
+.floating-number {
+  position: absolute;
+  top: 12%;
+  z-index: 4;
+  font-family: var(--header-font);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #f4ead2;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 85%), 0 0 8px rgb(0 0 0 / 60%);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.floating-number--critique {
+  font-size: 1.5rem;
+  color: #ffd66e;
+  text-shadow: 0 2px 0 rgb(40 20 0 / 90%), 0 0 12px rgb(255 170 40 / 85%);
+}
+
+.floating-number--subi {
+  color: #ff8a6e;
+}
+
+.floating-number--esquive {
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: #9fc4e8;
+}
+
+.floating-number--affliction {
+  font-size: 0.95rem;
+}
+
+/* Le survol d'une affliction ouvre son explication. */
+.status-icon {
+  cursor: help;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ecrans du camp : titres, niveaux, equipement, retour, codex         */
+/* ------------------------------------------------------------------ */
+
+/* Titres de page : or degrade comme le bandeau des boss, filet a losange,
+   et un reflet qui les traverse a l'ouverture de l'ecran. */
+.screen-heading h2 {
+  background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgb(255 250 230 / 90%) 50%,
+      transparent 60%
+    )
+    120% 0 / 250% 100% no-repeat,
+    linear-gradient(180deg, #fff7dc 0%, #f4d88e 40%, #d6a743 66%, #8a5a1c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgb(255 175 60 / 22%));
+}
+
+.screen-heading h2::after {
+  content: "";
+  display: block;
+  width: min(280px, 70%);
+  height: 12px;
+  margin-top: 8px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M6 0L12 6L6 12L0 6Z' fill='%23e9cf8a'/%3E%3C/svg%3E")
+    center / 12px 12px no-repeat,
+    linear-gradient(
+      90deg,
+      rgb(198 172 116 / 0%),
+      rgb(198 172 116 / 80%) 50%,
+      rgb(198 172 116 / 0%)
+    )
+    center / 100% 1px no-repeat;
+}
+
+.app-screen.is-active .screen-heading h2 {
+  animation: titre-reflet 1.2s 0.15s ease-out both;
+}
+
+@keyframes titre-reflet {
+  from {
+    background-position: 120% 0, 0 0;
+  }
+  to {
+    background-position: -120% 0, 0 0;
+  }
+}
+
+/* Compteurs qui pulsent a l'arrivee des runes. */
+#banked-runes {
+  display: inline-block;
+}
+
+#banked-runes.rune-pulse {
+  animation: rune-pulse 0.6s ease-out;
+}
+
+.fx-pulse {
+  animation: fx-pulse 0.55s ease-out;
+}
+
+@keyframes fx-pulse {
+  30% {
+    transform: scale(1.35);
+    color: #ffe9a8;
+    text-shadow: 0 0 14px rgb(255 200 90 / 90%);
+  }
+}
+
+.stat-values b {
+  display: inline-block;
+}
+
+.fx-line-flash {
+  animation: fx-line-flash 0.8s ease-out;
+}
+
+@keyframes fx-line-flash {
+  0% {
+    box-shadow: inset 0 0 0 1px rgb(233 200 120 / 0%);
+    background-color: transparent;
+  }
+  20% {
+    box-shadow: inset 0 0 0 1px rgb(233 200 120 / 70%);
+    background-color: rgb(233 200 120 / 12%);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px rgb(233 200 120 / 0%);
+    background-color: transparent;
+  }
+}
+
+/* Bandeaux fixes du camp : nouveau niveau, retour d'expedition. Ils ne
+   captent aucun clic et disparaissent seuls. */
+#level-toast,
+#camp-recap {
+  position: fixed;
+  left: 50%;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 28px 10px;
+  border: 1px solid rgb(214 180 110 / 75%);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgb(24 19 12 / 95%), rgb(12 10 7 / 95%));
+  box-shadow: inset 0 0 0 1px rgb(214 180 110 / 18%), 0 0 42px
+    rgb(232 192 106 / 32%), 0 12px 30px rgb(0 0 0 / 50%);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+#level-toast {
+  top: 18%;
+}
+
+#camp-recap {
+  top: 22%;
+  min-width: min(360px, calc(100% - 32px));
+}
+
+#level-toast.is-on {
+  animation: toast-slam 1.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+#camp-recap.is-on {
+  animation: toast-slam 3.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes toast-slam {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.3);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(1);
+  }
+}
+
+.level-toast__kicker,
+.camp-recap__kicker {
+  font-family: var(--header-font);
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.level-toast__value,
+.camp-recap__value {
+  font-family: var(--header-font);
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: linear-gradient(
+    180deg,
+    #fff7dc 0%,
+    #f4d88e 40%,
+    #d6a743 66%,
+    #8a5a1c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgb(255 175 60 / 45%));
+}
+
+.camp-recap__label {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+/* Equipement : la carte s'allume, l'icone vole, l'emplacement pulse. */
+.fx-equip {
+  animation: fx-equip 0.7s ease-out;
+}
+
+@keyframes fx-equip {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(233 200 120 / 0%);
+  }
+  25% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px rgb(233 200 120 / 90%), 0 0 26px
+      rgb(233 200 120 / 55%);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgb(233 200 120 / 0%);
+  }
+}
+
+.fx-equip-slot {
+  animation: fx-equip-slot 0.75s ease-out;
+}
+
+@keyframes fx-equip-slot {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 217 138 / 0%);
+  }
+  20% {
+    box-shadow: 0 0 0 2px rgb(255 217 138 / 95%), 0 0 30px rgb(255 200 90 / 60%);
+    filter: brightness(1.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 217 138 / 0%);
+    filter: none;
+  }
+}
+
+.fx-flying-icon {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 65;
+  margin: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgb(255 200 90 / 85%));
+}
+
+/* Codex : galerie des boss, silhouettes pour ceux qu'on n'a pas croises. */
+#codex-bosses {
+  max-height: 560px;
+}
+
+.codex-boss-count {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.codex-boss-count strong {
+  color: var(--accent);
+}
+
+.codex-boss-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.codex-boss {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgb(198 172 116 / 10%),
+    transparent 70%
+  );
+  text-align: center;
+}
+
+.codex-boss__sprite {
+  width: 84px;
+  height: 84px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.codex-boss__name {
+  font-family: var(--header-font);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.codex-boss__zone {
+  font-size: 0.68rem;
+  color: var(--text-faint);
+}
+
+.codex-boss.is-unknown {
+  background: none;
+}
+
+.codex-boss.is-unknown .codex-boss__sprite {
+  filter: brightness(0) drop-shadow(0 0 1px rgb(198 172 116 / 35%));
+  opacity: 0.55;
+}
+
+.codex-boss.is-unknown .codex-boss__name {
+  letter-spacing: 0.2em;
+  color: var(--text-faint);
+}
+
+.codex-boss.is-revealing {
+  animation: codex-revele-carte 1.4s ease-out both;
+}
+
+.codex-boss.is-revealing .codex-boss__sprite {
+  animation: codex-revele-sprite 1.4s ease-out both;
+  animation-delay: inherit;
+}
+
+@keyframes codex-revele-carte {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 217 138 / 0%);
+  }
+  35% {
+    box-shadow: 0 0 0 2px rgb(255 217 138 / 90%), 0 0 28px rgb(255 200 90 / 55%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 217 138 / 0%);
+  }
+}
+
+@keyframes codex-revele-sprite {
+  0% {
+    filter: brightness(0);
+    transform: scale(0.9);
+  }
+  45% {
+    filter: brightness(2.4) saturate(0);
+    transform: scale(1.12);
+  }
+  100% {
+    filter: none;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-screen.is-active .screen-heading h2,
+  #banked-runes.rune-pulse,
+  .fx-pulse,
+  .fx-line-flash,
+  .fx-equip,
+  .fx-equip-slot,
+  .codex-boss.is-revealing,
+  .codex-boss.is-revealing .codex-boss__sprite {
+    animation: none;
+  }
+  #level-toast.is-on,
+  #camp-recap.is-on {
+    animation: toast-fondu 2.5s linear both;
+  }
+  @keyframes toast-fondu {
+    0%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}

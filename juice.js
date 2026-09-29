@@ -20,6 +20,191 @@ const rejouer = (el, classe) => {
   el.classList.remove(classe);
   void el.offsetWidth;
   el.classList.add(classe);
+  retirerApresAnimation(el, classe);
+};
+
+/**
+ * Retire la classe d'animation une fois l'animation jouee.
+ *
+ * Laissee en place, elle rejouait l'effet a chaque retour sur l'ecran : un
+ * navigateur relance les animations CSS d'un element qui repasse de
+ * display: none a visible (onglets du camp, zone de combat). L'objet equipe
+ * pulsait ainsi a chaque ouverture de l'inventaire.
+ */
+export const retirerApresAnimation = (el, classe) => {
+  const fin = (e) => {
+    // Les animations des enfants remontent jusqu'ici : on attend la sienne.
+    if (e.target !== el) return;
+    // Rejouer l'effet annule l'ancienne animation, et cette annulation arrive
+    // APRES le lancement de la nouvelle : on ne retire rien tant qu'une
+    // animation de l'element tourne encore.
+    if (el.getAnimations?.().some((a) => a.playState === "running")) return;
+    el.classList.remove(classe);
+    el.removeEventListener("animationend", fin);
+    el.removeEventListener("animationcancel", fin);
+  };
+  el.addEventListener("animationend", fin);
+  el.addEventListener("animationcancel", fin);
+};
+
+/* ------------------------------------------------------------------ */
+/* Retour de coup en combat                                           */
+/* ------------------------------------------------------------------ */
+
+/** Cadre du combattant : "ennemi" (lane de droite) ou "heros". */
+const cadreDe = (cote) =>
+  aUnDom()
+    ? document
+        .getElementById(cote === "ennemi" ? "enemy-sprite" : "player-sprite")
+        ?.closest(".fighter-stage")
+    : null;
+
+/*
+ * Au-dela, les chiffres s'empilent illisiblement : le temps accelere (banque
+ * hors ligne) peut enchainer plusieurs coups par seconde.
+ */
+const CHIFFRES_MAX = 4;
+
+/**
+ * Un chiffre ou un mot qui monte au-dessus d'un combattant, puis s'efface.
+ * `ton` : "normal", "critique", "subi", "esquive", ou une couleur CSS pour
+ * les tics d'affliction.
+ */
+export const texteFlottant = (cote, texte, ton = "normal") => {
+  const cadre = cadreDe(cote);
+  if (!cadre || document.hidden) return;
+  const presents = cadre.querySelectorAll(".floating-number");
+  if (presents.length >= CHIFFRES_MAX) presents[0].remove();
+
+  const el = document.createElement("span");
+  el.className = "floating-number";
+  const tons = ["normal", "critique", "subi", "esquive"];
+  if (tons.includes(ton)) el.classList.add(`floating-number--${ton}`);
+  else {
+    el.classList.add("floating-number--affliction");
+    el.style.color = ton;
+  }
+  el.textContent = texte;
+  // Un leger ecart horizontal pour que deux coups rapproches ne se couvrent pas.
+  el.style.left = `${50 + (Math.random() - 0.5) * 36}%`;
+  cadre.appendChild(el);
+
+  if (mouvementReduit() || !el.animate) {
+    setTimeout(() => el.remove(), 900);
+    return;
+  }
+  const grand = ton === "critique";
+  const animation = el.animate(
+    [
+      { transform: "translate(-50%, 6px) scale(0.6)", opacity: 0 },
+      {
+        transform: `translate(-50%, -8px) scale(${grand ? 1.45 : 1.1})`,
+        opacity: 1,
+        offset: 0.15,
+      },
+      { transform: "translate(-50%, -16px) scale(1)", opacity: 1, offset: 0.6 },
+      { transform: "translate(-50%, -34px) scale(0.95)", opacity: 0 },
+    ],
+    { duration: grand ? 1100 : 850, easing: "ease-out" },
+  );
+  animation.onfinish = () => el.remove();
+  animation.oncancel = () => el.remove();
+};
+
+/*
+ * Une seule animation par element et par role : la nouvelle annule la
+ * precedente. Sans ca, si l'affichage se fige (fenetre masquee sans que
+ * l'onglet le soit), les flashs s'empilent et le sprite reste blanc jusqu'a
+ * la reprise.
+ */
+const enCours = new WeakMap();
+const animerSeul = (el, role, images, options) => {
+  if (!el?.animate) return;
+  let parRole = enCours.get(el);
+  if (!parRole) {
+    parRole = {};
+    enCours.set(el, parRole);
+  }
+  parRole[role]?.cancel();
+  parRole[role] = el.animate(images, options);
+};
+
+/**
+ * Le combattant encaisse : flash blanc sur le sprite, recul oppose a
+ * l'attaquant, chiffre de degats. Les critiques et les coups mortels frappent
+ * plus fort et secouent legerement la zone de combat.
+ */
+export const retourDeCoup = ({
+  cible,
+  texte,
+  critique = false,
+  mortel = false,
+}) => {
+  const cadre = cadreDe(cible);
+  if (!cadre || document.hidden) return;
+  texteFlottant(
+    cible,
+    texte,
+    cible === "heros" ? "subi" : critique ? "critique" : "normal",
+  );
+  if (mouvementReduit() || !cadre.animate) return;
+
+  const sprite = cadre.querySelector(".fighter-sprite");
+  const fort = critique || mortel;
+  const sens = cible === "ennemi" ? 1 : -1;
+  animerSeul(
+    cadre,
+    "mouvement",
+    [
+      { transform: "translateX(0)" },
+      { transform: `translateX(${(fort ? 16 : 8) * sens}px)`, offset: 0.2 },
+      { transform: "translateX(0)" },
+    ],
+    { duration: fort ? 340 : 230, easing: "ease-out" },
+  );
+  animerSeul(
+    sprite,
+    "flash",
+    [
+      { filter: "brightness(3.2) saturate(0)" },
+      { filter: "brightness(1.4)", offset: 0.4 },
+      { filter: "none" },
+    ],
+    { duration: fort ? 260 : 170 },
+  );
+  if (fort) {
+    const zone = document.getElementById("combat-zone");
+    animerSeul(
+      zone,
+      "secousse",
+      [
+        { transform: "translate(0, 0)" },
+        { transform: "translate(-4px, 2px)", offset: 0.2 },
+        { transform: "translate(3px, -2px)", offset: 0.45 },
+        { transform: "translate(-2px, 1px)", offset: 0.7 },
+        { transform: "translate(0, 0)" },
+      ],
+      { duration: 280 },
+    );
+  }
+};
+
+/** Le combattant se jette en avant quand il frappe. */
+export const elanAttaque = (cote) => {
+  const cadre = cadreDe(cote);
+  if (!cadre || document.hidden || mouvementReduit() || !cadre.animate) return;
+  const sens = cote === "ennemi" ? -1 : 1;
+  animerSeul(
+    cadre,
+    "mouvement",
+    [
+      { transform: "translateX(0)" },
+      { transform: `translateX(${-6 * sens}px)`, offset: 0.25 },
+      { transform: `translateX(${22 * sens}px)`, offset: 0.5 },
+      { transform: "translateX(0)" },
+    ],
+    { duration: 380, easing: "ease-in-out" },
+  );
 };
 
 /** Le compteur de runes portees pulse quand les runes y arrivent. */
@@ -29,24 +214,26 @@ export const pulserCompteurRunes = () => {
   if (compteur) rejouer(compteur, "rune-pulse");
 };
 
+const visible = (el) => {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
+};
+
 /**
- * Des losanges dores partent de l'ennemi vaincu et filent vers le compteur de
- * runes portees. Le nombre grandit avec le gain, mais reste plafonne : une
- * expedition peut tourner des heures, les effets ne doivent rien couter.
+ * Des losanges dores filent d'un element a un autre. `arrivee` peut etre une
+ * fonction : l'element vise est parfois reconstruit par updateUI pendant le
+ * vol, on le relit donc a l'atterrissage pour faire pulser le bon.
  */
-export const envolerRunes = (montant) => {
-  if (!aUnDom() || document.hidden) return;
-  const depart = document.getElementById("enemy-sprite");
-  const arrivee = document.getElementById("carried-runes");
-  if (!depart || !arrivee) return;
+const envolerEntre = (depart, arrivee, n, surArrivee) => {
+  const cible = typeof arrivee === "function" ? arrivee() : arrivee;
+  if (!depart || !cible) return;
   const a = depart.getBoundingClientRect();
-  const b = arrivee.getBoundingClientRect();
+  const b = cible.getBoundingClientRect();
   if (!a.width || !b.width || mouvementReduit() || !Element.prototype.animate) {
-    pulserCompteurRunes();
+    surArrivee?.();
     return;
   }
-
-  const n = Math.min(9, 3 + Math.floor(Math.log10(Math.max(1, montant)) * 1.5));
   const x0 = a.left + a.width / 2;
   const y0 = a.top + a.height * 0.45;
   const x1 = b.left + b.width / 2;
@@ -58,7 +245,7 @@ export const envolerRunes = (montant) => {
     rune.className = "rune-mote";
     document.body.appendChild(rune);
     // Chaque rune jaillit d'abord dans une direction au hasard, puis rejoint
-    // le compteur : sans cet ecart elles voyageraient en file indienne.
+    // la cible : sans cet ecart elles voyageraient en file indienne.
     const angle = Math.random() * Math.PI * 2;
     const ecart = 40 + Math.random() * 70;
     const mx = x0 + Math.cos(angle) * ecart;
@@ -86,16 +273,171 @@ export const envolerRunes = (montant) => {
         fill: "both",
       },
     );
-    const finir = () => {
+    animation.onfinish = () => {
       rune.remove();
       if (premiereArrivee) {
         premiereArrivee = false;
-        pulserCompteurRunes();
+        surArrivee?.();
       }
     };
-    animation.onfinish = finir;
     animation.oncancel = () => rune.remove();
   }
+};
+
+/**
+ * Des losanges dores partent de l'ennemi vaincu et filent vers le compteur de
+ * runes portees. Le nombre grandit avec le gain, mais reste plafonne : une
+ * expedition peut tourner des heures, les effets ne doivent rien couter.
+ */
+export const envolerRunes = (montant) => {
+  if (!aUnDom() || document.hidden) return;
+  const n = Math.min(9, 3 + Math.floor(Math.log10(Math.max(1, montant)) * 1.5));
+  envolerEntre(
+    document.getElementById("enemy-sprite"),
+    document.getElementById("carried-runes"),
+    n,
+    pulserCompteurRunes,
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/* Ecrans du camp                                                     */
+/* ------------------------------------------------------------------ */
+
+/** Cree (une fois) un bandeau fixe, et le rejoue. */
+const bandeau = (id, html) => {
+  let el = document.getElementById(id);
+  if (!el) {
+    el = document.createElement("div");
+    el.id = id;
+    el.setAttribute("aria-hidden", "true");
+    document.body.appendChild(el);
+  }
+  el.innerHTML = html;
+  rejouer(el, "is-on");
+  return el;
+};
+
+/**
+ * Un niveau achete : les runes partent du compteur coffre vers la stat, qui
+ * pulse a leur arrivee, et le nouveau niveau s'annonce en haut de l'ecran.
+ */
+export const celebrerNiveau = ({ stat, niveau, gain = 1 }) => {
+  if (!aUnDom() || document.hidden) return;
+  bandeau(
+    "level-toast",
+    `<span class="level-toast__kicker">Grâce renforcée${gain > 1 ? ` · +${gain}` : ""}</span>
+     <strong class="level-toast__value">Niveau ${niveau}</strong>`,
+  );
+  const valeur = () => document.getElementById(`base-${stat}`);
+  const arrivee = () =>
+    visible(valeur())
+      ? valeur()
+      : document.querySelector(`.stat-info[data-stat="${stat}"]`);
+  envolerEntre(
+    document.getElementById("banked-runes"),
+    arrivee,
+    Math.min(8, 4 + gain),
+    () => {
+      const v = valeur();
+      if (v) rejouer(v, "fx-pulse");
+      const ligne = document
+        .querySelector(`.stat-info[data-stat="${stat}"]`)
+        ?.closest(".stat-line");
+      if (ligne) rejouer(ligne, "fx-line-flash");
+    },
+  );
+};
+
+/**
+ * Un objet equipe : sa carte s'allume, son icone file vers l'emplacement
+ * correspondant, qui pulse a l'arrivee. `slot` : weapon, armor, accessory.
+ */
+export const celebrerEquipement = ({ slot, itemId }) => {
+  if (!aUnDom() || document.hidden) return;
+  const carte = document.querySelector(
+    `.inventory-item[data-item-id="${CSS.escape(itemId)}"]`,
+  );
+  const cible = () =>
+    [
+      document.querySelector(`.inventory-equipped-card.item-type-${slot}`),
+      document.getElementById(`slot-${slot}`),
+    ].find(visible);
+  const pulserCible = () => {
+    const c = cible();
+    if (c) rejouer(c, "fx-equip-slot");
+  };
+  if (carte) rejouer(carte, "fx-equip");
+  const icone = carte?.querySelector(".item-icon");
+  const arrivee = cible();
+  if (!icone || !arrivee || !visible(icone) || mouvementReduit()) {
+    pulserCible();
+    return;
+  }
+  const a = icone.getBoundingClientRect();
+  const b = arrivee.getBoundingClientRect();
+  const clone = icone.cloneNode(true);
+  clone.classList.add("fx-flying-icon");
+  clone.style.width = `${a.width}px`;
+  clone.style.height = `${a.height}px`;
+  document.body.appendChild(clone);
+  const dx = b.left + b.width / 2 - (a.left + a.width / 2);
+  const dy = b.top + b.height / 2 - (a.top + a.height / 2);
+  const vol = clone.animate(
+    [
+      { transform: `translate(${a.left}px, ${a.top}px) scale(1)`, opacity: 1 },
+      {
+        transform: `translate(${a.left + dx * 0.5}px, ${a.top + dy * 0.5 - 60}px) scale(1.35)`,
+        opacity: 1,
+        offset: 0.5,
+      },
+      {
+        transform: `translate(${a.left + dx}px, ${a.top + dy}px) scale(0.8)`,
+        opacity: 0.2,
+      },
+    ],
+    { duration: 620, easing: "cubic-bezier(0.45, 0, 0.25, 1)", fill: "both" },
+  );
+  vol.onfinish = () => {
+    clone.remove();
+    pulserCible();
+  };
+  vol.oncancel = () => clone.remove();
+};
+
+/**
+ * Retour au camp : les runes encaissees s'affichent en grand, le chiffre
+ * defile, puis elles filent vers le compteur coffre. `format` est le
+ * formateur du jeu (ce module n'importe rien).
+ */
+export const recapRetour = ({ montant, ferveur = 0, format = String }) => {
+  if (!aUnDom() || document.hidden || montant <= 0) return;
+  const el = bandeau(
+    "camp-recap",
+    `<span class="camp-recap__kicker">De retour au camp</span>
+     <strong class="camp-recap__value">+<span class="camp-recap__count">0</span></strong>
+     <span class="camp-recap__label">runes mises à l'abri${ferveur > 0 ? ` · dont ${format(ferveur)} de Ferveur` : ""}</span>`,
+  );
+  const compteur = el.querySelector(".camp-recap__count");
+  const duree = mouvementReduit() ? 0 : 900;
+  const debut = performance.now();
+  const pas = (maintenant) => {
+    const p = duree ? Math.min(1, (maintenant - debut) / duree) : 1;
+    compteur.textContent = format(Math.round(montant * (1 - (1 - p) ** 3)));
+    if (p < 1) requestAnimationFrame(pas);
+  };
+  requestAnimationFrame(pas);
+  // Filet : requestAnimationFrame s'arrete onglet masque, le total doit
+  // quand meme finir juste.
+  setTimeout(() => {
+    compteur.textContent = format(montant);
+  }, duree + 50);
+  setTimeout(() => {
+    envolerEntre(compteur, document.getElementById("banked-runes"), 8, () => {
+      const coffre = document.getElementById("banked-runes");
+      if (coffre) rejouer(coffre, "rune-pulse");
+    });
+  }, duree + 250);
 };
 
 /*
