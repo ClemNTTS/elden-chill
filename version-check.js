@@ -1,3 +1,4 @@
+import "./pwa.js";
 import { saveGame } from "./save.js";
 /*
  * Detection de mise a jour deployee.
