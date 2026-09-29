@@ -1683,6 +1683,42 @@ export const showEventBanner = ({ title, kind, text }) => {
   }, 5000);
 };
 
+/**
+ * Entree d'un boss : la banniere d'evenement passe en grand, lettres dorees,
+ * avec un flash sur la zone de combat. Meme element et meme minuteur que les
+ * evenements, pour qu'un evenement qui suit la chasse proprement.
+ */
+export const showBossBanner = ({ name, subtitle }) => {
+  const banniere = document.getElementById("event-banner");
+  if (!banniere) return;
+
+  document.getElementById("event-banner-title").innerText = name || "Boss";
+  document.getElementById("event-banner-text").innerText = subtitle || "Boss";
+  banniere.dataset.tone = "boss";
+
+  clearTimeout(masqueBanniereId);
+  banniere.hidden = false;
+  // Retirer puis remettre la classe rejoue l'arrivee si deux boss s'enchainent.
+  banniere.classList.remove("is-visible");
+  void banniere.offsetWidth;
+  banniere.classList.add("is-visible");
+
+  const flash = document.getElementById("boss-flash");
+  if (flash) {
+    flash.classList.remove("is-on");
+    void flash.offsetWidth;
+    flash.classList.add("is-on");
+  }
+  playSfx("event");
+
+  masqueBanniereId = setTimeout(() => {
+    banniere.classList.remove("is-visible");
+    setTimeout(() => {
+      banniere.hidden = true;
+    }, 300);
+  }, 3800);
+};
+
 /** Efface la banniere sans attendre, au retour au camp. */
 export const clearEventBanner = () => {
   const banniere = document.getElementById("event-banner");
@@ -3745,6 +3781,9 @@ const PARALLAX_FACTORS = [
   [".camp-scene__sky", 0.02],
   [".camp-scene__mid", 0.055],
   [".camp-scene__near", 0.1],
+  // Le feu de camp vit hors de #camp-scene (voir juice.js) mais doit suivre
+  // le sol au defilement.
+  ["#camp-fire", 0.1],
 ];
 
 export const initCampParallax = () => {
@@ -3757,7 +3796,7 @@ export const initCampParallax = () => {
   if (reduced) return;
 
   const layers = PARALLAX_FACTORS.map(([selector, factor]) => [
-    scene.querySelector(selector),
+    scene.querySelector(selector) || document.querySelector(selector),
     factor,
   ]).filter(([el]) => el);
 

@@ -1,3 +1,4 @@
+import { allumerFeuDeCamp } from "./juice.js";
 import {
   equipAsh,
   equipItem,
@@ -347,6 +348,7 @@ window.onload = () => {
   const report = loadGame();
 
   createFireParticles();
+  allumerFeuDeCamp();
   initCampParallax();
   setAudioListener();
   updateUI();

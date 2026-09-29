@@ -1,4 +1,5 @@
 import { applyTraitsToEnemy } from "./biome-traits.js";
+import { BIOMES } from "./biome.js";
 import { getFerveurMultDanger } from "./escalation.js";
 import { combatLoop } from "./combat.js";
 import { ITEMS } from "./item.js";
@@ -11,7 +12,7 @@ import {
   markCodexBossSeen,
   markCodexMonsterSeen,
 } from "./systems.js";
-import { ActionLog, updateHealthBars, updateUI } from "./ui.js";
+import { ActionLog, showBossBanner, updateHealthBars, updateUI } from "./ui.js";
 
 export const devSpawnQueue = [];
 
@@ -196,6 +197,14 @@ export const spawnMonster = (monsterId, sessionId) => {
     runtimeState.currentLoopCount > 0
       ? `${firstEnemy.name}${groupSizeText} +${runtimeState.currentLoopCount}`
       : `${firstEnemy.name}${groupSizeText}`;
+
+  if (firstEnemy.isBoss) {
+    const zone = BIOMES[gameState.world.currentBiome]?.name;
+    showBossBanner({
+      name: firstEnemy.name,
+      subtitle: zone ? `Boss · ${zone}` : "Boss",
+    });
+  }
 
   updateHealthBars();
 

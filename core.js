@@ -1,3 +1,4 @@
+import { envolerRunes } from "./juice.js";
 import { ASHES_OF_WAR } from "./ashes.js";
 import { delayedSetTimeout, reinitialiserRattrapage } from "./tempo.js";
 import {
@@ -115,7 +116,10 @@ const dropItem = (itemId) => {
   } else {
     if (inventoryItem.level >= 10) {
       if (inventoryItem.level > 10) inventoryItem.level = 10;
-      ActionLog(`${itemTemplate.name} est déjà au niveau maximum (10) !`);
+      ActionLog(
+        `${itemTemplate.name} est déjà au niveau maximum (10) !`,
+        "log-loot",
+      );
       /*
        * Indexee sur la valeur du biome, pas sur le niveau.
        *
@@ -143,6 +147,7 @@ const dropItem = (itemId) => {
       inventoryItem.count = 0;
       ActionLog(
         `${itemTemplate.name} monte au niveau ${inventoryItem.level} !`,
+        "log-loot",
       );
     } else {
       ActionLog(
@@ -295,6 +300,7 @@ export const handleDrops = (sessionId) => {
     }
     const runesAwarded = Math.floor(enemy.runes * intBonus) || 1;
     gameState.runes.carried += Math.floor(runesAwarded);
+    envolerRunes(runesAwarded);
     /*
      * La prime de Ferveur ne passe PAS par runes.carried : celles-ci sont
      * encaissees a chaque cycle nettoye, ce qui la mettrait aussitot a l'abri

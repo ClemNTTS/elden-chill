@@ -406,10 +406,15 @@ button:disabled {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    circle at 73% 26%,
-    rgba(232, 192, 106, 0.2),
-    transparent 26%
-  );
+      circle at 73% 26%,
+      rgba(255, 214, 128, 0.3),
+      transparent 14%
+    ),
+    radial-gradient(
+      circle at 73% 26%,
+      rgba(232, 192, 106, 0.2),
+      transparent 34%
+    );
   animation: grace-breathe 7s ease-in-out infinite;
 }
 
@@ -3338,17 +3343,15 @@ button:disabled {
 /* Renaissance disponible : le cadre doit se voir d'un coup d'oeil. */
 .endgame-panel.is-ready {
   border-color: var(--accent);
-  box-shadow:
-    0 0 0 1px var(--accent),
-    0 0 24px color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px
+    color-mix(in srgb, var(--accent) 35%, transparent);
   animation: endgame-lueur 2.4s ease-in-out infinite;
 }
 
 @keyframes endgame-lueur {
   50% {
-    box-shadow:
-      0 0 0 1px var(--accent),
-      0 0 36px color-mix(in srgb, var(--accent) 55%, transparent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 36px
+      color-mix(in srgb, var(--accent) 55%, transparent);
   }
 }
 
@@ -4547,5 +4550,267 @@ button:disabled {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Effets : entree des boss, runes, feu de camp                       */
+/* ------------------------------------------------------------------ */
+
+/* Entree d'un boss. Meme banniere que les evenements, en version grande :
+   nom en lettres dorees, arrivee en force, reflet qui la traverse. Elle ne
+   capte toujours aucun clic. */
+.event-banner[data-tone="boss"] {
+  top: 14px;
+  justify-content: center;
+  width: min(560px, calc(100% - 24px));
+  padding: 14px 22px 12px;
+  overflow: hidden;
+  text-align: center;
+  border-color: rgb(214 180 110 / 75%);
+  background: linear-gradient(180deg, rgb(24 19 12 / 95%), rgb(12 10 7 / 95%));
+  box-shadow: inset 0 0 0 1px rgb(214 180 110 / 18%), 0 0 42px
+    rgb(232 192 106 / 35%), 0 10px 26px rgb(0 0 0 / 45%);
+  transform: translateX(-50%) scale(1.25);
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.event-banner[data-tone="boss"].is-visible {
+  transform: translateX(-50%) scale(1);
+}
+
+.event-banner[data-tone="boss"] .event-banner__kind {
+  display: none;
+}
+
+.event-banner[data-tone="boss"] .event-banner__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.event-banner[data-tone="boss"] .event-banner__text {
+  order: -1;
+  margin-bottom: 4px;
+  font-family: var(--header-font);
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.event-banner[data-tone="boss"] .event-banner__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3.4vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(
+    180deg,
+    #fff7dc 0%,
+    #f4d88e 40%,
+    #d6a743 66%,
+    #8a5a1c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgb(255 175 60 / 45%));
+}
+
+.event-banner[data-tone="boss"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgb(255 245 210 / 38%) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+
+.event-banner[data-tone="boss"].is-visible::after {
+  animation: boss-glint 1.1s 0.25s ease-out both;
+}
+
+@keyframes boss-glint {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* Flash dore sur la zone de combat, une seule fois a l'entree du boss. */
+.boss-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 72% 50%,
+    rgb(255 240 200 / 85%),
+    rgb(255 210 120 / 30%) 45%,
+    transparent 75%
+  );
+}
+
+.boss-flash.is-on {
+  animation: boss-flash 0.7s ease-out;
+}
+
+@keyframes boss-flash {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Runes qui filent de l'ennemi vaincu vers le compteur. Positionnees par
+   juice.js, en fixe : elles traversent la page quel que soit le defilement. */
+.rune-mote {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 2px solid #ffe07a;
+  background: rgb(255 224 122 / 30%);
+  box-shadow: 0 0 10px rgb(255 200 60 / 90%), 0 0 3px #fff3b8;
+  pointer-events: none;
+}
+
+#carried-runes {
+  display: inline-block;
+}
+
+#carried-runes.rune-pulse {
+  animation: rune-pulse 0.6s ease-out;
+}
+
+@keyframes rune-pulse {
+  30% {
+    transform: scale(1.18);
+    color: #ffe9a8;
+    text-shadow: 0 0 12px rgb(255 200 90 / 90%);
+  }
+}
+
+/* Feu de camp, pose sur le foyer eteint du calque du sol : (150, 218) sur une
+   image de 480x270 affichee a la largeur du decor. Les unites cqw suivent la
+   largeur reelle du calque, barre de defilement exclue. */
+#camp-fire {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  transform: translate3d(0, var(--parallax, 0px), 0);
+  will-change: transform;
+}
+
+.camp-fire__foyer {
+  position: absolute;
+  left: 31.25%;
+  top: calc(100cqw * 0.5625 * 0.822);
+  width: calc(100cqw * 12 / 480);
+  height: calc(100cqw * 16 / 480);
+  min-width: 12px;
+  min-height: 16px;
+  transform: translate(-50%, -88%);
+}
+
+.camp-fire__flame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.camp-fire__glow {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  width: calc(100cqw * 0.26);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgb(255 150 50 / 34%),
+    rgb(255 120 40 / 10%) 35%,
+    transparent 65%
+  );
+  mix-blend-mode: screen;
+  animation: fire-flicker 1.9s ease-in-out infinite;
+}
+
+@keyframes fire-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  18% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 0.7;
+  }
+  52% {
+    opacity: 0.95;
+  }
+  71% {
+    opacity: 0.75;
+  }
+}
+
+.camp-fire__embers {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+}
+
+.camp-fire__ember {
+  position: absolute;
+  width: max(2px, calc(100cqw / 480));
+  height: max(2px, calc(100cqw / 480));
+  background: #ffd08a;
+  box-shadow: 0 0 6px rgb(255 150 50 / 90%);
+  opacity: 0;
+  animation: camp-ember-rise 2.4s linear infinite;
+}
+
+@keyframes camp-ember-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * 1px), calc(100cqw * -0.08));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-banner[data-tone="boss"],
+  .event-banner[data-tone="boss"].is-visible {
+    transform: translateX(-50%);
+  }
+  .event-banner[data-tone="boss"].is-visible::after,
+  .boss-flash.is-on,
+  #carried-runes.rune-pulse,
+  .camp-fire__glow,
+  .camp-fire__ember {
+    animation: none;
   }
 }
