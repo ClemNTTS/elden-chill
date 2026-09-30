@@ -318,7 +318,7 @@ import {
 } from "./actions.js";
 import { BIOMES, LOOT_TABLES } from "./biome.js";
 import { libellesDePhase } from "./boss-phases.js";
-import { encaisserFerveur, startExploration } from "./core.js";
+import { startExploration, terminerRetourAuCamp } from "./core.js";
 import {
   CRIT_PER_RANK,
   LEVELS_PER_CRIT_POINT,
@@ -443,7 +443,6 @@ import {
   PREP_CONSUMABLES,
   applyPreparationStats,
   buildEnemyIntent,
-  clearRunBuffs,
   describeHazards,
   getCodexBiomeInfo,
   getItemRarity,
@@ -3797,20 +3796,16 @@ export const toggleView = (view) => {
     playDungeonMusic();
   } else {
     clearEventBanner();
-    clearRunBuffs();
-    runtimeState.enemyIntent = null;
     /*
      * Repli VOLONTAIRE : c'est le seul moment ou la reserve de Ferveur est
      * mise a l'abri. Le versement precede l'encaissement des runes portees
      * pour que le journal se lise dans l'ordre du geste. Voir escalation.js.
      */
-    const revenaitDExpedition = gameState.world.isExploring;
-    const ferveurEncaissee = revenaitDExpedition
-      ? encaisserFerveur("Repli au camp")
-      : 0;
-    const runesRapportees = gameState.runes.carried + ferveurEncaissee;
-    gameState.runes.banked += gameState.runes.carried;
-    gameState.runes.carried = 0;
+    const {
+      revenaitDExpedition,
+      montant: runesRapportees,
+      ferveur: ferveurEncaissee,
+    } = terminerRetourAuCamp();
     const layout = ensureBattleLogLayout();
     if (layout) {
       layout.enemyColumn.innerHTML = "";

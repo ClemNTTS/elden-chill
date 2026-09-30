@@ -1,4 +1,5 @@
 import { BIOMES } from "./biome.js";
+import { encaisserRunes } from "./shared/runes.js";
 import { CRIT_BASE, syncCritStats } from "./crit.js";
 import { getMaxLevel } from "./rebirth.js";
 import { decodeLegacySave, openSave, sealSave } from "./save-crypto.js";
@@ -392,9 +393,7 @@ const hydrate = (profile) => {
   // mais la boucle de combat n'est pas relancee au chargement : le joueur
   // arrivait sur un ecran de combat vide et bloque. On le ramene au camp.
   //
-  // Les runes portees ne sont ni encaissees ni perdues : les encaisser ferait
-  // du rechargement un moyen de securiser un butin, les perdre punirait un
-  // simple plantage. Elles restent portees, donc toujours en jeu.
+  // Ce retour securise aussi le butin : au camp, aucune rune ne reste portee.
   if (withOfflineTime.world?.isExploring) {
     withOfflineTime.world.isExploring = false;
     withOfflineTime.playerEffects = [];
@@ -406,6 +405,7 @@ const hydrate = (profile) => {
   }
 
   setGameState(withOfflineTime);
+  const runesEncaissees = encaisserRunes(gameState);
   // Les rangs font foi : ils reconstruisent critChance et critDamage, y compris
   // si la sauvegarde portait des valeurs incoherentes.
   syncCritStats();
@@ -423,6 +423,7 @@ const hydrate = (profile) => {
     if (!gameState.ui) gameState.ui = {};
     gameState.ui.currentScreen = "hub";
   }
+  if (runesEncaissees > 0) saveGame("retour-au-camp-chargement");
 };
 
 /**

@@ -22,6 +22,7 @@ import {
   markTrialCleared,
 } from "./rebirth.js";
 import { saveGame } from "./save.js";
+import { encaisserRunes } from "./shared/runes.js";
 import { playSfx } from "./sfx.js";
 import { devSpawnQueue, spawnMonster } from "./spawn.js";
 import {
@@ -376,6 +377,20 @@ export const encaisserFerveur = (raison = "Repli") => {
   return montant;
 };
 
+/** Termine un retour reussi avant que l'interface n'affiche le camp. */
+export const terminerRetourAuCamp = (raison = "Repli au camp") => {
+  const revenaitDExpedition = gameState.world.isExploring;
+  const ferveur = revenaitDExpedition ? encaisserFerveur(raison) : 0;
+  const montant = encaisserRunes(gameState) + ferveur;
+  gameState.world.isExploring = false;
+  runtimeState.currentCombatSession++;
+  runtimeState.enemyIntent = null;
+  clearRunBuffs();
+  gameState.ui.currentScreen = "hub";
+  saveGame("retour-au-camp");
+  return { revenaitDExpedition, montant, ferveur };
+};
+
 export const handleVictory = (sessionId) => {
   handleDrops(sessionId);
   gameState.ennemyEffects = [];
@@ -576,10 +591,7 @@ export const handleVictory = (sessionId) => {
         `Objectif de ${stopAt} cycle(s) atteint : repli au camp.`,
         "log-crit",
       );
-      encaisserFerveur("Objectif de cycles atteint");
-      gameState.world.isExploring = false;
-      clearRunBuffs();
-      saveGame();
+      terminerRetourAuCamp("Objectif de cycles atteint");
       delayedSetTimeout(() => toggleView("camp"), 1500);
       updateUI();
       return;
