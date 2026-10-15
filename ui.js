@@ -2755,6 +2755,12 @@ const renderBiomeDetail = (biomeId) => {
       <span class="danger-badge danger-${getDangerRelatif(biomeId, gameState.stats?.level || 0).cle}">${echapperHtml(getDangerRelatif(biomeId, gameState.stats?.level || 0).libelle)}</span>
     </div>
     <p class="biome-focus">${guide?.focus || "Aucune recommandation disponible."}</p>
+    <div class="biome-detail-actions">
+      <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
+        ${isUnlocked ? "Explorer cette zone" : "Zone pas encore debloquee"}
+      </button>
+      <span class="detail-path-role">${guide?.pathRole || ""}</span>
+    </div>
     <div class="biome-detail-grid">
       <div class="detail-block">
         <span class="detail-label">Puissance attendue</span>
@@ -2795,12 +2801,7 @@ const renderBiomeDetail = (biomeId) => {
       </div>`,
       )
       .join("")}
-    <div class="biome-detail-actions">
-      <button id="start-selected-biome" ${!isUnlocked || gameState.world.isExploring ? "disabled" : ""}>
-        ${isUnlocked ? "Explorer cette zone" : "Zone pas encore debloquee"}
-      </button>
-      <span class="detail-path-role">${guide?.pathRole || ""}</span>
-    </div>
+
   `;
 
   const startButton = document.getElementById("start-selected-biome");
