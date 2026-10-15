@@ -2801,7 +2801,6 @@ const renderBiomeDetail = (biomeId) => {
       </div>`,
       )
       .join("")}
-
   `;
 
   const startButton = document.getElementById("start-selected-biome");
